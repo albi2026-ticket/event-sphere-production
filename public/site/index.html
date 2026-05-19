@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TicketHub — Live Events, Concerts, Sports & Festivals</title>
+<meta name="description" content="Discover and buy tickets to concerts, sports, festivals and conferences worldwide. Resell with confidence. Premium ticketing made simple." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<nav class="navbar navbar-expand-lg nav-blur">
+  <div class="container-xxl">
+    <a class="brand" href="index.html"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>TicketHub</a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav mx-auto gap-1">
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="events.html">Events</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link nav-link-pro dropdown-toggle" data-bs-toggle="dropdown" href="#">Categories</a>
+          <ul class="dropdown-menu mt-2" style="background:var(--card);border:1px solid var(--border);border-radius:14px">
+            <li><a class="dropdown-item text-white-50" href="events.html"><i class="bi bi-music-note-beamed me-2"></i>Concerts</a></li>
+            <li><a class="dropdown-item text-white-50" href="events.html"><i class="bi bi-trophy me-2"></i>Sports</a></li>
+            <li><a class="dropdown-item text-white-50" href="events.html"><i class="bi bi-stars me-2"></i>Festivals</a></li>
+            <li><a class="dropdown-item text-white-50" href="events.html"><i class="bi bi-mic me-2"></i>Conferences</a></li>
+          </ul>
+        </li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="dashboard.html">My Tickets</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="organizer.html">Sell</a></li>
+      </ul>
+      <div class="d-flex align-items-center gap-2">
+        <button class="icon-btn" data-theme-toggle><i class="bi bi-sun" data-theme-icon></i></button>
+        <a class="icon-btn position-relative" href="dashboard.html"><i class="bi bi-bell"></i><span class="position-absolute top-0 end-0 translate-middle badge rounded-pill" style="background:var(--secondary);font-size:.6rem">3</span></a>
+        <a class="btn btn-ghost d-none d-md-inline-flex" href="login.html">Sign in</a>
+        <a class="btn btn-primary-grad" href="register.html">Get started</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="container-xxl position-relative" style="z-index:2">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-7">
+        <span class="hero-eyebrow"><span style="width:8px;height:8px;border-radius:50%;background:var(--success)"></span> 1.2M+ live events worldwide</span>
+        <h1 class="mt-3">Find tickets to the <span class="grad-text">moments that matter.</span></h1>
+        <p class="mt-3 fs-5" style="max-width:560px">Concerts, sports, festivals, and conferences — all in one premium marketplace. Buy, sell and transfer tickets in seconds.</p>
+
+        <!-- Search -->
+        <div class="search-pill mt-4 ac-wrap">
+          <div class="field"><i class="bi bi-search"></i><input data-autocomplete placeholder="Search artists, teams, venues" /></div>
+          <div class="field"><i class="bi bi-geo-alt"></i><input placeholder="Any city" /></div>
+          <div class="field"><i class="bi bi-calendar3"></i><input type="date" /></div>
+          <button class="btn btn-primary-grad btn-lg">Search</button>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat"><b><span data-count="48000">0</span>+</b><span>Events live</span></div>
+          <div class="stat"><b><span data-count="180">0</span>+</b><span>Countries</span></div>
+          <div class="stat"><b><span data-count="12">0</span>M+</b><span>Happy fans</span></div>
+        </div>
+      </div>
+      <div class="col-lg-5 d-none d-lg-block">
+        <div class="position-relative">
+          <img class="rounded-pro float" style="width:100%;box-shadow:var(--shadow-lg)" src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=900&q=80" alt="Live concert crowd" loading="lazy"/>
+          <div class="glass p-3 position-absolute" style="bottom:-20px;left:-20px;width:230px">
+            <div class="d-flex align-items-center gap-2">
+              <div style="width:42px;height:42px;border-radius:12px;background:var(--grad-primary);display:grid;place-items:center"><i class="bi bi-ticket-perforated text-white"></i></div>
+              <div><div class="fw-semibold">Ticket secured</div><div class="text-muted-pro small">Coldplay · Row F</div></div>
+            </div>
+          </div>
+          <div class="glass p-3 position-absolute" style="top:-20px;right:-10px">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-shield-check" style="color:var(--success);font-size:1.4rem"></i>
+              <div><div class="fw-semibold small">100% Verified</div><div class="text-muted-pro" style="font-size:.75rem">Refund guarantee</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trust marquee -->
+    <div class="marquee mt-5 pt-4">
+      <div class="marquee-track text-muted-pro fw-semibold" style="font-size:1.1rem;opacity:.7">
+        <span>SPOTIFY</span><span>LIVE NATION</span><span>UEFA</span><span>NBA</span><span>TED</span><span>F1</span><span>COACHELLA</span><span>SXSW</span>
+        <span>SPOTIFY</span><span>LIVE NATION</span><span>UEFA</span><span>NBA</span><span>TED</span><span>F1</span><span>COACHELLA</span><span>SXSW</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CATEGORIES ===== -->
+<section class="section">
+  <div class="container-xxl">
+    <div class="section-title fade-up">
+      <div>
+        <div class="eyebrow">Browse by category</div>
+        <h2 class="mt-2">What are you in the mood for?</h2>
+      </div>
+      <a class="btn btn-ghost" href="events.html">All categories <i class="bi bi-arrow-right ms-1"></i></a>
+    </div>
+    <div class="row g-3 fade-up">
+      <div class="col-6 col-md-3"><a class="cat-card" href="events.html"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&q=80')"></div><div class="label">Concerts <small>12,438</small></div></a></div>
+      <div class="col-6 col-md-3"><a class="cat-card" href="events.html"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&q=80')"></div><div class="label">Sports <small>6,210</small></div></a></div>
+      <div class="col-6 col-md-3"><a class="cat-card" href="events.html"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&q=80')"></div><div class="label">Festivals <small>1,890</small></div></a></div>
+      <div class="col-6 col-md-3"><a class="cat-card" href="events.html"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&q=80')"></div><div class="label">Conferences <small>4,127</small></div></a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TRENDING ===== -->
+<section class="section-sm">
+  <div class="container-xxl">
+    <div class="section-title fade-up">
+      <div>
+        <div class="eyebrow">Trending now</div>
+        <h2 class="mt-2">Hottest concerts this week</h2>
+      </div>
+      <div class="d-flex gap-2">
+        <span class="chip active">All</span><span class="chip">This week</span><span class="chip">This month</span><span class="chip">Near me</span>
+      </div>
+    </div>
+    <div class="row g-4 fade-up">
+      <!-- Cards generated -->
+      <div class="col-md-6 col-lg-3">
+        <article class="card-pro">
+          <div class="thumb"><span class="badge-soft">CONCERT</span><span class="fav" data-fav="ev1"><i class="bi bi-heart"></i></span>
+            <img loading="lazy" src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80" alt="Coldplay"/></div>
+          <div class="body">
+            <div class="meta"><i class="bi bi-calendar3"></i> Sat, Jun 21 · 8:00 PM</div>
+            <h3 class="title"><a href="event-details.html" style="color:inherit">Coldplay — Music of the Spheres</a></h3>
+            <div class="venue"><i class="bi bi-geo-alt"></i> Wembley Stadium, London</div>
+            <div class="foot"><div class="price">From $89 <small>· Resale OK</small></div><a class="btn btn-glass btn-sm" href="event-details.html">View</a></div>
+          </div>
+        </article>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <article class="card-pro">
+          <div class="thumb"><span class="badge-soft">TOUR</span><span class="fav" data-fav="ev2"><i class="bi bi-heart"></i></span>
+            <img loading="lazy" src="https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=800&q=80" alt="Bad Bunny"/></div>
+          <div class="body">
+            <div class="meta"><i class="bi bi-calendar3"></i> Fri, Jul 11 · 9:00 PM</div>
+            <h3 class="title"><a href="event-details.html" style="color:inherit">Bad Bunny — Most Wanted</a></h3>
+            <div class="venue"><i class="bi bi-geo-alt"></i> SoFi Stadium, LA</div>
+            <div class="foot"><div class="price">From $124</div><a class="btn btn-glass btn-sm" href="event-details.html">View</a></div>
+          </div>
+        </article>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <article class="card-pro">
+          <div class="thumb"><span class="badge-soft">RESIDENCY</span><span class="fav" data-fav="ev3"><i class="bi bi-heart"></i></span>
+            <img loading="lazy" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80" alt="Beyoncé"/></div>
+          <div class="body">
+            <div class="meta"><i class="bi bi-calendar3"></i> Thu, Aug 14 · 8:30 PM</div>
+            <h3 class="title"><a href="event-details.html" style="color:inherit">Beyoncé — Renaissance Encore</a></h3>
+            <div class="venue"><i class="bi bi-geo-alt"></i> Sphere, Las Vegas</div>
+            <div class="foot"><div class="price">From $210</div><a class="btn btn-glass btn-sm" href="event-details.html">View</a></div>
+          </div>
+        </article>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <article class="card-pro">
+          <div class="thumb"><span class="badge-soft">NEW</span><span class="fav" data-fav="ev4"><i class="bi bi-heart"></i></span>
+            <img loading="lazy" src="https://images.unsplash.com/photo-1496337589254-7e19d01cec44?w=800&q=80" alt="Drake"/></div>
+          <div class="body">
+            <div class="meta"><i class="bi bi-calendar3"></i> Wed, Sep 3 · 8:00 PM</div>
+            <h3 class="title"><a href="event-details.html" style="color:inherit">Drake — It's All A Blur</a></h3>
+            <div class="venue"><i class="bi bi-geo-alt"></i> Madison Square Garden</div>
+            <div class="foot"><div class="price">From $145</div><a class="btn btn-glass btn-sm" href="event-details.html">View</a></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SPORTS ===== -->
+<section class="section-sm">
+  <div class="container-xxl">
+    <div class="section-title fade-up">
+      <div><div class="eyebrow">Sports</div><h2 class="mt-2">Game day, every day</h2></div>
+      <a class="btn btn-ghost" href="events.html">Browse sports <i class="bi bi-arrow-right ms-1"></i></a>
+    </div>
+    <div class="row g-4 fade-up">
+      <div class="col-md-6 col-lg-3"><article class="card-pro"><div class="thumb"><span class="badge-soft">NBA FINALS</span><span class="fav" data-fav="s1"><i class="bi bi-heart"></i></span><img loading="lazy" src="https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&q=80" alt=""/></div><div class="body"><div class="meta"><i class="bi bi-calendar3"></i> Jun 6 · 9:00 PM</div><h3 class="title">Lakers vs Celtics</h3><div class="venue"><i class="bi bi-geo-alt"></i> Crypto.com Arena</div><div class="foot"><div class="price">From $189</div><a class="btn btn-glass btn-sm" href="event-details.html">View</a></div></div></article></div>
+      <div class="col-md-6 col-lg-3"><article class="card-pro"><div class="thumb"><span class="badge-soft">UEFA</span><span class="fav" data-fav="s2"><i class="bi bi-heart"></i></span><img loading="lazy" src="https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800&q=80" alt=""/></div><div class="body"><div class="meta"><i class="bi bi-calendar3"></i> Jun 1 · 8:00 PM</div><h3 class="title">Champions League Final</h3><div class="venue"><i class="bi bi-geo-alt"></i> Wembley, London</div><div class="foot"><div class="price">From $320</div><a class="btn btn-glass btn-sm" href="event-details.html">View</a></div></div></article></div>
+      <div class="col-md-6 col-lg-3"><article class="card-pro"><div class="thumb"><span class="badge-soft">F1</span><span class="fav" data-fav="s3"><i class="bi bi-heart"></i></span><img loading="lazy" src="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800&q=80" alt=""/></div><div class="body"><div class="meta"><i class="bi bi-calendar3"></i> May 24 · 2:00 PM</div><h3 class="title">F1 Monaco Grand Prix</h3><div class="venue"><i class="bi bi-geo-alt"></i> Circuit de Monaco</div><div class="foot"><div class="price">From $480</div><a class="btn btn-glass btn-sm" href="event-details.html">View</a></div></div></article></div>
+      <div class="col-md-6 col-lg-3"><article class="card-pro"><div class="thumb"><span class="badge-soft">NFL</span><span class="fav" data-fav="s4"><i class="bi bi-heart"></i></span><img loading="lazy" src="https://images.unsplash.com/photo-1495555687398-3f50d6e79e1e?w=800&q=80" alt=""/></div><div class="body"><div class="meta"><i class="bi bi-calendar3"></i> Sep 12 · 8:20 PM</div><h3 class="title">Cowboys vs Eagles</h3><div class="venue"><i class="bi bi-geo-alt"></i> AT&amp;T Stadium</div><div class="foot"><div class="price">From $99</div><a class="btn btn-glass btn-sm" href="event-details.html">View</a></div></div></article></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FESTIVALS BANNER ===== -->
+<section class="section-sm">
+  <div class="container-xxl">
+    <div class="glass p-4 p-md-5 position-relative overflow-hidden fade-up" style="background:linear-gradient(120deg, rgba(139,92,246,.25), rgba(91,140,255,.15))">
+      <div class="row align-items-center g-4">
+        <div class="col-md-7">
+          <div class="eyebrow">Festival season</div>
+          <h2 class="mt-2">Three days. One ticket. Endless memories.</h2>
+          <p class="mt-2 mb-4">Browse the season's biggest festivals — from Coachella to Tomorrowland — with verified resale and instant transfer.</p>
+          <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-primary-grad" href="events.html">Explore festivals</a>
+            <a class="btn btn-glass" href="events.html">View lineups</a>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <img class="rounded-pro" style="width:100%" src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80" alt=""/>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURED CAROUSEL ===== -->
+<section class="section-sm">
+  <div class="container-xxl">
+    <div class="section-title fade-up"><div><div class="eyebrow">Featured</div><h2 class="mt-2">Curated by editors</h2></div></div>
+    <div id="featCarousel" class="carousel slide fade-up" data-bs-ride="carousel">
+      <div class="carousel-inner rounded-pro" style="height:380px">
+        <div class="carousel-item active h-100" style="background:url('https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=1600&q=80') center/cover">
+          <div class="h-100 d-flex align-items-end p-4 p-md-5" style="background:linear-gradient(180deg,transparent,rgba(0,0,0,.85))">
+            <div><span class="badge-soft" style="position:static">EDITOR'S PICK</span>
+              <h2 class="text-white mt-2">Tomorrowland 2026 — Mainstage Premiere</h2>
+              <p class="text-white-50 mb-3">Belgium · July 17–19</p>
+              <a class="btn btn-primary-grad" href="event-details.html">Get tickets</a>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-item h-100" style="background:url('https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1600&q=80') center/cover">
+          <div class="h-100 d-flex align-items-end p-4 p-md-5" style="background:linear-gradient(180deg,transparent,rgba(0,0,0,.85))">
+            <div><span class="badge-soft" style="position:static">LIMITED</span>
+              <h2 class="text-white mt-2">Glastonbury — Pyramid Stage Weekend</h2>
+              <p class="text-white-50 mb-3">UK · June 24–28</p>
+              <a class="btn btn-primary-grad" href="event-details.html">Get tickets</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="carousel-control-prev" data-bs-target="#featCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+      <button class="carousel-control-next" data-bs-target="#featCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== POPULAR CITIES ===== -->
+<section class="section-sm">
+  <div class="container-xxl">
+    <div class="section-title fade-up"><div><div class="eyebrow">Popular cities</div><h2 class="mt-2">Where the world goes out</h2></div></div>
+    <div class="row g-3 fade-up">
+      <div class="col-6 col-md-3 col-lg-2"><div class="city-card"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&q=80')"></div><div class="name">New York <span>1.2k</span></div></div></div>
+      <div class="col-6 col-md-3 col-lg-2"><div class="city-card"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&q=80')"></div><div class="name">Paris <span>820</span></div></div></div>
+      <div class="col-6 col-md-3 col-lg-2"><div class="city-card"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=600&q=80')"></div><div class="name">London <span>1.5k</span></div></div></div>
+      <div class="col-6 col-md-3 col-lg-2"><div class="city-card"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=600&q=80')"></div><div class="name">Tokyo <span>640</span></div></div></div>
+      <div class="col-6 col-md-3 col-lg-2"><div class="city-card"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1583422409516-2895a77efded?w=600&q=80')"></div><div class="name">Dubai <span>410</span></div></div></div>
+      <div class="col-6 col-md-3 col-lg-2"><div class="city-card"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1505761671935-60b3a7427bad?w=600&q=80')"></div><div class="name">Berlin <span>730</span></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TESTIMONIALS ===== -->
+<section class="section">
+  <div class="container-xxl">
+    <div class="section-title fade-up"><div><div class="eyebrow">Loved by fans</div><h2 class="mt-2">A community of 12 million</h2></div></div>
+    <div class="row g-4 fade-up">
+      <div class="col-md-4"><div class="testimonial"><div class="stars">★★★★★</div><p class="mt-2 mb-0" style="color:var(--text)">"Got front-row tickets in under a minute. The QR transfer to my friend was instant. Best ticketing app I've used."</p><div class="who"><img src="https://i.pravatar.cc/100?img=12"/><div><div class="fw-semibold">Maya Chen</div><div class="text-muted-pro small">San Francisco</div></div></div></div></div>
+      <div class="col-md-4"><div class="testimonial"><div class="stars">★★★★★</div><p class="mt-2 mb-0" style="color:var(--text)">"Resold my Coachella tickets in 10 minutes when plans changed. Refund guarantee actually means something here."</p><div class="who"><img src="https://i.pravatar.cc/100?img=32"/><div><div class="fw-semibold">Liam Patel</div><div class="text-muted-pro small">London</div></div></div></div></div>
+      <div class="col-md-4"><div class="testimonial"><div class="stars">★★★★★</div><p class="mt-2 mb-0" style="color:var(--text)">"The seat map is gorgeous and accurate. I knew exactly what I was buying before paying."</p><div class="who"><img src="https://i.pravatar.cc/100?img=47"/><div><div class="fw-semibold">Sara Okafor</div><div class="text-muted-pro small">Berlin</div></div></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== NEWSLETTER ===== -->
+<section class="section-sm">
+  <div class="container-xxl">
+    <div class="newsletter fade-up">
+      <div class="row align-items-center g-4 position-relative" style="z-index:2">
+        <div class="col-md-7">
+          <h2>Never miss a drop.</h2>
+          <p class="mb-0" style="color:rgba(255,255,255,.85)">Get presale codes, early access and weekly picks tailored to your taste.</p>
+        </div>
+        <div class="col-md-5">
+          <form class="d-flex gap-2" onsubmit="event.preventDefault();tkToast('Subscribed! Check your inbox.')">
+            <input class="form-control" type="email" placeholder="you@email.com" required/>
+            <button class="btn btn-light">Subscribe</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="container-xxl">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <a class="brand mb-3" href="index.html"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>TicketHub</a>
+        <p class="mt-3" style="max-width:340px">The premium marketplace to discover, buy and resell tickets to the world's best live events.</p>
+        <div class="d-flex gap-2 mt-3"><a href="#" class="icon-btn"><i class="bi bi-twitter-x"></i></a><a href="#" class="icon-btn"><i class="bi bi-instagram"></i></a><a href="#" class="icon-btn"><i class="bi bi-tiktok"></i></a><a href="#" class="icon-btn"><i class="bi bi-youtube"></i></a></div>
+      </div>
+      <div class="col-6 col-lg-2"><h6>Discover</h6><a href="events.html">Concerts</a><a href="events.html">Sports</a><a href="events.html">Festivals</a><a href="events.html">Theater</a></div>
+      <div class="col-6 col-lg-2"><h6>Sell</h6><a href="organizer.html">Organizer tools</a><a href="organizer.html">List tickets</a><a href="#">Pricing</a><a href="#">Resources</a></div>
+      <div class="col-6 col-lg-2"><h6>Company</h6><a href="#">About</a><a href="#">Careers</a><a href="#">Press</a><a href="#">Contact</a></div>
+      <div class="col-6 col-lg-2"><h6>Support</h6><a href="#">Help center</a><a href="#">Refund policy</a><a href="#">Terms</a><a href="#">Privacy</a></div>
+    </div>
+    <div class="legal"><div>© <span data-year></span> TicketHub Inc.</div><div class="d-flex gap-3"><a href="#">Cookies</a><a href="#">Accessibility</a><a href="#">Sitemap</a></div></div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

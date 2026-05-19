@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>My Dashboard — TicketHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="dash-shell">
+  <aside class="dash-side">
+    <a class="brand mb-4" href="index.html"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>TicketHub</a>
+    <nav class="menu">
+      <a class="active" href="dashboard.html"><i class="bi bi-grid-1x2"></i> Overview</a>
+      <a href="#tickets"><i class="bi bi-ticket-perforated"></i> My tickets</a>
+      <a href="#fav"><i class="bi bi-heart"></i> Favorites</a>
+      <a href="#notif"><i class="bi bi-bell"></i> Notifications</a>
+      <a href="#activity"><i class="bi bi-clock-history"></i> Activity</a>
+      <a href="organizer.html"><i class="bi bi-bar-chart"></i> Organizer</a>
+      <a href="#settings"><i class="bi bi-gear"></i> Settings</a>
+      <hr class="divider"/>
+      <a href="login.html"><i class="bi bi-box-arrow-right"></i> Sign out</a>
+    </nav>
+  </aside>
+
+  <main class="dash-main">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+      <div>
+        <button class="btn btn-glass d-lg-none" data-toggle-side><i class="bi bi-list"></i></button>
+        <h1 class="d-inline-block mb-0" style="font-size:1.8rem">Hi, Alex 👋</h1>
+        <p class="mb-0 text-muted-pro">You've got 2 upcoming events this month.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="icon-btn" data-theme-toggle><i class="bi bi-sun" data-theme-icon></i></button>
+        <a class="btn btn-primary-grad" href="events.html"><i class="bi bi-plus-lg me-1"></i> Find events</a>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3"><div class="kpi"><div class="label">Upcoming events</div><div class="value">3</div><div class="delta">+1 this week</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">Tickets owned</div><div class="value">7</div><div class="delta">2 transferable</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">Saved events</div><div class="value">12</div><div class="delta">3 going on sale</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">Loyalty points</div><div class="value">2,480</div><div class="delta">$24 reward</div></div></div>
+    </div>
+
+    <!-- My QR tickets -->
+    <h4 id="tickets" class="mt-2 mb-3">My tickets</h4>
+    <div class="row g-3">
+      <div class="col-lg-6">
+        <div class="qr-ticket">
+          <div class="info">
+            <span class="badge-soft" style="position:static;background:rgba(91,140,255,.15);border-color:rgba(91,140,255,.3);color:#93b4ff">UPCOMING</span>
+            <h5 class="mt-2">Coldplay — Music of the Spheres</h5>
+            <small class="text-muted-pro d-block"><i class="bi bi-geo-alt me-1"></i>Wembley Stadium, London</small>
+            <small class="text-muted-pro d-block"><i class="bi bi-calendar3 me-1"></i>Sat, Jun 21 · 8:00 PM</small>
+            <div class="mt-3 small">Seat <b style="color:var(--text)">F-12, F-13</b></div>
+            <div class="mt-3 d-flex gap-2">
+              <button class="btn btn-primary-grad btn-sm"><i class="bi bi-download me-1"></i> Download</button>
+              <button class="btn btn-glass btn-sm"><i class="bi bi-arrow-left-right me-1"></i> Transfer</button>
+            </div>
+          </div>
+          <div class="qr"><img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=TH-49281"/></div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="qr-ticket">
+          <div class="info">
+            <span class="badge-soft" style="position:static;background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.3);color:#fcd34d">THIS WEEK</span>
+            <h5 class="mt-2">Lakers vs Celtics</h5>
+            <small class="text-muted-pro d-block"><i class="bi bi-geo-alt me-1"></i>Crypto.com Arena</small>
+            <small class="text-muted-pro d-block"><i class="bi bi-calendar3 me-1"></i>Thu · 7:30 PM</small>
+            <div class="mt-3 small">Seat <b style="color:var(--text)">112-Row 8-Seat 5</b></div>
+            <div class="mt-3 d-flex gap-2">
+              <button class="btn btn-primary-grad btn-sm"><i class="bi bi-download me-1"></i> Download</button>
+              <button class="btn btn-glass btn-sm"><i class="bi bi-cash-coin me-1"></i> Resell</button>
+            </div>
+          </div>
+          <div class="qr"><img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=TH-49282"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Favorites -->
+    <h4 id="fav" class="mt-5 mb-3">Favorites</h4>
+    <div class="row g-3">
+      <div class="col-md-6 col-lg-4">
+        <article class="card-pro"><div class="thumb"><span class="badge-soft">CONCERT</span><img src="https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=600&q=80"/></div>
+          <div class="body"><div class="meta"><i class="bi bi-calendar3"></i> Jul 11</div><h3 class="title">Bad Bunny — LA</h3><div class="foot"><div class="price">From $124</div><a class="btn btn-glass btn-sm" href="event-details.html">View</a></div></div></article>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <article class="card-pro"><div class="thumb"><span class="badge-soft">FESTIVAL</span><img src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=600&q=80"/></div>
+          <div class="body"><div class="meta"><i class="bi bi-calendar3"></i> Jul 17</div><h3 class="title">Tomorrowland W1</h3><div class="foot"><div class="price">From $380</div><a class="btn btn-glass btn-sm" href="event-details.html">View</a></div></div></article>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <article class="card-pro"><div class="thumb"><span class="badge-soft">SPORTS</span><img src="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=600&q=80"/></div>
+          <div class="body"><div class="meta"><i class="bi bi-calendar3"></i> May 24</div><h3 class="title">F1 Monaco GP</h3><div class="foot"><div class="price">From $480</div><a class="btn btn-glass btn-sm" href="event-details.html">View</a></div></div></article>
+      </div>
+    </div>
+
+    <!-- Activity + Notifications -->
+    <div class="row g-3 mt-3">
+      <div class="col-lg-7">
+        <div class="card-pro p-4" id="activity">
+          <h5>Recent activity</h5>
+          <ul class="list-unstyled mt-3 mb-0">
+            <li class="d-flex gap-3 py-2"><i class="bi bi-cart-check text-success"></i><div><div>Purchased <b>Coldplay</b> · 2 tickets</div><small class="text-muted-pro">Today · 14:22</small></div></li>
+            <li class="d-flex gap-3 py-2 border-top border-pro"><i class="bi bi-heart" style="color:var(--secondary)"></i><div><div>Saved <b>F1 Monaco GP</b></div><small class="text-muted-pro">Yesterday · 09:11</small></div></li>
+            <li class="d-flex gap-3 py-2 border-top border-pro"><i class="bi bi-arrow-left-right" style="color:var(--primary)"></i><div><div>Transferred <b>Lakers vs Warriors</b> · 1 ticket</div><small class="text-muted-pro">Mar 02</small></div></li>
+            <li class="d-flex gap-3 py-2 border-top border-pro"><i class="bi bi-shield-check text-success"></i><div><div>Refund processed · $89</div><small class="text-muted-pro">Feb 17</small></div></li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card-pro p-4" id="notif">
+          <div class="d-flex justify-content-between align-items-center mb-2"><h5 class="m-0">Notifications</h5><a href="#" class="small">Mark all read</a></div>
+          <ul class="list-unstyled mt-2 mb-0">
+            <li class="py-3 border-bottom border-pro"><div class="fw-semibold">Presale starts in 24h</div><small class="text-muted-pro">Drake — It's All A Blur</small></li>
+            <li class="py-3 border-bottom border-pro"><div class="fw-semibold">Your QR is ready</div><small class="text-muted-pro">Lakers vs Celtics</small></li>
+            <li class="py-3"><div class="fw-semibold">New event near you</div><small class="text-muted-pro">Arctic Monkeys at The Forum</small></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <h4 id="settings" class="mt-5 mb-3">Account settings</h4>
+    <div class="row g-3">
+      <div class="col-lg-6"><div class="card-pro p-4">
+        <h6>Profile</h6>
+        <div class="row g-2 mt-2"><div class="col-6"><label class="form-label">First</label><input class="form-control" value="Alex"/></div><div class="col-6"><label class="form-label">Last</label><input class="form-control" value="Morgan"/></div></div>
+        <label class="form-label mt-2">Email</label><input class="form-control" value="alex@email.com"/>
+        <button class="btn btn-primary-grad mt-3">Save</button>
+      </div></div>
+      <div class="col-lg-6"><div class="card-pro p-4">
+        <h6>Preferences</h6>
+        <div class="form-check form-switch mt-3"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Email notifications</label></div>
+        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">SMS reminders</label></div>
+        <div class="form-check form-switch"><input class="form-check-input" type="checkbox"><label class="form-check-label">Marketing emails</label></div>
+        <label class="form-label mt-3">Default city</label>
+        <select class="form-select"><option>Los Angeles</option><option>New York</option><option>London</option></select>
+      </div></div>
+    </div>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/main.js"></script>
+</body>
+</html>
