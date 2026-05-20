@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\StripeWebhookEvent;
 use App\Models\Ticket;
 use App\Models\TicketType;
+use App\Services\Orders\OrderService;
 use App\Services\Tickets\TicketInventoryService;
 use App\Services\Tickets\TicketService;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,7 @@ class StripePaymentService
     public function __construct(
         private readonly TicketInventoryService $inventory,
         private readonly TicketService $tickets,
+        private readonly OrderService $orders,
     ) {}
 
     public function createCheckoutSession(Order $order): Session
@@ -32,7 +34,11 @@ class StripePaymentService
         $this->ensureOrderCanCheckout($order);
 
         $client = $this->client();
-        $successUrl = (string) config('services.stripe.success_url');
+        $successUrl = str_replace(
+            ['{ORDER_ID}', '{ORDER_NUMBER}'],
+            [(string) $order->id, urlencode($order->order_number)],
+            (string) config('services.stripe.success_url'),
+        );
         $cancelUrl = str_replace('{ORDER_NUMBER}', urlencode($order->order_number), (string) config('services.stripe.cancel_url'));
 
         $session = $client->checkout->sessions->create([
@@ -225,7 +231,13 @@ class StripePaymentService
 
     protected function markCheckoutSessionCancelled(mixed $session): void
     {
-        $this->markOrderPaymentStatus($this->findOrderForSession($session), Order::PAYMENT_STATUS_CANCELLED, [
+        $order = $this->findOrderForSession($session);
+
+        if ($order && $order->payment_status !== Order::PAYMENT_STATUS_PAID) {
+            $this->orders->releaseReservations($order);
+        }
+
+        $this->markOrderPaymentStatus($order, Order::PAYMENT_STATUS_CANCELLED, [
             'status' => Order::STATUS_CANCELLED,
             'cancelled_at' => now(),
             'stripe_payment_status' => $session->payment_status ?? 'expired',

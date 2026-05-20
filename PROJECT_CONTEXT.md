@@ -167,16 +167,13 @@ Roles stored in:
 
 ## 8. CURRENT DEVELOPMENT STATUS
 
-- Backend initialized (Laravel)
+- Backend initialized (Laravel) with full API (Sanctum, events, orders, tickets, Stripe, dashboards)
 - Database connected (Supabase PostgreSQL)
-- Authentication system implemented (Sanctum + roles)
-- Core API structure in progress:
-  - Events CRUD
-  - Ticket system
-  - Order system
-  - Image upload system
+- Static frontend (`public/site/*.html`) connected via `public/assets/js/api/` client layer
+- `POST /api/orders` creates pending orders with inventory reservation
+- Checkout flow: order → Stripe Checkout Session → webhook fulfillment
 
-Frontend already exists and must not be modified.
+See [INTEGRATION.md](INTEGRATION.md) for local dev setup (FRONTEND_URL, API base meta tag).
 
 ---
 

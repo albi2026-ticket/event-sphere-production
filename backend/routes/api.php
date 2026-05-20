@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\AuthUserController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\EventImageController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\Organizer\OrganizerDashboardController;
 use App\Http\Controllers\Api\Organizer\OrganizerEventController;
 use App\Http\Controllers\Api\Organizer\OrganizerPaymentController;
@@ -66,6 +67,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/me/favorites/toggle', [UserFavoriteController::class, 'toggle']);
         Route::delete('/me/favorites/{event}', [UserFavoriteController::class, 'destroy']);
         Route::post('/ticket-types/{ticketType}/reserve', [TicketTypeController::class, 'reserve']);
+        Route::post('/orders', [OrderController::class, 'store']);
         Route::get('/orders/{order}/tickets', [TicketController::class, 'orderTickets']);
         Route::get('/orders/{order}/payment-status', [CheckoutSessionController::class, 'show']);
         Route::post('/orders/{order}/checkout-session', [CheckoutSessionController::class, 'store']);

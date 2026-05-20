@@ -1,0 +1,30 @@
+(function () {
+  'use strict';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('[data-register-form]');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      try {
+        const password = form.querySelector('[name="password"]').value;
+        const payload = {
+          first_name: form.querySelector('[name="first_name"]').value.trim(),
+          last_name: form.querySelector('[name="last_name"]').value.trim(),
+          email: form.querySelector('[name="email"]').value.trim(),
+          password,
+          password_confirmation: password,
+        };
+        const user = await window.EventSphereAuth.register(payload);
+        window.tkToast?.('Welcome to TicketHub!');
+        window.EventSphereAuth.redirectByRole(user);
+      } catch (err) {
+        window.tkToast?.(err.message || 'Registration failed', 'error');
+        btn.disabled = false;
+      }
+    });
+  });
+})();

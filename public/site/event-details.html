@@ -2,6 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="api-base" content="http://127.0.0.1:8000/api" />
 <title>Coldplay — Music of the Spheres · TicketHub</title>
 <meta name="description" content="Tickets, seat map, prices and venue details for Coldplay's Music of the Spheres tour."/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -14,16 +15,16 @@
 <script src="../assets/js/partials.js"></script>
 
 <!-- Banner -->
-<section style="position:relative;height:420px;overflow:hidden">
-  <img src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1800&q=80" alt="" style="width:100%;height:100%;object-fit:cover"/>
+<section style="position:relative;height:420px;overflow:hidden" data-event-root>
+  <img data-event-banner src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1800&q=80" alt="" style="width:100%;height:100%;object-fit:cover"/>
   <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,15,25,.2) 0%, rgba(11,15,25,.95) 90%)"></div>
   <div class="container-xxl position-relative" style="margin-top:-260px;z-index:2">
-    <nav class="text-white-50 small mb-2"><a href="events.html" class="text-white-50">Events</a> <i class="bi bi-chevron-right mx-1"></i> Concerts <i class="bi bi-chevron-right mx-1"></i> Coldplay</nav>
+    <nav class="text-white-50 small mb-2"><a href="events.html" class="text-white-50">Events</a> <i class="bi bi-chevron-right mx-1"></i> <span data-event-breadcrumb>Coldplay</span></nav>
     <span class="badge-soft" style="position:static">CONCERT · WORLD TOUR</span>
-    <h1 class="mt-2 text-white" style="max-width:780px">Coldplay — Music of the Spheres World Tour</h1>
+    <h1 class="mt-2 text-white" data-event-title style="max-width:780px">Coldplay — Music of the Spheres World Tour</h1>
     <div class="d-flex flex-wrap gap-3 mt-3 text-white-50">
-      <span><i class="bi bi-calendar3 me-1"></i> Saturday, June 21, 2026 · 8:00 PM</span>
-      <span><i class="bi bi-geo-alt me-1"></i> Wembley Stadium, London</span>
+      <span data-event-meta-date><i class="bi bi-calendar3 me-1"></i> Saturday, June 21, 2026 · 8:00 PM</span>
+      <span data-event-meta-venue><i class="bi bi-geo-alt me-1"></i> Wembley Stadium, London</span>
       <span><i class="bi bi-star-fill me-1 text-warning"></i> 4.9 (2,318 reviews)</span>
     </div>
   </div>
@@ -43,7 +44,7 @@
 
         <!-- About -->
         <h3>About this event</h3>
-        <p>Coldplay's record-breaking Music of the Spheres World Tour returns to London for one final night at Wembley Stadium. Expect a stunning audiovisual production, fan-favorite anthems, and a few surprises from the band's brand-new album. This show is part of the eco-friendly tour series — your ticket includes a tree planted in your name.</p>
+        <p data-event-description>Coldplay's record-breaking Music of the Spheres World Tour returns to London for one final night at Wembley Stadium. Expect a stunning audiovisual production, fan-favorite anthems, and a few surprises from the band's brand-new album. This show is part of the eco-friendly tour series — your ticket includes a tree planted in your name.</p>
 
         <!-- Lineup -->
         <h4 class="mt-4">Lineup</h4>
@@ -66,7 +67,7 @@
             <div class="text-muted-pro small"><span data-seat-count>0</span> seat(s)</div>
             <div class="fw-bold fs-4" data-seat-total>$0</div>
           </div>
-          <a class="btn btn-primary-grad" href="checkout.html">Continue <i class="bi bi-arrow-right ms-1"></i></a>
+          <a class="btn btn-primary-grad" href="checkout.html" data-event-buy>Continue <i class="bi bi-arrow-right ms-1"></i></a>
         </div>
 
         <!-- Organizer -->
@@ -92,20 +93,20 @@
       <div class="col-lg-4">
         <div class="sticky-checkout">
           <div class="card-pro p-4">
-            <div class="d-flex justify-content-between align-items-start"><div><div class="text-muted-pro small">Starting from</div><div class="fs-3 fw-bold">$89.00</div></div><span class="badge-soft" style="position:static;background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.3);color:#86efac">Available</span></div>
+            <div class="d-flex justify-content-between align-items-start"><div><div class="text-muted-pro small">Starting from</div><div class="fs-3 fw-bold" data-event-price>$89.00</div></div><span class="badge-soft" style="position:static;background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.3);color:#86efac">Available</span></div>
             <hr class="divider"/>
             <label class="form-label">Ticket type</label>
-            <select class="form-select mb-3"><option>General Admission · $89</option><option>Reserved Seating · $145</option><option>VIP Pit · $320</option><option>Diamond Package · $720</option></select>
+            <select class="form-select mb-3" data-ticket-type-select><option>General Admission · $89</option></select>
             <label class="form-label">Quantity</label>
-            <div class="qty-wrap d-flex align-items-center gap-2 mb-3" data-price="89">
+            <div class="qty-wrap d-flex align-items-center gap-2 mb-3" data-qty data-price="89">
               <button class="btn btn-glass" data-qty="-">−</button>
               <input class="form-control text-center" value="2" style="max-width:70px"/>
               <button class="btn btn-glass" data-qty="+">+</button>
               <span class="ms-auto fw-bold" data-qty-total>$178.00</span>
             </div>
             <div class="form-check mb-3"><input class="form-check-input" type="checkbox" checked><label class="form-check-label small">Add refund protection · $4.99</label></div>
-            <a href="checkout.html" class="btn btn-primary-grad w-100 btn-lg">Buy tickets</a>
-            <button class="btn btn-ghost w-100 mt-2" data-fav="cold1"><i class="bi bi-heart me-1"></i> Save for later</button>
+            <a href="#" class="btn btn-primary-grad w-100 btn-lg" data-event-buy>Buy tickets</a>
+            <button class="btn btn-ghost w-100 mt-2" data-event-fav data-fav="cold1"><i class="bi bi-heart me-1"></i> Save for later</button>
             <hr class="divider"/>
             <ul class="list-unstyled mb-0 small text-muted-pro">
               <li><i class="bi bi-shield-check me-2" style="color:var(--success)"></i> 100% refund guarantee</li>
@@ -134,6 +135,14 @@
 
 <div data-partial="footer"></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/api/config.js"></script>
+<script src="../assets/js/api/api-client.js"></script>
+<script src="../assets/js/api/auth.js"></script>
+<script src="../assets/js/api/utils.js"></script>
+<script src="../assets/js/api/events.js"></script>
+<script src="../assets/js/api/cart.js"></script>
+<script src="../assets/js/api/favorites.js"></script>
 <script src="../assets/js/main.js"></script>
+<script src="../assets/js/pages/event-details-page.js"></script>
 </body>
 </html>

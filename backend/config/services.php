@@ -39,8 +39,8 @@ return [
         'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
         'currency' => env('STRIPE_CURRENCY', 'USD'),
-        'success_url' => env('STRIPE_CHECKOUT_SUCCESS_URL', env('FRONTEND_URL', 'http://localhost:5173').'/checkout/success?session_id={CHECKOUT_SESSION_ID}'),
-        'cancel_url' => env('STRIPE_CHECKOUT_CANCEL_URL', env('FRONTEND_URL', 'http://localhost:5173').'/checkout/cancelled?order={ORDER_NUMBER}'),
+        'success_url' => env('STRIPE_CHECKOUT_SUCCESS_URL', env('FRONTEND_URL', 'http://localhost:5173').'/site/checkout-success.html?session_id={CHECKOUT_SESSION_ID}&order_id={ORDER_ID}'),
+        'cancel_url' => env('STRIPE_CHECKOUT_CANCEL_URL', env('FRONTEND_URL', 'http://localhost:5173').'/site/checkout-cancelled.html?order={ORDER_NUMBER}'),
     ],
 
 ];

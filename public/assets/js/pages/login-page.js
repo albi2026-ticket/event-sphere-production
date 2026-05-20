@@ -1,0 +1,24 @@
+(function () {
+  'use strict';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('[data-login-form]');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      try {
+        const email = form.querySelector('[name="email"]').value.trim();
+        const password = form.querySelector('[name="password"]').value;
+        const user = await window.EventSphereAuth.login(email, password);
+        window.tkToast?.('Welcome back!');
+        window.EventSphereAuth.redirectByRole(user);
+      } catch (err) {
+        window.tkToast?.(err.message || 'Sign in failed', 'error');
+        btn.disabled = false;
+      }
+    });
+  });
+})();

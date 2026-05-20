@@ -1,0 +1,70 @@
+(function () {
+  'use strict';
+
+  const api = () => window.EventSphereApi;
+  const u = () => window.EventSphereUtils;
+
+  async function listActiveTickets() {
+    const { data } = await api().fetch('/me/tickets/active');
+    return Array.isArray(data) ? data : [];
+  }
+
+  async function loadQrBlob(ticketId) {
+    return api().fetchBlob(`/tickets/${ticketId}/qr-code`);
+  }
+
+  async function downloadTicket(ticketId, ticketCode) {
+    const blob = await api().fetchBlob(`/tickets/${ticketId}/download`);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ticket-${ticketCode || ticketId}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function renderTicketCard(ticket) {
+    const ev = ticket.event || {};
+    const status = (ticket.status || 'active').toUpperCase();
+    const date = u().formatEventDate(ev.starts_at, ev.timezone);
+    const seat = ticket.seat_label ? `Seat <b style="color:var(--text)">${u().escapeHtml(ticket.seat_label)}</b>` : `Code <b style="color:var(--text)">${u().escapeHtml(ticket.ticket_code)}</b>`;
+
+    return `
+      <div class="col-lg-6" data-ticket-id="${ticket.id}">
+        <div class="qr-ticket">
+          <div class="info">
+            <span class="badge-soft" style="position:static;background:rgba(91,140,255,.15);border-color:rgba(91,140,255,.3);color:#93b4ff">${u().escapeHtml(status)}</span>
+            <h5 class="mt-2">${u().escapeHtml(ev.title || 'Event')}</h5>
+            <small class="text-muted-pro d-block"><i class="bi bi-geo-alt me-1"></i>${u().escapeHtml(ev.venue_name || '')}${ev.city ? `, ${u().escapeHtml(ev.city)}` : ''}</small>
+            <small class="text-muted-pro d-block"><i class="bi bi-calendar3 me-1"></i>${u().escapeHtml(date)}</small>
+            <div class="mt-3 small">${seat}</div>
+            <div class="mt-3 d-flex gap-2">
+              <button class="btn btn-primary-grad btn-sm" data-ticket-download="${ticket.id}" data-ticket-code="${u().escapeHtml(ticket.ticket_code)}"><i class="bi bi-download me-1"></i> Download</button>
+            </div>
+          </div>
+          <div class="qr"><img alt="QR" data-ticket-qr="${ticket.id}" src="" style="min-width:180px;min-height:180px;background:#fff;border-radius:8px"/></div>
+        </div>
+      </div>`;
+  }
+
+  async function hydrateQrImages(root) {
+    const imgs = (root || document).querySelectorAll('[data-ticket-qr]');
+    for (const img of imgs) {
+      const id = img.getAttribute('data-ticket-qr');
+      try {
+        const blob = await loadQrBlob(id);
+        img.src = URL.createObjectURL(blob);
+      } catch {
+        img.alt = 'QR unavailable';
+      }
+    }
+  }
+
+  window.EventSphereTickets = {
+    listActiveTickets,
+    loadQrBlob,
+    downloadTicket,
+    renderTicketCard,
+    hydrateQrImages,
+  };
+})();

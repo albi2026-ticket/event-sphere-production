@@ -2,6 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="api-base" content="http://127.0.0.1:8000/api" />
 <title>Events — TicketHub</title>
 <meta name="description" content="Browse all upcoming events. Filter by category, date, city, and price."/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -20,8 +21,8 @@
     <div class="d-flex justify-content-between align-items-end flex-wrap gap-3">
       <div><h1 style="font-size:2.2rem">All events</h1><p class="mb-0">48,231 events · sorted by relevance</p></div>
       <div class="d-flex gap-2 ac-wrap" style="position:relative">
-        <input class="form-control" data-autocomplete placeholder="Search events..." style="min-width:280px"/>
-        <button class="btn btn-primary-grad"><i class="bi bi-search"></i></button>
+        <input class="form-control" data-autocomplete data-events-search placeholder="Search events..." style="min-width:280px"/>
+        <button class="btn btn-primary-grad" data-events-search-btn type="button"><i class="bi bi-search"></i></button>
       </div>
     </div>
   </div>
@@ -66,7 +67,9 @@
             <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-label">Refundable</label></div>
             <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-label">VIP available</label></div>
           </div>
-          <button class="btn btn-primary-grad w-100 mt-2">Apply filters</button>
+          <input type="text" class="form-control mb-2" data-filter-category placeholder="Category"/>
+          <input type="text" class="form-control mb-2" data-filter-city placeholder="City"/>
+          <button class="btn btn-primary-grad w-100 mt-2" type="button" data-events-apply-filters>Apply filters</button>
         </div>
       </aside>
 
@@ -74,7 +77,7 @@
       <div class="col-lg-9">
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
           <div class="d-flex gap-2 flex-wrap">
-            <span class="chip active">Trending</span><span class="chip">Newest</span><span class="chip">Soonest</span><span class="chip">Lowest price</span>
+            <span class="chip active" data-events-sort>Trending</span><span class="chip" data-events-sort>Newest</span><span class="chip" data-events-sort>Soonest</span><span class="chip" data-events-sort>Lowest price</span>
           </div>
           <div class="btn-group">
             <button class="btn btn-glass active"><i class="bi bi-grid-3x3-gap"></i></button>
@@ -87,17 +90,7 @@
           <!-- card template repeats with varying images -->
         </div>
 
-        <nav class="d-flex justify-content-center mt-5">
-          <ul class="pagination">
-            <li class="page-item disabled"><a class="page-link bg-card border-pro text-muted-pro" href="#"><i class="bi bi-chevron-left"></i></a></li>
-            <li class="page-item active"><a class="page-link" href="#" style="background:var(--grad-primary);border:none">1</a></li>
-            <li class="page-item"><a class="page-link bg-card border-pro" style="color:var(--text)" href="#">2</a></li>
-            <li class="page-item"><a class="page-link bg-card border-pro" style="color:var(--text)" href="#">3</a></li>
-            <li class="page-item"><a class="page-link bg-card border-pro" style="color:var(--text)" href="#">…</a></li>
-            <li class="page-item"><a class="page-link bg-card border-pro" style="color:var(--text)" href="#">24</a></li>
-            <li class="page-item"><a class="page-link bg-card border-pro" style="color:var(--text)" href="#"><i class="bi bi-chevron-right"></i></a></li>
-          </ul>
-        </nav>
+        <div id="events-pagination"></div>
       </div>
     </div>
   </div>
@@ -105,39 +98,13 @@
 
 <div data-partial="footer"></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/api/config.js"></script>
+<script src="../assets/js/api/api-client.js"></script>
+<script src="../assets/js/api/auth.js"></script>
+<script src="../assets/js/api/utils.js"></script>
+<script src="../assets/js/api/events.js"></script>
+<script src="../assets/js/api/favorites.js"></script>
 <script src="../assets/js/main.js"></script>
-<script>
-// Render demo grid
-const data = [
-  {t:"Arctic Monkeys — Live", c:"CONCERT", d:"Sat, Jun 14 · 8:00 PM", v:"O2 Arena, London", p:99, img:"https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80"},
-  {t:"Real Madrid vs Barcelona", c:"SPORTS", d:"Sun, May 18 · 9:00 PM", v:"Santiago Bernabéu", p:240, img:"https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800&q=80"},
-  {t:"Tomorrowland Weekend 1", c:"FESTIVAL", d:"Jul 17–19", v:"Boom, Belgium", p:380, img:"https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&q=80"},
-  {t:"TED 2026 — The Brave Ones", c:"CONFERENCE", d:"Apr 13–17", v:"Vancouver, CA", p:4500, img:"https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&q=80"},
-  {t:"Hamilton — Broadway", c:"THEATER", d:"Fri, Aug 22 · 7:30 PM", v:"Richard Rodgers Theatre", p:175, img:"https://images.unsplash.com/photo-1503095396549-807759245b35?w=800&q=80"},
-  {t:"Lakers vs Warriors", c:"SPORTS", d:"Tue, Mar 11 · 7:30 PM", v:"Chase Center", p:120, img:"https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&q=80"},
-  {t:"Dua Lipa — Radical Optimism", c:"CONCERT", d:"Thu, Sep 18 · 8:00 PM", v:"The Forum, LA", p:140, img:"https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=800&q=80"},
-  {t:"Burning Man 2026", c:"FESTIVAL", d:"Aug 30 – Sep 7", v:"Black Rock Desert", p:575, img:"https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80"},
-  {t:"NBA All-Star Game", c:"SPORTS", d:"Sun, Feb 15 · 8:00 PM", v:"American Airlines Center", p:310, img:"https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=800&q=80"},
-];
-const grid = document.getElementById('grid');
-grid.innerHTML = data.map((e,i)=>`
-  <div class="col-md-6 col-xl-4">
-    <article class="card-pro fade-up">
-      <div class="thumb">
-        <span class="badge-soft">${e.c}</span>
-        <span class="fav" data-fav="grid${i}"><i class="bi bi-heart"></i></span>
-        <img loading="lazy" src="${e.img}" alt=""/>
-      </div>
-      <div class="body">
-        <div class="meta"><i class="bi bi-calendar3"></i> ${e.d}</div>
-        <h3 class="title"><a href="event-details.html" style="color:inherit">${e.t}</a></h3>
-        <div class="venue"><i class="bi bi-geo-alt"></i> ${e.v}</div>
-        <div class="foot"><div class="price">From $${e.p}</div><a class="btn btn-glass btn-sm" href="event-details.html">View</a></div>
-      </div>
-    </article>
-  </div>`).join('');
-// re-trigger fade observer
-document.querySelectorAll('.fade-up').forEach(el=>el.classList.add('in'));
-</script>
+<script src="../assets/js/pages/events-page.js"></script>
 </body>
 </html>

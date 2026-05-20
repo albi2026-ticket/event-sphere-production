@@ -47,10 +47,21 @@
       b.classList.toggle('active', list.includes(b.dataset.fav));
     });
   }
-  document.addEventListener('click', (e) => {
+  document.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-fav]');
     if (!b) return;
     e.preventDefault();
+    const eventId = b.dataset.eventId;
+    if (eventId && window.EventSphereAuth?.isLoggedIn?.() && window.EventSphereFavorites) {
+      try {
+        const result = await window.EventSphereFavorites.toggleFavorite(Number(eventId));
+        b.classList.toggle('active', result?.is_favorited);
+        window.tkToast(result?.is_favorited ? 'Saved to favorites' : 'Removed from favorites', result?.is_favorited ? 'success' : 'info');
+      } catch (err) {
+        window.tkToast(err.message || 'Favorite update failed', 'error');
+      }
+      return;
+    }
     const id = b.dataset.fav;
     const list = favs();
     const i = list.indexOf(id);
