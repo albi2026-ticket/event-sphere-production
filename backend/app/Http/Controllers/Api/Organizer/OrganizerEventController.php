@@ -6,13 +6,9 @@ use App\Http\Controllers\Api\Concerns\FiltersEvents;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\EventIndexRequest;
 use App\Http\Requests\Api\StoreEventRequest;
-use App\Http\Requests\Api\StoreTicketTypeRequest;
 use App\Http\Requests\Api\UpdateEventRequest;
-use App\Http\Requests\Api\UpdateTicketTypeRequest;
 use App\Http\Resources\EventResource;
-use App\Http\Resources\TicketTypeResource;
 use App\Models\Event;
-use App\Models\TicketType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -66,35 +62,6 @@ class OrganizerEventController extends Controller
         $event->delete();
 
         return response()->json(['message' => 'Event deleted.']);
-    }
-
-    public function storeTicketType(StoreTicketTypeRequest $request, Event $event): TicketTypeResource
-    {
-        $ticketType = $event->ticketTypes()->create($request->validated());
-
-        if (! $event->base_price || $ticketType->price < $event->base_price) {
-            $event->update(['base_price' => $ticketType->price, 'currency' => $ticketType->currency]);
-        }
-
-        return new TicketTypeResource($ticketType);
-    }
-
-    public function updateTicketType(UpdateTicketTypeRequest $request, TicketType $ticketType): TicketTypeResource
-    {
-        $ticketType->update($request->validated());
-
-        return new TicketTypeResource($ticketType->fresh());
-    }
-
-    public function destroyTicketType(Request $request, TicketType $ticketType): JsonResponse
-    {
-        abort_unless($request->user()->canManageEvent($ticketType->event), 403);
-
-        abort_if($ticketType->quantity_sold > 0, 422, 'Ticket types with sold tickets cannot be deleted.');
-
-        $ticketType->delete();
-
-        return response()->json(['message' => 'Ticket type deleted.']);
     }
 
     protected function eventPayload(Request $request, int $organizerId, bool $partial = false): array

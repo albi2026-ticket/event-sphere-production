@@ -24,10 +24,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'status',
     'is_vip',
     'is_resale_allowed',
+    'sort_order',
 ])]
 class TicketType extends Model
 {
     use HasFactory;
+
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_INACTIVE = 'inactive';
+    public const STATUS_PAUSED = 'paused';
+    public const STATUS_SOLD_OUT = 'sold_out';
 
     public function event(): BelongsTo
     {
@@ -57,6 +63,29 @@ class TicketType extends Model
             'sale_ends_at' => 'datetime',
             'is_vip' => 'boolean',
             'is_resale_allowed' => 'boolean',
+            'sort_order' => 'integer',
         ];
+    }
+
+    public function availableQuantity(): int
+    {
+        return max(0, $this->quantity_total - $this->quantity_sold - $this->quantity_reserved);
+    }
+
+    public function isOnSale(): bool
+    {
+        $now = now();
+
+        return $this->status === self::STATUS_ACTIVE
+            && (! $this->sale_starts_at || $this->sale_starts_at->lte($now))
+            && (! $this->sale_ends_at || $this->sale_ends_at->gte($now));
+    }
+
+    public function isAvailableForPurchase(int $quantity = 1): bool
+    {
+        return $this->isOnSale()
+            && $quantity >= $this->min_per_order
+            && $quantity <= $this->max_per_order
+            && $this->availableQuantity() >= $quantity;
     }
 }

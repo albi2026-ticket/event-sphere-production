@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\EventImageController;
 use App\Http\Controllers\Api\Organizer\OrganizerEventController;
+use App\Http\Controllers\Api\TicketTypeController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -21,8 +22,10 @@ Route::post('/reset-password', [NewPasswordController::class, 'store'])->middlew
 
 Route::get('/events', [EventController::class, 'index']);
 Route::get('/events/{event:slug}/images', [EventImageController::class, 'index']);
+Route::get('/events/{event:slug}/ticket-types', [TicketTypeController::class, 'index']);
 Route::get('/events/{event:slug}', [EventController::class, 'show']);
 Route::get('/event-images/{eventImage}', [EventImageController::class, 'show']);
+Route::get('/ticket-types/{ticketType}', [TicketTypeController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/user', [AuthUserController::class, 'show']);
@@ -33,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::middleware('role:user,organizer,admin')->group(function (): void {
         Route::get('/me/dashboard', [DashboardController::class, 'user']);
+        Route::post('/ticket-types/{ticketType}/reserve', [TicketTypeController::class, 'reserve']);
     });
 
     Route::middleware('role:organizer')->prefix('organizer')->group(function (): void {
@@ -45,9 +49,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/events/{event}/images', [EventImageController::class, 'store']);
         Route::patch('/event-images/{eventImage}', [EventImageController::class, 'update']);
         Route::delete('/event-images/{eventImage}', [EventImageController::class, 'destroy']);
-        Route::post('/events/{event}/ticket-types', [OrganizerEventController::class, 'storeTicketType']);
-        Route::patch('/ticket-types/{ticketType}', [OrganizerEventController::class, 'updateTicketType']);
-        Route::delete('/ticket-types/{ticketType}', [OrganizerEventController::class, 'destroyTicketType']);
+        Route::post('/events/{event}/ticket-types', [TicketTypeController::class, 'store']);
+        Route::patch('/ticket-types/{ticketType}', [TicketTypeController::class, 'update']);
+        Route::delete('/ticket-types/{ticketType}', [TicketTypeController::class, 'destroy']);
+        Route::patch('/ticket-types/{ticketType}/inventory', [TicketTypeController::class, 'adjustInventory']);
     });
 
     Route::middleware('role:admin')->prefix('admin')->group(function (): void {
@@ -65,5 +70,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/events/{event}/images', [EventImageController::class, 'store']);
         Route::patch('/event-images/{eventImage}', [EventImageController::class, 'update']);
         Route::delete('/event-images/{eventImage}', [EventImageController::class, 'destroy']);
+        Route::post('/events/{event}/ticket-types', [TicketTypeController::class, 'store']);
+        Route::patch('/ticket-types/{ticketType}', [TicketTypeController::class, 'update']);
+        Route::delete('/ticket-types/{ticketType}', [TicketTypeController::class, 'destroy']);
+        Route::patch('/ticket-types/{ticketType}/inventory', [TicketTypeController::class, 'adjustInventory']);
     });
 });

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use App\Models\Event;
+use App\Models\TicketType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -31,9 +32,15 @@ class StoreTicketTypeRequest extends FormRequest
             'max_per_order' => ['sometimes', 'integer', 'min:1', 'gte:min_per_order'],
             'sale_starts_at' => ['nullable', 'date'],
             'sale_ends_at' => ['nullable', 'date', 'after:sale_starts_at'],
-            'status' => ['sometimes', Rule::in(['active', 'paused', 'sold_out'])],
+            'status' => ['sometimes', Rule::in([
+                TicketType::STATUS_ACTIVE,
+                TicketType::STATUS_INACTIVE,
+                TicketType::STATUS_PAUSED,
+                TicketType::STATUS_SOLD_OUT,
+            ])],
             'is_vip' => ['sometimes', 'boolean'],
             'is_resale_allowed' => ['sometimes', 'boolean'],
+            'sort_order' => ['sometimes', 'integer', 'min:0'],
         ];
     }
 }
