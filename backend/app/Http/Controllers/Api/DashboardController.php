@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\Dashboard\OrganizerDashboardService;
 use App\Services\Dashboard\UserDashboardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function __construct(private readonly UserDashboardService $userDashboard) {}
+    public function __construct(
+        private readonly UserDashboardService $userDashboard,
+        private readonly OrganizerDashboardService $organizerDashboard,
+    ) {}
 
     public function user(Request $request): JsonResponse
     {
@@ -24,10 +28,7 @@ class DashboardController extends Controller
 
         return response()->json([
             'data' => [
-                'role' => $user->role,
-                'organizer_status' => $user->organizer_status,
-                'events_count' => $user->organizedEvents()->count(),
-                'published_events_count' => $user->organizedEvents()->where('status', 'published')->count(),
+                ...$this->organizerDashboard->summary($user),
             ],
         ]);
     }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\AdminEventController;
+use App\Http\Controllers\Api\Admin\AdminOrganizerDashboardController;
 use App\Http\Controllers\Api\Admin\AdminPaymentController;
 use App\Http\Controllers\Api\Admin\AdminTicketController;
 use App\Http\Controllers\Api\Admin\UserRoleController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\Api\AuthUserController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\EventImageController;
+use App\Http\Controllers\Api\Organizer\OrganizerDashboardController;
 use App\Http\Controllers\Api\Organizer\OrganizerEventController;
 use App\Http\Controllers\Api\Organizer\OrganizerPaymentController;
 use App\Http\Controllers\Api\Organizer\OrganizerTicketController;
@@ -79,6 +81,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::middleware('role:organizer')->prefix('organizer')->group(function (): void {
         Route::get('/dashboard', [DashboardController::class, 'organizer']);
+        Route::get('/dashboard/summary', [OrganizerDashboardController::class, 'summary']);
+        Route::get('/analytics', [OrganizerDashboardController::class, 'analytics']);
+        Route::get('/analytics/revenue', [OrganizerDashboardController::class, 'revenue']);
+        Route::get('/analytics/sales-trends', [OrganizerDashboardController::class, 'salesTrends']);
+        Route::get('/events/performance', [OrganizerDashboardController::class, 'eventPerformance']);
+        Route::get('/events/{event}/analytics', [OrganizerDashboardController::class, 'eventAnalytics'])->middleware('organizer.event');
+        Route::get('/inventory', [OrganizerDashboardController::class, 'inventory']);
+        Route::get('/orders/recent', [OrganizerDashboardController::class, 'recentOrders']);
+        Route::get('/attendees', [OrganizerDashboardController::class, 'attendees']);
         Route::get('/payments', [OrganizerPaymentController::class, 'index']);
         Route::get('/payments/{order}', [OrganizerPaymentController::class, 'show']);
         Route::get('/events/{event}/attendees', [OrganizerTicketController::class, 'attendees']);
@@ -100,6 +111,13 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::middleware('role:admin')->prefix('admin')->group(function (): void {
         Route::get('/dashboard', [DashboardController::class, 'admin']);
+        Route::get('/organizers/{organizer}/dashboard/summary', [AdminOrganizerDashboardController::class, 'summary']);
+        Route::get('/organizers/{organizer}/analytics', [AdminOrganizerDashboardController::class, 'analytics']);
+        Route::get('/organizers/{organizer}/analytics/revenue', [AdminOrganizerDashboardController::class, 'revenue']);
+        Route::get('/organizers/{organizer}/events/performance', [AdminOrganizerDashboardController::class, 'eventPerformance']);
+        Route::get('/organizers/{organizer}/inventory', [AdminOrganizerDashboardController::class, 'inventory']);
+        Route::get('/organizers/{organizer}/orders', [AdminOrganizerDashboardController::class, 'orders']);
+        Route::get('/organizers/{organizer}/attendees', [AdminOrganizerDashboardController::class, 'attendees']);
         Route::get('/payments', [AdminPaymentController::class, 'index']);
         Route::get('/payments/{order}', [AdminPaymentController::class, 'show']);
         Route::post('/payments/{order}/refund', [AdminPaymentController::class, 'refund']);
