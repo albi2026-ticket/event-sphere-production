@@ -3,23 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\Dashboard\UserDashboardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    public function __construct(private readonly UserDashboardService $userDashboard) {}
+
     public function user(Request $request): JsonResponse
     {
-        $user = $request->user();
-
         return response()->json([
-            'data' => [
-                'role' => $user->role,
-                'orders_count' => $user->orders()->count(),
-                'tickets_count' => $user->tickets()->count(),
-                'favorites_count' => $user->favorites()->count(),
-                'reviews_count' => $user->reviews()->count(),
-            ],
+            'data' => $this->userDashboard->summary($request->user()),
         ]);
     }
 

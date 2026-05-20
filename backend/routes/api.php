@@ -15,6 +15,11 @@ use App\Http\Controllers\Api\Payments\CheckoutSessionController;
 use App\Http\Controllers\Api\Payments\WebhookController;
 use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\Api\TicketTypeController;
+use App\Http\Controllers\Api\User\UserDashboardController;
+use App\Http\Controllers\Api\User\UserFavoriteController;
+use App\Http\Controllers\Api\User\UserOrderController;
+use App\Http\Controllers\Api\User\UserProfileController;
+use App\Http\Controllers\Api\User\UserTicketController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -44,7 +49,20 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::middleware('role:user,organizer,admin')->group(function (): void {
         Route::get('/me/dashboard', [DashboardController::class, 'user']);
-        Route::get('/me/tickets', [TicketController::class, 'index']);
+        Route::get('/me/dashboard/summary', [UserDashboardController::class, 'summary']);
+        Route::get('/me/dashboard/upcoming-events', [UserDashboardController::class, 'upcomingEvents']);
+        Route::get('/me/profile', [UserProfileController::class, 'show']);
+        Route::patch('/me/profile', [UserProfileController::class, 'update']);
+        Route::get('/me/tickets', [UserTicketController::class, 'index']);
+        Route::get('/me/tickets/active', [UserTicketController::class, 'active']);
+        Route::get('/me/tickets/history', [UserTicketController::class, 'history']);
+        Route::get('/me/orders', [UserOrderController::class, 'index']);
+        Route::get('/me/orders/{order}', [UserOrderController::class, 'show']);
+        Route::get('/me/orders/{order}/receipt', [UserOrderController::class, 'receipt']);
+        Route::get('/me/favorites', [UserFavoriteController::class, 'index']);
+        Route::post('/me/favorites', [UserFavoriteController::class, 'store']);
+        Route::post('/me/favorites/toggle', [UserFavoriteController::class, 'toggle']);
+        Route::delete('/me/favorites/{event}', [UserFavoriteController::class, 'destroy']);
         Route::post('/ticket-types/{ticketType}/reserve', [TicketTypeController::class, 'reserve']);
         Route::get('/orders/{order}/tickets', [TicketController::class, 'orderTickets']);
         Route::get('/orders/{order}/payment-status', [CheckoutSessionController::class, 'show']);

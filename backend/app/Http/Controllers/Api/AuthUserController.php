@@ -3,15 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
+use App\Http\Resources\UserProfileResource;
 use Illuminate\Http\Request;
 
 class AuthUserController extends Controller
 {
-    public function show(Request $request): JsonResponse
+    public function show(Request $request): UserProfileResource
     {
-        return response()->json([
-            'data' => $request->user(),
-        ]);
+        return new UserProfileResource($request->user());
     }
 }
