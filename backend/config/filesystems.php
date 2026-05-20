@@ -15,6 +15,8 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
+    'event_images_disk' => env('EVENT_IMAGES_DISK', 'public'),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks

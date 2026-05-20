@@ -22,7 +22,7 @@ class StoreEventImageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'image' => ['nullable', 'image', 'max:5120'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120'],
             'url' => ['required_without:image', 'nullable', 'url', 'max:2048'],
             'alt_text' => ['nullable', 'string', 'max:255'],
             'type' => ['sometimes', Rule::in(['banner', 'card', 'gallery', 'thumbnail'])],

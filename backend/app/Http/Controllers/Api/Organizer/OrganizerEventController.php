@@ -5,22 +5,17 @@ namespace App\Http\Controllers\Api\Organizer;
 use App\Http\Controllers\Api\Concerns\FiltersEvents;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\EventIndexRequest;
-use App\Http\Requests\Api\StoreEventImageRequest;
 use App\Http\Requests\Api\StoreEventRequest;
 use App\Http\Requests\Api\StoreTicketTypeRequest;
-use App\Http\Requests\Api\UpdateEventImageRequest;
 use App\Http\Requests\Api\UpdateEventRequest;
 use App\Http\Requests\Api\UpdateTicketTypeRequest;
-use App\Http\Resources\EventImageResource;
 use App\Http\Resources\EventResource;
 use App\Http\Resources\TicketTypeResource;
 use App\Models\Event;
-use App\Models\EventImage;
 use App\Models\TicketType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class OrganizerEventController extends Controller
@@ -71,58 +66,6 @@ class OrganizerEventController extends Controller
         $event->delete();
 
         return response()->json(['message' => 'Event deleted.']);
-    }
-
-    public function uploadImage(StoreEventImageRequest $request, Event $event): EventImageResource
-    {
-        $url = $request->string('url')->toString();
-
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store("event-images/{$event->id}", 'public');
-            $url = Storage::disk('public')->url($path);
-        }
-
-        if ($request->boolean('is_primary')) {
-            $event->images()->update(['is_primary' => false]);
-        }
-
-        $image = $event->images()->create([
-            'url' => $url,
-            'alt_text' => $request->input('alt_text'),
-            'type' => $request->input('type', 'gallery'),
-            'sort_order' => $request->integer('sort_order', 0),
-            'is_primary' => $request->boolean('is_primary'),
-        ]);
-
-        if ($image->is_primary || $image->type === 'banner') {
-            $event->update(['banner_image_url' => $image->url]);
-        }
-
-        return new EventImageResource($image);
-    }
-
-    public function updateImage(UpdateEventImageRequest $request, EventImage $eventImage): EventImageResource
-    {
-        if ($request->boolean('is_primary')) {
-            $eventImage->event->images()->whereKeyNot($eventImage->id)->update(['is_primary' => false]);
-        }
-
-        $eventImage->update($request->validated());
-
-        if ($eventImage->is_primary || $eventImage->type === 'banner') {
-            $eventImage->event->update(['banner_image_url' => $eventImage->url]);
-        }
-
-        return new EventImageResource($eventImage->fresh());
-    }
-
-    public function destroyImage(Request $request, EventImage $eventImage): JsonResponse
-    {
-        abort_unless($request->user()->canManageEvent($eventImage->event), 403);
-
-        $eventImage->delete();
-
-        return response()->json(['message' => 'Event image deleted.']);
     }
 
     public function storeTicketType(StoreTicketTypeRequest $request, Event $event): TicketTypeResource

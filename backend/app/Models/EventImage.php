@@ -9,7 +9,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'event_id',
+    'disk',
+    'path',
     'url',
+    'original_name',
+    'mime_type',
+    'size',
+    'width',
+    'height',
     'alt_text',
     'type',
     'sort_order',
@@ -27,6 +34,9 @@ class EventImage extends Model
     protected function casts(): array
     {
         return [
+            'size' => 'integer',
+            'width' => 'integer',
+            'height' => 'integer',
             'sort_order' => 'integer',
             'is_primary' => 'boolean',
         ];

@@ -13,11 +13,18 @@ class EventImageResource extends JsonResource
             'id' => $this->id,
             'event_id' => $this->event_id,
             'url' => $this->url,
+            'optimized_url' => $this->url,
+            'original_name' => $this->original_name,
+            'mime_type' => $this->mime_type,
+            'size' => $this->size,
+            'width' => $this->width,
+            'height' => $this->height,
             'alt_text' => $this->alt_text,
             'type' => $this->type,
             'sort_order' => $this->sort_order,
             'is_primary' => $this->is_primary,
             'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }
