@@ -7,8 +7,8 @@ use App\Models\StripeWebhookEvent;
 use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Services\Tickets\TicketInventoryService;
+use App\Services\Tickets\TicketService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Stripe\Checkout\Session;
 use Stripe\Event;
@@ -20,7 +20,10 @@ use UnexpectedValueException;
 
 class StripePaymentService
 {
-    public function __construct(private readonly TicketInventoryService $inventory) {}
+    public function __construct(
+        private readonly TicketInventoryService $inventory,
+        private readonly TicketService $tickets,
+    ) {}
 
     public function createCheckoutSession(Order $order): Session
     {
@@ -158,6 +161,8 @@ class StripePaymentService
             'refunded_at' => now(),
         ])->save();
 
+        $this->tickets->markOrderTickets($order, Ticket::STATUS_REFUNDED);
+
         return $refund;
     }
 
@@ -195,8 +200,9 @@ class StripePaymentService
 
         foreach ($locked->items as $item) {
             $this->inventory->commitSale($item->ticketType, $item->quantity);
-            $this->createTicketsForOrderItem($locked, $item);
         }
+
+        $this->tickets->generateForPaidOrder($locked);
 
         $locked->forceFill([
             'status' => Order::STATUS_PAID,
@@ -288,24 +294,6 @@ class StripePaymentService
                     'items' => "Ticket inventory is no longer available for {$item->ticket_type_name}.",
                 ]);
             }
-        }
-    }
-
-    protected function createTicketsForOrderItem(Order $order, mixed $item): void
-    {
-        $existing = $item->tickets()->count();
-
-        for ($i = $existing; $i < $item->quantity; $i++) {
-            Ticket::query()->create([
-                'ticket_code' => 'ES-'.Str::upper(Str::random(14)),
-                'qr_token' => (string) Str::uuid(),
-                'user_id' => $order->user_id,
-                'event_id' => $item->event_id,
-                'ticket_type_id' => $item->ticket_type_id,
-                'order_id' => $order->id,
-                'order_item_id' => $item->id,
-                'status' => 'valid',
-            ]);
         }
     }
 

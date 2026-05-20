@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\AdminEventController;
 use App\Http\Controllers\Api\Admin\AdminPaymentController;
+use App\Http\Controllers\Api\Admin\AdminTicketController;
 use App\Http\Controllers\Api\Admin\UserRoleController;
 use App\Http\Controllers\Api\AuthUserController;
 use App\Http\Controllers\Api\DashboardController;
@@ -9,8 +10,10 @@ use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\EventImageController;
 use App\Http\Controllers\Api\Organizer\OrganizerEventController;
 use App\Http\Controllers\Api\Organizer\OrganizerPaymentController;
+use App\Http\Controllers\Api\Organizer\OrganizerTicketController;
 use App\Http\Controllers\Api\Payments\CheckoutSessionController;
 use App\Http\Controllers\Api\Payments\WebhookController;
+use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\Api\TicketTypeController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
@@ -41,15 +44,28 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::middleware('role:user,organizer,admin')->group(function (): void {
         Route::get('/me/dashboard', [DashboardController::class, 'user']);
+        Route::get('/me/tickets', [TicketController::class, 'index']);
         Route::post('/ticket-types/{ticketType}/reserve', [TicketTypeController::class, 'reserve']);
+        Route::get('/orders/{order}/tickets', [TicketController::class, 'orderTickets']);
         Route::get('/orders/{order}/payment-status', [CheckoutSessionController::class, 'show']);
         Route::post('/orders/{order}/checkout-session', [CheckoutSessionController::class, 'store']);
+        Route::get('/tickets/{ticket}', [TicketController::class, 'show']);
+        Route::get('/tickets/{ticket}/qr-code', [TicketController::class, 'qrCode']);
+        Route::get('/tickets/{ticket}/download', [TicketController::class, 'download']);
+    });
+
+    Route::middleware('role:organizer,admin')->group(function (): void {
+        Route::post('/tickets/validate', [OrganizerTicketController::class, 'validateTicket']);
+        Route::post('/tickets/check-in', [OrganizerTicketController::class, 'checkIn']);
     });
 
     Route::middleware('role:organizer')->prefix('organizer')->group(function (): void {
         Route::get('/dashboard', [DashboardController::class, 'organizer']);
         Route::get('/payments', [OrganizerPaymentController::class, 'index']);
         Route::get('/payments/{order}', [OrganizerPaymentController::class, 'show']);
+        Route::get('/events/{event}/attendees', [OrganizerTicketController::class, 'attendees']);
+        Route::post('/tickets/validate', [OrganizerTicketController::class, 'validateTicket']);
+        Route::post('/tickets/check-in', [OrganizerTicketController::class, 'checkIn']);
         Route::get('/events', [OrganizerEventController::class, 'index']);
         Route::post('/events', [OrganizerEventController::class, 'store']);
         Route::get('/events/{event}', [OrganizerEventController::class, 'show']);
@@ -69,6 +85,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/payments', [AdminPaymentController::class, 'index']);
         Route::get('/payments/{order}', [AdminPaymentController::class, 'show']);
         Route::post('/payments/{order}/refund', [AdminPaymentController::class, 'refund']);
+        Route::get('/tickets', [AdminTicketController::class, 'index']);
+        Route::post('/tickets/validate', [AdminTicketController::class, 'validateTicket']);
+        Route::post('/tickets/check-in', [AdminTicketController::class, 'checkIn']);
+        Route::get('/tickets/{ticket}', [AdminTicketController::class, 'show']);
+        Route::patch('/tickets/{ticket}/status', [AdminTicketController::class, 'updateStatus']);
         Route::patch('/users/{user}/role', [UserRoleController::class, 'update']);
         Route::post('/users/{user}/approve-organizer', [UserRoleController::class, 'approveOrganizer']);
         Route::post('/users/{user}/reject-organizer', [UserRoleController::class, 'rejectOrganizer']);

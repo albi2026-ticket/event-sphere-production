@@ -1,0 +1,64 @@
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class TicketResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'ticket_code' => $this->ticket_code,
+            'status' => $this->status,
+            'seat_label' => $this->seat_label,
+            'qr_payload' => $this->qr_payload,
+            'qr_code_url' => url("/api/tickets/{$this->id}/qr-code"),
+            'download_url' => url("/api/tickets/{$this->id}/download"),
+            'checked_in_at' => $this->checked_in_at,
+            'checked_in_by' => $this->whenLoaded('checkedInBy', fn () => [
+                'id' => $this->checkedInBy->id,
+                'name' => $this->checkedInBy->name,
+            ]),
+            'checked_in_method' => $this->checked_in_method,
+            'downloaded_at' => $this->downloaded_at,
+            'download_count' => $this->download_count,
+            'attendee' => $this->whenLoaded('user', fn () => [
+                'id' => $this->user->id,
+                'name' => $this->user->name,
+                'email' => $this->user->email,
+                'phone' => $this->user->phone,
+            ]),
+            'event' => $this->whenLoaded('event', fn () => [
+                'id' => $this->event->id,
+                'title' => $this->event->title,
+                'slug' => $this->event->slug,
+                'venue_name' => $this->event->venue_name,
+                'city' => $this->event->city,
+                'country' => $this->event->country,
+                'starts_at' => $this->event->starts_at,
+                'ends_at' => $this->event->ends_at,
+                'timezone' => $this->event->timezone,
+                'organizer_id' => $this->event->organizer_id,
+            ]),
+            'ticket_type' => $this->whenLoaded('ticketType', fn () => [
+                'id' => $this->ticketType->id,
+                'name' => $this->ticketType->name,
+                'price' => $this->ticketType->price,
+                'currency' => $this->ticketType->currency,
+            ]),
+            'order' => $this->whenLoaded('order', fn () => [
+                'id' => $this->order->id,
+                'order_number' => $this->order->order_number,
+                'status' => $this->order->status,
+                'payment_status' => $this->order->payment_status,
+                'total' => $this->order->total,
+                'currency' => $this->order->currency,
+            ]),
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+        ];
+    }
+}

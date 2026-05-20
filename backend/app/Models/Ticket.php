@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'ticket_code',
     'qr_token',
+    'qr_payload',
     'user_id',
     'event_id',
     'ticket_type_id',
@@ -20,12 +21,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'transfer_status',
     'checked_in_at',
     'checked_in_by',
+    'checked_in_method',
+    'checked_in_notes',
     'transferred_to_user_id',
     'transferred_at',
+    'downloaded_at',
+    'download_count',
 ])]
 class Ticket extends Model
 {
     use HasFactory;
+
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_USED = 'used';
+
+    public const STATUS_CANCELLED = 'cancelled';
+
+    public const STATUS_REFUNDED = 'refunded';
 
     public function user(): BelongsTo
     {
@@ -67,6 +80,8 @@ class Ticket extends Model
         return [
             'checked_in_at' => 'datetime',
             'transferred_at' => 'datetime',
+            'downloaded_at' => 'datetime',
+            'download_count' => 'integer',
         ];
     }
 }
