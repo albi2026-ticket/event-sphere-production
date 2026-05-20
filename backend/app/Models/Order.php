@@ -23,6 +23,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'promo_code',
     'payment_provider',
     'payment_reference',
+    'stripe_checkout_session_id',
+    'stripe_payment_intent_id',
+    'stripe_refund_id',
+    'stripe_payment_status',
     'billing_email',
     'billing_phone',
     'billing_first_name',
@@ -37,10 +41,31 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'paid_at',
     'cancelled_at',
     'refunded_at',
+    'checkout_expires_at',
 ])]
 class Order extends Model
 {
     use HasFactory;
+
+    public const STATUS_PENDING = 'pending';
+
+    public const STATUS_PAID = 'paid';
+
+    public const STATUS_CANCELLED = 'cancelled';
+
+    public const STATUS_REFUNDED = 'refunded';
+
+    public const PAYMENT_STATUS_UNPAID = 'unpaid';
+
+    public const PAYMENT_STATUS_PENDING = 'pending';
+
+    public const PAYMENT_STATUS_PAID = 'paid';
+
+    public const PAYMENT_STATUS_FAILED = 'failed';
+
+    public const PAYMENT_STATUS_CANCELLED = 'cancelled';
+
+    public const PAYMENT_STATUS_REFUNDED = 'refunded';
 
     public function user(): BelongsTo
     {
@@ -75,6 +100,7 @@ class Order extends Model
             'paid_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'refunded_at' => 'datetime',
+            'checkout_expires_at' => 'datetime',
         ];
     }
 }

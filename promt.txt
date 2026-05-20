@@ -1,0 +1,367 @@
+Ky është prompt që e përdor çdo herë kur hap Codex të ri:
+
+You are continuing development on an existing full-stack SaaS project called “Event Sphere”.
+
+Before doing ANY implementation:
+- First read and fully understand the PROJECT_CONTEXT.md file
+- Understand existing architecture, database, roles, and API structure
+- Do NOT redesign the system
+- Do NOT break existing frontend
+- Do NOT introduce a new architecture
+
+CURRENT STACK:
+
+Frontend:
+- React
+- TypeScript
+- Vite
+- TanStack Router
+- Existing frontend is already built (Lovable-generated)
+
+Backend:
+- Laravel API
+- PostgreSQL (Supabase)
+- Sanctum authentication
+
+PROJECT TYPE:
+- Multi-role event ticket marketplace (like Eventbrite / Ticketmaster)
+
+SYSTEM ROLES:
+1. USER (customers)
+2. ORGANIZER (event creators)
+3. ADMIN (full system control)
+
+CORE RULES:
+- Backend must adapt to existing frontend (do NOT modify frontend structure)
+- API-first architecture only
+- No Blade UI allowed
+- All features must be dashboard-ready (CRUD via UI later)
+- Maintain role-based access control
+- Maintain organizer ownership validation
+- Maintain admin override permissions
+
+CURRENT IMPLEMENTATION STATUS:
+- Laravel backend initialized
+- Supabase PostgreSQL connected
+- Core database schema exists or is being built:
+  users, events, event_images, ticket_types, orders, order_items, tickets, favorites, reviews
+- Authentication system exists using Sanctum + role-based system
+- Event CRUD system is being developed
+- Ticket system supports tiers and inventory tracking
+- Order system supports checkout, payments, and statuses
+- Image upload system uses Laravel storage
+- Frontend exists but uses API integration phase (some parts still mock data)
+
+DEVELOPMENT GOAL:
+Build a fully functional event marketplace with:
+- complete CRUD systems
+- secure role-based permissions
+- organizer dashboard functionality
+- admin dashboard functionality
+- scalable API architecture
+- frontend-compatible responses
+
+BEFORE WRITING CODE:
+- Always check if feature already exists
+- Extend existing system instead of rewriting it
+- Keep database relations consistent
+- Ensure API responses match frontend needs
+
+OUTPUT EXPECTATIONS:
+- Laravel best practices
+- clean architecture
+- scalable structure
+- clear separation of concerns
+
+Now wait for the next instruction (feature request).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PROMTET E MBETURA PER TI VAZHDUAR
+
+PROMPT 9 — STRIPE INTEGRATION - i gatshem per dorzim ne codex ky promt
+Integrate Stripe Checkout into Laravel API.
+
+IMPORTANT:
+- Backend must adapt to existing frontend checkout pages
+- Do not redesign frontend checkout UI
+- Do not break existing frontend structure
+- Preserve existing frontend routes/components/UI
+- Keep frontend and backend separated
+- Use API-only architecture
+- Do not generate Blade UI
+- Ensure frontend compatibility with existing checkout flow
+
+Frontend stack:
+- React
+- TypeScript
+- Vite
+- TanStack Router
+
+Backend stack:
+- Laravel API
+- PostgreSQL (Supabase)
+- Laravel Sanctum authentication
+
+SYSTEM ROLES:
+
+1. USER
+- can initiate Stripe checkout
+- can complete payments
+- can view payment status in orders
+
+2. ORGANIZER
+- can view payments for own events
+- can track revenue
+- organizer ownership validation required
+
+3. ADMIN
+- full payment visibility
+- can manage/refund payments
+- override access
+
+STRIPE REQUIREMENTS:
+
+- create Stripe Checkout session
+- support dynamic order-based checkout
+- secure payment initialization
+- webhook handling for payment confirmation
+- verify Stripe signatures (security)
+- mark orders as "paid" after webhook confirmation
+- handle failed/cancelled payments
+- support Stripe test mode
+- environment variables configuration
+
+PAYMENT FLOW REQUIREMENTS:
+
+1. User creates order in frontend
+2. Backend creates Stripe Checkout Session
+3. User is redirected to Stripe checkout page
+4. Stripe sends webhook after payment
+5. Backend verifies webhook
+6. Order status is updated to:
+   - paid
+   - failed
+   - cancelled
+
+SECURITY REQUIREMENTS:
+- validate order ownership
+- prevent fake payment marking
+- verify Stripe webhook signatures
+- ensure idempotent webhook processing
+
+GENERATE:
+
+- artisan commands
+- Stripe service class
+- CheckoutSessionController
+- WebhookController
+- API routes
+- validation rules
+- environment variables setup (.env)
+- webhook signature verification logic
+
+ALSO GENERATE:
+- Stripe checkout session creation example
+- webhook event handling example
+- order status update logic
+- frontend API integration example
+- test mode configuration
+
+FRONTEND INTEGRATION RULES:
+- existing checkout UI must remain unchanged
+- only connect API calls to existing buttons/forms
+- if necessary, safely add new UI states:
+  - loading payment state
+  - success page
+  - failure page
+- do not overwrite existing frontend checkout structure
+
+ALSO EXPLAIN:
+
+- Stripe payment flow step-by-step
+- webhook lifecycle
+- frontend checkout integration
+- how React should call checkout API
+- how redirect URLs work
+- how to test Stripe in test mode
+- how to use Stripe test cards
+- how order status sync works
+
+VERY IMPORTANT:
+The system must be production-ready, secure, and scalable.
+
+Frontend architecture must remain intact.
+Backend must adapt to frontend.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PROMPT 10 — QR TICKET SYSTEM
+
+After successful payment, generate ticket system with QR codes.
+
+Important:
+- Backend must adapt to existing frontend ticket pages
+- Do not redesign frontend
+- Keep ticket API responses frontend-compatible
+
+Requirements:
+- unique ticket codes
+- QR code generation
+- downloadable tickets
+- ticket validation
+- used/unused status
+- check-in ready structure
+
+Generate:
+- migrations
+- models
+- controllers
+- services
+- QR generation logic
+- API routes
+
+Also explain:
+- ticket generation flow
+- QR validation flow
+- frontend ticket integration
+- future scanner compatibility
+
+
+
+
+
+
+
+
+
+
+
+
+
+PROMPT 11 — USER DASHBOARD API
+
+Build user dashboard API for Event Sphere.
+
+Important:
+- Backend must adapt to existing frontend dashboard UI
+- Do not redesign frontend
+- Preserve frontend layouts and components
+
+Requirements:
+- my tickets
+- upcoming events
+- favorite events
+- order history
+- downloadable tickets
+- profile information
+
+Generate:
+- controllers
+- API routes
+- resources
+- pagination
+- filtering
+
+Also explain:
+- frontend integration
+- authenticated API flow
+- dashboard data loading strategy
+
+
+
+
+
+
+
+
+
+
+
+PROMPT 12 — ORGANIZER DASHBOARD API
+
+Build organizer dashboard API for Laravel.
+
+Important:
+- Backend must adapt to existing frontend organizer pages
+- Do not redesign frontend
+- Keep API responses frontend-compatible
+
+Requirements:
+- organizer analytics
+- revenue stats
+- attendee stats
+- ticket sales
+- event management
+- dashboard summaries
+
+Generate:
+- controllers
+- API routes
+- statistics queries
+- dashboard logic
+
+Also explain:
+- frontend integration
+- analytics calculation
+- scalable dashboard architecture
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+php artisan migrate
+php artisan route:list
+php artisan serve
+ 
+Npm run dev
+
+git add .
+git commit -m "update"
+git push

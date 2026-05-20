@@ -1,12 +1,16 @@
 <?php
 
-use App\Http\Controllers\Api\Admin\UserRoleController;
 use App\Http\Controllers\Api\Admin\AdminEventController;
+use App\Http\Controllers\Api\Admin\AdminPaymentController;
+use App\Http\Controllers\Api\Admin\UserRoleController;
 use App\Http\Controllers\Api\AuthUserController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\EventImageController;
 use App\Http\Controllers\Api\Organizer\OrganizerEventController;
+use App\Http\Controllers\Api\Organizer\OrganizerPaymentController;
+use App\Http\Controllers\Api\Payments\CheckoutSessionController;
+use App\Http\Controllers\Api\Payments\WebhookController;
 use App\Http\Controllers\Api\TicketTypeController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
@@ -26,6 +30,7 @@ Route::get('/events/{event:slug}/ticket-types', [TicketTypeController::class, 'i
 Route::get('/events/{event:slug}', [EventController::class, 'show']);
 Route::get('/event-images/{eventImage}', [EventImageController::class, 'show']);
 Route::get('/ticket-types/{ticketType}', [TicketTypeController::class, 'show']);
+Route::post('/stripe/webhook', WebhookController::class);
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/user', [AuthUserController::class, 'show']);
@@ -37,10 +42,14 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::middleware('role:user,organizer,admin')->group(function (): void {
         Route::get('/me/dashboard', [DashboardController::class, 'user']);
         Route::post('/ticket-types/{ticketType}/reserve', [TicketTypeController::class, 'reserve']);
+        Route::get('/orders/{order}/payment-status', [CheckoutSessionController::class, 'show']);
+        Route::post('/orders/{order}/checkout-session', [CheckoutSessionController::class, 'store']);
     });
 
     Route::middleware('role:organizer')->prefix('organizer')->group(function (): void {
         Route::get('/dashboard', [DashboardController::class, 'organizer']);
+        Route::get('/payments', [OrganizerPaymentController::class, 'index']);
+        Route::get('/payments/{order}', [OrganizerPaymentController::class, 'show']);
         Route::get('/events', [OrganizerEventController::class, 'index']);
         Route::post('/events', [OrganizerEventController::class, 'store']);
         Route::get('/events/{event}', [OrganizerEventController::class, 'show']);
@@ -57,6 +66,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::middleware('role:admin')->prefix('admin')->group(function (): void {
         Route::get('/dashboard', [DashboardController::class, 'admin']);
+        Route::get('/payments', [AdminPaymentController::class, 'index']);
+        Route::get('/payments/{order}', [AdminPaymentController::class, 'show']);
+        Route::post('/payments/{order}/refund', [AdminPaymentController::class, 'refund']);
         Route::patch('/users/{user}/role', [UserRoleController::class, 'update']);
         Route::post('/users/{user}/approve-organizer', [UserRoleController::class, 'approveOrganizer']);
         Route::post('/users/{user}/reject-organizer', [UserRoleController::class, 'rejectOrganizer']);
