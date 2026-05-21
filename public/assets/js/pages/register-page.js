@@ -8,7 +8,7 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = form.querySelector('button[type="submit"]');
-      btn.disabled = true;
+      if (btn) btn.disabled = true;
       try {
         const password = form.querySelector('[name="password"]').value;
         const payload = {
@@ -23,7 +23,7 @@
         window.EventSphereAuth.redirectByRole(user);
       } catch (err) {
         window.tkToast?.(err.message || 'Registration failed', 'error');
-        btn.disabled = false;
+        if (btn) btn.disabled = false;
       }
     });
   });

@@ -23,9 +23,11 @@
       </ul>
       <div class="d-flex align-items-center gap-2">
         <button class="icon-btn" data-theme-toggle><i class="bi bi-sun" data-theme-icon></i></button>
-        <a class="icon-btn position-relative" href="dashboard.html"><i class="bi bi-bell"></i><span class="position-absolute top-0 end-0 translate-middle badge rounded-pill" style="background:var(--secondary);font-size:.6rem">3</span></a>
-        <a class="btn btn-ghost d-none d-md-inline-flex" href="login.html">Sign in</a>
-        <a class="btn btn-primary-grad" href="register.html">Get started</a>
+        <a class="icon-btn position-relative" href="dashboard.html" data-auth-user style="display:none"><i class="bi bi-bell"></i><span class="position-absolute top-0 end-0 translate-middle badge rounded-pill" style="background:var(--secondary);font-size:.6rem">3</span></a>
+        <a class="btn btn-ghost d-none d-md-inline-flex" href="login.html" data-auth-guest>Sign in</a>
+        <a class="btn btn-primary-grad" href="register.html" data-auth-guest>Get started</a>
+        <a class="btn btn-ghost d-none d-md-inline-flex" href="dashboard.html" data-auth-user data-auth-name style="display:none">Account</a>
+        <a class="btn btn-primary-grad" href="#" data-auth-user data-logout style="display:none">Sign out</a>
       </div>
     </div>
   </div>

@@ -6,11 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Payments\CreateCheckoutSessionRequest;
 use App\Models\Order;
 use App\Services\Payments\StripePaymentService;
+use App\Services\Tickets\TicketInventoryService;
+use App\Services\Tickets\TicketService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class CheckoutSessionController extends Controller
 {
-    public function __construct(private readonly StripePaymentService $stripe) {}
+    public function __construct(
+        private readonly StripePaymentService $stripe,
+        private readonly TicketInventoryService $inventory,
+        private readonly TicketService $tickets,
+    ) {}
 
     public function show(CreateCheckoutSessionRequest $request, Order $order): JsonResponse
     {
@@ -36,6 +43,10 @@ class CheckoutSessionController extends Controller
     {
         abort_unless($order->user_id === $request->user()?->id, 403, 'You can only pay for your own orders.');
 
+        if ($this->shouldUseLocalCheckout()) {
+            return $this->completeLocalCheckout($order);
+        }
+
         $session = $this->stripe->createCheckoutSession($order);
 
         return response()->json([
@@ -48,6 +59,64 @@ class CheckoutSessionController extends Controller
                     'order_number' => $order->order_number,
                     'status' => $order->fresh()->status,
                     'payment_status' => $order->fresh()->payment_status,
+                    'total' => $order->total,
+                    'currency' => $order->currency,
+                ],
+            ],
+        ], 201);
+    }
+
+    protected function shouldUseLocalCheckout(): bool
+    {
+        $secret = config('services.stripe.secret');
+
+        return app()->environment('local') && (! is_string($secret) || $secret === '');
+    }
+
+    protected function completeLocalCheckout(Order $order): JsonResponse
+    {
+        $order = DB::transaction(function () use ($order): Order {
+            $locked = Order::query()
+                ->with(['items.ticketType'])
+                ->whereKey($order->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($locked->payment_status !== Order::PAYMENT_STATUS_PAID) {
+                foreach ($locked->items as $item) {
+                    $this->inventory->commitSale($item->ticketType, $item->quantity);
+                }
+
+                $this->tickets->generateForPaidOrder($locked);
+
+                $locked->forceFill([
+                    'status' => Order::STATUS_PAID,
+                    'payment_status' => Order::PAYMENT_STATUS_PAID,
+                    'payment_provider' => 'local',
+                    'payment_reference' => 'local-'.$locked->order_number,
+                    'paid_at' => now(),
+                ])->save();
+            }
+
+            return $locked->fresh(['tickets', 'items']);
+        });
+
+        $checkoutUrl = str_replace(
+            ['{CHECKOUT_SESSION_ID}', '{ORDER_ID}', '{ORDER_NUMBER}'],
+            ['local-'.$order->id, (string) $order->id, urlencode($order->order_number)],
+            (string) config('services.stripe.success_url'),
+        );
+
+        return response()->json([
+            'data' => [
+                'checkout_session_id' => 'local-'.$order->id,
+                'checkout_url' => $checkoutUrl,
+                'payment_status' => $order->payment_status,
+                'order' => [
+                    'id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'status' => $order->status,
+                    'payment_status' => $order->payment_status,
                     'total' => $order->total,
                     'currency' => $order->currency,
                 ],

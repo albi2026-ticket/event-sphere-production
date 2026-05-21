@@ -50,11 +50,11 @@
           </div>
           <div class="filter-group">
             <label class="form-label">City</label>
-            <input class="form-control" placeholder="Search city"/>
+            <input class="form-control" data-filter-city placeholder="Search city"/>
           </div>
           <div class="filter-group">
             <label class="form-label d-flex justify-content-between">Price <span class="text-muted-pro small">$0 – $500</span></label>
-            <input type="range" class="form-range" min="0" max="500" value="500"/>
+            <input type="range" class="form-range" min="0" max="500" value="500" data-filter-max-price/>
           </div>
           <div class="filter-group">
             <label class="form-label">Distance</label>
@@ -68,7 +68,6 @@
             <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-label">VIP available</label></div>
           </div>
           <input type="text" class="form-control mb-2" data-filter-category placeholder="Category"/>
-          <input type="text" class="form-control mb-2" data-filter-city placeholder="City"/>
           <button class="btn btn-primary-grad w-100 mt-2" type="button" data-events-apply-filters>Apply filters</button>
         </div>
       </aside>

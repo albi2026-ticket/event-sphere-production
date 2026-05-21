@@ -4,7 +4,7 @@
   const eventsApi = () => window.EventSphereEvents;
   const u = () => window.EventSphereUtils;
 
-  let state = { page: 1, sort: 'trending', q: '', category: '', city: '' };
+  let state = { page: 1, sort: 'trending', q: '', category: '', city: '', max_price: '' };
 
   async function load() {
     const grid = document.getElementById('grid');
@@ -21,6 +21,7 @@
         q: state.q || undefined,
         category: state.category || undefined,
         city: state.city || undefined,
+        max_price: state.max_price || undefined,
       });
 
       if (!events.length) {
@@ -77,11 +78,22 @@
       });
     });
 
+    document.querySelectorAll('.filter-card .filter-group:first-of-type .chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.filter-card .filter-group:first-of-type .chip').forEach((c) => c.classList.remove('active'));
+        chip.classList.add('active');
+      });
+    });
+
     const applyBtn = document.querySelector('[data-events-apply-filters]');
     if (applyBtn) {
       applyBtn.addEventListener('click', () => {
-        state.category = document.querySelector('[data-filter-category]')?.value || '';
+        const activeCategory = document.querySelector('.filter-card .filter-group:first-of-type .chip.active')?.textContent.trim();
+        state.category = activeCategory && activeCategory !== 'All'
+          ? activeCategory
+          : (document.querySelector('[data-filter-category]')?.value || '');
         state.city = document.querySelector('[data-filter-city]')?.value || '';
+        state.max_price = document.querySelector('[data-filter-max-price]')?.value || '';
         state.page = 1;
         load();
       });

@@ -8,7 +8,7 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = form.querySelector('button[type="submit"]');
-      btn.disabled = true;
+     if (btn) btn.disabled = true;
       try {
         const email = form.querySelector('[name="email"]').value.trim();
         const password = form.querySelector('[name="password"]').value;
@@ -17,7 +17,7 @@
         window.EventSphereAuth.redirectByRole(user);
       } catch (err) {
         window.tkToast?.(err.message || 'Sign in failed', 'error');
-        btn.disabled = false;
+       if (btn) btn.disabled = false;
       }
     });
   });

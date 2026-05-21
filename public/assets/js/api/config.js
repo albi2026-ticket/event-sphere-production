@@ -6,7 +6,7 @@
   const fromWindow = window.__EVENT_SPHERE_API__?.trim();
   const fallback = 'http://127.0.0.1:8000/api';
 
-  const base = (fromMeta || fromWindow || fallback).replace(/\/$/, '');
+  const base = (fromWindow || fromMeta || fallback).replace(/\/$/, '');
 
   window.EventSphereConfig = {
     API_BASE_URL: base,
