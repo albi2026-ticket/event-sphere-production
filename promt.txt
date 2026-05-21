@@ -1,3 +1,16 @@
+Demo accounts all use Password123!:
+user@eventsphere.test, organizer@eventsphere.test, admin@eventsphere.test.
+
+
+Niher dalin mockDATA pas ca sekondave dalin te dhenat nga API,
+Ka nevoj me rishiku nuk mundesh mi qit cmim per eventin,
+
+
+
+
+
+
+
 Ky është prompt që e përdor çdo herë kur hap Codex të ri:
 
 You are continuing development on an existing full-stack SaaS project called “Event Sphere”.
