@@ -23,8 +23,8 @@
       <h2>Create your account</h2>
       <p class="text-muted-pro">Free forever. No credit card required.</p>
       <div class="d-grid gap-2 mt-4">
-        <button class="btn btn-ghost"><i class="bi bi-google me-2"></i> Sign up with Google</button>
-        <button class="btn btn-ghost"><i class="bi bi-apple me-2"></i> Sign up with Apple</button>
+        <button class="btn btn-ghost" type="button" data-social-auth="Google"><i class="bi bi-google me-2"></i> Sign up with Google</button>
+        <button class="btn btn-ghost" type="button" data-social-auth="Apple"><i class="bi bi-apple me-2"></i> Sign up with Apple</button>
       </div>
       <div class="d-flex align-items-center my-4 gap-2"><hr class="flex-grow-1 m-0" style="border-color:var(--border)"/><span class="text-muted-pro small">or</span><hr class="flex-grow-1 m-0" style="border-color:var(--border)"/></div>
       <form data-register-form>
@@ -34,8 +34,13 @@
         </div>
         <label class="form-label mt-2">Email</label><input class="form-control" type="email" name="email" required/>
         <label class="form-label mt-2">Password</label><input class="form-control" type="password" name="password" required minlength="8" placeholder="At least 8 characters"/>
+<<<<<<< HEAD
         <div class="form-check mt-3"><input class="form-check-input" type="checkbox" required><label class="form-check-label small">I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a></label></div>
         <button class="btn btn-primary-grad w-100 mt-4 btn-lg">Create account</button>
+=======
+        <div class="form-check mt-3"><input class="form-check-input" type="checkbox" required><label class="form-check-label small">I agree to the <a href="#" data-policy-link="Terms">Terms</a> and <a href="#" data-policy-link="Privacy Policy">Privacy Policy</a></label></div>
+        <button type="submit" class="btn btn-primary-grad w-100 mt-4 btn-lg">Create account</button>
+>>>>>>> e762646 (Complete organizer workflows, dashboard integrations, and frontend API connections)
       </form>
       <p class="text-muted-pro text-center mt-4 small">Already a member? <a href="login.html">Sign in</a></p>
     </div>

@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class UserRoleController extends Controller
 {
@@ -16,6 +17,12 @@ class UserRoleController extends Controller
             'role' => ['required', Rule::in([User::ROLE_USER, User::ROLE_ORGANIZER, User::ROLE_ADMIN])],
             'status' => ['sometimes', Rule::in([User::STATUS_ACTIVE, User::STATUS_SUSPENDED, User::STATUS_BANNED])],
         ]);
+
+        if ($request->user()->is($user) && ($validated['role'] !== User::ROLE_ADMIN || ($validated['status'] ?? $user->status) !== User::STATUS_ACTIVE)) {
+            throw ValidationException::withMessages([
+                'user' => 'You cannot remove your own active admin access.',
+            ]);
+        }
 
         $user->fill($validated);
 

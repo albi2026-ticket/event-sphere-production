@@ -32,7 +32,7 @@
         <h1 class="d-inline-block mb-0" style="font-size:1.8rem">Platform overview</h1>
         <p class="mb-0 text-muted-pro">Real-time KPIs · last 24 hours</p>
       </div>
-      <div class="d-flex gap-2"><button class="btn btn-glass"><i class="bi bi-download me-1"></i> Export</button><button class="btn btn-primary-grad"><i class="bi bi-bell me-1"></i> Alerts</button></div>
+      <div class="d-flex gap-2"><button class="btn btn-glass" type="button" data-admin-export><i class="bi bi-download me-1"></i> Export</button><button class="btn btn-primary-grad" type="button" data-admin-alerts><i class="bi bi-bell me-1"></i> Alerts</button></div>
     </div>
 
     <div class="row g-3 mb-4" data-admin-kpis>
@@ -47,15 +47,43 @@
       <div class="col-lg-4"><div class="card-pro p-4"><h5>Top categories</h5><canvas id="cat" height="180"></canvas></div></div>
     </div>
 
+    <!-- Events -->
+    <h4 id="events" class="mt-2 mb-3">Event moderation</h4>
+    <div class="card-pro p-3 mb-4">
+      <form class="row g-2 mb-3" data-admin-event-filters>
+        <div class="col-md-5"><input class="form-control" name="q" placeholder="Search events, category, city"/></div>
+        <div class="col-md-3"><select class="form-select" name="status"><option value="">All statuses</option><option value="draft">Draft</option><option value="published">Published</option><option value="rejected">Rejected</option></select></div>
+        <div class="col-md-2"><button class="btn btn-glass w-100" type="submit"><i class="bi bi-search me-1"></i> Search</button></div>
+        <div class="col-md-2"><button class="btn btn-glass w-100" type="button" data-reset-admin-events><i class="bi bi-x-circle me-1"></i> Clear</button></div>
+      </form>
+      <div data-admin-events><div class="table-responsive"><table class="table table-borderless align-middle mb-0" style="color:var(--text)">
+        <thead style="color:var(--muted)"><tr><th>Event</th><th>Organizer</th><th>Date</th><th>Status</th><th>Tickets</th><th></th></tr></thead>
+        <tbody><tr><td colspan="6" class="text-muted-pro">Loading events…</td></tr></tbody>
+      </table></div></div>
+    </div>
+
     <!-- Users -->
     <h4 id="users" class="mt-2 mb-3">Recent users</h4>
-    <div class="card-pro p-3 mb-4" data-admin-users><div class="table-responsive"><table class="table table-borderless align-middle mb-0" style="color:var(--text)">
-      <thead style="color:var(--muted)"><tr><th>User</th><th>Email</th><th>Joined</th><th>Orders</th><th>Status</th><th></th></tr></thead>
+    <div class="card-pro p-3 mb-4">
+      <form class="row g-2 mb-3" data-admin-user-filters>
+        <div class="col-md-4"><input class="form-control" name="q" placeholder="Search users by name or email"/></div>
+        <div class="col-md-2"><select class="form-select" name="role"><option value="">All roles</option><option value="user">User</option><option value="organizer">Organizer</option><option value="admin">Admin</option></select></div>
+        <div class="col-md-2"><select class="form-select" name="organizer_status"><option value="">Organizer status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="none">None</option></select></div>
+        <div class="col-md-2"><button class="btn btn-glass w-100" type="submit"><i class="bi bi-search me-1"></i> Search</button></div>
+        <div class="col-md-2"><button class="btn btn-glass w-100" type="button" data-reset-admin-users><i class="bi bi-x-circle me-1"></i> Clear</button></div>
+      </form>
+      <div data-admin-users><div class="table-responsive"><table class="table table-borderless align-middle mb-0" style="color:var(--text)">
+      <thead style="color:var(--muted)"><tr><th>User</th><th>Email</th><th>Joined</th><th>Orders</th><th>Role</th><th>Organizer</th><th>Status</th><th></th></tr></thead>
       <tbody>
-        <tr><td><div class="d-flex align-items-center gap-2"><img src="https://i.pravatar.cc/40?img=14" class="rounded-circle" width="32"/> Alex Morgan</div></td><td>alex@email.com</td><td>2d ago</td><td>3</td><td><span class="badge" style="background:rgba(34,197,94,.15);color:#86efac">Verified</span></td><td><button class="icon-btn"><i class="bi bi-three-dots"></i></button></td></tr>
-        <tr><td><div class="d-flex align-items-center gap-2"><img src="https://i.pravatar.cc/40?img=24" class="rounded-circle" width="32"/> Sasha Ivanov</div></td><td>sasha@email.com</td><td>5d ago</td><td>11</td><td><span class="badge" style="background:rgba(91,140,255,.15);color:#93b4ff">VIP</span></td><td><button class="icon-btn"><i class="bi bi-three-dots"></i></button></td></tr>
-        <tr><td><div class="d-flex align-items-center gap-2"><img src="https://i.pravatar.cc/40?img=34" class="rounded-circle" width="32"/> Nia Williams</div></td><td>nia@email.com</td><td>1w ago</td><td>2</td><td><span class="badge" style="background:rgba(245,158,11,.15);color:#fcd34d">Unverified</span></td><td><button class="icon-btn"><i class="bi bi-three-dots"></i></button></td></tr>
+        <tr><td colspan="8" class="text-muted-pro">Loading users…</td></tr>
       </tbody></table></div></div>
+    </div>
+
+    <h4 class="mt-2 mb-3">Organizer approvals</h4>
+    <div class="card-pro p-3 mb-4" data-admin-organizers><div class="table-responsive"><table class="table table-borderless align-middle mb-0" style="color:var(--text)">
+      <thead style="color:var(--muted)"><tr><th>Organizer</th><th>Email</th><th>Status</th><th>Events</th><th></th></tr></thead>
+      <tbody><tr><td colspan="5" class="text-muted-pro">Loading organizer requests…</td></tr></tbody>
+    </table></div></div>
 
     <!-- Refunds + Fraud -->
     <div class="row g-3">

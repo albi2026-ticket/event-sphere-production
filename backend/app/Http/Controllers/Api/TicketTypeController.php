@@ -14,6 +14,7 @@ use App\Services\Tickets\TicketInventoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\ValidationException;
 
 class TicketTypeController extends Controller
 {
@@ -63,6 +64,7 @@ class TicketTypeController extends Controller
     public function update(UpdateTicketTypeRequest $request, TicketType $ticketType): TicketTypeResource
     {
         $payload = $request->validated();
+        $this->ensurePublishedEventKeepsInventory($ticketType, $payload);
 
         if (isset($payload['currency'])) {
             $payload['currency'] = strtoupper($payload['currency']);
@@ -92,6 +94,7 @@ class TicketTypeController extends Controller
     {
         abort_unless($request->user()?->canManageEvent($ticketType->event), 403);
         abort_if($ticketType->quantity_sold > 0, 422, 'Ticket types with sold tickets cannot be deleted.');
+        $this->ensurePublishedEventKeepsInventory($ticketType, ['status' => TicketType::STATUS_INACTIVE, 'quantity_total' => 0]);
 
         $event = $ticketType->event;
         $ticketType->delete();
@@ -102,6 +105,8 @@ class TicketTypeController extends Controller
 
     public function adjustInventory(AdjustTicketInventoryRequest $request, TicketType $ticketType): TicketTypeResource
     {
+        $this->ensurePublishedEventKeepsInventory($ticketType, $request->validated());
+
         $ticketType = $this->inventory->adjustTotal(
             $ticketType,
             (int) $request->integer('quantity_total', $ticketType->quantity_total),
@@ -111,6 +116,41 @@ class TicketTypeController extends Controller
         $this->syncEventBasePrice($ticketType->event);
 
         return new TicketTypeResource($ticketType);
+    }
+
+    /**
+     * @param  array<string, mixed>  $changes
+     */
+    protected function ensurePublishedEventKeepsInventory(TicketType $ticketType, array $changes): void
+    {
+        $event = $ticketType->event;
+
+        if ($event->status !== 'published') {
+            return;
+        }
+
+        $nextStatus = $changes['status'] ?? $ticketType->status;
+        $nextTotal = array_key_exists('quantity_total', $changes)
+            ? (int) $changes['quantity_total']
+            : $ticketType->quantity_total;
+
+        $thisTierWillRemainActive = $nextStatus === TicketType::STATUS_ACTIVE && $nextTotal > 0;
+
+        if ($thisTierWillRemainActive) {
+            return;
+        }
+
+        $hasOtherActiveInventory = $event->ticketTypes()
+            ->whereKeyNot($ticketType->id)
+            ->where('status', TicketType::STATUS_ACTIVE)
+            ->where('quantity_total', '>', 0)
+            ->exists();
+
+        if (! $hasOtherActiveInventory) {
+            throw ValidationException::withMessages([
+                'ticket_types' => 'Published events must keep at least one active ticket tier with inventory.',
+            ]);
+        }
     }
 
     public function reserve(ReserveTicketInventoryRequest $request, TicketType $ticketType): TicketTypeResource

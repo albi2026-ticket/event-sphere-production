@@ -3,6 +3,17 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('[data-register-form]');
+    document.querySelectorAll('[data-social-auth]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        window.tkToast?.(`${btn.dataset.socialAuth} sign-up is not enabled yet. Use email registration.`, 'info');
+      });
+    });
+    document.querySelectorAll('[data-policy-link]').forEach((link) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.tkToast?.(`${link.dataset.policyLink} page is not published yet.`, 'info');
+      });
+    });
     if (!form) return;
 
     form.addEventListener('submit', async (e) => {

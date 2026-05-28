@@ -135,10 +135,21 @@
       wrap.appendChild(menu);
     }
     menu.innerHTML = hits.length
-      ? hits.map(h => `<div class="px-3 py-2 rounded" style="cursor:pointer" onmouseover="this.style.background='var(--card-2)'" onmouseout="this.style.background=''"><i class="bi bi-search me-2 text-muted-pro"></i>${h}</div>`).join('')
+      ? hits.map(h => `<div class="px-3 py-2 rounded" data-ac-value="${h.replace(/"/g, '&quot;')}" style="cursor:pointer" onmouseover="this.style.background='var(--card-2)'" onmouseout="this.style.background=''"><i class="bi bi-search me-2 text-muted-pro"></i>${h}</div>`).join('')
       : '<div class="px-3 py-2 text-muted-pro">No matches</div>';
   });
   document.addEventListener('click', (e) => {
+    const suggestion = e.target.closest('[data-ac-value]');
+    if (suggestion) {
+      const wrap = suggestion.closest('.ac-wrap');
+      const input = wrap?.querySelector('[data-autocomplete]');
+      if (input) {
+        input.value = suggestion.dataset.acValue || '';
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      suggestion.closest('.ac-menu')?.remove();
+      return;
+    }
     if (!e.target.closest('.ac-wrap')) document.querySelectorAll('.ac-menu').forEach(m => m.remove());
   });
 

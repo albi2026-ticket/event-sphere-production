@@ -3,6 +3,15 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('[data-login-form]');
+    document.querySelectorAll('[data-social-auth]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        window.tkToast?.(`${btn.dataset.socialAuth} sign-in is not enabled yet. Use email and password.`, 'info');
+      });
+    });
+    document.querySelector('[data-forgot-password]')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.tkToast?.('Password reset email flow is available through the API but has no email UI yet.', 'info');
+    });
     if (!form) return;
 
     form.addEventListener('submit', async (e) => {

@@ -9,10 +9,12 @@ use App\Http\Requests\Api\StoreEventRequest;
 use App\Http\Requests\Api\UpdateEventRequest;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
+use App\Models\TicketType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class OrganizerEventController extends Controller
 {
@@ -20,8 +22,8 @@ class OrganizerEventController extends Controller
 
     public function index(EventIndexRequest $request): AnonymousResourceCollection
     {
-        $query = $request->user()
-            ->organizedEvents()
+        $query = Event::query()
+            ->where('organizer_id', $request->user()->id)
             ->with(['images', 'ticketTypes'])
             ->withCount(['reviews', 'tickets', 'favorites']);
 
@@ -36,7 +38,15 @@ class OrganizerEventController extends Controller
 
     public function store(StoreEventRequest $request): EventResource
     {
-        $event = Event::create($this->eventPayload($request, $request->user()->id));
+        $payload = $this->eventPayload($request, $request->user()->id);
+
+        if ($payload['status'] === 'published') {
+            throw ValidationException::withMessages([
+                'status' => 'Create the event as a draft, add ticket tiers, then publish it.',
+            ]);
+        }
+
+        $event = Event::create($payload);
 
         return new EventResource($event->load(['images', 'ticketTypes']));
     }
@@ -50,7 +60,10 @@ class OrganizerEventController extends Controller
 
     public function update(UpdateEventRequest $request, Event $event): EventResource
     {
-        $event->update($this->eventPayload($request, $event->organizer_id, true));
+        $payload = $this->eventPayload($request, $event->organizer_id, true);
+        $this->ensurePublishable($event, $payload['status'] ?? $event->status);
+
+        $event->update($payload);
 
         return new EventResource($event->fresh()->load(['images', 'ticketTypes']));
     }
@@ -58,6 +71,7 @@ class OrganizerEventController extends Controller
     public function destroy(Request $request, Event $event): JsonResponse
     {
         abort_unless($request->user()->canManageEvent($event), 403);
+        abort_if($event->tickets()->exists() || $event->orderItems()->exists(), 422, 'Events with tickets or orders cannot be deleted. Move the event to draft or cancelled instead.');
 
         $event->delete();
 
@@ -95,5 +109,23 @@ class OrganizerEventController extends Controller
         }
 
         return $slug;
+    }
+
+    protected function ensurePublishable(Event $event, ?string $status = null): void
+    {
+        if (($status ?? $event->status) !== 'published') {
+            return;
+        }
+
+        $hasActiveInventory = $event->ticketTypes()
+            ->where('status', TicketType::STATUS_ACTIVE)
+            ->where('quantity_total', '>', 0)
+            ->exists();
+
+        if (! $hasActiveInventory) {
+            throw ValidationException::withMessages([
+                'ticket_types' => 'Published events require at least one active ticket tier with available inventory.',
+            ]);
+        }
     }
 }

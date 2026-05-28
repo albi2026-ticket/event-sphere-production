@@ -13,9 +13,32 @@
     return data;
   }
 
+  async function completeMockPayment(orderId) {
+    const { data } = await api().fetch('/payment/mock-success', {
+      method: 'POST',
+      body: { order_id: orderId },
+    });
+    return data;
+  }
+
   async function getPaymentStatus(orderId) {
     const { data } = await api().fetch(`/orders/${orderId}/payment-status`);
     return data;
+  }
+
+  async function getOrder(orderId) {
+    const { data } = await api().fetch(`/me/orders/${orderId}`);
+    return data;
+  }
+
+  async function downloadReceipt(orderId, orderNumber) {
+    const blob = await api().fetchBlob(`/me/orders/${orderId}/receipt`);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `receipt-${orderNumber || orderId}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   async function listMyOrders(params = {}) {
@@ -27,7 +50,10 @@
   window.EventSphereOrders = {
     createOrder,
     startCheckout,
+    completeMockPayment,
     getPaymentStatus,
+    getOrder,
+    downloadReceipt,
     listMyOrders,
   };
 })();

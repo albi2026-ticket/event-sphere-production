@@ -9,6 +9,23 @@
     return Array.isArray(data) ? data : [];
   }
 
+  async function listTickets(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    const { data, meta } = await api().fetch(`/me/tickets${qs ? `?${qs}` : ''}`);
+    return { tickets: Array.isArray(data) ? data : [], meta };
+  }
+
+  async function listTicketHistory(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    const { data, meta } = await api().fetch(`/me/tickets/history${qs ? `?${qs}` : ''}`);
+    return { tickets: Array.isArray(data) ? data : [], meta };
+  }
+
+  async function getTicket(ticketId) {
+    const { data } = await api().fetch(`/tickets/${ticketId}`);
+    return data;
+  }
+
   async function loadQrBlob(ticketId) {
     return api().fetchBlob(`/tickets/${ticketId}/qr-code`);
   }
@@ -40,6 +57,9 @@
             <div class="mt-3 small">${seat}</div>
             <div class="mt-3 d-flex gap-2">
               <button class="btn btn-primary-grad btn-sm" data-ticket-download="${ticket.id}" data-ticket-code="${u().escapeHtml(ticket.ticket_code)}"><i class="bi bi-download me-1"></i> Download</button>
+              <button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}"><i class="bi bi-info-circle me-1"></i> Details</button>
+              <button class="btn btn-glass btn-sm" type="button" data-ticket-transfer="${ticket.id}"><i class="bi bi-arrow-left-right me-1"></i> Transfer</button>
+              <button class="btn btn-glass btn-sm" type="button" data-ticket-resell="${ticket.id}"><i class="bi bi-cash-coin me-1"></i> Resell</button>
             </div>
           </div>
           <div class="qr"><img alt="QR" data-ticket-qr="${ticket.id}" src="" style="min-width:180px;min-height:180px;background:#fff;border-radius:8px"/></div>
@@ -62,6 +82,9 @@
 
   window.EventSphereTickets = {
     listActiveTickets,
+    listTickets,
+    listTicketHistory,
+    getTicket,
     loadQrBlob,
     downloadTicket,
     renderTicketCard,

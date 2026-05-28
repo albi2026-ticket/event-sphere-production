@@ -27,10 +27,10 @@
         <li class="nav-item dropdown">
           <a class="nav-link nav-link-pro dropdown-toggle" data-bs-toggle="dropdown" href="#">Categories</a>
           <ul class="dropdown-menu mt-2" style="background:var(--card);border:1px solid var(--border);border-radius:14px">
-            <li><a class="dropdown-item text-white-50" href="events.html"><i class="bi bi-music-note-beamed me-2"></i>Concerts</a></li>
-            <li><a class="dropdown-item text-white-50" href="events.html"><i class="bi bi-trophy me-2"></i>Sports</a></li>
-            <li><a class="dropdown-item text-white-50" href="events.html"><i class="bi bi-stars me-2"></i>Festivals</a></li>
-            <li><a class="dropdown-item text-white-50" href="events.html"><i class="bi bi-mic me-2"></i>Conferences</a></li>
+            <li><a class="dropdown-item text-white-50" href="events.html?category=Concerts"><i class="bi bi-music-note-beamed me-2"></i>Concerts</a></li>
+            <li><a class="dropdown-item text-white-50" href="events.html?category=Sports"><i class="bi bi-trophy me-2"></i>Sports</a></li>
+            <li><a class="dropdown-item text-white-50" href="events.html?category=Festivals"><i class="bi bi-stars me-2"></i>Festivals</a></li>
+            <li><a class="dropdown-item text-white-50" href="events.html?category=Conferences"><i class="bi bi-mic me-2"></i>Conferences</a></li>
           </ul>
         </li>
         <li class="nav-item"><a class="nav-link nav-link-pro" href="dashboard.html">My Tickets</a></li>
@@ -59,10 +59,10 @@
 
         <!-- Search -->
         <div class="search-pill mt-4 ac-wrap">
-          <div class="field"><i class="bi bi-search"></i><input data-autocomplete placeholder="Search artists, teams, venues" /></div>
-          <div class="field"><i class="bi bi-geo-alt"></i><input placeholder="Any city" /></div>
-          <div class="field"><i class="bi bi-calendar3"></i><input type="date" /></div>
-          <button class="btn btn-primary-grad btn-lg">Search</button>
+          <div class="field"><i class="bi bi-search"></i><input data-autocomplete data-home-search placeholder="Search artists, teams, venues" /></div>
+          <div class="field"><i class="bi bi-geo-alt"></i><input data-home-city placeholder="Any city" /></div>
+          <div class="field"><i class="bi bi-calendar3"></i><input data-home-date type="date" /></div>
+          <button class="btn btn-primary-grad btn-lg" type="button" data-home-search-btn>Search</button>
         </div>
 
         <div class="hero-stats">
@@ -111,10 +111,10 @@
       <a class="btn btn-ghost" href="events.html">All categories <i class="bi bi-arrow-right ms-1"></i></a>
     </div>
     <div class="row g-3 fade-up">
-      <div class="col-6 col-md-3"><a class="cat-card" href="events.html"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&q=80')"></div><div class="label">Concerts <small>12,438</small></div></a></div>
-      <div class="col-6 col-md-3"><a class="cat-card" href="events.html"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&q=80')"></div><div class="label">Sports <small>6,210</small></div></a></div>
-      <div class="col-6 col-md-3"><a class="cat-card" href="events.html"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&q=80')"></div><div class="label">Festivals <small>1,890</small></div></a></div>
-      <div class="col-6 col-md-3"><a class="cat-card" href="events.html"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&q=80')"></div><div class="label">Conferences <small>4,127</small></div></a></div>
+      <div class="col-6 col-md-3"><a class="cat-card" href="events.html?category=Concerts"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&q=80')"></div><div class="label">Concerts <small>12,438</small></div></a></div>
+      <div class="col-6 col-md-3"><a class="cat-card" href="events.html?category=Sports"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&q=80')"></div><div class="label">Sports <small>6,210</small></div></a></div>
+      <div class="col-6 col-md-3"><a class="cat-card" href="events.html?category=Festivals"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&q=80')"></div><div class="label">Festivals <small>1,890</small></div></a></div>
+      <div class="col-6 col-md-3"><a class="cat-card" href="events.html?category=Conferences"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&q=80')"></div><div class="label">Conferences <small>4,127</small></div></a></div>
     </div>
   </div>
 </section>

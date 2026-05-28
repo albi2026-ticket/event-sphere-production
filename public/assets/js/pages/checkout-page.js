@@ -43,6 +43,8 @@
     }
 
     if (payBtn) payBtn.textContent = `Pay ${u().formatMoney(total, c.currency)}`;
+    const refundInput = form?.querySelector('[name="refund_protection"]');
+    if (refundInput) refundInput.checked = !!c.refund_protection;
 
     const user = auth().getUser();
     if (form && user) {
@@ -76,15 +78,21 @@
         });
 
         sessionStorage.setItem('event_sphere_last_order_id', String(order.id));
-        const checkout = await orders().startCheckout(order.id);
+        const checkout = await orders().completeMockPayment(order.id);
         cart().clearCart();
         if (checkout.checkout_url) location.href = checkout.checkout_url;
-        else throw new Error('No checkout URL returned');
+        else location.href = `checkout-success.html?order_id=${encodeURIComponent(order.id)}&mock=1`;
       } catch (err) {
         window.tkToast?.(err.message || 'Checkout failed', 'error');
         payBtn.disabled = false;
         payBtn.textContent = `Pay ${u().formatMoney(total, c.currency)}`;
       }
+    });
+
+    document.querySelectorAll('[data-alt-pay]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        window.tkToast?.(`${btn.dataset.altPay} is not enabled yet. Use card mock checkout for testing.`, 'info');
+      });
     });
   });
 })();

@@ -36,7 +36,7 @@
         <div class="card-pro filter-card">
           <div class="d-flex justify-content-between align-items-center mb-2">
             <h6 class="m-0">Filters</h6>
-            <a href="#" class="small">Clear all</a>
+            <a href="#" class="small" data-events-clear-filters>Clear all</a>
           </div>
           <div class="filter-group">
             <label class="form-label">Category</label>
@@ -46,7 +46,7 @@
           </div>
           <div class="filter-group">
             <label class="form-label">Date</label>
-            <select class="form-select"><option>Any date</option><option>Today</option><option>This weekend</option><option>This month</option><option>Custom range</option></select>
+            <select class="form-select" data-filter-date><option value="">Any date</option><option value="today">Today</option><option value="weekend">This weekend</option><option value="month">This month</option></select>
           </div>
           <div class="filter-group">
             <label class="form-label">City</label>
@@ -79,8 +79,8 @@
             <span class="chip active" data-events-sort>Trending</span><span class="chip" data-events-sort>Newest</span><span class="chip" data-events-sort>Soonest</span><span class="chip" data-events-sort>Lowest price</span>
           </div>
           <div class="btn-group">
-            <button class="btn btn-glass active"><i class="bi bi-grid-3x3-gap"></i></button>
-            <button class="btn btn-glass"><i class="bi bi-list-ul"></i></button>
+            <button class="btn btn-glass active" type="button" data-events-view="grid"><i class="bi bi-grid-3x3-gap"></i></button>
+            <button class="btn btn-glass" type="button" data-events-view="list"><i class="bi bi-list-ul"></i></button>
           </div>
         </div>
 

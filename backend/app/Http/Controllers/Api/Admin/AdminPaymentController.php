@@ -5,13 +5,19 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Payments\RefundPaymentRequest;
 use App\Models\Order;
+use App\Models\Ticket;
 use App\Services\Payments\StripePaymentService;
+use App\Services\Tickets\TicketService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class AdminPaymentController extends Controller
 {
-    public function __construct(private readonly StripePaymentService $stripe) {}
+    public function __construct(
+        private readonly StripePaymentService $stripe,
+        private readonly TicketService $tickets,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -34,6 +40,31 @@ class AdminPaymentController extends Controller
 
     public function refund(RefundPaymentRequest $request, Order $order): JsonResponse
     {
+        if ($order->payment_status !== Order::PAYMENT_STATUS_PAID) {
+            throw ValidationException::withMessages([
+                'order' => 'Only paid orders can be refunded.',
+            ]);
+        }
+
+        if (! $order->stripe_payment_intent_id) {
+            $order->forceFill([
+                'status' => Order::STATUS_REFUNDED,
+                'payment_status' => Order::PAYMENT_STATUS_REFUNDED,
+                'payment_reference' => $order->payment_reference ?: 'mock-refund-'.$order->order_number,
+                'refunded_at' => now(),
+            ])->save();
+
+            $this->tickets->markOrderTickets($order, Ticket::STATUS_REFUNDED);
+
+            return response()->json([
+                'data' => [
+                    'refund_id' => 'mock-refund-'.$order->order_number,
+                    'status' => 'succeeded',
+                    'order' => $order->fresh(),
+                ],
+            ]);
+        }
+
         $refund = $this->stripe->refundOrder(
             $order,
             $request->filled('amount') ? (float) $request->input('amount') : null,
