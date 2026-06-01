@@ -1,0 +1,215 @@
+<?php
+
+namespace Tests\Feature\Organizer;
+
+use App\Models\Event;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Ticket;
+use App\Models\TicketType;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class OrganizerDashboardTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_organizer_can_create_ticket_and_publish_complete_event_workflow(): void
+    {
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $eventResponse = $this->actingAs($organizer, 'sanctum')
+            ->postJson('/api/organizer/events', [
+                'title' => 'Complete Creation Event',
+                'category' => 'Concert',
+                'description' => 'A fully configured organizer event.',
+                'venue_name' => 'Event Sphere Hall',
+                'city' => 'New York',
+                'address' => '100 Main Street',
+                'starts_at' => now()->addMonth()->toIso8601String(),
+                'ends_at' => now()->addMonth()->addHours(3)->toIso8601String(),
+                'status' => 'draft',
+                'visibility' => 'public',
+                'banner_image_url' => 'https://example.test/cover.jpg',
+                'currency' => 'USD',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.category', 'Concert')
+            ->assertJsonPath('data.address', '100 Main Street');
+
+        $eventId = $eventResponse->json('data.id');
+
+        $this->actingAs($organizer, 'sanctum')
+            ->postJson("/api/organizer/events/{$eventId}/images", [
+                'url' => 'https://example.test/gallery.jpg',
+                'type' => 'banner',
+                'is_primary' => true,
+                'alt_text' => 'Complete Creation Event',
+            ])
+            ->assertCreated();
+
+        $this->actingAs($organizer, 'sanctum')
+            ->postJson("/api/organizer/events/{$eventId}/ticket-types", [
+                'name' => 'VIP',
+                'price' => 120,
+                'quantity_total' => 25,
+                'currency' => 'USD',
+                'status' => TicketType::STATUS_ACTIVE,
+                'sort_order' => 2,
+            ])
+            ->assertCreated();
+
+        $this->actingAs($organizer, 'sanctum')
+            ->postJson("/api/organizer/events/{$eventId}/ticket-types", [
+                'name' => 'Early Bird',
+                'price' => 40,
+                'quantity_total' => 50,
+                'currency' => 'USD',
+                'status' => TicketType::STATUS_ACTIVE,
+                'sort_order' => 1,
+            ])
+            ->assertCreated();
+
+        $this->assertDatabaseHas('events', [
+            'id' => $eventId,
+            'base_price' => 40,
+        ]);
+
+        $this->actingAs($organizer, 'sanctum')
+            ->patchJson("/api/organizer/events/{$eventId}", ['status' => 'published'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'published')
+            ->assertJsonPath('data.base_price', '40.00');
+
+        $this->getJson('/api/events/complete-creation-event')
+            ->assertOk()
+            ->assertJsonPath('data.status', 'published')
+            ->assertJsonPath('data.ticket_types.0.name', 'Early Bird')
+            ->assertJsonPath('data.ticket_types.0.price', '40.00');
+    }
+
+    public function test_organizer_dashboard_endpoints_support_events_analytics_and_attendee_search(): void
+    {
+        $organizer = User::factory()->create([
+            'name' => 'Organizer User',
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $buyer = User::factory()->create([
+            'name' => 'Attendee Search Match',
+            'email' => 'attendee-search@example.test',
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $event = Event::query()->create([
+            'organizer_id' => $organizer->id,
+            'title' => 'Organizer Dashboard Event',
+            'slug' => 'organizer-dashboard-event',
+            'category' => 'Concerts',
+            'venue_name' => 'Event Sphere Hall',
+            'city' => 'New York',
+            'starts_at' => now()->addMonth(),
+            'status' => 'draft',
+            'visibility' => 'public',
+            'currency' => 'USD',
+        ]);
+
+        $ticketType = TicketType::query()->create([
+            'event_id' => $event->id,
+            'name' => 'General Admission',
+            'price' => 40,
+            'currency' => 'USD',
+            'quantity_total' => 100,
+            'quantity_sold' => 2,
+            'quantity_reserved' => 0,
+            'min_per_order' => 1,
+            'max_per_order' => 10,
+            'status' => TicketType::STATUS_ACTIVE,
+        ]);
+
+        $order = Order::query()->create([
+            'user_id' => $buyer->id,
+            'order_number' => 'ES-ORG-000001',
+            'status' => Order::STATUS_PAID,
+            'payment_status' => Order::PAYMENT_STATUS_PAID,
+            'subtotal' => 80,
+            'service_fee' => 4,
+            'total' => 84,
+            'currency' => 'USD',
+            'billing_email' => $buyer->email,
+            'billing_first_name' => 'Attendee',
+            'billing_last_name' => 'Match',
+            'paid_at' => now(),
+        ]);
+
+        $item = OrderItem::query()->create([
+            'order_id' => $order->id,
+            'event_id' => $event->id,
+            'ticket_type_id' => $ticketType->id,
+            'quantity' => 2,
+            'unit_price' => 40,
+            'service_fee' => 4,
+            'total' => 84,
+            'ticket_type_name' => $ticketType->name,
+            'event_title' => $event->title,
+            'event_starts_at' => $event->starts_at,
+        ]);
+
+        Ticket::query()->create([
+            'ticket_code' => 'ES-ORG-TICKET-1',
+            'qr_token' => 'organizer-dashboard-token',
+            'qr_payload' => '{}',
+            'user_id' => $buyer->id,
+            'event_id' => $event->id,
+            'ticket_type_id' => $ticketType->id,
+            'order_id' => $order->id,
+            'order_item_id' => $item->id,
+            'status' => Ticket::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($organizer, 'sanctum')
+            ->patchJson("/api/organizer/events/{$event->id}", ['status' => 'published'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'published');
+
+        $this->actingAs($organizer, 'sanctum')
+            ->getJson('/api/organizer/dashboard/summary')
+            ->assertOk()
+            ->assertJsonPath('data.cards.events_count', 1)
+            ->assertJsonPath('data.cards.tickets_sold', 2);
+
+        $this->actingAs($organizer, 'sanctum')
+            ->getJson('/api/organizer/events/performance')
+            ->assertOk()
+            ->assertJsonPath('data.0.title', 'Organizer Dashboard Event')
+            ->assertJsonPath('data.0.tickets_available', 98);
+
+        $this->actingAs($organizer, 'sanctum')
+            ->getJson('/api/organizer/inventory')
+            ->assertOk()
+            ->assertJsonPath('data.0.quantity_available', 98);
+
+        $this->actingAs($organizer, 'sanctum')
+            ->getJson('/api/organizer/analytics/revenue?group_by=day')
+            ->assertOk()
+            ->assertJsonPath('data.by_event.0.revenue', 84);
+
+        $this->actingAs($organizer, 'sanctum')
+            ->getJson('/api/organizer/attendees?search=Search%20Match')
+            ->assertOk()
+            ->assertJsonPath('data.0.ticket_code', 'ES-ORG-TICKET-1');
+
+        $this->actingAs($organizer, 'sanctum')
+            ->patchJson("/api/organizer/events/{$event->id}", ['status' => 'draft'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'draft');
+    }
+}

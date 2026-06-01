@@ -94,30 +94,37 @@
 
   /* ---------- Countdown ---------- */
   function startCountdown(el) {
+    if (!el.dataset.countdown) return;
+    if (el._countdownTimer) clearInterval(el._countdownTimer);
     const target = new Date(el.dataset.countdown).getTime();
+    const end = el.dataset.countdownEnd ? new Date(el.dataset.countdownEnd).getTime() : null;
     const tick = () => {
+      if (Number.isNaN(target)) return;
+      if (end && Date.now() >= end) {
+        el.innerHTML = '<div class="unit"><b>Event</b><span>Ended</span></div>';
+        clearInterval(el._countdownTimer);
+        return;
+      }
       const d = target - Date.now();
-      if (d <= 0) { el.innerHTML = '<div class="unit"><b>0</b><span>Live</span></div>'; return; }
+      if (d <= 0) {
+        el.innerHTML = '<div class="unit"><b>Event</b><span>Started</span></div>';
+        if (!end) clearInterval(el._countdownTimer);
+        return;
+      }
       const days = Math.floor(d / 864e5);
       const hrs = Math.floor((d % 864e5) / 36e5);
       const min = Math.floor((d % 36e5) / 6e4);
-      const sec = Math.floor((d % 6e4) / 1000);
       el.innerHTML = `
         <div class="unit"><b>${days}</b><span>Days</span></div>
         <div class="unit"><b>${String(hrs).padStart(2,'0')}</b><span>Hours</span></div>
-        <div class="unit"><b>${String(min).padStart(2,'0')}</b><span>Min</span></div>
-        <div class="unit"><b>${String(sec).padStart(2,'0')}</b><span>Sec</span></div>`;
+        <div class="unit"><b>${String(min).padStart(2,'0')}</b><span>Min</span></div>`;
     };
-    tick(); setInterval(tick, 1000);
+    tick(); el._countdownTimer = setInterval(tick, 30000);
   }
+  window.EventSphereStartCountdown = startCountdown;
 
-  /* ---------- Search autocomplete (demo) ---------- */
-  const sampleEvents = [
-    'Taylor Swift — Eras Tour', 'Coldplay Music of the Spheres', 'Bad Bunny World Tour',
-    'NBA Finals', 'UEFA Champions League Final', 'Tomorrowland 2026',
-    'Formula 1 Monaco GP', 'Beyoncé Renaissance', 'Drake — It\'s All A Blur',
-    'TED Conference 2026', 'Comic-Con International', 'Burning Man'
-  ];
+  /* ---------- Search autocomplete ---------- */
+  const sampleEvents = [];
   document.addEventListener('input', (e) => {
     const inp = e.target.closest('[data-autocomplete]');
     if (!inp) return;
@@ -126,6 +133,7 @@
     let menu = wrap.querySelector('.ac-menu');
     const q = inp.value.trim().toLowerCase();
     if (!q) { if (menu) menu.remove(); return; }
+    if (!sampleEvents.length) { if (menu) menu.remove(); return; }
     const hits = sampleEvents.filter(s => s.toLowerCase().includes(q)).slice(0, 6);
     if (!menu) {
       menu = document.createElement('div');
@@ -194,17 +202,40 @@
   }
 
   /* ---------- Quantity stepper & dynamic price ---------- */
+  function updateQtyTotal(wrap) {
+    const input = wrap?.querySelector('input');
+    if (!input) return;
+    const unit = Number(wrap.dataset.price || 0);
+    const min = Number(input.min || 1);
+    const max = Number(input.max || 10);
+    const currency = wrap.dataset.currency || 'USD';
+    const value = Math.max(min, Math.min(Number(input.value || min), max));
+    input.value = value;
+    const out = wrap.querySelector('[data-qty-total]');
+    if (out && window.EventSphereUtils?.formatMoney) {
+      out.textContent = window.EventSphereUtils.formatMoney(value * unit, currency);
+    } else if (out) {
+      out.textContent = '$' + (value * unit).toFixed(2);
+    }
+  }
+
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-qty]');
+    const btn = e.target.closest('button[data-qty]');
     if (!btn) return;
     const wrap = btn.closest('.qty-wrap');
     const input = wrap.querySelector('input');
-    const unit = +wrap.dataset.price || 0;
-    let v = +input.value || 1;
-    v = btn.dataset.qty === '+' ? Math.min(10, v + 1) : Math.max(1, v - 1);
+    const min = Number(input.min || 1);
+    const max = Number(input.max || 10);
+    let v = Number(input.value || min);
+    v = btn.dataset.qty === '+' ? Math.min(max, v + 1) : Math.max(min, v - 1);
     input.value = v;
-    const out = wrap.querySelector('[data-qty-total]');
-    if (out) out.textContent = '$' + (v * unit).toFixed(2);
+    updateQtyTotal(wrap);
+  });
+
+  document.addEventListener('input', (e) => {
+    const input = e.target.closest('.qty-wrap input');
+    if (!input) return;
+    updateQtyTotal(input.closest('.qty-wrap'));
   });
 
   /* ---------- Mobile dash sidebar ---------- */

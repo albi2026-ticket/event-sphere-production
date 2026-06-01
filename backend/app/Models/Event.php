@@ -51,7 +51,7 @@ class Event extends Model
 
     public function ticketTypes(): HasMany
     {
-        return $this->hasMany(TicketType::class);
+        return $this->hasMany(TicketType::class)->orderBy('sort_order')->orderBy('price');
     }
 
     public function orderItems(): HasMany

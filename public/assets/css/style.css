@@ -394,6 +394,24 @@ a:hover { color: var(--secondary); }
 .dashboard-table { color: var(--text); }
 .dashboard-table thead { color: var(--muted); }
 .dashboard-table td { color: var(--text); border-top: 1px solid var(--border); }
+.dashboard-progress {
+  height: 6px;
+  background: var(--card-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.dashboard-progress .progress-bar { background: var(--grad-primary); }
+.event-banner-placeholder {
+  background:
+    linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent),
+    var(--card-2);
+  background-size: 220% 100%, auto;
+  animation: shimmer 1.4s infinite;
+}
+.event-banner-placeholder.event-banner-empty {
+  animation: none;
+  background: var(--card-2);
+}
 .dashboard-actions { display: inline-flex; gap: .4rem; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
 .dashboard-actions .btn { border-radius: 10px; padding: .42rem .7rem; }
 .dashboard-pagination {
@@ -426,6 +444,31 @@ a:hover { color: var(--secondary); }
   border: 1px solid var(--border-strong);
 }
 .dashboard-modal .modal-header { border-bottom: 1px solid var(--border); }
+#organizerEventModal .modal-dialog {
+  max-height: calc(100dvh - 1rem);
+}
+#organizerEventModal .dashboard-modal {
+  max-height: calc(100dvh - 1rem);
+  overflow: hidden;
+}
+#organizerEventModal [data-organizer-event-form] {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+#organizerEventModal .modal-header,
+#organizerEventModal .modal-footer {
+  flex: 0 0 auto;
+}
+#organizerEventModal .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
 .dashboard-detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -26,7 +26,7 @@ class UserDashboardController extends Controller
     {
         $tickets = $request->user()
             ->tickets()
-            ->with(['event', 'ticketType', 'order'])
+            ->with(['event.images', 'ticketType', 'order'])
             ->where('status', '!=', Ticket::STATUS_CANCELLED)
             ->where('status', '!=', Ticket::STATUS_REFUNDED)
             ->whereHas('event', fn ($query) => $query->where('starts_at', '>=', now()))

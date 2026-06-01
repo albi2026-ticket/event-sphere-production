@@ -112,6 +112,10 @@
       state.errors.summary = err.message || 'Failed to load dashboard summary';
     } finally {
       state.loading.summary = false;
+      renderGreeting();
+      renderAlert();
+      renderKpis();
+      renderActivity();
     }
   }
 
@@ -125,6 +129,8 @@
       state.errors.profile = err.message || 'Failed to load profile';
     } finally {
       state.loading.profile = false;
+      renderGreeting();
+      hydrateProfileForm();
     }
   }
 
@@ -139,6 +145,8 @@
       state.errors.upcoming = err.message || 'Failed to load upcoming events';
     } finally {
       state.loading.upcoming = false;
+      renderUpcomingEvents();
+      renderAlert();
     }
   }
 
@@ -180,13 +188,13 @@
       }
       state.tickets = result.tickets;
       state.ticketMeta = result.meta;
-
-      const activeResult = await ticketsApi().listTickets({ status: 'active', upcoming: 1, per_page: 4, sort: 'starts_at' });
-      state.activeTickets = activeResult.tickets;
     } catch (err) {
       state.errors.tickets = err.message || 'Failed to load tickets';
     } finally {
       state.loading.tickets = false;
+      renderTickets();
+      renderActivity();
+      renderAlert();
     }
   }
 
@@ -210,6 +218,9 @@
       state.errors.orders = err.message || 'Failed to load orders';
     } finally {
       state.loading.orders = false;
+      renderOrders();
+      renderActivity();
+      renderAlert();
     }
   }
 
@@ -229,6 +240,9 @@
       state.errors.favorites = err.message || 'Failed to load favorites';
     } finally {
       state.loading.favorites = false;
+      renderFavorites();
+      renderActivity();
+      renderAlert();
     }
   }
 

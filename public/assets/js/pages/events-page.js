@@ -37,7 +37,7 @@
     if (state.view === 'list') {
       return events.map((event) => {
         const date = u().formatEventDate(event.starts_at, event.timezone);
-        const price = event.base_price ?? event.ticket_types?.[0]?.price ?? 0;
+        const price = eventsApi().lowestAvailablePrice(event);
         return `
           <div class="col-12">
             <article class="card-pro p-3 d-flex gap-3 align-items-center flex-wrap">
@@ -48,7 +48,7 @@
                 <div class="venue"><i class="bi bi-geo-alt"></i> ${u().escapeHtml(event.venue_name || '')}${event.city ? `, ${u().escapeHtml(event.city)}` : ''}</div>
               </div>
               <div class="text-end">
-                <div class="price mb-2">From ${u().formatMoney(price, event.currency)}</div>
+                <div class="price mb-2">From ${u().formatMoney(price.amount, price.currency)}</div>
                 <a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(event.slug)}">View</a>
               </div>
               <span class="fav" data-fav="event-${event.id}" data-event-id="${event.id}" style="position:static"><i class="bi bi-heart"></i></span>

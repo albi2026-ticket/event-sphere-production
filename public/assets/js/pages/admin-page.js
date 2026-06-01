@@ -104,6 +104,10 @@
       state.errors.payments = err.message || 'Failed to load payments';
     } finally {
       state.loading.payments = false;
+      renderKpis();
+      renderCharts();
+      renderPayments();
+      renderActivity();
     }
   }
 
@@ -120,6 +124,10 @@
       state.errors.users = err.message || 'Failed to load users';
     } finally {
       state.loading.users = false;
+      renderKpis();
+      renderUsers();
+      renderOrganizers();
+      renderActivity();
     }
   }
 
@@ -135,6 +143,10 @@
       state.errors.events = err.message || 'Failed to load events';
     } finally {
       state.loading.events = false;
+      renderKpis();
+      renderCharts();
+      renderEvents();
+      renderActivity();
     }
   }
 
@@ -357,6 +369,7 @@
   }
 
   async function refreshAll() {
+    renderAll();
     await Promise.all([loadPayments(), loadUsers(), loadEvents()]);
     renderAll();
   }

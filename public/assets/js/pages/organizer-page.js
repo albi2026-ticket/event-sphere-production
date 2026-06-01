@@ -6,7 +6,25 @@
   const u = () => window.EventSphereUtils;
 
   const state = {
+    summary: null,
     events: [],
+    performance: [],
+    inventory: [],
+    attendees: [],
+    attendeeMeta: null,
+    revenue: null,
+    trends: [],
+    loading: {
+      summary: true,
+      events: true,
+      performance: true,
+      inventory: true,
+      attendees: true,
+      revenue: true,
+    },
+    errors: {},
+    attendeePage: 1,
+    groupBy: 'day',
     selectedEvent: null,
     pendingImages: [],
     busy: false,
@@ -15,486 +33,576 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    const user = auth().requireAuth(['organizer', 'admin'], { requireApprovedOrganizer: true });
-    if (!user) return;
-
-    wireEventForm();
-    wireTierControls();
-    wireImageUpload();
-    wireEventActions();
-    wireUtilityActions();
-
-    try {
-      await Promise.all([loadDashboard(), loadEvents()]);
-    } catch (err) {
-      window.tkToast?.(err.message || 'Failed to load organizer dashboard', 'error');
-    }
-  });
-
-  async function loadDashboard() {
-    const { data: summary } = await api().fetch('/organizer/dashboard/summary');
-    const cards = summary.cards || {};
-
-    const kpiRow = $('[data-organizer-kpis]');
-    if (kpiRow) {
-      kpiRow.innerHTML = `
-        <div class="col-md-3"><div class="kpi"><div class="label">Revenue</div><div class="value">${u().formatMoney(cards.total_revenue, 'USD')}</div></div></div>
-        <div class="col-md-3"><div class="kpi"><div class="label">Tickets sold</div><div class="value">${cards.tickets_sold ?? 0}</div></div></div>
-        <div class="col-md-3"><div class="kpi"><div class="label">Events</div><div class="value">${cards.events_count ?? 0}</div></div></div>
-        <div class="col-md-3"><div class="kpi"><div class="label">Attendees</div><div class="value">${cards.attendees_count ?? 0}</div></div></div>`;
-    }
-
-    await Promise.all([loadCharts(), loadAttendees()]);
+  function rows(value) {
+    if (Array.isArray(value)) return value;
+    if (Array.isArray(value?.data)) return value.data;
+    return [];
   }
 
-  async function loadCharts() {
-    const { data: trends } = await api().fetch('/organizer/analytics/sales-trends');
-    const revChart = document.getElementById('chartRev');
-    if (revChart && window.Chart && Array.isArray(trends)) {
-      const labels = trends.map((t) => String(t.period).slice(0, 10));
-      const values = trends.map((t) => Number(t.revenue));
-      if (window._chartRev) window._chartRev.destroy();
-      window._chartRev = new Chart(revChart, {
-        type: 'line',
-        data: { labels, datasets: [{ label: 'Revenue', data: values, borderColor: '#5B8CFF', tension: 0.35, fill: true, backgroundColor: 'rgba(91,140,255,.12)' }] },
-        options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#94A3B8' } }, x: { ticks: { color: '#94A3B8' } } } },
-      });
-    }
+  function esc(value) {
+    return u().escapeHtml(value ?? '');
+  }
 
-    const { data: analytics } = await api().fetch('/organizer/analytics');
-    const catChart = document.getElementById('chartCat');
-    if (catChart && window.Chart && analytics?.revenue_by_event) {
-      const byEvent = Array.isArray(analytics.revenue_by_event) ? analytics.revenue_by_event : [];
-      if (window._chartCat) window._chartCat.destroy();
-      window._chartCat = new Chart(catChart, {
-        type: 'doughnut',
-        data: {
-          labels: byEvent.map((e) => e.title),
-          datasets: [{ data: byEvent.map((e) => Number(e.revenue)), backgroundColor: ['#5B8CFF', '#8B5CF6', '#22C55E', '#F59E0B', '#EC4899'] }],
-        },
-        options: { plugins: { legend: { labels: { color: '#94A3B8' } } } },
+  function qs(params) {
+    const clean = {};
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && String(value).trim() !== '') clean[key] = value;
+    });
+    return new URLSearchParams(clean).toString();
+  }
+
+  function statusBadge(status) {
+    const colors = {
+      published: 'rgba(34,197,94,.15);color:#86efac',
+      active: 'rgba(34,197,94,.15);color:#86efac',
+      paid: 'rgba(34,197,94,.15);color:#86efac',
+      used: 'rgba(148,163,184,.15);color:#cbd5e1',
+      draft: 'rgba(91,140,255,.15);color:#93b4ff',
+      pending_review: 'rgba(245,158,11,.15);color:#fcd34d',
+      pending: 'rgba(245,158,11,.15);color:#fcd34d',
+      rejected: 'rgba(239,68,68,.18);color:#fca5a5',
+      cancelled: 'rgba(239,68,68,.18);color:#fca5a5',
+      refunded: 'rgba(91,140,255,.15);color:#93b4ff',
+      completed: 'rgba(148,163,184,.15);color:#cbd5e1',
+    };
+    const value = status || 'unknown';
+    return `<span class="badge" style="background:${colors[value] || 'rgba(148,163,184,.15);color:#cbd5e1'}">${esc(String(value).replace(/_/g, ' '))}</span>`;
+  }
+
+  function dateLabel(value, timezone) {
+    return value ? u().formatEventDate(value, timezone) : '-';
+  }
+
+  function loadingRow(cols, label) {
+    return `<tr><td colspan="${cols}"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>${esc(label)}</span></div></td></tr>`;
+  }
+
+  function errorRow(cols, message, retryAttr) {
+    return `<tr><td colspan="${cols}"><div class="dashboard-empty text-danger"><i class="bi bi-exclamation-triangle"></i><span>${esc(message)}</span><button class="btn btn-glass btn-sm" type="button" ${retryAttr}>Retry</button></div></td></tr>`;
+  }
+
+  function emptyRow(cols, icon, title, detail) {
+    return `<tr><td colspan="${cols}"><div class="dashboard-empty"><i class="bi ${icon}"></i><div><div class="fw-semibold">${esc(title)}</div><small>${esc(detail || '')}</small></div></div></td></tr>`;
+  }
+
+  function emptyBlock(icon, title, detail) {
+    return `<div class="dashboard-empty"><i class="bi ${icon}"></i><div><div class="fw-semibold">${esc(title)}</div><small>${esc(detail || '')}</small></div></div>`;
+  }
+
+  function pagination(meta, attr) {
+    if (!meta || meta.last_page <= 1) return '';
+    const current = Number(meta.current_page || 1);
+    const last = Number(meta.last_page || 1);
+    return `<div class="dashboard-pagination">
+      <button class="btn btn-glass btn-sm" type="button" ${attr}="${current - 1}" ${current <= 1 ? 'disabled' : ''}><i class="bi bi-chevron-left"></i></button>
+      <span class="text-muted-pro small">Page ${current} of ${last}</span>
+      <button class="btn btn-glass btn-sm" type="button" ${attr}="${current + 1}" ${current >= last ? 'disabled' : ''}><i class="bi bi-chevron-right"></i></button>
+    </div>`;
+  }
+
+  async function loadSummary() {
+    state.loading.summary = true;
+    state.errors.summary = null;
+    try {
+      const { data } = await api().fetch('/organizer/dashboard/summary');
+      state.summary = data;
+    } catch (err) {
+      state.errors.summary = err.message || 'Failed to load organizer summary';
+    } finally {
+      state.loading.summary = false;
+      renderKpis();
+      renderAlert();
+    }
+  }
+
+  async function loadEvents() {
+    state.loading.events = true;
+    state.errors.events = null;
+    renderEvents();
+    try {
+      const query = qs({
+        per_page: 100,
+        sort: 'newest',
+        q: $('[data-organizer-event-search]')?.value,
+        status: $('[data-organizer-event-status]')?.value,
       });
+      const res = await api().fetch(`/organizer/events${query ? `?${query}` : ''}`);
+      state.events = rows(res.data);
+      hydrateEventFilter();
+    } catch (err) {
+      state.errors.events = err.message || 'Failed to load events';
+    } finally {
+      state.loading.events = false;
+      renderEvents();
+      renderAlert();
+    }
+  }
+
+  async function loadPerformance() {
+    state.loading.performance = true;
+    state.errors.performance = null;
+    renderPerformance();
+    try {
+      const { data } = await api().fetch('/organizer/events/performance?sort=-revenue&per_page=100');
+      state.performance = rows(data);
+    } catch (err) {
+      state.errors.performance = err.message || 'Failed to load ticket performance';
+    } finally {
+      state.loading.performance = false;
+      renderPerformance();
+      renderEvents();
+      renderAlert();
+    }
+  }
+
+  async function loadInventory() {
+    state.loading.inventory = true;
+    state.errors.inventory = null;
+    renderInventory();
+    try {
+      const { data } = await api().fetch('/organizer/inventory');
+      state.inventory = rows(data);
+    } catch (err) {
+      state.errors.inventory = err.message || 'Failed to load inventory';
+    } finally {
+      state.loading.inventory = false;
+      renderInventory();
+      renderAlert();
+    }
+  }
+
+  async function loadRevenue() {
+    state.loading.revenue = true;
+    state.errors.revenue = null;
+    renderRevenue();
+    try {
+      const { data } = await api().fetch(`/organizer/analytics/revenue?group_by=${encodeURIComponent(state.groupBy)}`);
+      state.revenue = data;
+      state.trends = rows(data?.trends);
+    } catch (err) {
+      state.errors.revenue = err.message || 'Failed to load revenue analytics';
+    } finally {
+      state.loading.revenue = false;
+      renderRevenue();
+      renderAlert();
     }
   }
 
   async function loadAttendees() {
-    const attBody = $('[data-organizer-attendees] tbody');
-    if (!attBody) return;
-
-    const res = await api().fetch('/organizer/orders/recent?per_page=5');
-    const orders = Array.isArray(res.data) ? res.data : [];
-    attBody.innerHTML = orders.map((o) =>
-      `<tr><td>${u().escapeHtml(o.user?.name || o.billing_first_name || 'Guest')}</td><td>${u().escapeHtml(o.items?.[0]?.event_title || '—')}</td><td>${o.items?.reduce((s, i) => s + (i.quantity || 0), 0) || 0}</td><td>${u().formatMoney(o.total, o.currency)}</td><td><span class="badge" style="background:rgba(34,197,94,.15);color:#86efac">${u().escapeHtml(o.payment_status)}</span></td><td></td></tr>`,
-    ).join('') || '<tr><td colspan="6" class="text-muted-pro">No recent orders</td></tr>';
+    state.loading.attendees = true;
+    state.errors.attendees = null;
+    renderAttendees();
+    try {
+      const query = qs({
+        per_page: 10,
+        page: state.attendeePage,
+        search: $('[data-attendee-search]')?.value,
+        event_id: $('[data-attendee-event]')?.value,
+        ticket_status: $('[data-attendee-status]')?.value,
+        sort: '-created_at',
+      });
+      const res = await api().fetch(`/organizer/attendees${query ? `?${query}` : ''}`);
+      state.attendees = rows(res.data);
+      state.attendeeMeta = res.meta;
+    } catch (err) {
+      state.errors.attendees = err.message || 'Failed to load attendees';
+    } finally {
+      state.loading.attendees = false;
+      renderAttendees();
+      renderAlert();
+    }
   }
 
-  async function loadEvents(selectId = null) {
-    const body = $('[data-organizer-events]');
-    if (body) body.innerHTML = '<tr><td colspan="6" class="text-muted-pro">Loading events...</td></tr>';
+  function renderAlert() {
+    const el = $('[data-organizer-alert]');
+    if (!el) return;
+    const errors = Object.values(state.errors).filter(Boolean);
+    el.innerHTML = errors.length
+      ? `<div class="alert border-pro dashboard-note text-danger"><i class="bi bi-exclamation-triangle me-2"></i>${esc(errors[0])}</div>`
+      : '';
+  }
 
-    const res = await api().fetch('/organizer/events?per_page=100&sort=newest');
-    state.events = Array.isArray(res.data) ? res.data : [];
-    renderEvents();
-
-    if (selectId) {
-      await selectEvent(selectId);
-    } else if (state.selectedEvent) {
-      const refreshed = state.events.find((event) => event.id === state.selectedEvent.id);
-      if (refreshed) fillForm(refreshed);
+  function renderKpis() {
+    const kpiRow = $('[data-organizer-kpis]');
+    if (!kpiRow) return;
+    if (state.loading.summary) {
+      kpiRow.innerHTML = Array.from({ length: 4 }).map(() => '<div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>').join('');
+      return;
     }
+    const cards = state.summary?.cards || {};
+    kpiRow.innerHTML = `
+      <div class="col-md-3"><div class="kpi"><div class="label">Revenue</div><div class="value">${u().formatMoney(cards.total_revenue || 0, 'USD')}</div><div class="delta">${cards.paid_orders_count ?? 0} paid orders</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">Tickets sold</div><div class="value">${cards.tickets_sold ?? 0}</div><div class="delta">${cards.active_tickets_count ?? 0} active tickets</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">Published events</div><div class="value">${cards.published_events_count ?? 0}</div><div class="delta">${cards.events_count ?? 0} total events</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">Attendees</div><div class="value">${cards.attendees_count ?? 0}</div><div class="delta">${cards.checked_in_count ?? 0} checked in</div></div></div>`;
+
+    const subtitle = $('[data-organizer-subtitle]');
+    if (subtitle) subtitle.textContent = `${cards.upcoming_events_count ?? 0} upcoming events · ${cards.sold_out_ticket_types_count ?? 0} sold-out ticket tiers`;
+  }
+
+  function performanceFor(eventId) {
+    return state.performance.find((item) => String(item.event_id) === String(eventId)) || {};
   }
 
   function renderEvents() {
     const body = $('[data-organizer-events]');
     if (!body) return;
-
-    if (!state.events.length) {
-      body.innerHTML = '<tr><td colspan="6" class="text-muted-pro">No events yet. Create your first event above.</td></tr>';
+    if (state.loading.events) {
+      body.innerHTML = loadingRow(7, 'Loading events...');
       return;
     }
-
+    if (state.errors.events) {
+      body.innerHTML = errorRow(7, state.errors.events, 'data-retry-events');
+      return;
+    }
     body.innerHTML = state.events.map((event) => {
+      const perf = performanceFor(event.id);
       const tiers = event.ticket_types || [];
       const total = tiers.reduce((sum, tier) => sum + Number(tier.quantity_total || 0), 0);
       const sold = tiers.reduce((sum, tier) => sum + Number(tier.quantity_sold || 0), 0);
       const reserved = tiers.reduce((sum, tier) => sum + Number(tier.quantity_reserved || 0), 0);
       const available = Math.max(0, total - sold - reserved);
-      const statusStyle = statusBadgeStyle(event.status);
-
-      return `<tr data-event-row="${event.id}">
-        <td><div class="fw-semibold">${u().escapeHtml(event.title)}</div><small class="text-muted-pro">${u().escapeHtml(event.city || '')}${event.venue_name ? ` · ${u().escapeHtml(event.venue_name)}` : ''}</small></td>
-        <td><span class="badge" style="${statusStyle}">${u().escapeHtml(event.status)}</span></td>
-        <td>${tiers.length}</td>
-        <td>${available} available / ${total} total</td>
-        <td>${u().escapeHtml(u().formatEventDate(event.starts_at, event.timezone))}</td>
-        <td class="text-end"><button class="btn btn-glass btn-sm" type="button" data-event-edit="${event.id}">Manage</button></td>
+      const revenue = perf.revenue ?? 0;
+      return `<tr>
+        <td><div class="fw-semibold">${esc(event.title)}</div><small class="text-muted-pro">${esc(event.city || '')}${event.venue_name ? ` · ${esc(event.venue_name)}` : ''}</small></td>
+        <td>${statusBadge(event.status)}</td>
+        <td>${esc(dateLabel(event.starts_at, event.timezone))}</td>
+        <td>${sold} sold / ${total} total</td>
+        <td>${u().formatMoney(revenue, event.currency || 'USD')}</td>
+        <td>${available} remaining</td>
+        <td class="text-end">
+          <div class="dashboard-actions">
+            <button class="btn btn-glass btn-sm" type="button" data-event-edit="${event.id}"><i class="bi bi-pencil me-1"></i>Edit</button>
+            ${event.status === 'published'
+              ? `<button class="btn btn-glass btn-sm" type="button" data-event-unpublish="${event.id}">Unpublish</button>`
+              : `<button class="btn btn-glass btn-sm" type="button" data-event-publish="${event.id}">Publish</button>`}
+            <button class="btn btn-glass btn-sm" type="button" data-event-analytics="${event.id}"><i class="bi bi-graph-up"></i></button>
+          </div>
+        </td>
       </tr>`;
-    }).join('');
+    }).join('') || emptyRow(7, 'bi-calendar-event', 'No events found', 'Create an event or adjust your filters.');
   }
 
-  function statusBadgeStyle(status) {
-    if (status === 'published') return 'background:rgba(34,197,94,.15);color:#86efac';
-    if (status === 'rejected' || status === 'cancelled') return 'background:rgba(239,68,68,.18);color:#fca5a5';
-    if (status === 'pending_review') return 'background:rgba(245,158,11,.18);color:#fcd34d';
-    return 'background:rgba(91,140,255,.15);color:#93b4ff';
-  }
-
-  function wireEventForm() {
-    const form = $('[data-organizer-event-form]');
-    if (!form) return;
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      await saveEvent({ publish: false, forceStatus: state.selectedEvent?.status || 'draft' });
-    });
-
-    $('[data-organizer-save-draft]')?.addEventListener('click', async () => {
-      await saveEvent({ publish: false, forceStatus: 'draft' });
-    });
-
-    $('[data-organizer-publish]')?.addEventListener('click', async () => {
-      await saveEvent({ publish: true, forceStatus: 'draft' });
-    });
-  }
-
-  function wireTierControls() {
-    $('[data-tier-add]')?.addEventListener('click', () => {
-      addTierRow({ name: 'New tier', price: '0.00', quantity_total: 100 });
-    });
-
-    document.addEventListener('click', async (e) => {
-      const deleteBtn = e.target.closest('[data-tier-delete]');
-      if (!deleteBtn) return;
-      e.preventDefault();
-      const row = deleteBtn.closest('[data-tier-row]');
-      const id = row?.dataset.ticketTypeId;
-
-      if (id) {
-        if (!confirm('Delete this ticket tier?')) return;
-        try {
-          setBusy(true);
-          await api().fetch(`/organizer/ticket-types/${id}`, { method: 'DELETE' });
-          window.tkToast?.('Ticket tier deleted');
-          row.remove();
-          await refreshSelectedEvent();
-          await loadEvents(state.selectedEvent?.id);
-        } catch (err) {
-          window.tkToast?.(err.message || 'Ticket tier delete failed', 'error');
-        } finally {
-          setBusy(false);
-        }
-        return;
-      }
-
-      const rows = $$('[data-tier-row]');
-      if (rows.length <= 1) {
-        window.tkToast?.('At least one ticket tier is required.', 'info');
-        return;
-      }
-      row?.remove();
-    });
-
-    document.addEventListener('click', async (e) => {
-      const editBtn = e.target.closest('[data-event-edit]');
-      if (!editBtn) return;
-      e.preventDefault();
-      await selectEvent(Number(editBtn.dataset.eventEdit));
-    });
-  }
-
-  function wireImageUpload() {
-    const area = $('[data-organizer-upload-area]');
-    const input = $('[data-organizer-image-input]');
-
-    $('[data-organizer-browse-image]')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      input?.click();
-    });
-
-    input?.addEventListener('change', () => {
-      setPendingImages(Array.from(input.files || []));
-    });
-
-    area?.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      area.style.borderColor = 'rgba(91,140,255,.65)';
-    });
-
-    area?.addEventListener('dragleave', () => {
-      area.style.borderColor = '';
-    });
-
-    area?.addEventListener('drop', (e) => {
-      e.preventDefault();
-      area.style.borderColor = '';
-      const files = Array.from(e.dataTransfer?.files || []);
-      if (!files.length) return;
-      setPendingImages(files);
-    });
-
-    document.addEventListener('click', async (e) => {
-      const btn = e.target.closest('[data-image-delete]');
-      if (!btn) return;
-      e.preventDefault();
-      if (!confirm('Delete this event image?')) return;
-      try {
-        setBusy(true);
-        await api().fetch(`/organizer/event-images/${btn.dataset.imageDelete}`, { method: 'DELETE' });
-        window.tkToast?.('Image deleted');
-        await refreshSelectedEvent();
-        await loadEvents(state.selectedEvent?.id);
-      } catch (err) {
-        window.tkToast?.(err.message || 'Image delete failed', 'error');
-      } finally {
-        setBusy(false);
-      }
-    });
-
-    document.addEventListener('click', async (e) => {
-      const btn = e.target.closest('[data-image-primary]');
-      if (!btn) return;
-      e.preventDefault();
-      try {
-        setBusy(true);
-        await api().fetch(`/organizer/event-images/${btn.dataset.imagePrimary}`, {
-          method: 'PATCH',
-          body: { is_primary: true, type: 'banner' },
-        });
-        window.tkToast?.('Primary image updated');
-        await refreshSelectedEvent();
-        await loadEvents(state.selectedEvent?.id);
-      } catch (err) {
-        window.tkToast?.(err.message || 'Image update failed', 'error');
-      } finally {
-        setBusy(false);
-      }
-    });
-  }
-
-  function wireEventActions() {
-    $('[data-organizer-new-event]')?.addEventListener('click', () => {
-      resetForm();
-      $('#create')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-
-    $('[data-organizer-delete-event]')?.addEventListener('click', async () => {
-      if (!state.selectedEvent) return;
-      if (!confirm('Delete this event? Events with tickets or orders must be moved to draft or cancelled instead.')) return;
-      try {
-        setBusy(true);
-        await api().fetch(`/organizer/events/${state.selectedEvent.id}`, { method: 'DELETE' });
-        window.tkToast?.('Event deleted');
-        resetForm();
-        await Promise.all([loadEvents(), loadDashboard()]);
-      } catch (err) {
-        window.tkToast?.(err.message || 'Event delete failed', 'error');
-      } finally {
-        setBusy(false);
-      }
-    });
-  }
-
-  function wireUtilityActions() {
-    document.querySelectorAll('[data-organizer-range]').forEach((button) => {
-      button.addEventListener('click', async () => {
-        document.querySelectorAll('[data-organizer-range]').forEach((btn) => btn.classList.remove('active'));
-        button.classList.add('active');
-        try {
-          await loadCharts();
-          window.tkToast?.(`Analytics refreshed for ${button.textContent.trim()}`);
-        } catch (err) {
-          window.tkToast?.(err.message || 'Analytics refresh failed', 'error');
-        }
-      });
-    });
-
-    $('[data-organizer-open-camera]')?.addEventListener('click', () => {
-      window.tkToast?.('Camera scanning needs a browser camera/QR implementation. Use manual ticket validation APIs for now.', 'info');
-    });
-  }
-
-  async function selectEvent(id) {
-    try {
-      setBusy(true);
-      const { data } = await api().fetch(`/organizer/events/${id}`);
-      fillForm(data);
-      $('#create')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } catch (err) {
-      window.tkToast?.(err.message || 'Failed to load event', 'error');
-    } finally {
-      setBusy(false);
+  function renderPerformance() {
+    const body = $('[data-organizer-performance]');
+    if (!body) return;
+    if (state.loading.performance) {
+      body.innerHTML = loadingRow(5, 'Loading performance...');
+      return;
     }
+    if (state.errors.performance) {
+      body.innerHTML = errorRow(5, state.errors.performance, 'data-retry-performance');
+      return;
+    }
+    body.innerHTML = state.performance.map((item) => {
+      const sold = Number(item.tickets_sold || 0);
+      const total = Number(item.tickets_total || 0);
+      const pct = total ? Math.round((sold / total) * 100) : 0;
+      return `<tr>
+        <td><div class="fw-semibold">${esc(item.title)}</div><small class="text-muted-pro">${statusBadge(item.status)}</small></td>
+        <td>${sold}</td>
+        <td>${item.tickets_available ?? 0}</td>
+        <td>${item.orders_count ?? 0}</td>
+        <td><div>${item.checked_in_count ?? 0} / ${item.attendees_count ?? 0}</div><div class="progress dashboard-progress"><div class="progress-bar" style="width:${pct}%"></div></div></td>
+      </tr>`;
+    }).join('') || emptyRow(5, 'bi-graph-up', 'No ticket performance yet', 'Sales and attendance metrics will appear after tickets are purchased.');
   }
 
-  async function refreshSelectedEvent() {
-    if (!state.selectedEvent) return;
-    const { data } = await api().fetch(`/organizer/events/${state.selectedEvent.id}`);
-    fillForm(data);
+  function renderInventory() {
+    const wrap = $('[data-organizer-inventory]');
+    if (!wrap) return;
+    if (state.loading.inventory) {
+      wrap.innerHTML = `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading inventory...</span></div>`;
+      return;
+    }
+    if (state.errors.inventory) {
+      wrap.innerHTML = `<div class="dashboard-empty text-danger"><i class="bi bi-exclamation-triangle"></i><span>${esc(state.errors.inventory)}</span><button class="btn btn-glass btn-sm" type="button" data-retry-inventory>Retry</button></div>`;
+      return;
+    }
+    wrap.innerHTML = state.inventory.slice(0, 8).map((tier) => {
+      const total = Number(tier.quantity_total || 0);
+      const available = Number(tier.quantity_available || 0);
+      const sold = Number(tier.quantity_sold || 0);
+      const pct = total ? Math.min(100, Math.round((sold / total) * 100)) : 0;
+      return `<div class="dashboard-mini-row">
+        <div class="flex-grow-1">
+          <div class="fw-semibold">${esc(tier.event_title)}</div>
+          <small>${esc(tier.name)} · ${available} remaining of ${total}</small>
+          <div class="progress dashboard-progress mt-2"><div class="progress-bar" style="width:${pct}%"></div></div>
+        </div>
+        ${statusBadge(tier.status)}
+      </div>`;
+    }).join('') || emptyBlock('bi-ticket', 'No ticket tiers yet', 'Create ticket tiers for an event to track inventory.');
   }
 
-  function fillForm(event) {
+  function renderAttendees() {
+    const body = $('[data-organizer-attendees]');
+    const pager = $('[data-attendee-pagination]');
+    if (!body) return;
+    if (state.loading.attendees) {
+      body.innerHTML = loadingRow(6, 'Loading attendees...');
+      if (pager) pager.innerHTML = '';
+      return;
+    }
+    if (state.errors.attendees) {
+      body.innerHTML = errorRow(6, state.errors.attendees, 'data-retry-attendees');
+      if (pager) pager.innerHTML = '';
+      return;
+    }
+    body.innerHTML = state.attendees.map((ticket) => `
+      <tr>
+        <td><div class="fw-semibold">${esc(ticket.attendee?.name || 'Guest')}</div><small class="text-muted-pro">${esc(ticket.attendee?.email || '')}</small></td>
+        <td>${esc(ticket.event?.title || '-')}</td>
+        <td><div>${esc(ticket.ticket_code)}</div><small class="text-muted-pro">${esc(ticket.ticket_type?.name || '')}</small></td>
+        <td>${esc(ticket.order?.order_number || '-')}</td>
+        <td>${statusBadge(ticket.status)}</td>
+        <td class="text-end"><button class="btn btn-glass btn-sm" type="button" data-attendee-details="${ticket.id}"><i class="bi bi-eye me-1"></i>Details</button></td>
+      </tr>
+    `).join('') || emptyRow(6, 'bi-people', 'No attendees found', 'Attendees appear here after tickets are issued.');
+    if (pager) pager.innerHTML = pagination(state.attendeeMeta, 'data-attendee-page');
+  }
+
+  function renderRevenue() {
+    renderRevenueChart();
+    renderRevenueByEventChart();
+    const body = $('[data-organizer-revenue-table]');
+    if (!body) return;
+    if (state.loading.revenue) {
+      body.innerHTML = loadingRow(4, 'Loading revenue...');
+      return;
+    }
+    if (state.errors.revenue) {
+      body.innerHTML = errorRow(4, state.errors.revenue, 'data-retry-revenue');
+      return;
+    }
+    const byEvent = rows(state.revenue?.by_event);
+    body.innerHTML = byEvent.map((item) => `
+      <tr>
+        <td><div class="fw-semibold">${esc(item.title)}</div><small class="text-muted-pro">${esc(item.slug)}</small></td>
+        <td>${u().formatMoney(item.revenue, item.currency || 'USD')}</td>
+        <td>${item.tickets_sold ?? 0}</td>
+        <td>${item.orders_count ?? 0}</td>
+      </tr>
+    `).join('') || emptyRow(4, 'bi-cash-stack', 'No revenue yet', 'Paid orders will populate this table.');
+  }
+
+  function renderRevenueChart() {
+    const canvas = document.getElementById('chartRev');
+    const empty = $('[data-organizer-revenue-empty]');
+    if (!canvas || !window.Chart) return;
+    if (state.loading.revenue || state.errors.revenue) {
+      if (empty) empty.innerHTML = state.errors.revenue ? emptyBlock('bi-exclamation-triangle', 'Revenue chart unavailable', state.errors.revenue) : '';
+      return;
+    }
+    const labels = state.trends.map((item) => String(item.period).slice(0, 10));
+    const values = state.trends.map((item) => Number(item.revenue || 0));
+    if (window._chartRev) window._chartRev.destroy();
+    if (!labels.length) {
+      if (empty) empty.innerHTML = emptyBlock('bi-graph-up', 'No revenue trend yet', 'Revenue trends appear after paid orders.');
+      return;
+    }
+    if (empty) empty.innerHTML = '';
+    window._chartRev = new Chart(canvas, {
+      type: 'line',
+      data: { labels, datasets: [{ label: 'Revenue', data: values, borderColor: '#5B8CFF', tension: 0.35, fill: true, backgroundColor: 'rgba(91,140,255,.12)' }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(255,255,255,.06)' } }, x: { ticks: { color: '#94A3B8' }, grid: { display: false } } } },
+    });
+  }
+
+  function renderRevenueByEventChart() {
+    const canvas = document.getElementById('chartCat');
+    const empty = $('[data-organizer-event-revenue-empty]');
+    if (!canvas || !window.Chart) return;
+    if (state.loading.revenue || state.errors.revenue) return;
+    const byEvent = rows(state.revenue?.by_event).slice(0, 6);
+    if (window._chartCat) window._chartCat.destroy();
+    if (!byEvent.length) {
+      if (empty) empty.innerHTML = emptyBlock('bi-pie-chart', 'No event revenue yet', 'Revenue by event appears after sales.');
+      return;
+    }
+    if (empty) empty.innerHTML = '';
+    window._chartCat = new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        labels: byEvent.map((item) => item.title),
+        datasets: [{ data: byEvent.map((item) => Number(item.revenue || 0)), backgroundColor: ['#5B8CFF', '#8B5CF6', '#22C55E', '#F59E0B', '#EC4899', '#14B8A6'] }],
+      },
+      options: { plugins: { legend: { position: 'bottom', labels: { color: '#94A3B8' } } } },
+    });
+  }
+
+  function hydrateEventFilter() {
+    const select = $('[data-attendee-event]');
+    if (!select) return;
+    const current = select.value;
+    select.innerHTML = '<option value="">All events</option>' + state.events.map((event) => `<option value="${event.id}">${esc(event.title)}</option>`).join('');
+    select.value = current;
+  }
+
+  function renderAll() {
+    renderAlert();
+    renderKpis();
+    renderEvents();
+    renderPerformance();
+    renderInventory();
+    renderAttendees();
+    renderRevenue();
+  }
+
+  async function refreshAll() {
+    renderAll();
+    await Promise.all([loadSummary(), loadEvents(), loadPerformance(), loadInventory(), loadAttendees(), loadRevenue()]);
+    renderAll();
+  }
+
+  async function refreshEventsAndAnalytics() {
+    await Promise.all([loadSummary(), loadEvents(), loadPerformance(), loadInventory(), loadRevenue()]);
+    renderAll();
+  }
+
+  function eventPayload() {
+    const form = $('[data-organizer-event-form]');
+    const fd = new FormData(form);
+    return {
+      title: String(fd.get('title') || '').trim(),
+      category: String(fd.get('category') || '').trim(),
+      description: String(fd.get('description') || '').trim() || null,
+      venue_name: String(fd.get('venue_name') || '').trim(),
+      city: String(fd.get('city') || '').trim(),
+      address: String(fd.get('address') || '').trim() || null,
+      starts_at: fd.get('starts_at'),
+      ends_at: fd.get('ends_at') || null,
+      status: fd.get('status'),
+      banner_image_url: String(fd.get('banner_image_url') || '').trim() || null,
+      visibility: 'public',
+      currency: 'USD',
+    };
+  }
+
+  function formError(message) {
+    const el = $('[data-event-form-error]');
+    if (el) el.innerHTML = message ? `<div class="alert border-pro dashboard-note text-danger">${esc(message)}</div>` : '';
+  }
+
+  function openEventModal(event = null) {
     const form = $('[data-organizer-event-form]');
     if (!form) return;
-
+    form.reset();
+    formError('');
     state.selectedEvent = event;
     state.pendingImages = [];
-    form.elements.event_id.value = event.id;
-    form.elements.title.value = event.title || '';
-    form.elements.category.value = event.category || 'Concert';
-    form.elements.starts_at.value = toDatetimeLocal(event.starts_at);
-    form.elements.venue_name.value = event.venue_name || '';
-    form.elements.city.value = event.city || '';
-    form.elements.description.value = event.description || '';
-
-    $('[data-organizer-form-title]').textContent = 'Manage event';
-    $('[data-organizer-submit]').textContent = 'Save event';
-    $('[data-organizer-delete-event]').style.display = '';
-    updateStatusButtons(event.status);
+    form.elements.event_id.value = event?.id || '';
+    form.elements.title.value = event?.title || '';
+    setSelectValue(form.elements.category, event?.category || '');
+    form.elements.starts_at.value = toDatetimeLocal(event?.starts_at);
+    form.elements.ends_at.value = toDatetimeLocal(event?.ends_at);
+    form.elements.status.value = event?.status || 'draft';
+    form.elements.venue_name.value = event?.venue_name || '';
+    form.elements.city.value = event?.city || '';
+    form.elements.address.value = event?.address || '';
+    form.elements.banner_image_url.value = event?.banner_image_url || '';
+    form.elements.description.value = event?.description || '';
+    renderTierRows(event?.ticket_types || []);
+    renderGallery(event?.images || []);
     updateImageName(null);
-
-    const wrap = $('[data-organizer-tiers]');
-    if (wrap) {
-      wrap.innerHTML = '';
-      const tiers = event.ticket_types || [];
-      if (tiers.length) tiers.forEach(addTierRow);
-      else addTierRow({ name: 'General Admission', price: '0.00', quantity_total: 100 });
-    }
-
-    renderGallery(event.images || []);
+    $('[data-event-modal-title]').textContent = event ? 'Edit event' : 'Create event';
+    bootstrap.Modal.getOrCreateInstance($('#organizerEventModal')).show();
   }
 
-  function resetForm() {
-    const form = $('[data-organizer-event-form]');
-    if (!form) return;
-    state.selectedEvent = null;
-    state.pendingImages = [];
-    form.reset();
-    form.elements.event_id.value = '';
-    $('[data-organizer-form-title]').textContent = 'Create event';
-    $('[data-organizer-submit]').textContent = 'Create event';
-    $('[data-organizer-delete-event]').style.display = 'none';
-    updateStatusButtons('draft');
-    updateImageName(null);
-    renderGallery([]);
-
-    const wrap = $('[data-organizer-tiers]');
-    if (wrap) {
-      wrap.innerHTML = '';
-      addTierRow({ name: 'General Admission', price: '89.00', quantity_total: 5000 });
-      addTierRow({ name: 'VIP Pit', price: '320.00', quantity_total: 500 });
-    }
-  }
-
-  function addTierRow(tier) {
-    const wrap = $('[data-organizer-tiers]');
-    if (!wrap) return;
-
-    const row = document.createElement('div');
-    row.className = 'card-pro p-3 mb-2 d-flex gap-2 align-items-center';
-    row.dataset.tierRow = '';
-    if (tier.id) row.dataset.ticketTypeId = tier.id;
-    row.innerHTML = `<input class="form-control" name="tier_name" value="${u().escapeHtml(tier.name || '')}" aria-label="Tier name"/>
-      <input class="form-control" name="tier_price" type="number" min="0" step="0.01" value="${u().escapeHtml(tier.price ?? '0.00')}" style="max-width:100px" aria-label="Tier price"/>
-      <input class="form-control" name="tier_quantity" type="number" min="0" step="1" value="${u().escapeHtml(tier.quantity_total ?? 0)}" style="max-width:110px" aria-label="Tier quantity"/>
-      <button class="btn btn-glass" type="button" data-tier-delete><i class="bi bi-trash"></i></button>`;
-    wrap.appendChild(row);
-  }
-
-  function renderGallery(images) {
-    const gallery = $('[data-organizer-gallery]');
-    if (!gallery) return;
-
-    if (!images.length) {
-      gallery.innerHTML = '<div class="col-12 small text-muted-pro">No uploaded images yet.</div>';
-      return;
-    }
-
-    gallery.innerHTML = images.map((image) => `
-      <div class="col-6">
-        <div class="card-pro p-2">
-          <img src="${u().escapeHtml(image.optimized_url || image.url)}" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px"/>
-          <div class="d-flex justify-content-between align-items-center mt-2">
-            <small class="text-muted-pro">${image.is_primary ? 'Primary' : u().escapeHtml(image.type || 'gallery')}</small>
-            <div class="d-flex gap-1">
-              <button class="btn btn-glass btn-sm" type="button" data-image-primary="${image.id}" ${image.is_primary ? 'disabled' : ''}>Primary</button>
-              <button class="btn btn-glass btn-sm" type="button" data-image-delete="${image.id}"><i class="bi bi-trash"></i></button>
-            </div>
-          </div>
-        </div>
-      </div>`).join('');
-  }
-
-  async function saveEvent({ publish, forceStatus }) {
+  async function saveEvent() {
     const form = $('[data-organizer-event-form]');
     if (!form || state.busy) return;
+    formError('');
     if (!form.reportValidity()) return;
-
+    const payload = eventPayload();
+    if (!payload.title || !payload.category || !payload.venue_name || !payload.city || !payload.starts_at) {
+      formError('Please complete all required event fields.');
+      return;
+    }
     const tiers = collectTiers();
     if (!tiers.length) {
-      window.tkToast?.('Add at least one ticket tier.', 'error');
+      formError('Add at least one ticket type.');
       return;
     }
-    const targetStatus = publish ? 'published' : forceStatus;
-    if (targetStatus === 'published' && !tiers.some((tier) => tier.quantity_total > 0 && tier.status !== 'inactive')) {
-      window.tkToast?.('Published events need an active ticket tier with inventory.', 'error');
+    const wantsPublished = payload.status === 'published';
+    if (wantsPublished && !tiers.some((tier) => tier.status === 'active' && Number(tier.quantity_total) > 0)) {
+      formError('Published events need at least one active ticket type with available inventory.');
       return;
     }
-
+    const eventId = form.elements.event_id.value;
     try {
       setBusy(true);
-      const payload = eventPayload(forceStatus);
-      let event = state.selectedEvent;
-
-      if (event) {
-        const { data } = await api().fetch(`/organizer/events/${event.id}`, {
-          method: 'PATCH',
-          body: payload,
-        });
-        event = data;
+      let savedEvent;
+      const basePayload = wantsPublished ? { ...payload, status: 'draft' } : payload;
+      if (eventId) {
+        const { data } = await api().fetch(`/organizer/events/${eventId}`, { method: 'PATCH', body: basePayload });
+        savedEvent = data;
+        window.tkToast?.('Event updated');
       } else {
-        const { data } = await api().fetch('/organizer/events', {
-          method: 'POST',
-          body: { ...payload, status: 'draft' },
-        });
-        event = data;
+        const { data } = await api().fetch('/organizer/events', { method: 'POST', body: { ...basePayload, status: 'draft' } });
+        savedEvent = data;
+        window.tkToast?.('Draft event created');
       }
-
-      await syncTicketTiers(event.id, tiers);
-      await uploadPendingImages(event);
-
-      if (publish) {
-        const { data } = await api().fetch(`/organizer/events/${event.id}`, {
-          method: 'PATCH',
-          body: { status: 'published' },
-        });
-        event = data;
+      await syncTicketTiers(savedEvent.id, tiers);
+      await uploadPendingImages(savedEvent);
+      if (wantsPublished) {
+        await api().fetch(`/organizer/events/${savedEvent.id}`, { method: 'PATCH', body: { status: 'published' } });
+        window.tkToast?.('Event published');
       }
-
-      state.selectedEvent = event;
-      window.tkToast?.(publish ? 'Event published' : 'Event saved');
-      await Promise.all([loadEvents(event.id), loadDashboard()]);
+      bootstrap.Modal.getOrCreateInstance($('#organizerEventModal')).hide();
+      await refreshEventsAndAnalytics();
     } catch (err) {
+      formError(err.message || 'Event save failed');
       window.tkToast?.(err.message || 'Event save failed', 'error');
     } finally {
       setBusy(false);
     }
   }
 
-  function eventPayload(status) {
-    const form = $('[data-organizer-event-form]');
-    const fd = new FormData(form);
-    return {
-      title: String(fd.get('title') || '').trim(),
-      category: fd.get('category'),
-      description: String(fd.get('description') || '').trim() || null,
-      venue_name: String(fd.get('venue_name') || '').trim(),
-      city: String(fd.get('city') || '').trim(),
-      starts_at: fd.get('starts_at'),
-      status,
-      visibility: 'public',
-      currency: 'USD',
-    };
+  async function quickStatus(eventId, status) {
+    try {
+      setBusy(true);
+      await api().fetch(`/organizer/events/${eventId}`, { method: 'PATCH', body: { status } });
+      window.tkToast?.(status === 'published' ? 'Event published' : 'Event unpublished');
+      await refreshEventsAndAnalytics();
+    } catch (err) {
+      window.tkToast?.(err.message || 'Event status update failed', 'error');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function renderTierRows(tiers) {
+    const wrap = $('[data-organizer-tiers]');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    if (tiers.length) {
+      tiers.forEach(addTierRow);
+      return;
+    }
+    addTierRow({ name: 'Early Bird', price: '0.00', quantity_total: 100, status: 'active' });
+    addTierRow({ name: 'General Admission', price: '0.00', quantity_total: 100, status: 'active' });
+  }
+
+  function addTierRow(tier = {}) {
+    const wrap = $('[data-organizer-tiers]');
+    if (!wrap) return;
+    const row = document.createElement('div');
+    row.className = 'card-pro p-3 mb-2';
+    row.dataset.tierRow = '';
+    if (tier.id) row.dataset.ticketTypeId = tier.id;
+    row.innerHTML = `
+      <div class="row g-2 align-items-end">
+        <div class="col-md-4"><label class="form-label small">Name</label><input class="form-control" name="tier_name" value="${esc(tier.name || '')}" required/></div>
+        <div class="col-md-3"><label class="form-label small">Price</label><input class="form-control" name="tier_price" type="number" min="0" step="0.01" value="${esc(tier.price ?? '0.00')}"/></div>
+        <div class="col-md-3"><label class="form-label small">Inventory</label><input class="form-control" name="tier_quantity" type="number" min="0" step="1" value="${esc(tier.quantity_total ?? 0)}"/></div>
+        <div class="col-md-2"><label class="form-label small">Status</label><select class="form-select" name="tier_status"><option value="active" ${tier.status === 'active' ? 'selected' : ''}>Active</option><option value="inactive" ${tier.status === 'inactive' ? 'selected' : ''}>Inactive</option><option value="paused" ${tier.status === 'paused' ? 'selected' : ''}>Paused</option></select></div>
+        <div class="col-12 d-flex justify-content-between align-items-center gap-2">
+          <small class="text-muted-pro">${Number(tier.quantity_sold || 0)} sold · ${Number(tier.quantity_reserved || 0)} reserved</small>
+          <button class="btn btn-glass btn-sm" type="button" data-tier-delete><i class="bi bi-trash"></i></button>
+        </div>
+      </div>`;
+    wrap.appendChild(row);
   }
 
   function collectTiers() {
@@ -502,6 +610,7 @@
       const name = $('[name="tier_name"]', row)?.value.trim();
       const price = Number($('[name="tier_price"]', row)?.value || 0);
       const quantity = Number($('[name="tier_quantity"]', row)?.value || 0);
+      const status = $('[name="tier_status"]', row)?.value || 'active';
       return {
         id: row.dataset.ticketTypeId ? Number(row.dataset.ticketTypeId) : null,
         name,
@@ -510,87 +619,307 @@
         currency: 'USD',
         min_per_order: 1,
         max_per_order: 10,
-        status: quantity > 0 ? 'active' : 'inactive',
+        status: quantity > 0 ? status : 'inactive',
         sort_order: index + 1,
       };
-    }).filter((tier) => {
-      if (!tier.name) return false;
-      if (Number.isNaN(tier.price) || tier.price < 0) return false;
-      if (Number.isNaN(tier.quantity_total) || tier.quantity_total < 0) return false;
-      return true;
-    });
+    }).filter((tier) => tier.name && !Number.isNaN(tier.price) && tier.price >= 0 && !Number.isNaN(tier.quantity_total) && tier.quantity_total >= 0);
   }
 
   async function syncTicketTiers(eventId, tiers) {
     for (const tier of tiers) {
       if (tier.id) {
-        await api().fetch(`/organizer/ticket-types/${tier.id}`, {
-          method: 'PATCH',
-          body: tier,
-        });
+        await api().fetch(`/organizer/ticket-types/${tier.id}`, { method: 'PATCH', body: tier });
       } else {
-        await api().fetch(`/organizer/events/${eventId}/ticket-types`, {
-          method: 'POST',
-          body: tier,
-        });
+        await api().fetch(`/organizer/events/${eventId}/ticket-types`, { method: 'POST', body: tier });
       }
     }
   }
 
   async function uploadPendingImages(event) {
-    if (!state.pendingImages.length) return;
-
-    const existingImages = event.images || [];
+    const coverUrl = $('[name="banner_image_url"]')?.value.trim();
+    if (coverUrl && !(event.images || []).some((image) => image.url === coverUrl)) {
+      await api().fetch(`/organizer/events/${event.id}/images`, {
+        method: 'POST',
+        body: { url: coverUrl, type: 'banner', is_primary: true, alt_text: event.title, sort_order: 0 },
+      });
+    }
     for (const [index, image] of state.pendingImages.entries()) {
       const fd = new FormData();
       fd.append('image', image);
-      fd.append('type', index === 0 && existingImages.length === 0 ? 'banner' : 'gallery');
-      fd.append('is_primary', index === 0 && existingImages.length === 0 ? '1' : '0');
-      fd.append('sort_order', String(existingImages.length + index));
+      fd.append('type', index === 0 && !coverUrl ? 'banner' : 'gallery');
+      fd.append('is_primary', index === 0 && !coverUrl ? '1' : '0');
+      fd.append('sort_order', String(index + 1));
       fd.append('alt_text', event.title || 'Event image');
-
-      await api().fetch(`/organizer/events/${event.id}/images`, {
-        method: 'POST',
-        body: fd,
-      });
+      await api().fetch(`/organizer/events/${event.id}/images`, { method: 'POST', body: fd });
     }
-
     state.pendingImages = [];
     updateImageName(null);
   }
 
-  function setPendingImages(files) {
-    const validFiles = files.filter((file) => file && file.type.startsWith('image/'));
-    if (validFiles.some((file) => file.size > 5 * 1024 * 1024)) {
-      window.tkToast?.('Image must be 5MB or smaller.', 'error');
-      return;
-    }
-    state.pendingImages = validFiles;
-    updateImageName(validFiles);
+  function renderGallery(images) {
+    const gallery = $('[data-organizer-gallery]');
+    if (!gallery) return;
+    gallery.innerHTML = images.length ? images.map((image) => `
+      <div class="col-6">
+        <div class="card-pro p-2">
+          <img src="${esc(image.optimized_url || image.url)}" alt="" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px"/>
+          <div class="d-flex justify-content-between align-items-center mt-2">
+            <small class="text-muted-pro">${image.is_primary ? 'Primary' : esc(image.type || 'gallery')}</small>
+            <button class="btn btn-glass btn-sm" type="button" data-image-delete="${image.id}"><i class="bi bi-trash"></i></button>
+          </div>
+        </div>
+      </div>`).join('') : '<div class="col-12 small text-muted-pro">No uploaded images yet.</div>';
   }
 
   function updateImageName(files) {
     const label = $('[data-organizer-image-name]');
     if (!label) return;
-    if (!files || !files.length) {
-      label.textContent = 'No images selected';
-      return;
-    }
-    label.textContent = files.length === 1 ? files[0].name : `${files.length} images selected`;
+    label.textContent = files?.length ? (files.length === 1 ? files[0].name : `${files.length} images selected`) : 'No images selected';
   }
 
-  function updateStatusButtons(status) {
-    const draftButton = $('[data-organizer-save-draft]');
-    const publishButton = $('[data-organizer-publish]');
-    if (draftButton) draftButton.textContent = status === 'published' ? 'Move to draft' : 'Save draft';
-    if (publishButton) publishButton.textContent = status === 'published' ? 'Update published' : 'Publish';
+  async function showEventAnalytics(eventId) {
+    const event = state.events.find((item) => String(item.id) === String(eventId));
+    const perf = performanceFor(eventId);
+    const inv = state.inventory.filter((tier) => String(tier.event_id) === String(eventId));
+    detailModal(event?.title || 'Event analytics', `
+      <div class="dashboard-detail-grid">
+        <div><dt>Status</dt><dd>${statusBadge(event?.status)}</dd></div>
+        <div><dt>Revenue</dt><dd>${u().formatMoney(perf.revenue || 0, perf.currency || event?.currency || 'USD')}</dd></div>
+        <div><dt>Tickets sold</dt><dd>${perf.tickets_sold ?? 0}</dd></div>
+        <div><dt>Tickets remaining</dt><dd>${perf.tickets_available ?? 0}</dd></div>
+        <div><dt>Orders</dt><dd>${perf.orders_count ?? 0}</dd></div>
+        <div><dt>Check-ins</dt><dd>${perf.checked_in_count ?? 0} / ${perf.attendees_count ?? 0}</dd></div>
+      </div>
+      <h6 class="mt-4">Ticket tiers</h6>
+      <div class="dashboard-stack">
+        ${inv.map((tier) => `<div class="dashboard-mini-row"><div><div class="fw-semibold">${esc(tier.name)}</div><small>${tier.quantity_available} remaining · ${tier.quantity_sold} sold</small></div>${statusBadge(tier.status)}</div>`).join('') || '<p class="text-muted-pro mb-0">No ticket tiers yet.</p>'}
+      </div>
+    `);
+  }
+
+  async function showAttendeeDetails(ticketId) {
+    const ticket = state.attendees.find((item) => String(item.id) === String(ticketId));
+    if (!ticket) return;
+    detailModal(ticket.attendee?.name || 'Attendee details', `
+      <div class="dashboard-detail-grid">
+        <div><dt>Name</dt><dd>${esc(ticket.attendee?.name || 'Guest')}</dd></div>
+        <div><dt>Email</dt><dd>${esc(ticket.attendee?.email || '-')}</dd></div>
+        <div><dt>Phone</dt><dd>${esc(ticket.attendee?.phone || '-')}</dd></div>
+        <div><dt>Status</dt><dd>${statusBadge(ticket.status)}</dd></div>
+        <div><dt>Ticket</dt><dd>${esc(ticket.ticket_code)}</dd></div>
+        <div><dt>Ticket type</dt><dd>${esc(ticket.ticket_type?.name || '-')}</dd></div>
+        <div><dt>Event</dt><dd>${esc(ticket.event?.title || '-')}</dd></div>
+        <div><dt>Order</dt><dd>${esc(ticket.order?.order_number || '-')}</dd></div>
+        <div><dt>Payment</dt><dd>${statusBadge(ticket.order?.payment_status)}</dd></div>
+        <div><dt>Checked in</dt><dd>${ticket.checked_in_at ? esc(dateLabel(ticket.checked_in_at)) : '-'}</dd></div>
+      </div>
+    `);
+  }
+
+  function detailModal(title, html) {
+    $('[data-organizer-detail-title]').textContent = title;
+    $('[data-organizer-detail-body]').innerHTML = html;
+    bootstrap.Modal.getOrCreateInstance($('#organizerDetailModal')).show();
+  }
+
+  function bindFilters() {
+    $('[data-organizer-event-status]')?.addEventListener('change', async () => {
+      await loadEvents();
+      renderEvents();
+    });
+    $('[data-organizer-event-search]')?.addEventListener('input', debounce(async () => {
+      await loadEvents();
+      renderEvents();
+    }, 250));
+    $('[data-attendee-event]')?.addEventListener('change', async () => {
+      state.attendeePage = 1;
+      await loadAttendees();
+      renderAttendees();
+    });
+    $('[data-attendee-status]')?.addEventListener('change', async () => {
+      state.attendeePage = 1;
+      await loadAttendees();
+      renderAttendees();
+    });
+    $('[data-attendee-search]')?.addEventListener('input', debounce(async () => {
+      state.attendeePage = 1;
+      await loadAttendees();
+      renderAttendees();
+    }, 250));
+  }
+
+  function bindActions() {
+    $('[data-organizer-new-event]')?.addEventListener('click', () => openEventModal());
+    $('[data-organizer-event-form]')?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      await saveEvent();
+    });
+    $('[data-tier-add]')?.addEventListener('click', () => addTierRow({ name: 'New ticket type', price: '0.00', quantity_total: 100, status: 'active' }));
+    $('[data-organizer-browse-image]')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      $('[data-organizer-image-input]')?.click();
+    });
+    $('[data-organizer-image-input]')?.addEventListener('change', (event) => {
+      const files = Array.from(event.target.files || []).filter((file) => file.type.startsWith('image/'));
+      if (files.some((file) => file.size > 5 * 1024 * 1024)) {
+        window.tkToast?.('Images must be 5MB or smaller.', 'error');
+        return;
+      }
+      state.pendingImages = files;
+      updateImageName(files);
+    });
+
+    document.addEventListener('click', async (event) => {
+      const tierDelete = event.target.closest('[data-tier-delete]');
+      if (tierDelete) {
+        const row = tierDelete.closest('[data-tier-row]');
+        const id = row?.dataset.ticketTypeId;
+        if (id) {
+          if (!confirm('Delete this ticket type?')) return;
+          try {
+            setBusy(true);
+            await api().fetch(`/organizer/ticket-types/${id}`, { method: 'DELETE' });
+            row.remove();
+            window.tkToast?.('Ticket type deleted');
+            await refreshEventsAndAnalytics();
+          } catch (err) {
+            window.tkToast?.(err.message || 'Ticket type delete failed', 'error');
+          } finally {
+            setBusy(false);
+          }
+          return;
+        }
+        if ($$('[data-tier-row]').length <= 1) {
+          window.tkToast?.('At least one ticket type is required.', 'info');
+          return;
+        }
+        row?.remove();
+        return;
+      }
+
+      const imageDelete = event.target.closest('[data-image-delete]');
+      if (imageDelete) {
+        if (!confirm('Delete this event image?')) return;
+        try {
+          setBusy(true);
+          await api().fetch(`/organizer/event-images/${imageDelete.dataset.imageDelete}`, { method: 'DELETE' });
+          const eventId = $('[data-organizer-event-form]')?.elements.event_id.value;
+          if (eventId) {
+            const { data } = await api().fetch(`/organizer/events/${eventId}`);
+            state.selectedEvent = data;
+            renderGallery(data.images || []);
+          }
+          await refreshEventsAndAnalytics();
+          window.tkToast?.('Image deleted');
+        } catch (err) {
+          window.tkToast?.(err.message || 'Image delete failed', 'error');
+        } finally {
+          setBusy(false);
+        }
+        return;
+      }
+
+      const retryEvents = event.target.closest('[data-retry-events]');
+      if (retryEvents) {
+        await loadEvents();
+        renderEvents();
+        return;
+      }
+      const retryPerformance = event.target.closest('[data-retry-performance]');
+      if (retryPerformance) {
+        await loadPerformance();
+        renderPerformance();
+        return;
+      }
+      const retryInventory = event.target.closest('[data-retry-inventory]');
+      if (retryInventory) {
+        await loadInventory();
+        renderInventory();
+        return;
+      }
+      const retryAttendees = event.target.closest('[data-retry-attendees]');
+      if (retryAttendees) {
+        await loadAttendees();
+        renderAttendees();
+        return;
+      }
+      const retryRevenue = event.target.closest('[data-retry-revenue]');
+      if (retryRevenue) {
+        await loadRevenue();
+        renderRevenue();
+        return;
+      }
+
+      const attendeePage = event.target.closest('[data-attendee-page]');
+      if (attendeePage) {
+        state.attendeePage = Number(attendeePage.dataset.attendeePage);
+        await loadAttendees();
+        renderAttendees();
+        return;
+      }
+
+      const edit = event.target.closest('[data-event-edit]');
+      if (edit) {
+        const eventRecord = state.events.find((item) => String(item.id) === String(edit.dataset.eventEdit));
+        openEventModal(eventRecord);
+        return;
+      }
+
+      const publish = event.target.closest('[data-event-publish]');
+      if (publish) {
+        await quickStatus(publish.dataset.eventPublish, 'published');
+        return;
+      }
+
+      const unpublish = event.target.closest('[data-event-unpublish]');
+      if (unpublish) {
+        await quickStatus(unpublish.dataset.eventUnpublish, 'draft');
+        return;
+      }
+
+      const analytics = event.target.closest('[data-event-analytics]');
+      if (analytics) {
+        await showEventAnalytics(analytics.dataset.eventAnalytics);
+        return;
+      }
+
+      const attendee = event.target.closest('[data-attendee-details]');
+      if (attendee) {
+        await showAttendeeDetails(attendee.dataset.attendeeDetails);
+      }
+    });
+
+    $$('[data-organizer-range]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        $$('[data-organizer-range]').forEach((btn) => btn.classList.toggle('active', btn === button));
+        state.groupBy = button.dataset.organizerRange;
+        await loadRevenue();
+        renderRevenue();
+      });
+    });
   }
 
   function setBusy(busy) {
     state.busy = busy;
-    $$('[data-organizer-event-form] button, [data-organizer-events] button').forEach((button) => {
+    $$('[data-event-save], [data-event-edit], [data-event-publish], [data-event-unpublish], [data-organizer-new-event]').forEach((button) => {
       button.disabled = busy;
     });
+  }
+
+  function setSelectValue(select, value) {
+    if (!select) return;
+    if (value && !Array.from(select.options).some((option) => option.value === value)) {
+      select.add(new Option(value, value));
+    }
+    select.value = value;
+  }
+
+  function debounce(fn, wait) {
+    let timer = null;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn(...args), wait);
+    };
   }
 
   function toDatetimeLocal(value) {
@@ -601,4 +930,18 @@
     const local = new Date(date.getTime() - offset * 60000);
     return local.toISOString().slice(0, 16);
   }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const user = auth().requireAuth(['organizer', 'admin'], { requireApprovedOrganizer: true });
+    if (!user) return;
+
+    bindFilters();
+    bindActions();
+
+    try {
+      await refreshAll();
+    } catch (err) {
+      window.tkToast?.(err.message || 'Failed to load organizer dashboard', 'error');
+    }
+  });
 })();

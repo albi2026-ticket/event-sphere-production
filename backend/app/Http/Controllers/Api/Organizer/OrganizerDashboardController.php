@@ -33,11 +33,12 @@ class OrganizerDashboardController extends Controller
     public function revenue(OrganizerDashboardRequest $request): JsonResponse
     {
         $filters = $request->validated();
+        $byEvent = $this->dashboard->revenueByEvent($request->user(), $filters);
 
         return response()->json([
             'data' => [
-                'total_revenue' => $this->dashboard->summary($request->user(), $filters)['cards']['total_revenue'],
-                'by_event' => $this->dashboard->revenueByEvent($request->user(), $filters),
+                'total_revenue' => (string) $byEvent->sum(fn ($event) => (float) $event->revenue),
+                'by_event' => $byEvent,
                 'trends' => $this->dashboard->salesTrends($request->user(), $filters),
             ],
         ]);

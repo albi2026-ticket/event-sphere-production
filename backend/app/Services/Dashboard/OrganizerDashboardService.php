@@ -240,6 +240,18 @@ class OrganizerDashboardService
             ->where('events.organizer_id', $organizer->id)
             ->when($filters['event_id'] ?? null, fn ($query, $eventId) => $query->where('tickets.event_id', $eventId))
             ->when($filters['ticket_status'] ?? null, fn ($query, $status) => $query->where('tickets.status', $status))
+            ->when($filters['search'] ?? null, function ($query, string $search): void {
+                $needle = '%'.$search.'%';
+
+                $query->where(function ($query) use ($needle): void {
+                    $query
+                        ->where('tickets.ticket_code', 'like', $needle)
+                        ->orWhere('events.title', 'like', $needle)
+                        ->orWhereHas('user', fn ($userQuery) => $userQuery
+                            ->where('name', 'like', $needle)
+                            ->orWhere('email', 'like', $needle));
+                });
+            })
             ->select('tickets.*');
     }
 
