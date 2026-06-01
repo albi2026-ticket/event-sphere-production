@@ -17,6 +17,11 @@
     return data;
   }
 
+  async function removeFavorite(eventId) {
+    await api().fetch(`/me/favorites/${eventId}`, { method: 'DELETE' });
+    return { event_id: eventId, is_favorited: false };
+  }
+
   async function syncFavoriteButtons() {
     if (!auth().isLoggedIn()) return;
     try {
@@ -31,5 +36,5 @@
     }
   }
 
-  window.EventSphereFavorites = { listFavorites, toggleFavorite, syncFavoriteButtons };
+  window.EventSphereFavorites = { listFavorites, toggleFavorite, removeFavorite, syncFavoriteButtons };
 })();

@@ -94,7 +94,7 @@ class UserDashboardTest extends TestCase
             'status' => Ticket::STATUS_ACTIVE,
         ]);
 
-        Favorite::query()->create([
+        $favorite = Favorite::query()->create([
             'user_id' => $user->id,
             'event_id' => $event->id,
         ]);
@@ -125,8 +125,30 @@ class UserDashboardTest extends TestCase
             ->assertJsonPath('data.0.ticket_code', 'ES-DASHBOARD-TEST');
 
         $this->actingAs($user, 'sanctum')
+            ->getJson('/api/me/dashboard/upcoming-events')
+            ->assertOk()
+            ->assertJsonPath('data.0.slug', 'dashboard-event');
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson("/api/me/orders/{$order->id}")
+            ->assertOk()
+            ->assertJsonPath('data.order_number', 'ES-2026-000003')
+            ->assertJsonPath('data.tickets.0.ticket_code', 'ES-DASHBOARD-TEST');
+
+        $this->actingAs($user, 'sanctum')
+            ->get("/api/me/orders/{$order->id}/receipt")
+            ->assertOk()
+            ->assertHeader('Content-Type', 'text/html; charset=UTF-8');
+
+        $this->actingAs($user, 'sanctum')
             ->getJson('/api/me/favorites')
             ->assertOk()
             ->assertJsonPath('data.0.event_id', $event->id);
+
+        $this->actingAs($user, 'sanctum')
+            ->deleteJson("/api/me/favorites/{$event->id}")
+            ->assertOk();
+
+        $this->assertModelMissing($favorite);
     }
 }
