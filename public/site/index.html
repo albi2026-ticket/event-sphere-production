@@ -33,16 +33,13 @@
             <li><a class="dropdown-item text-white-50" href="events.html?category=Conferences"><i class="bi bi-mic me-2"></i>Conferences</a></li>
           </ul>
         </li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="dashboard.html">My Tickets</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="organizer.html">Sell</a></li>
       </ul>
       <div class="d-flex align-items-center gap-2">
         <button class="icon-btn" data-theme-toggle><i class="bi bi-sun" data-theme-icon></i></button>
-        <a class="icon-btn position-relative" href="dashboard.html" data-auth-user style="display:none"><i class="bi bi-bell"></i><span class="position-absolute top-0 end-0 translate-middle badge rounded-pill" style="background:var(--secondary);font-size:.6rem">3</span></a>
-        <a class="btn btn-ghost d-none d-md-inline-flex" href="login.html" data-auth-guest>Sign in</a>
-        <a class="btn btn-primary-grad" href="register.html" data-auth-guest>Get started</a>
-        <a class="btn btn-ghost d-none d-md-inline-flex" href="dashboard.html" data-auth-user data-auth-name style="display:none">Account</a>
-        <a class="btn btn-primary-grad" href="#" data-auth-user data-logout style="display:none">Sign out</a>
+        <a class="btn btn-ghost" href="login.html" data-auth-guest>Sign In</a>
+        <a class="btn btn-primary-grad" href="register.html" data-auth-guest>Register</a>
+        <a class="btn btn-ghost" href="dashboard.html" data-auth-user data-auth-dashboard-link hidden>My Tickets</a>
+        <a class="btn btn-primary-grad" href="#" data-auth-user data-logout hidden>Sign Out</a>
       </div>
     </div>
   </div>
