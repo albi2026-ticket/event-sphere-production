@@ -38,6 +38,7 @@ class EventResource extends JsonResource
             'is_verified' => $this->is_verified,
             'allow_resale' => $this->allow_resale,
             'refund_policy' => $this->refund_policy,
+            'moderation_notes' => $this->moderation_notes,
             'views_count' => $this->views_count,
             'images' => EventImageResource::collection($this->whenLoaded('images')),
             'ticket_types' => TicketTypeResource::collection($this->whenLoaded('ticketTypes')),

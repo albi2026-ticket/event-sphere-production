@@ -44,4 +44,21 @@ class AdminUserController extends Controller
 
         return response()->json($users);
     }
+
+    public function show(User $user): JsonResponse
+    {
+        $user->loadCount(['orders', 'organizedEvents', 'tickets', 'favorites', 'reviews']);
+        $user->load([
+            'orders' => fn ($query) => $query
+                ->select('id', 'user_id', 'order_number', 'status', 'payment_status', 'total', 'currency', 'created_at')
+                ->latest()
+                ->limit(5),
+            'organizedEvents' => fn ($query) => $query
+                ->select('id', 'organizer_id', 'title', 'status', 'starts_at', 'city', 'created_at')
+                ->latest()
+                ->limit(5),
+        ]);
+
+        return response()->json(['data' => $user]);
+    }
 }

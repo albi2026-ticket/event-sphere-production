@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'is_verified',
     'allow_resale',
     'refund_policy',
+    'moderation_notes',
     'views_count',
 ])]
 class Event extends Model

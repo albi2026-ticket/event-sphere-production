@@ -50,6 +50,78 @@ class AdminDashboardTest extends TestCase
             ->assertUnprocessable();
     }
 
+    public function test_admin_can_view_suspend_and_reactivate_users(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $user = User::factory()->create([
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson("/api/admin/users/{$user->id}")
+            ->assertOk()
+            ->assertJsonPath('data.email', $user->email)
+            ->assertJsonStructure(['data' => ['orders_count', 'organized_events_count', 'tickets_count']]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/admin/users/{$user->id}/suspend")
+            ->assertOk()
+            ->assertJsonPath('data.status', User::STATUS_SUSPENDED);
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/admin/users/{$user->id}/reactivate")
+            ->assertOk()
+            ->assertJsonPath('data.status', User::STATUS_ACTIVE);
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/admin/users/{$admin->id}/suspend")
+            ->assertUnprocessable();
+    }
+
+    public function test_admin_can_unpublish_events_and_store_moderation_notes(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $event = Event::query()->create([
+            'organizer_id' => $organizer->id,
+            'title' => 'Moderated Event',
+            'slug' => 'moderated-event',
+            'category' => 'Concerts',
+            'venue_name' => 'Event Sphere Hall',
+            'city' => 'New York',
+            'starts_at' => now()->addMonth(),
+            'status' => 'published',
+            'visibility' => 'public',
+            'currency' => 'USD',
+        ]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/admin/events/{$event->id}/unpublish", ['reason' => 'Needs updated venue details.'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'draft')
+            ->assertJsonPath('data.moderation_notes', 'Needs updated venue details.');
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/admin/events/{$event->id}/reject", ['reason' => 'Policy issue.'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'rejected')
+            ->assertJsonPath('data.moderation_notes', 'Policy issue.');
+    }
+
     public function test_admin_can_refund_mock_paid_orders(): void
     {
         $admin = User::factory()->create([

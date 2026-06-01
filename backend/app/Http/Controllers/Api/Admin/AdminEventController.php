@@ -87,7 +87,22 @@ class AdminEventController extends Controller
     {
         $request->validate(['reason' => ['nullable', 'string', 'max:1000']]);
 
-        $event->update(['status' => 'rejected']);
+        $event->update([
+            'status' => 'rejected',
+            'moderation_notes' => $request->input('reason', $event->moderation_notes),
+        ]);
+
+        return new EventResource($event->fresh());
+    }
+
+    public function unpublish(Request $request, Event $event): EventResource
+    {
+        $request->validate(['reason' => ['nullable', 'string', 'max:1000']]);
+
+        $event->update([
+            'status' => 'draft',
+            'moderation_notes' => $request->input('reason', $event->moderation_notes),
+        ]);
 
         return new EventResource($event->fresh());
     }

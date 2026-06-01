@@ -335,6 +335,54 @@ a:hover { color: var(--secondary); }
 .kpi .value { font-family: var(--font-display); font-weight: 700; font-size: 1.85rem; margin-top: .25rem; }
 .kpi .delta { color: var(--success); font-size: .82rem; }
 .kpi .delta.neg { color: var(--danger); }
+.admin-avatar { width: 36px; height: 36px; object-fit: cover; border: 1px solid var(--border); }
+.admin-select { min-width: 120px; padding: .45rem .75rem; }
+.admin-actions { display: inline-flex; gap: .4rem; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.admin-actions .btn { padding: .42rem .7rem; border-radius: 10px; }
+.admin-empty { display: flex; align-items: center; justify-content: center; gap: .65rem; color: var(--muted); min-height: 72px; text-align: center; }
+.admin-empty i { font-size: 1.15rem; }
+.activity-item {
+  display: flex; align-items: center; gap: .85rem; padding: .8rem .25rem;
+  border-bottom: 1px solid var(--border);
+}
+.activity-item:last-child { border-bottom: 0; }
+.activity-item > i {
+  width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+  background: var(--card-2); color: var(--primary); border: 1px solid var(--border);
+}
+.activity-item small { color: var(--muted); }
+.admin-modal {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+}
+.admin-modal .modal-header { border-bottom: 1px solid var(--border); }
+.admin-detail-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+  margin: 0;
+}
+.admin-detail-list > div {
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: .85rem;
+}
+.admin-detail-list dt {
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 600;
+  margin-bottom: .25rem;
+  text-transform: uppercase;
+}
+.admin-detail-list dd { margin: 0; color: var(--text); word-break: break-word; }
+.admin-mini-table { color: var(--text); }
+.admin-mini-table td { border-bottom: 1px solid var(--border); color: var(--text); }
+@media (max-width: 768px) {
+  .admin-detail-list { grid-template-columns: 1fr; }
+  .admin-actions { justify-content: flex-start; }
+}
 
 /* QR ticket */
 .qr-ticket {

@@ -64,4 +64,24 @@ class UserRoleController extends Controller
 
         return response()->json(['data' => $user->fresh()]);
     }
+
+    public function suspend(Request $request, User $user): JsonResponse
+    {
+        if ($request->user()->is($user)) {
+            throw ValidationException::withMessages([
+                'user' => 'You cannot suspend your own admin account.',
+            ]);
+        }
+
+        $user->forceFill(['status' => User::STATUS_SUSPENDED])->save();
+
+        return response()->json(['data' => $user->fresh()]);
+    }
+
+    public function reactivate(User $user): JsonResponse
+    {
+        $user->forceFill(['status' => User::STATUS_ACTIVE])->save();
+
+        return response()->json(['data' => $user->fresh()]);
+    }
 }

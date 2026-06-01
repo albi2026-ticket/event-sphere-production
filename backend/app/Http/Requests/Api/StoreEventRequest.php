@@ -45,6 +45,7 @@ class StoreEventRequest extends FormRequest
             'is_verified' => ['sometimes', 'boolean'],
             'allow_resale' => ['sometimes', 'boolean'],
             'refund_policy' => ['nullable', 'string', 'max:255'],
+            'moderation_notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

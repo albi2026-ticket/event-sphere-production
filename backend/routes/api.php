@@ -127,12 +127,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/payments/{order}', [AdminPaymentController::class, 'show']);
         Route::post('/payments/{order}/refund', [AdminPaymentController::class, 'refund']);
         Route::get('/users', [AdminUserController::class, 'index']);
+        Route::get('/users/{user}', [AdminUserController::class, 'show']);
         Route::get('/tickets', [AdminTicketController::class, 'index']);
         Route::post('/tickets/validate', [AdminTicketController::class, 'validateTicket']);
         Route::post('/tickets/check-in', [AdminTicketController::class, 'checkIn']);
         Route::get('/tickets/{ticket}', [AdminTicketController::class, 'show']);
         Route::patch('/tickets/{ticket}/status', [AdminTicketController::class, 'updateStatus']);
         Route::patch('/users/{user}/role', [UserRoleController::class, 'update']);
+        Route::post('/users/{user}/suspend', [UserRoleController::class, 'suspend']);
+        Route::post('/users/{user}/reactivate', [UserRoleController::class, 'reactivate']);
         Route::post('/users/{user}/approve-organizer', [UserRoleController::class, 'approveOrganizer']);
         Route::post('/users/{user}/reject-organizer', [UserRoleController::class, 'rejectOrganizer']);
         Route::get('/events', [AdminEventController::class, 'index']);
@@ -142,6 +145,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::delete('/events/{event}', [AdminEventController::class, 'destroy']);
         Route::post('/events/{event}/publish', [AdminEventController::class, 'publish']);
         Route::post('/events/{event}/reject', [AdminEventController::class, 'reject']);
+        Route::post('/events/{event}/unpublish', [AdminEventController::class, 'unpublish']);
         Route::post('/events/{event}/images', [EventImageController::class, 'store']);
         Route::patch('/event-images/{eventImage}', [EventImageController::class, 'update']);
         Route::delete('/event-images/{eventImage}', [EventImageController::class, 'destroy']);
