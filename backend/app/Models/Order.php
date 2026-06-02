@@ -15,7 +15,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'payment_status',
     'subtotal',
     'service_fee',
-    'refund_protection_fee',
     'discount_total',
     'tax_total',
     'total',
@@ -92,7 +91,6 @@ class Order extends Model
         return [
             'subtotal' => 'decimal:2',
             'service_fee' => 'decimal:2',
-            'refund_protection_fee' => 'decimal:2',
             'discount_total' => 'decimal:2',
             'tax_total' => 'decimal:2',
             'total' => 'decimal:2',

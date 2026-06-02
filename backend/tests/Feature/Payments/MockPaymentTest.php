@@ -536,6 +536,122 @@ class MockPaymentTest extends TestCase
         $this->assertSame(Order::PAYMENT_STATUS_CANCELLED, $expiredOrder->payment_status);
     }
 
+    public function test_order_creation_uses_event_service_fee_percentage_and_no_refund_protection_fee(): void
+    {
+        $user = User::factory()->create([
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $event = Event::query()->create([
+            'organizer_id' => $organizer->id,
+            'title' => 'Fee Managed Checkout Event',
+            'slug' => 'fee-managed-checkout-event',
+            'category' => 'Concerts',
+            'venue_name' => 'Event Sphere Hall',
+            'city' => 'New York',
+            'starts_at' => now()->addMonth(),
+            'status' => 'published',
+            'visibility' => 'public',
+            'currency' => 'USD',
+            'service_fee_percentage' => 12.5,
+        ]);
+
+        $ticketType = TicketType::query()->create([
+            'event_id' => $event->id,
+            'name' => 'General Admission',
+            'price' => 40,
+            'currency' => 'USD',
+            'quantity_total' => 10,
+            'min_per_order' => 1,
+            'max_per_order' => 10,
+            'status' => TicketType::STATUS_ACTIVE,
+        ]);
+
+        $orderId = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/orders', [
+                'items' => [
+                    ['ticket_type_id' => $ticketType->id, 'quantity' => 2],
+                ],
+                'billing_email' => $user->email,
+                'billing_first_name' => 'Test',
+                'billing_last_name' => 'Buyer',
+                'attendees' => $this->attendees(2),
+                'refund_protection' => true,
+            ])
+            ->assertCreated()
+            ->assertJsonMissingPath('data.refund_protection_fee')
+            ->json('data.id');
+
+        $order = Order::query()->findOrFail($orderId);
+
+        $this->assertEquals(80.0, (float) $order->subtotal);
+        $this->assertEquals(10.0, (float) $order->service_fee);
+        $this->assertEquals(90.0, (float) $order->total);
+        $this->assertEquals(0.0, (float) $order->refund_protection_fee);
+    }
+
+    public function test_order_creation_is_blocked_after_event_start_time(): void
+    {
+        $user = User::factory()->create([
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $event = Event::query()->create([
+            'organizer_id' => $organizer->id,
+            'title' => 'Started Checkout Event',
+            'slug' => 'started-checkout-event',
+            'category' => 'Concerts',
+            'venue_name' => 'Event Sphere Hall',
+            'city' => 'New York',
+            'starts_at' => now()->subMinute(),
+            'status' => 'published',
+            'visibility' => 'public',
+            'currency' => 'USD',
+        ]);
+
+        $ticketType = TicketType::query()->create([
+            'event_id' => $event->id,
+            'name' => 'General Admission',
+            'price' => 25,
+            'currency' => 'USD',
+            'quantity_total' => 10,
+            'min_per_order' => 1,
+            'max_per_order' => 10,
+            'status' => TicketType::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/orders', [
+                'items' => [
+                    ['ticket_type_id' => $ticketType->id, 'quantity' => 1],
+                ],
+                'billing_email' => $user->email,
+                'billing_first_name' => 'Test',
+                'billing_last_name' => 'Buyer',
+                'attendees' => $this->attendees(1),
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('items');
+
+        $ticketType->refresh();
+        $this->assertSame(0, $ticketType->quantity_reserved);
+        $this->assertSame(0, $ticketType->quantity_sold);
+    }
+
     /**
      * @return array<int, array{name: string, email: string, phone: string}>
      */

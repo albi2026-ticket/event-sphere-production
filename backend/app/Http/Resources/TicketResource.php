@@ -47,8 +47,9 @@ class TicketResource extends JsonResource
                 'country' => $this->event->country,
                 'starts_at' => $this->event->starts_at,
                 'ends_at' => $this->event->ends_at,
-                'timezone' => $this->event->timezone,
+                'timezone' => $this->event->timezone ?: 'Europe/Pristina',
                 'organizer_id' => $this->event->organizer_id,
+                'service_fee_percentage' => $this->event->service_fee_percentage ?? 10,
             ]),
             'ticket_type' => $this->whenLoaded('ticketType', fn () => [
                 'id' => $this->ticketType->id,

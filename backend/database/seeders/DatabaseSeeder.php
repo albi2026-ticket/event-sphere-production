@@ -229,7 +229,7 @@ class DatabaseSeeder extends Seeder
             $ticketType = $event->ticketTypes()->where('name', 'General Admission')->firstOrFail();
             $quantity = 2;
             $subtotal = (float) $ticketType->price * $quantity;
-            $serviceFee = round($subtotal * 0.05, 2);
+            $serviceFee = round($subtotal * 0.10, 2);
             $total = $subtotal + $serviceFee;
 
             $order = Order::query()->updateOrCreate(
@@ -240,7 +240,6 @@ class DatabaseSeeder extends Seeder
                     'payment_status' => Order::PAYMENT_STATUS_PAID,
                     'subtotal' => $subtotal,
                     'service_fee' => $serviceFee,
-                    'refund_protection_fee' => 0,
                     'discount_total' => 0,
                     'tax_total' => 0,
                     'total' => $total,

@@ -90,6 +90,9 @@ class OrganizerEventController extends Controller
         $payload['status'] = $payload['status'] ?? 'draft';
         $payload['visibility'] = $payload['visibility'] ?? 'public';
         $payload['currency'] = strtoupper($payload['currency'] ?? 'USD');
+        if (! $partial) {
+            $payload['service_fee_percentage'] = 10;
+        }
 
         return $payload;
     }

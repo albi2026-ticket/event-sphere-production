@@ -29,6 +29,7 @@ class OrderItemResource extends JsonResource
                 'city' => $this->event->city,
                 'country' => $this->event->country,
                 'starts_at' => $this->event->starts_at,
+                'service_fee_percentage' => $this->event->service_fee_percentage ?? 10,
             ]),
             'ticket_type' => $this->whenLoaded('ticketType', fn () => [
                 'id' => $this->ticketType->id,

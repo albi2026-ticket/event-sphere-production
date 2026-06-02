@@ -218,4 +218,46 @@ class AdminDashboardTest extends TestCase
         $this->assertSame(Order::PAYMENT_STATUS_REFUNDED, $order->payment_status);
         $this->assertSame(Ticket::STATUS_REFUNDED, $order->tickets()->first()->status);
     }
+
+    public function test_admin_can_update_event_service_fee_percentage(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $event = Event::query()->create([
+            'organizer_id' => $organizer->id,
+            'title' => 'Fee Controlled Event',
+            'slug' => 'fee-controlled-event',
+            'category' => 'Concerts',
+            'venue_name' => 'Event Sphere Hall',
+            'city' => 'New York',
+            'starts_at' => now()->addMonth(),
+            'status' => 'published',
+            'visibility' => 'public',
+            'currency' => 'USD',
+        ]);
+
+        $this->assertEquals(10.0, (float) $event->refresh()->service_fee_percentage);
+
+        $this->actingAs($admin, 'sanctum')
+            ->patchJson("/api/admin/events/{$event->id}/service-fee", ['service_fee_percentage' => 12.5])
+            ->assertOk()
+            ->assertJsonPath('data.service_fee_percentage', '12.50');
+
+        $this->actingAs($admin, 'sanctum')
+            ->patchJson("/api/admin/events/{$event->id}/service-fee", ['service_fee_percentage' => 35])
+            ->assertUnprocessable();
+
+        $this->actingAs($organizer, 'sanctum')
+            ->patchJson("/api/admin/events/{$event->id}/service-fee", ['service_fee_percentage' => 5])
+            ->assertForbidden();
+    }
 }

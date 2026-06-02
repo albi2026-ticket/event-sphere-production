@@ -35,7 +35,6 @@ class StoreOrderRequest extends FormRequest
             'attendees.*.name' => ['required', 'string', 'max:255'],
             'attendees.*.email' => ['required', 'string', 'email', 'max:255'],
             'attendees.*.phone' => ['nullable', 'string', 'max:255'],
-            'refund_protection' => ['sometimes', 'boolean'],
             'promo_code' => ['nullable', 'string', 'max:64'],
         ];
     }

@@ -52,6 +52,12 @@ class OrderService
                     ->firstOrFail();
 
                 $quantity = (int) $line['quantity'];
+                if ($ticketType->event?->starts_at && $ticketType->event->starts_at->lte(now())) {
+                    throw ValidationException::withMessages([
+                        'items' => 'Ticket sales are closed because this event has already started.',
+                    ]);
+                }
+
                 $this->inventory->reserve($ticketType, $quantity);
                 $ticketType = $ticketType->fresh();
                 $event = $ticketType->event;
@@ -59,7 +65,8 @@ class OrderService
 
                 $unitPrice = (float) $ticketType->price;
                 $lineTotal = round($unitPrice * $quantity, 2);
-                $lineFee = round($lineTotal * 0.05, 2);
+                $serviceFeePercentage = (float) ($event->service_fee_percentage ?? 10);
+                $lineFee = round($lineTotal * ($serviceFeePercentage / 100), 2);
                 $subtotal += $lineTotal;
                 $currency = strtoupper($ticketType->currency ?: $ticketType->event->currency ?: $currency);
                 $lineAttendees = array_slice($attendees, $attendeeCursor, $quantity);
@@ -112,12 +119,9 @@ class OrderService
             }
 
             $serviceFee = round(array_sum(array_column($lineItems, 'service_fee')), 2);
-            $refundProtection = ! empty($billing['refund_protection'])
-                ? (float) ($billing['refund_protection_fee'] ?? 4.99)
-                : 0.0;
             $discount = (float) ($billing['discount_total'] ?? 0);
             $tax = (float) ($billing['tax_total'] ?? 0);
-            $total = max(0, round($subtotal + $serviceFee + $refundProtection + $tax - $discount, 2));
+            $total = max(0, round($subtotal + $serviceFee + $tax - $discount, 2));
 
             $order = Order::query()->create([
                 'user_id' => $user->id,
@@ -126,7 +130,6 @@ class OrderService
                 'payment_status' => Order::PAYMENT_STATUS_UNPAID,
                 'subtotal' => $subtotal,
                 'service_fee' => $serviceFee,
-                'refund_protection_fee' => $refundProtection,
                 'discount_total' => $discount,
                 'tax_total' => $tax,
                 'total' => $total,

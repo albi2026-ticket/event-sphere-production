@@ -41,6 +41,7 @@ class AdminEventController extends Controller
         $payload['status'] = $payload['status'] ?? 'draft';
         $payload['visibility'] = $payload['visibility'] ?? 'public';
         $payload['currency'] = strtoupper($payload['currency'] ?? 'USD');
+        $payload['service_fee_percentage'] = 10;
 
         $event = Event::create($payload);
 
@@ -65,6 +66,19 @@ class AdminEventController extends Controller
         }
 
         $event->update($payload);
+
+        return new EventResource($event->fresh()->load(['organizer', 'images', 'ticketTypes']));
+    }
+
+    public function updateServiceFee(Request $request, Event $event): EventResource
+    {
+        $validated = $request->validate([
+            'service_fee_percentage' => ['required', 'numeric', 'min:0', 'max:30'],
+        ]);
+
+        $event->update([
+            'service_fee_percentage' => round((float) $validated['service_fee_percentage'], 2),
+        ]);
 
         return new EventResource($event->fresh()->load(['organizer', 'images', 'ticketTypes']));
     }

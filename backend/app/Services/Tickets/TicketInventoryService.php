@@ -99,6 +99,12 @@ class TicketInventoryService
             ]);
         }
 
+        if ($ticketType->event?->starts_at && $ticketType->event->starts_at->lte(now())) {
+            throw ValidationException::withMessages([
+                'ticket_type' => 'Ticket sales are closed because this event has already started.',
+            ]);
+        }
+
         if ($quantity < $ticketType->min_per_order) {
             throw ValidationException::withMessages([
                 'quantity' => "Quantity must be at least {$ticketType->min_per_order}.",

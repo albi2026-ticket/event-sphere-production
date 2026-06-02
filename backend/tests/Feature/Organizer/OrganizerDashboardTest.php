@@ -8,6 +8,7 @@ use App\Models\OrderItem;
 use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -170,6 +171,53 @@ class OrganizerDashboardTest extends TestCase
             ->assertJsonPath('data.banner_image_url', $primaryUrl)
             ->assertJsonPath('data.images.0.url', $primaryUrl)
             ->assertJsonPath('data.images.0.is_primary', true);
+    }
+
+    public function test_event_times_are_normalized_from_kosovo_timezone_without_display_shift(): void
+    {
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $response = $this->actingAs($organizer, 'sanctum')
+            ->postJson('/api/organizer/events', [
+                'title' => 'Pristina Time Event',
+                'category' => 'Concert',
+                'venue_name' => 'Event Sphere Hall',
+                'city' => 'Pristina',
+                'starts_at' => '2026-06-10T19:00',
+                'ends_at' => '2026-06-10T22:00',
+                'status' => 'draft',
+                'visibility' => 'public',
+                'currency' => 'USD',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.timezone', 'Europe/Pristina');
+
+        $event = Event::findOrFail($response->json('data.id'));
+
+        $this->assertSame(
+            '2026-06-10 17:00:00',
+            $event->starts_at->copy()->utc()->format('Y-m-d H:i:s')
+        );
+        $this->assertSame(
+            '2026-06-10 19:00',
+            $event->starts_at->copy()->setTimezone('Europe/Belgrade')->format('Y-m-d H:i')
+        );
+
+        $this->actingAs($organizer, 'sanctum')
+            ->patchJson("/api/organizer/events/{$event->id}", [
+                'starts_at' => '2026-06-10T19:00',
+                'ends_at' => '2026-06-10T22:00',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.timezone', 'Europe/Pristina');
+
+        $event->refresh();
+
+        $this->assertTrue($event->starts_at->equalTo(Carbon::parse('2026-06-10 19:00', 'Europe/Belgrade')->utc()));
     }
 
     public function test_organizer_dashboard_endpoints_support_events_analytics_and_attendee_search(): void

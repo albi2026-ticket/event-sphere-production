@@ -143,6 +143,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/events', [AdminEventController::class, 'store']);
         Route::get('/events/{event}', [AdminEventController::class, 'show']);
         Route::patch('/events/{event}', [AdminEventController::class, 'update']);
+        Route::patch('/events/{event}/service-fee', [AdminEventController::class, 'updateServiceFee']);
         Route::delete('/events/{event}', [AdminEventController::class, 'destroy']);
         Route::post('/events/{event}/publish', [AdminEventController::class, 'publish']);
         Route::post('/events/{event}/reject', [AdminEventController::class, 'reject']);
