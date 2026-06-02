@@ -48,7 +48,7 @@
                 <div class="venue"><i class="bi bi-geo-alt"></i> ${u().escapeHtml(event.venue_name || '')}${event.city ? `, ${u().escapeHtml(event.city)}` : ''}</div>
               </div>
               <div class="text-end">
-                <div class="price mb-2">From ${u().formatMoney(price.amount, price.currency)}</div>
+                <div class="price mb-2">${u().isEventSalesClosed(event) ? 'Sales closed' : `From ${u().formatMoney(price.amount, price.currency)}`}</div>
                 <a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(event.slug)}">View</a>
               </div>
               <span class="fav" data-fav="event-${event.id}" data-event-id="${event.id}" style="position:static"><i class="bi bi-heart"></i></span>

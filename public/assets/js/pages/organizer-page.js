@@ -247,11 +247,11 @@
     const body = $('[data-organizer-events]');
     if (!body) return;
     if (state.loading.events) {
-      body.innerHTML = loadingRow(7, 'Loading events...');
+      body.innerHTML = loadingRow(8, 'Loading events...');
       return;
     }
     if (state.errors.events) {
-      body.innerHTML = errorRow(7, state.errors.events, 'data-retry-events');
+      body.innerHTML = errorRow(8, state.errors.events, 'data-retry-events');
       return;
     }
     body.innerHTML = state.events.map((event) => {
@@ -266,6 +266,7 @@
         <td data-label="Event"><div class="fw-semibold">${esc(event.title)}</div><small class="text-muted-pro">${esc(event.city || '')}${event.venue_name ? ` · ${esc(event.venue_name)}` : ''}</small></td>
         <td data-label="Status">${statusBadge(event.status)}</td>
         <td data-label="Date">${esc(dateLabel(event.starts_at, event.timezone))}</td>
+        <td data-label="Service Fee"><span class="fw-semibold">${Number(event.service_fee_percentage ?? 10)}%</span><br><small class="text-muted-pro">Applied at checkout</small></td>
         <td data-label="Sold">${sold} sold / ${total} total</td>
         <td data-label="Revenue">${u().formatMoney(revenue, event.currency || 'USD')}</td>
         <td data-label="Available">${available} remaining</td>
@@ -279,7 +280,7 @@
           </div>
         </td>
       </tr>`;
-    }).join('') || emptyRow(7, 'bi-calendar-event', 'No events found', 'Create an event or adjust your filters.');
+    }).join('') || emptyRow(8, 'bi-calendar-event', 'No events found', 'Create an event or adjust your filters.');
   }
 
   function renderPerformance() {
@@ -478,6 +479,7 @@
       address: String(fd.get('address') || '').trim() || null,
       starts_at: fd.get('starts_at'),
       ends_at: fd.get('ends_at') || null,
+      timezone: u().EVENT_TIMEZONE || 'Europe/Pristina',
       status: fd.get('status'),
       max_tickets_per_user: Number.isInteger(maxTicketsPerUser) && maxTicketsPerUser > 0 ? maxTicketsPerUser : null,
       visibility: 'public',
@@ -500,8 +502,8 @@
     form.elements.event_id.value = event?.id || '';
     form.elements.title.value = event?.title || '';
     setSelectValue(form.elements.category, event?.category || '');
-    form.elements.starts_at.value = toDatetimeLocal(event?.starts_at);
-    form.elements.ends_at.value = toDatetimeLocal(event?.ends_at);
+    form.elements.starts_at.value = toDatetimeLocal(event?.starts_at, event?.timezone);
+    form.elements.ends_at.value = toDatetimeLocal(event?.ends_at, event?.timezone);
     form.elements.status.value = event?.status || 'draft';
     setPurchaseLimitValue(event?.max_tickets_per_user || null);
     form.elements.venue_name.value = event?.venue_name || '';
@@ -719,6 +721,7 @@
     detailModal(event?.title || 'Event analytics', `
       <div class="dashboard-detail-grid">
         <div><dt>Status</dt><dd>${statusBadge(event?.status)}</dd></div>
+        <div><dt>Service Fee</dt><dd>${Number(event?.service_fee_percentage ?? 10)}%</dd></div>
         <div><dt>Revenue</dt><dd>${u().formatMoney(perf.revenue || 0, perf.currency || event?.currency || 'USD')}</dd></div>
         <div><dt>Tickets sold</dt><dd>${perf.tickets_sold ?? 0}</dd></div>
         <div><dt>Tickets remaining</dt><dd>${perf.tickets_available ?? 0}</dd></div>
@@ -972,13 +975,8 @@
     };
   }
 
-  function toDatetimeLocal(value) {
-    if (!value) return '';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    const offset = date.getTimezoneOffset();
-    const local = new Date(date.getTime() - offset * 60000);
-    return local.toISOString().slice(0, 16);
+  function toDatetimeLocal(value, timezone) {
+    return u().toEventDatetimeLocal(value, timezone);
   }
 
   document.addEventListener('DOMContentLoaded', async () => {

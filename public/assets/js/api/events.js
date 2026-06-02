@@ -30,6 +30,40 @@
     return tier ? { amount: tier.price, currency: tier.currency || event.currency } : { amount: event.base_price ?? 0, currency: event.currency || 'USD' };
   }
 
+  function serviceFeePercentage(event) {
+    return Number(event?.service_fee_percentage ?? 10);
+  }
+
+  function priceBreakdown(amount, event) {
+    const ticketPrice = Number(amount || 0);
+    const percentage = serviceFeePercentage(event);
+    const serviceFee = Math.round(ticketPrice * (percentage / 100) * 100) / 100;
+
+    return {
+      ticketPrice,
+      percentage,
+      serviceFee,
+      total: Math.round((ticketPrice + serviceFee) * 100) / 100,
+    };
+  }
+
+  function priceBreakdownHtml(amount, currency, event, compact = false) {
+    const breakdown = priceBreakdown(amount, event);
+    if (compact) {
+      return `<span class="price-breakdown small d-block">
+        <span class="d-block">Ticket ${u().formatMoney(breakdown.ticketPrice, currency)}</span>
+        <span class="d-block">Fee (${breakdown.percentage}%) ${u().formatMoney(breakdown.serviceFee, currency)}</span>
+        <strong class="d-block">Total ${u().formatMoney(breakdown.total, currency)}</strong>
+      </span>`;
+    }
+
+    return `<div class="price-breakdown small">
+      <div class="d-flex justify-content-between gap-3"><span class="text-muted-pro">Ticket Price</span><span>${u().formatMoney(breakdown.ticketPrice, currency)}</span></div>
+      <div class="d-flex justify-content-between gap-3"><span class="text-muted-pro">Service Fee (${breakdown.percentage}%)</span><span>${u().formatMoney(breakdown.serviceFee, currency)}</span></div>
+      <div class="d-flex justify-content-between gap-3 fw-bold"><span>Total</span><span>${u().formatMoney(breakdown.total, currency)}</span></div>
+    </div>`;
+  }
+
   function renderEventCard(event, index) {
     const img = u().eventImage(event);
     const date = u().formatEventDate(event.starts_at, event.timezone);
@@ -50,7 +84,7 @@
         <div class="meta"><i class="bi bi-calendar3"></i> ${u().escapeHtml(date)}</div>
         <h3 class="title"><a href="event-details.html?slug=${encodeURIComponent(slug)}" style="color:inherit">${u().escapeHtml(event.title)}</a></h3>
         <div class="venue"><i class="bi bi-geo-alt"></i> ${u().escapeHtml(event.venue_name || '')}${event.city ? `, ${u().escapeHtml(event.city)}` : ''}</div>
-        <div class="foot"><div class="price">From ${u().formatMoney(price.amount, price.currency)}</div><a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(slug)}">View</a></div>
+        <div class="foot"><div class="price">${u().isEventSalesClosed(event) ? 'Sales closed' : `From ${u().formatMoney(price.amount, price.currency)}`}</div><a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(slug)}">View</a></div>
       </div>
     </article>
   </div>`;
@@ -61,6 +95,9 @@
     getEvent,
     availableTicketTypes,
     lowestAvailablePrice,
+    serviceFeePercentage,
+    priceBreakdown,
+    priceBreakdownHtml,
     renderEventCard,
   };
 })();

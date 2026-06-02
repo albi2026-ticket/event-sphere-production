@@ -832,6 +832,7 @@ a:hover { color: var(--secondary); }
 
 /* Sticky checkout */
 .sticky-checkout { position: sticky; top: 90px; }
+.mobile-ticket-select { display: none; }
 
 /* Toast */
 .toast-stack { position: fixed; top: 90px; right: 20px; z-index: 1080; display: flex; flex-direction: column; gap: .5rem; }
@@ -884,6 +885,7 @@ a:hover { color: var(--secondary); }
 }
 .status-active,
 .status-approved,
+.status-live,
 .status-paid,
 .status-published {
   background: var(--success-soft);
@@ -893,6 +895,7 @@ a:hover { color: var(--secondary); }
 .status-pending,
 .status-pending_review,
 .status-draft,
+.status-upcoming,
 .status-unpaid {
   background: var(--warning-soft);
   color: var(--warning-text);
@@ -914,6 +917,7 @@ a:hover { color: var(--secondary); }
 }
 .status-used,
 .status-completed,
+.status-finished,
 .status-none,
 .status-private,
 .status-public,
@@ -1160,6 +1164,51 @@ img, svg, canvas, video { max-width: 100%; }
   .form-select,
   textarea.form-control {
     min-height: 42px;
+  }
+  [data-ticket-type-select] {
+    display: none;
+    width: 100%;
+    min-height: 48px;
+    font-size: 16px;
+    line-height: 1.35;
+    white-space: normal;
+    text-overflow: ellipsis;
+  }
+  .mobile-ticket-select {
+    display: block;
+    position: relative;
+    z-index: 20;
+  }
+  .mobile-ticket-select .dropdown-menu {
+    position: absolute;
+    inset-inline: 0 auto;
+    max-height: 56dvh;
+    overflow-y: auto;
+    border-radius: 14px;
+    z-index: 1060;
+  }
+  .mobile-ticket-select .form-select {
+    min-height: 48px;
+    padding-right: 2.5rem;
+    white-space: normal;
+  }
+  .mobile-ticket-option {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+    min-height: 48px;
+    padding: .75rem 1rem;
+    white-space: normal;
+  }
+  .mobile-ticket-option small {
+    color: var(--muted);
+  }
+  [data-ticket-type-select] option {
+    font-size: 16px;
+    line-height: 1.45;
+    padding: .75rem 1rem;
+    white-space: normal;
   }
   .btn-lg {
     width: 100%;

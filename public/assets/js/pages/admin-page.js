@@ -66,6 +66,18 @@
     return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
   }
 
+  function eventLifecycleStatus(event) {
+    if (!event?.starts_at) return 'upcoming';
+    const now = new Date();
+    const start = new Date(event.starts_at);
+    const end = event.ends_at ? new Date(event.ends_at) : null;
+
+    if (Number.isNaN(start.getTime())) return 'upcoming';
+    if (now < start) return 'upcoming';
+    if (!end || Number.isNaN(end.getTime()) || now <= end) return 'live';
+    return 'finished';
+  }
+
   function buttonIcon(icon, label, attrs, extraClass = 'btn-glass') {
     return `<button class="btn ${extraClass} btn-sm" type="button" ${attrs} title="${u().escapeHtml(label)}"><i class="bi ${icon}"></i><span class="visually-hidden">${u().escapeHtml(label)}</span></button>`;
   }
@@ -270,11 +282,11 @@
     const body = document.querySelector('[data-admin-events] tbody');
     if (!body) return;
     if (state.loading.events) {
-      body.innerHTML = loadingRow(7, 'Loading events...');
+      body.innerHTML = loadingRow(9, 'Loading events...');
       return;
     }
     if (state.errors.events) {
-      body.innerHTML = errorRow(7, state.errors.events, 'data-retry-events');
+      body.innerHTML = errorRow(9, state.errors.events, 'data-retry-events');
       return;
     }
 
@@ -282,7 +294,14 @@
       <tr>
         <td data-label="Event"><div class="fw-semibold">${u().escapeHtml(event.title)}</div><div class="small text-muted-pro">${u().escapeHtml(event.category || '')} · ${u().escapeHtml(event.city || '')}</div></td>
         <td data-label="Organizer">${u().escapeHtml(event.organizer?.name || `#${event.organizer_id}`)}</td>
-        <td data-label="Date">${dateLabel(event.starts_at)}</td>
+        <td data-label="Date">${u().escapeHtml(u().formatEventDate(event.starts_at, event.timezone))}</td>
+        <td data-label="Event Status">${badge(eventLifecycleStatus(event))}</td>
+        <td data-label="Service Fee">
+          <div class="d-flex gap-2 align-items-center">
+            <input class="form-control form-control-sm admin-select" style="max-width:84px" type="number" min="0" max="30" step="0.01" value="${Number(event.service_fee_percentage ?? 10)}" data-event-fee-input="${event.id}"/>
+            <button class="btn btn-glass btn-sm" type="button" data-save-event-fee="${event.id}">Save</button>
+          </div>
+        </td>
         <td data-label="Status">${badge(event.status)}</td>
         <td data-label="Visibility">${event.visibility ? badge(event.visibility) : '-'}</td>
         <td data-label="Notes"><span class="small text-muted-pro">${u().escapeHtml(event.moderation_notes || '-')}</span></td>
@@ -295,7 +314,7 @@
           </div>
         </td>
       </tr>
-    `).join('') || emptyRow(7, 'bi-calendar-event', 'No events match these filters');
+    `).join('') || emptyRow(9, 'bi-calendar-event', 'No events match these filters');
   }
 
   function paymentRow(order, actions) {
@@ -428,7 +447,7 @@
       <h6 class="mt-4">Recent orders</h6>
       ${orders.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${orders.map((order) => `<tr><td>${u().escapeHtml(order.order_number)}</td><td>${badge(order.payment_status)}</td><td>${money(order.total, order.currency)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No recent orders.</p>'}
       <h6 class="mt-4">Organized events</h6>
-      ${events.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${events.map((event) => `<tr><td>${u().escapeHtml(event.title)}</td><td>${badge(event.status)}</td><td>${dateLabel(event.starts_at)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No organized events.</p>'}
+      ${events.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${events.map((event) => `<tr><td>${u().escapeHtml(event.title)}</td><td>${badge(event.status)}</td><td>${u().escapeHtml(u().formatEventDate(event.starts_at, event.timezone))}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No organized events.</p>'}
     `);
   }
 
@@ -442,7 +461,7 @@
         ['Visibility', badge(event.visibility || 'public')],
         ['Category', u().escapeHtml(event.category || '-')],
         ['City', u().escapeHtml(event.city || '-')],
-        ['Starts', dateTimeLabel(event.starts_at)],
+        ['Starts', u().formatEventDate(event.starts_at, event.timezone)],
         ['Tickets', String(event.tickets_count ?? 0)],
         ['Views', String(event.views_count ?? 0)],
       ])}
@@ -471,7 +490,7 @@
         ['Reference', u().escapeHtml(order.payment_reference || '-')],
       ])}
       <h6 class="mt-4">Items</h6>
-      ${items.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${items.map((item) => `<tr><td>${u().escapeHtml(item.event_title || item.event?.title || '-')}</td><td>${u().escapeHtml(item.ticket_type_name || item.ticket_type?.name || '-')}</td><td>x${item.quantity}</td><td>${money(item.total, order.currency)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No line items.</p>'}
+      ${items.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${items.map((item) => `<tr><td>${u().escapeHtml(item.event_title || item.event?.title || '-')}</td><td>${u().escapeHtml(item.ticket_type_name || item.ticket_type?.name || '-')}</td><td>x${item.quantity}</td><td><small>Ticket ${money(Number(item.unit_price || 0) * Number(item.quantity || 0), order.currency)}<br>Fee ${money(item.service_fee, order.currency)}</small></td><td>${money(item.total, order.currency)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No line items.</p>'}
       <h6 class="mt-4">Tickets and attendees</h6>
       ${tickets.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${tickets.map((ticket) => `<tr><td><div class="fw-semibold">${u().escapeHtml(ticket.attendee_name || ticket.user?.name || 'Guest')}</div><small>${u().escapeHtml(ticket.attendee_email || ticket.user?.email || '')}</small></td><td>${u().escapeHtml(ticket.event?.title || '-')}</td><td>${u().escapeHtml(ticket.ticket_type?.name || '-')}</td><td><small>Paid by ${u().escapeHtml(order.user?.name || order.billing_email || '-')}</small></td><td>${u().escapeHtml(ticket.ticket_code || '-')}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No tickets issued yet.</p>'}
     `);
@@ -529,6 +548,7 @@
       state.paymentFilters = {};
       await refreshPayments();
     });
+
   }
 
   function bindActions() {
@@ -600,6 +620,18 @@
         if (button.dataset.unpublishEvent) {
           button.disabled = true;
           await eventModeration(button.dataset.unpublishEvent, 'unpublish');
+        }
+
+        if (button.dataset.saveEventFee) {
+          button.disabled = true;
+          const eventId = button.dataset.saveEventFee;
+          const value = document.querySelector(`[data-event-fee-input="${eventId}"]`)?.value;
+          await api().fetch(`/admin/events/${eventId}/service-fee`, {
+            method: 'PATCH',
+            body: { service_fee_percentage: value },
+          });
+          window.tkToast?.('Event service fee updated');
+          await refreshEvents();
         }
 
         if (button.dataset.refundOrder) {

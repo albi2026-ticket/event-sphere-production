@@ -16,7 +16,7 @@
     else sessionStorage.setItem(cfg().CART_KEY, JSON.stringify(cart));
   }
 
-  function setFromEvent(event, ticketTypeId, quantity, options = {}) {
+  function setFromEvent(event, ticketTypeId, quantity) {
     const tt = event.ticket_types?.find((t) => t.id === ticketTypeId) ||
       event.ticketTypes?.find((t) => t.id === ticketTypeId);
     if (!tt) throw new Error('Ticket type not found');
@@ -28,6 +28,7 @@
     setCart({
       event_slug: event.slug,
       event_id: event.id,
+      source_url: `event-details.html?slug=${encodeURIComponent(event.slug)}`,
       event_title: event.title,
       event_image: window.EventSphereUtils.eventImage(event),
       venue_name: event.venue_name,
@@ -35,9 +36,9 @@
       starts_at: event.starts_at,
       timezone: event.timezone,
       currency: event.currency || tt.currency,
+      service_fee_percentage: Number(event.service_fee_percentage ?? 10),
       max_tickets_per_user: maxTicketsPerUser || null,
       items: [{ ticket_type_id: tt.id, ticket_type_name: tt.name, quantity, unit_price: tt.price }],
-      refund_protection: !!options.refund_protection,
     });
   }
 

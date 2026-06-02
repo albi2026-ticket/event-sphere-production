@@ -66,6 +66,10 @@
             <hr class="divider"/>
             <label class="form-label">Ticket type</label>
             <select class="form-select mb-3" data-ticket-type-select disabled><option>Loading ticket types...</option></select>
+            <div class="dropdown mb-3 mobile-ticket-select" data-ticket-type-mobile hidden>
+              <button class="form-select text-start" type="button" data-bs-toggle="dropdown" data-ticket-type-mobile-button disabled>Loading ticket types...</button>
+              <div class="dropdown-menu w-100" data-ticket-type-mobile-menu></div>
+            </div>
             <div class="small text-muted-pro mb-3" data-event-purchase-limit hidden></div>
             <label class="form-label">Quantity</label>
             <div class="qty-wrap d-flex align-items-center gap-2 mb-3" data-qty data-price="0" data-currency="USD">
@@ -74,7 +78,6 @@
               <button class="btn btn-glass" type="button" data-qty="+">+</button>
               <span class="ms-auto fw-bold" data-qty-total>$0.00</span>
             </div>
-            <div class="form-check mb-3"><input class="form-check-input" type="checkbox" checked data-refund-protection><label class="form-check-label small">Add refund protection · $4.99</label></div>
             <a href="#" class="btn btn-primary-grad w-100 btn-lg disabled" aria-disabled="true" data-event-buy>Buy tickets</a>
             <button class="btn btn-ghost w-100 mt-2" data-event-fav data-fav="" disabled><i class="bi bi-heart me-1"></i> Save for later</button>
             <hr class="divider"/>

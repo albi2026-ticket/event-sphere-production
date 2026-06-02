@@ -1,6 +1,9 @@
 (function () {
   'use strict';
 
+  const EVENT_TIMEZONE = 'Europe/Pristina';
+  const EVENT_CALCULATION_TIMEZONE = 'Europe/Belgrade';
+
   function escapeHtml(str) {
     return String(str ?? '')
       .replace(/&/g, '&amp;')
@@ -23,14 +26,56 @@
   function formatEventDate(startsAt, timezone) {
     if (!startsAt) return '';
     const d = new Date(startsAt);
-    return d.toLocaleString('en-US', {
+    const tz = timezone || EVENT_TIMEZONE;
+    const calculationTz = tz === EVENT_TIMEZONE ? EVENT_CALCULATION_TIMEZONE : tz;
+    return `${d.toLocaleString('en-US', {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
-      timeZone: timezone || undefined,
-    });
+      timeZone: calculationTz,
+    })} (${tz})`;
+  }
+
+  function formatEventTime(startsAt, timezone) {
+    if (!startsAt) return '';
+    const d = new Date(startsAt);
+    const tz = timezone || EVENT_TIMEZONE;
+    const calculationTz = tz === EVENT_TIMEZONE ? EVENT_CALCULATION_TIMEZONE : tz;
+    return `${d.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone: calculationTz,
+    })} (${tz})`;
+  }
+
+  function toEventDatetimeLocal(value, timezone) {
+    if (!value) return '';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '';
+    const tz = timezone || EVENT_TIMEZONE;
+    const calculationTz = tz === EVENT_TIMEZONE ? EVENT_CALCULATION_TIMEZONE : tz;
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: calculationTz,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).formatToParts(d).reduce((carry, part) => {
+      carry[part.type] = part.value;
+      return carry;
+    }, {});
+
+    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+  }
+
+  function isEventSalesClosed(event) {
+    if (!event?.starts_at) return false;
+    const start = new Date(event.starts_at);
+    return !Number.isNaN(start.getTime()) && Date.now() >= start.getTime();
   }
 
   function eventImage(event) {
@@ -57,6 +102,11 @@
     escapeHtml,
     formatMoney,
     formatEventDate,
+    formatEventTime,
+    toEventDatetimeLocal,
+    isEventSalesClosed,
+    EVENT_TIMEZONE,
+    EVENT_CALCULATION_TIMEZONE,
     eventImage,
     paginateLinks,
   };

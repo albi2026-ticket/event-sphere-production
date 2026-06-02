@@ -66,8 +66,11 @@
 
       const priceEl = $('[data-event-price]');
       const lowestPrice = eventsApi().lowestAvailablePrice(event);
-      if (priceEl) priceEl.textContent = money(lowestPrice.amount, lowestPrice.currency);
+      if (priceEl) {
+        priceEl.textContent = money(lowestPrice.amount, lowestPrice.currency);
+      }
       const purchaseLimit = eventLimit(event);
+      const salesClosed = u().isEventSalesClosed(event);
       const purchaseLimitEl = $('[data-event-purchase-limit]');
       if (purchaseLimitEl) {
         purchaseLimitEl.hidden = !purchaseLimit;
@@ -82,16 +85,38 @@
       }
 
       const select = $('[data-ticket-type-select]');
-      const types = event.ticket_types || [];
+      const mobileSelect = $('[data-ticket-type-mobile]');
+      const mobileSelectButton = $('[data-ticket-type-mobile-button]');
+      const mobileSelectMenu = $('[data-ticket-type-mobile-menu]');
+      const types = salesClosed ? [] : (event.ticket_types || []);
       if (select) {
-        select.innerHTML = types.map((t) =>
-          `<option value="${t.id}" data-price="${t.price}" data-currency="${t.currency || event.currency || 'USD'}" data-min="${t.min_per_order || 1}" data-available="${Number(t.quantity_available ?? t.available_quantity ?? 0)}" ${Number(t.quantity_available ?? t.available_quantity ?? 0) <= 0 || t.status === 'sold_out' || t.status === 'inactive' ? 'disabled' : ''}>${u().escapeHtml(t.name)} · ${money(t.price, t.currency || event.currency)} · ${Number(t.quantity_available ?? t.available_quantity ?? 0)} left${t.status === 'sold_out' ? ' · Sold out' : ''}</option>`,
-        ).join('') || '<option disabled>No ticket tiers available</option>';
+        select.innerHTML = salesClosed
+          ? '<option disabled>Sales closed</option>'
+          : types.map((t) =>
+            `<option value="${t.id}" data-price="${t.price}" data-currency="${t.currency || event.currency || 'USD'}" data-min="${t.min_per_order || 1}" data-available="${Number(t.quantity_available ?? t.available_quantity ?? 0)}" ${Number(t.quantity_available ?? t.available_quantity ?? 0) <= 0 || t.status === 'sold_out' || t.status === 'inactive' ? 'disabled' : ''}>${u().escapeHtml(t.name)} · ${money(t.price, t.currency || event.currency)} · ${Number(t.quantity_available ?? t.available_quantity ?? 0)} left${t.status === 'sold_out' ? ' · Sold out' : ''}</option>`,
+          ).join('') || '<option disabled>No ticket tiers available</option>';
         select.disabled = !types.length;
       }
+      const syncMobileOptions = () => {
+        if (!mobileSelect || !mobileSelectButton || !mobileSelectMenu) return;
+        mobileSelect.hidden = false;
+        mobileSelectButton.disabled = !types.length;
+        mobileSelectButton.textContent = salesClosed ? 'Sales closed' : 'Select ticket type';
+        mobileSelectMenu.innerHTML = salesClosed
+          ? '<span class="dropdown-item-text text-muted-pro">Sales closed</span>'
+          : types.map((t) => {
+            const available = Number(t.quantity_available ?? t.available_quantity ?? 0);
+            const disabled = available <= 0 || t.status === 'sold_out' || t.status === 'inactive';
+            return `<button class="dropdown-item mobile-ticket-option" type="button" data-mobile-ticket-type="${t.id}" ${disabled ? 'disabled' : ''}>
+              <span>${u().escapeHtml(t.name)}</span>
+              <small>${money(t.price, t.currency || event.currency)} · ${available} left${t.status === 'sold_out' ? ' · Sold out' : ''}</small>
+            </button>`;
+          }).join('') || '<span class="dropdown-item-text text-muted-pro">No ticket tiers available</span>';
+      };
+      syncMobileOptions();
 
       const qtyWrap = $('[data-qty]');
-      let selectedType = eventsApi().availableTicketTypes(event)[0] || null;
+      let selectedType = salesClosed ? null : (eventsApi().availableTicketTypes(event)[0] || null);
       if (select && selectedType) select.value = String(selectedType.id);
 
       const syncSelectedType = () => {
@@ -106,7 +131,14 @@
             input.value = Math.max(Number(input.min || 1), Math.min(Number(input.value || 1), Number(input.max || available || 1)));
           }
           const out = qtyWrap.querySelector('[data-qty-total]');
-          if (out) out.textContent = money(Number(input?.value || 1) * Number(selectedType.price || 0), selectedType.currency || event.currency);
+          if (out) {
+            const subtotal = Number(input?.value || 1) * Number(selectedType.price || 0);
+            out.textContent = money(subtotal, selectedType.currency || event.currency);
+          }
+        }
+        if (mobileSelectButton && selectedType) {
+          const available = Number(selectedType.quantity_available ?? selectedType.available_quantity ?? 0);
+          mobileSelectButton.textContent = `${selectedType.name} · ${money(selectedType.price, selectedType.currency || event.currency)} · ${available} left`;
         }
       };
 
@@ -116,21 +148,35 @@
         if (input) input.value = selectedType?.min_per_order || 1;
         syncSelectedType();
       });
+      mobileSelectMenu?.addEventListener('click', (event) => {
+        const option = event.target.closest('[data-mobile-ticket-type]');
+        if (!option || option.disabled) return;
+        selectedType = types.find((t) => String(t.id) === option.dataset.mobileTicketType);
+        if (select && selectedType) select.value = String(selectedType.id);
+        const input = qtyWrap?.querySelector('input');
+        if (input) input.value = selectedType?.min_per_order || 1;
+        syncSelectedType();
+      });
 
       const qtyInput = qtyWrap?.querySelector('input');
       if (qtyInput) qtyInput.value = selectedType?.min_per_order || 1;
       syncSelectedType();
-      if (!types.length || !selectedType) {
+      if (salesClosed || !types.length || !selectedType) {
         document.querySelectorAll('[data-event-buy]').forEach((btn) => {
           btn.classList.add('disabled');
           btn.setAttribute('aria-disabled', 'true');
+          btn.textContent = salesClosed ? 'Sales Closed' : 'Buy tickets';
         });
         const availability = $('[data-event-availability]');
-        if (availability) availability.textContent = 'Unavailable';
+        if (availability) {
+          availability.textContent = salesClosed ? 'Sales Closed' : 'Unavailable';
+          availability.className = `badge status-badge ${salesClosed ? 'status-cancelled' : 'status-active'}`;
+        }
       } else {
         document.querySelectorAll('[data-event-buy]').forEach((btn) => {
           btn.classList.remove('disabled');
           btn.removeAttribute('aria-disabled');
+          btn.textContent = 'Buy tickets';
         });
         const availability = $('[data-event-availability]');
         if (availability) availability.textContent = 'Available';
@@ -139,6 +185,10 @@
       document.querySelectorAll('[data-event-buy]').forEach((btn) => {
         btn.addEventListener('click', (e) => {
           e.preventDefault();
+          if (salesClosed) {
+            window.tkToast?.('Ticket sales are closed for this event.', 'error');
+            return;
+          }
           if (!selectedType) {
             window.tkToast?.('No tickets are currently available for this event.', 'error');
             return;
@@ -150,9 +200,7 @@
           const qty = Number($('[data-qty] input')?.value || 1);
           const typeId = Number(select?.value || selectedType?.id);
           try {
-            cart().setFromEvent(event, typeId, qty, {
-              refund_protection: !!$('[data-refund-protection]')?.checked,
-            });
+            cart().setFromEvent(event, typeId, qty);
             location.href = 'checkout.html';
           } catch (err) {
             window.tkToast?.(err.message, 'error');

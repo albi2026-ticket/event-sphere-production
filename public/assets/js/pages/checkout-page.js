@@ -6,7 +6,7 @@
   const orders = () => window.EventSphereOrders;
   const u = () => window.EventSphereUtils;
 
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     auth().requireAuth(['user', 'organizer', 'admin']);
 
     const c = cart().getCart();
@@ -14,6 +14,7 @@
     const form = document.querySelector('[data-checkout-form]');
     const payBtn = document.querySelector('[data-checkout-pay]');
     const attendeeFields = document.querySelector('[data-attendee-fields]');
+    const backLink = document.querySelector('[data-checkout-back]');
 
     if (!c || !c.items?.length) {
       window.tkToast?.('Your cart is empty', 'info');
@@ -22,10 +23,13 @@
     }
 
     const item = c.items[0];
+    if (backLink) {
+      backLink.href = c.source_url || (c.event_slug ? `event-details.html?slug=${encodeURIComponent(c.event_slug)}` : 'events.html');
+    }
+    const feePercentage = Number(c.service_fee_percentage ?? 10);
     const subtotal = Number(item.unit_price) * Number(item.quantity);
-    const serviceFee = Math.round(subtotal * 0.05 * 100) / 100;
-    const refundFee = c.refund_protection ? 4.99 : 0;
-    const total = subtotal + serviceFee + refundFee;
+    const serviceFee = Math.round(subtotal * (feePercentage / 100) * 100) / 100;
+    const total = subtotal + serviceFee;
 
     if (summary) {
       const inner = `
@@ -37,32 +41,33 @@
           ${c.max_tickets_per_user ? `<br><small class="text-muted-pro">Limit ${c.max_tickets_per_user} ticket${Number(c.max_tickets_per_user) === 1 ? '' : 's'} per user</small>` : ''}</div>
         </div>
         <div class="d-flex justify-content-between small mb-1"><span class="text-muted-pro">Subtotal</span><span>${u().formatMoney(subtotal, c.currency)}</span></div>
-        <div class="d-flex justify-content-between small mb-1"><span class="text-muted-pro">Service fee</span><span>${u().formatMoney(serviceFee, c.currency)}</span></div>
-        ${refundFee ? `<div class="d-flex justify-content-between small mb-1"><span class="text-muted-pro">Refund protection</span><span>${u().formatMoney(refundFee, c.currency)}</span></div>` : ''}
+        <div class="d-flex justify-content-between small mb-1"><span class="text-muted-pro">Service fee (${feePercentage}%)</span><span>${u().formatMoney(serviceFee, c.currency)}</span></div>
         <hr class="divider"/>
         <div class="d-flex justify-content-between fw-bold fs-5"><span>Total</span><span>${u().formatMoney(total, c.currency)}</span></div>`;
       summary.innerHTML = `<h6 class="mb-3">Order summary</h6>${inner}`;
     }
 
     if (payBtn) payBtn.textContent = `Pay ${u().formatMoney(total, c.currency)}`;
-    const refundInput = form?.querySelector('[name="refund_protection"]');
-    if (refundInput) refundInput.checked = !!c.refund_protection;
 
     const user = auth().getUser();
     const purchaserName = (user?.name || `${user?.first_name || ''} ${user?.last_name || ''}`).trim();
+    const nameParts = purchaserName.split(/\s+/).filter(Boolean);
+    const purchaserFirstName = user?.first_name || nameParts.shift() || purchaserName || 'Guest';
+    const purchaserLastName = user?.last_name || nameParts.join(' ') || 'Customer';
     if (form && user) {
       const email = form.querySelector('[name="billing_email"]');
-      if (email && !email.value) email.value = user.email || '';
+      if (email) email.value = user.email || '';
       const fn = form.querySelector('[name="billing_first_name"]');
-      if (fn && !fn.value) fn.value = user.first_name || '';
+      if (fn) fn.value = purchaserFirstName;
       const ln = form.querySelector('[name="billing_last_name"]');
-      if (ln && !ln.value) ln.value = user.last_name || '';
+      if (ln) ln.value = purchaserLastName;
+      const phone = form.querySelector('[name="billing_phone"]');
+      if (phone) phone.value = user.phone || '';
     }
 
     if (attendeeFields) {
       const quantity = Math.max(1, Number(item.quantity || 1));
       attendeeFields.innerHTML = Array.from({ length: quantity }, (_, index) => {
-        const isFirst = index === 0;
         return `
           <div class="${index > 0 ? 'pt-3 mt-3 border-top' : ''}" style="${index > 0 ? 'border-color:var(--border) !important' : ''}">
             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -70,9 +75,9 @@
               <small class="text-muted-pro">${u().escapeHtml(item.ticket_type_name || 'Ticket')}</small>
             </div>
             <div class="row g-3">
-              <div class="col-md-6"><label class="form-label">Full name</label><input class="form-control" name="attendees[${index}][name]" required placeholder="Attendee name" value="${isFirst ? u().escapeHtml(purchaserName) : ''}"/></div>
-              <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="attendees[${index}][email]" required placeholder="attendee@email.com" value="${isFirst ? u().escapeHtml(user?.email || '') : ''}"/></div>
-              <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="attendees[${index}][phone]" placeholder="+1 (555) 000-0000" value="${isFirst ? u().escapeHtml(user?.phone || '') : ''}"/></div>
+              <div class="col-md-6"><label class="form-label">Full name</label><input class="form-control" name="attendees[${index}][name]" required placeholder="Attendee name"/></div>
+              <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="attendees[${index}][email]" required placeholder="attendee@email.com"/></div>
+              <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="attendees[${index}][phone]" placeholder="+1 (555) 000-0000"/></div>
             </div>
           </div>`;
       }).join('');
@@ -103,7 +108,6 @@
           billing_zip: fd.get('billing_zip') || null,
           billing_country: fd.get('billing_country') || null,
           attendees,
-          refund_protection: !!fd.get('refund_protection'),
         });
 
         sessionStorage.setItem('event_sphere_last_order_id', String(createdOrder.id));

@@ -6,6 +6,7 @@
   const ticketsApi = () => window.EventSphereTickets;
   const ordersApi = () => window.EventSphereOrders;
   const favApi = () => window.EventSphereFavorites;
+  const eventsApi = () => window.EventSphereEvents;
   const u = () => window.EventSphereUtils;
 
   const state = {
@@ -358,6 +359,7 @@
     if (!event) return '';
     const img = u().eventImage(event);
     const price = event.base_price ?? event.ticket_types?.[0]?.price ?? 0;
+    const pricing = eventsApi().priceBreakdownHtml(price, event.currency || 'USD', event, true);
     return `
       <div class="col-md-6 col-xl-4">
         <article class="card-pro dashboard-favorite-card">
@@ -370,7 +372,7 @@
             <h3 class="title">${escape(event.title)}</h3>
             <div class="venue"><i class="bi bi-geo-alt"></i> ${escape(event.venue_name || '')}${event.city ? `, ${escape(event.city)}` : ''}</div>
             <div class="foot">
-              <div class="price">From ${u().formatMoney(price, event.currency)}</div>
+              <div class="price">${pricing}</div>
               <div class="dashboard-actions">
                 <a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(event.slug)}">Open</a>
                 <button class="btn btn-glass btn-sm" type="button" data-remove-favorite="${event.id}"><i class="bi bi-heartbreak"></i></button>
@@ -648,13 +650,15 @@
         <div><dt>Payment</dt><dd>${statusBadge(order.payment_status)}</dd></div>
         <div><dt>Status</dt><dd>${statusBadge(order.status)}</dd></div>
         <div><dt>Purchased</dt><dd>${escape(shortDate(order.created_at))}</dd></div>
+        <div><dt>Ticket Price</dt><dd>${u().formatMoney(order.subtotal, order.currency)}</dd></div>
+        <div><dt>Service Fee</dt><dd>${u().formatMoney(order.service_fee, order.currency)}</dd></div>
         <div><dt>Total</dt><dd>${u().formatMoney(order.total, order.currency)}</dd></div>
         <div><dt>Purchaser</dt><dd>${escape(order.purchaser?.name || '-')} · ${escape(order.purchaser?.email || '-')}</dd></div>
         <div><dt>Attendees</dt><dd>${order.attendee_count ?? tickets.length}</dd></div>
       </div>
       <h6 class="mt-4">Items</h6>
       <div class="table-responsive"><table class="table table-borderless dashboard-table mb-0"><tbody>
-        ${items.map((item) => `<tr><td data-label="Event">${escape(item.event_title || item.event?.title || 'Event')}</td><td data-label="Ticket">${escape(item.ticket_type_name || item.ticket_type?.name || 'Ticket')}</td><td data-label="Qty">x${item.quantity}</td><td data-label="Total">${u().formatMoney(item.total, order.currency)}</td></tr>`).join('') || '<tr><td colspan="4">No line items</td></tr>'}
+        ${items.map((item) => `<tr><td data-label="Event">${escape(item.event_title || item.event?.title || 'Event')}</td><td data-label="Ticket">${escape(item.ticket_type_name || item.ticket_type?.name || 'Ticket')}</td><td data-label="Qty">x${item.quantity}</td><td data-label="Ticket Price">${u().formatMoney(Number(item.unit_price || 0) * Number(item.quantity || 0), order.currency)}</td><td data-label="Service Fee">${u().formatMoney(item.service_fee, order.currency)}</td><td data-label="Total">${u().formatMoney(item.total, order.currency)}</td></tr>`).join('') || '<tr><td colspan="6">No line items</td></tr>'}
       </tbody></table></div>
       <h6 class="mt-4">Ticket access</h6>
       <div class="dashboard-stack">
