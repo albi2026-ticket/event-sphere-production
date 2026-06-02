@@ -9,6 +9,11 @@ class EventResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $primaryImage = $this->whenLoaded('images', fn () => $this->images->firstWhere('is_primary', true) ?? $this->images->first());
+        $bannerImageUrl = $primaryImage instanceof \App\Models\EventImage
+            ? $primaryImage->publicUrl()
+            : $this->banner_image_url;
+
         return [
             'id' => $this->id,
             'organizer_id' => $this->organizer_id,
@@ -30,7 +35,7 @@ class EventResource extends JsonResource
             'timezone' => $this->timezone,
             'status' => $this->status,
             'visibility' => $this->visibility,
-            'banner_image_url' => $this->banner_image_url,
+            'banner_image_url' => $bannerImageUrl,
             'base_price' => $this->base_price,
             'currency' => $this->currency,
             'is_featured' => $this->is_featured,

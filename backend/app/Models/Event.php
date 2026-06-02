@@ -46,7 +46,10 @@ class Event extends Model
 
     public function images(): HasMany
     {
-        return $this->hasMany(EventImage::class);
+        return $this->hasMany(EventImage::class)
+            ->orderByDesc('is_primary')
+            ->orderBy('sort_order')
+            ->orderBy('id');
     }
 
     public function ticketTypes(): HasMany

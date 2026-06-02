@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'event_id',
@@ -29,6 +30,15 @@ class EventImage extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    public function publicUrl(): ?string
+    {
+        if ($this->disk && $this->path) {
+            return Storage::disk($this->disk)->url($this->path);
+        }
+
+        return $this->url;
     }
 
     protected function casts(): array

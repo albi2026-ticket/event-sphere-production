@@ -9,11 +9,13 @@ class EventImageResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $url = $this->publicUrl();
+
         return [
             'id' => $this->id,
             'event_id' => $this->event_id,
-            'url' => $this->url,
-            'optimized_url' => $this->url,
+            'url' => $url,
+            'optimized_url' => $url,
             'original_name' => $this->original_name,
             'mime_type' => $this->mime_type,
             'size' => $this->size,

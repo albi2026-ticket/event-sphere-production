@@ -9,6 +9,8 @@ use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class OrganizerDashboardTest extends TestCase
@@ -91,6 +93,80 @@ class OrganizerDashboardTest extends TestCase
             ->assertJsonPath('data.status', 'published')
             ->assertJsonPath('data.ticket_types.0.name', 'Early Bird')
             ->assertJsonPath('data.ticket_types.0.price', '40.00');
+    }
+
+    public function test_uploaded_primary_event_image_is_returned_for_public_and_organizer_event_displays(): void
+    {
+        Storage::fake('public');
+
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $event = Event::query()->create([
+            'organizer_id' => $organizer->id,
+            'title' => 'Uploaded Image Event',
+            'slug' => 'uploaded-image-event',
+            'category' => 'Concert',
+            'venue_name' => 'Image Hall',
+            'city' => 'New York',
+            'starts_at' => now()->addMonth(),
+            'status' => 'draft',
+            'visibility' => 'public',
+            'currency' => 'USD',
+        ]);
+
+        $this->actingAs($organizer, 'sanctum')
+            ->post("/api/organizer/events/{$event->id}/images", [
+                'image' => UploadedFile::fake()->image('gallery.jpg', 800, 450),
+                'type' => 'gallery',
+                'sort_order' => 0,
+                'is_primary' => '0',
+            ])
+            ->assertCreated();
+
+        $primaryResponse = $this->actingAs($organizer, 'sanctum')
+            ->post("/api/organizer/events/{$event->id}/images", [
+                'image' => UploadedFile::fake()->image('cover.jpg', 1200, 675),
+                'type' => 'banner',
+                'sort_order' => 10,
+                'is_primary' => '1',
+                'alt_text' => 'Uploaded Image Event cover',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.is_primary', true);
+
+        $primaryUrl = $primaryResponse->json('data.url');
+        $event->refresh();
+
+        $this->assertNotEmpty($primaryUrl);
+        $this->assertSame($primaryUrl, $event->banner_image_url);
+        Storage::disk('public')->assertExists($event->images()->first()->path);
+
+        $this->actingAs($organizer, 'sanctum')
+            ->postJson("/api/organizer/events/{$event->id}/ticket-types", [
+                'name' => 'General Admission',
+                'price' => 40,
+                'quantity_total' => 50,
+                'currency' => 'USD',
+                'status' => TicketType::STATUS_ACTIVE,
+            ])
+            ->assertCreated();
+
+        $this->actingAs($organizer, 'sanctum')
+            ->patchJson("/api/organizer/events/{$event->id}", ['status' => 'published'])
+            ->assertOk()
+            ->assertJsonPath('data.banner_image_url', $primaryUrl)
+            ->assertJsonPath('data.images.0.url', $primaryUrl)
+            ->assertJsonPath('data.images.0.is_primary', true);
+
+        $this->getJson('/api/events/uploaded-image-event')
+            ->assertOk()
+            ->assertJsonPath('data.banner_image_url', $primaryUrl)
+            ->assertJsonPath('data.images.0.url', $primaryUrl)
+            ->assertJsonPath('data.images.0.is_primary', true);
     }
 
     public function test_organizer_dashboard_endpoints_support_events_analytics_and_attendee_search(): void

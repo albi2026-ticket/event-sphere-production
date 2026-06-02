@@ -155,7 +155,7 @@ class EventImageController extends Controller
     protected function syncEventBanner(EventImage $eventImage): void
     {
         if ($eventImage->is_primary || $eventImage->type === 'banner') {
-            $eventImage->event->update(['banner_image_url' => $eventImage->url]);
+            $eventImage->event->update(['banner_image_url' => $eventImage->publicUrl()]);
         }
     }
 }
