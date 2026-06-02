@@ -10,6 +10,7 @@
     document.querySelectorAll('[data-theme-icon]').forEach(el => {
       el.className = 'bi ' + (t === 'light' ? 'bi-moon-stars' : 'bi-sun');
     });
+    document.dispatchEvent(new CustomEvent('event-sphere:theme-changed', { detail: { theme: t } }));
   };
   const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
   applyTheme(savedTheme);

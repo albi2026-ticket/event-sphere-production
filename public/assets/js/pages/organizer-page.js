@@ -51,22 +51,21 @@
     return new URLSearchParams(clean).toString();
   }
 
-  function statusBadge(status) {
-    const colors = {
-      published: 'rgba(34,197,94,.15);color:#86efac',
-      active: 'rgba(34,197,94,.15);color:#86efac',
-      paid: 'rgba(34,197,94,.15);color:#86efac',
-      used: 'rgba(148,163,184,.15);color:#cbd5e1',
-      draft: 'rgba(91,140,255,.15);color:#93b4ff',
-      pending_review: 'rgba(245,158,11,.15);color:#fcd34d',
-      pending: 'rgba(245,158,11,.15);color:#fcd34d',
-      rejected: 'rgba(239,68,68,.18);color:#fca5a5',
-      cancelled: 'rgba(239,68,68,.18);color:#fca5a5',
-      refunded: 'rgba(91,140,255,.15);color:#93b4ff',
-      completed: 'rgba(148,163,184,.15);color:#cbd5e1',
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function chartTheme() {
+    return {
+      text: cssVar('--muted') || '#94A3B8',
+      grid: cssVar('--border') || 'rgba(148,163,184,.16)',
+      primary: cssVar('--primary') || '#5B8CFF',
     };
-    const value = status || 'unknown';
-    return `<span class="badge" style="background:${colors[value] || 'rgba(148,163,184,.15);color:#cbd5e1'}">${esc(String(value).replace(/_/g, ' '))}</span>`;
+  }
+
+  function statusBadge(status) {
+    const value = String(status || 'unknown').toLowerCase();
+    return `<span class="badge status-badge status-${esc(value)}">${esc(value.replace(/_/g, ' '))}</span>`;
   }
 
   function dateLabel(value, timezone) {
@@ -402,10 +401,11 @@
       return;
     }
     if (empty) empty.innerHTML = '';
+    const theme = chartTheme();
     window._chartRev = new Chart(canvas, {
       type: 'line',
-      data: { labels, datasets: [{ label: 'Revenue', data: values, borderColor: '#5B8CFF', tension: 0.35, fill: true, backgroundColor: 'rgba(91,140,255,.12)' }] },
-      options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(255,255,255,.06)' } }, x: { ticks: { color: '#94A3B8' }, grid: { display: false } } } },
+      data: { labels, datasets: [{ label: 'Revenue', data: values, borderColor: theme.primary, tension: 0.35, fill: true, backgroundColor: 'rgba(91,140,255,.12)' }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { color: theme.text }, grid: { color: theme.grid } }, x: { ticks: { color: theme.text }, grid: { display: false } } } },
     });
   }
 
@@ -421,13 +421,14 @@
       return;
     }
     if (empty) empty.innerHTML = '';
+    const theme = chartTheme();
     window._chartCat = new Chart(canvas, {
       type: 'doughnut',
       data: {
         labels: byEvent.map((item) => item.title),
         datasets: [{ data: byEvent.map((item) => Number(item.revenue || 0)), backgroundColor: ['#5B8CFF', '#8B5CF6', '#22C55E', '#F59E0B', '#EC4899', '#14B8A6'] }],
       },
-      options: { plugins: { legend: { position: 'bottom', labels: { color: '#94A3B8' } } } },
+      options: { plugins: { legend: { position: 'bottom', labels: { color: theme.text } } } },
     });
   }
 
@@ -749,6 +750,11 @@
   }
 
   function bindActions() {
+    document.addEventListener('event-sphere:theme-changed', () => {
+      renderRevenueChart();
+      renderRevenueByEventChart();
+    });
+
     $('[data-organizer-new-event]')?.addEventListener('click', () => openEventModal());
     $('[data-organizer-event-form]')?.addEventListener('submit', async (event) => {
       event.preventDefault();

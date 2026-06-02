@@ -34,26 +34,22 @@
     return u().formatMoney(amount || 0, currency || 'USD');
   }
 
-  function badge(value) {
-    const colors = {
-      active: 'rgba(34,197,94,.15);color:#86efac',
-      approved: 'rgba(34,197,94,.15);color:#86efac',
-      paid: 'rgba(34,197,94,.15);color:#86efac',
-      published: 'rgba(34,197,94,.15);color:#86efac',
-      pending: 'rgba(245,158,11,.15);color:#fcd34d',
-      pending_review: 'rgba(245,158,11,.15);color:#fcd34d',
-      draft: 'rgba(245,158,11,.15);color:#fcd34d',
-      unpaid: 'rgba(148,163,184,.15);color:#cbd5e1',
-      failed: 'rgba(239,68,68,.18);color:#fca5a5',
-      cancelled: 'rgba(239,68,68,.18);color:#fca5a5',
-      rejected: 'rgba(239,68,68,.18);color:#fca5a5',
-      banned: 'rgba(239,68,68,.18);color:#fca5a5',
-      suspended: 'rgba(239,68,68,.18);color:#fca5a5',
-      refunded: 'rgba(91,140,255,.15);color:#93b4ff',
-      none: 'rgba(148,163,184,.15);color:#cbd5e1',
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function chartTheme() {
+    return {
+      text: cssVar('--muted') || '#94A3B8',
+      grid: cssVar('--border') || 'rgba(148,163,184,.16)',
+      primary: cssVar('--primary') || '#5B8CFF',
     };
-    const safe = u().escapeHtml(String(value || 'none').replace(/_/g, ' '));
-    return `<span class="badge" style="background:${colors[value] || colors.none}">${safe}</span>`;
+  }
+
+  function badge(value) {
+    const key = String(value || 'none').toLowerCase();
+    const safe = u().escapeHtml(key.replace(/_/g, ' '));
+    return `<span class="badge status-badge status-${u().escapeHtml(key)}">${safe}</span>`;
   }
 
   function dateLabel(value) {
@@ -168,6 +164,7 @@
   }
 
   function renderCharts() {
+    const theme = chartTheme();
     const salesChart = document.querySelector('canvas#salesChart');
     if (salesChart && window.Chart) {
       const byMonth = {};
@@ -179,8 +176,8 @@
       if (window._salesChart) window._salesChart.destroy();
       window._salesChart = new Chart(salesChart, {
         type: 'bar',
-        data: { labels, datasets: [{ label: 'Sales', data: labels.map((label) => byMonth[label]), backgroundColor: '#5B8CFF', borderRadius: 8 }] },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(255,255,255,.06)' } }, x: { ticks: { color: '#94A3B8' }, grid: { display: false } } } },
+        data: { labels, datasets: [{ label: 'Sales', data: labels.map((label) => byMonth[label]), backgroundColor: theme.primary, borderRadius: 8 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: theme.text }, grid: { color: theme.grid } }, x: { ticks: { color: theme.text }, grid: { display: false } } } },
       });
     }
 
@@ -196,7 +193,7 @@
       window._catChart = new Chart(catChart, {
         type: 'doughnut',
         data: { labels, datasets: [{ data: labels.map((label) => byCategory[label]), backgroundColor: ['#5B8CFF', '#22C55E', '#F59E0B', '#EF4444', '#A78BFA', '#14B8A6', '#F97316', '#64748B'] }] },
-        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#94A3B8' } } } },
+        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: theme.text } } } },
       });
     }
   }
@@ -532,6 +529,8 @@
   }
 
   function bindActions() {
+    document.addEventListener('event-sphere:theme-changed', renderCharts);
+
     document.addEventListener('click', async (event) => {
       const button = event.target.closest('button');
       if (!button) return;

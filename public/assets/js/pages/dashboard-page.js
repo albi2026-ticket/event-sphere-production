@@ -45,18 +45,8 @@
   }
 
   function statusBadge(status) {
-    const colors = {
-      active: 'rgba(91,140,255,.15);color:#93b4ff',
-      paid: 'rgba(34,197,94,.15);color:#86efac',
-      used: 'rgba(148,163,184,.15);color:#cbd5e1',
-      refunded: 'rgba(91,140,255,.15);color:#93b4ff',
-      cancelled: 'rgba(239,68,68,.18);color:#fca5a5',
-      failed: 'rgba(239,68,68,.18);color:#fca5a5',
-      pending: 'rgba(245,158,11,.15);color:#fcd34d',
-      unpaid: 'rgba(245,158,11,.15);color:#fcd34d',
-    };
-    const value = status || 'unknown';
-    return `<span class="badge" style="background:${colors[value] || 'rgba(148,163,184,.15);color:#cbd5e1'}">${escape(String(value).replace(/_/g, ' '))}</span>`;
+    const value = String(status || 'unknown').toLowerCase();
+    return `<span class="badge status-badge status-${escape(value)}">${escape(value.replace(/_/g, ' '))}</span>`;
   }
 
   function dateLabel(value, timezone) {
