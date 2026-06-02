@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'status',
     'visibility',
     'banner_image_url',
+    'max_tickets_per_user',
     'base_price',
     'currency',
     'is_featured',
@@ -82,6 +83,7 @@ class Event extends Model
         return [
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
+            'max_tickets_per_user' => 'integer',
             'base_price' => 'decimal:2',
             'is_featured' => 'boolean',
             'is_trending' => 'boolean',

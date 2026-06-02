@@ -149,7 +149,7 @@ class OrganizerDashboardService
     public function attendeesListQuery(User $organizer, array $filters = []): Builder
     {
         return $this->ticketsQuery($organizer, $filters)
-            ->with(['user:id,name,email,phone', 'event:id,title,slug,organizer_id,starts_at', 'ticketType:id,name', 'order:id,order_number,payment_status', 'checkedInBy:id,name']);
+            ->with(['user:id,name,email,phone', 'event:id,title,slug,organizer_id,starts_at', 'ticketType:id,name', 'order:id,user_id,order_number,payment_status', 'order.user:id,name,email', 'checkedInBy:id,name']);
     }
 
     /**
@@ -172,7 +172,7 @@ class OrganizerDashboardService
     public function recentAttendees(User $organizer, array $filters = [], int $limit = 10): Collection
     {
         return $this->ticketsQuery($organizer, $filters)
-            ->with(['user:id,name,email,phone', 'event:id,title,slug,organizer_id,starts_at', 'ticketType:id,name', 'order:id,order_number,payment_status'])
+            ->with(['user:id,name,email,phone', 'event:id,title,slug,organizer_id,starts_at', 'ticketType:id,name', 'order:id,user_id,order_number,payment_status', 'order.user:id,name,email'])
             ->latest('tickets.created_at')
             ->limit($limit)
             ->get();
@@ -246,6 +246,8 @@ class OrganizerDashboardService
                 $query->where(function ($query) use ($needle): void {
                     $query
                         ->where('tickets.ticket_code', 'like', $needle)
+                        ->orWhere('tickets.attendee_name', 'like', $needle)
+                        ->orWhere('tickets.attendee_email', 'like', $needle)
                         ->orWhere('events.title', 'like', $needle)
                         ->orWhereHas('user', fn ($userQuery) => $userQuery
                             ->where('name', 'like', $needle)

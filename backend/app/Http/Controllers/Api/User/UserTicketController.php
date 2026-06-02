@@ -19,7 +19,7 @@ class UserTicketController extends Controller
         return TicketResource::collection(
             $request->user()
                 ->tickets()
-                ->with(['event', 'ticketType', 'order', 'checkedInBy'])
+                ->with(['user', 'event', 'ticketType', 'order.user', 'checkedInBy'])
                 ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
                 ->when($request->boolean('upcoming'), fn ($query) => $query->whereHas('event', fn ($eventQuery) => $eventQuery->where('starts_at', '>=', now())))
                 ->when($request->filled('search'), fn ($query) => $query->where(function ($searchQuery) use ($request): void {
@@ -47,7 +47,7 @@ class UserTicketController extends Controller
         return TicketResource::collection(
             $request->user()
                 ->tickets()
-                ->with(['event', 'ticketType', 'order', 'checkedInBy'])
+                ->with(['user', 'event', 'ticketType', 'order.user', 'checkedInBy'])
                 ->whereIn('status', [Ticket::STATUS_USED, Ticket::STATUS_CANCELLED, Ticket::STATUS_REFUNDED])
                 ->latest()
                 ->paginate($request->perPage())

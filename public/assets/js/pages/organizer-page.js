@@ -350,10 +350,10 @@
     }
     body.innerHTML = state.attendees.map((ticket) => `
       <tr>
-        <td><div class="fw-semibold">${esc(ticket.attendee?.name || 'Guest')}</div><small class="text-muted-pro">${esc(ticket.attendee?.email || '')}</small></td>
+        <td><div class="fw-semibold">${esc(ticket.attendee?.name || 'Guest')}</div><small class="text-muted-pro">${esc(ticket.attendee?.email || '')}${ticket.attendee?.phone ? ` · ${esc(ticket.attendee.phone)}` : ''}</small></td>
         <td>${esc(ticket.event?.title || '-')}</td>
         <td><div>${esc(ticket.ticket_code)}</div><small class="text-muted-pro">${esc(ticket.ticket_type?.name || '')}</small></td>
-        <td>${esc(ticket.order?.order_number || '-')}</td>
+        <td><div>${esc(ticket.order?.order_number || '-')}</div><small class="text-muted-pro">Purchased by ${esc(ticket.purchaser?.name || ticket.order?.purchaser?.name || '-')}</small></td>
         <td>${statusBadge(ticket.status)}</td>
         <td class="text-end"><button class="btn btn-glass btn-sm" type="button" data-attendee-details="${ticket.id}"><i class="bi bi-eye me-1"></i>Details</button></td>
       </tr>
@@ -464,6 +464,11 @@
   function eventPayload() {
     const form = $('[data-organizer-event-form]');
     const fd = new FormData(form);
+    const limitValue = fd.get('max_tickets_per_user') === 'custom'
+      ? fd.get('max_tickets_per_user_custom')
+      : fd.get('max_tickets_per_user');
+    const maxTicketsPerUser = limitValue ? Number(limitValue) : null;
+
     return {
       title: String(fd.get('title') || '').trim(),
       category: String(fd.get('category') || '').trim(),
@@ -474,7 +479,7 @@
       starts_at: fd.get('starts_at'),
       ends_at: fd.get('ends_at') || null,
       status: fd.get('status'),
-      banner_image_url: String(fd.get('banner_image_url') || '').trim() || null,
+      max_tickets_per_user: Number.isInteger(maxTicketsPerUser) && maxTicketsPerUser > 0 ? maxTicketsPerUser : null,
       visibility: 'public',
       currency: 'USD',
     };
@@ -498,15 +503,16 @@
     form.elements.starts_at.value = toDatetimeLocal(event?.starts_at);
     form.elements.ends_at.value = toDatetimeLocal(event?.ends_at);
     form.elements.status.value = event?.status || 'draft';
+    setPurchaseLimitValue(event?.max_tickets_per_user || null);
     form.elements.venue_name.value = event?.venue_name || '';
     form.elements.city.value = event?.city || '';
     form.elements.address.value = event?.address || '';
-    form.elements.banner_image_url.value = event?.banner_image_url || '';
     form.elements.description.value = event?.description || '';
     renderTierRows(event?.ticket_types || []);
     renderGallery(event?.images || []);
     updateImageName(null);
     $('[data-event-modal-title]').textContent = event ? 'Edit event' : 'Create event';
+    syncEventSaveLabel();
     bootstrap.Modal.getOrCreateInstance($('#organizerEventModal')).show();
   }
 
@@ -534,7 +540,9 @@
     try {
       setBusy(true);
       let savedEvent;
-      const basePayload = wantsPublished ? { ...payload, status: 'draft' } : payload;
+      const wasPublished = state.selectedEvent?.status === 'published';
+      const shouldDeferPublish = wantsPublished && (!eventId || !wasPublished);
+      const basePayload = shouldDeferPublish ? { ...payload, status: 'draft' } : payload;
       if (eventId) {
         const { data } = await api().fetch(`/organizer/events/${eventId}`, { method: 'PATCH', body: basePayload });
         savedEvent = data;
@@ -542,11 +550,11 @@
       } else {
         const { data } = await api().fetch('/organizer/events', { method: 'POST', body: { ...basePayload, status: 'draft' } });
         savedEvent = data;
-        window.tkToast?.('Draft event created');
+        if (!shouldDeferPublish) window.tkToast?.('Draft event created');
       }
       await syncTicketTiers(savedEvent.id, tiers);
       await uploadPendingImages(savedEvent);
-      if (wantsPublished) {
+      if (shouldDeferPublish) {
         await api().fetch(`/organizer/events/${savedEvent.id}`, { method: 'PATCH', body: { status: 'published' } });
         window.tkToast?.('Event published');
       }
@@ -619,7 +627,7 @@
         quantity_total: quantity,
         currency: 'USD',
         min_per_order: 1,
-        max_per_order: 10,
+        max_per_order: Math.max(1, quantity),
         status: quantity > 0 ? status : 'inactive',
         sort_order: index + 1,
       };
@@ -637,18 +645,11 @@
   }
 
   async function uploadPendingImages(event) {
-    const coverUrl = $('[name="banner_image_url"]')?.value.trim();
-    if (coverUrl && !(event.images || []).some((image) => image.url === coverUrl)) {
-      await api().fetch(`/organizer/events/${event.id}/images`, {
-        method: 'POST',
-        body: { url: coverUrl, type: 'banner', is_primary: true, alt_text: event.title, sort_order: 0 },
-      });
-    }
     for (const [index, image] of state.pendingImages.entries()) {
       const fd = new FormData();
       fd.append('image', image);
-      fd.append('type', index === 0 && !coverUrl ? 'banner' : 'gallery');
-      fd.append('is_primary', index === 0 && !coverUrl ? '1' : '0');
+      fd.append('type', index === 0 ? 'banner' : 'gallery');
+      fd.append('is_primary', index === 0 ? '1' : '0');
       fd.append('sort_order', String(index + 1));
       fd.append('alt_text', event.title || 'Event image');
       await api().fetch(`/organizer/events/${event.id}/images`, { method: 'POST', body: fd });
@@ -676,6 +677,39 @@
     const label = $('[data-organizer-image-name]');
     if (!label) return;
     label.textContent = files?.length ? (files.length === 1 ? files[0].name : `${files.length} images selected`) : 'No images selected';
+  }
+
+  function setPurchaseLimitValue(limit) {
+    const select = $('[data-purchase-limit-select]');
+    const custom = $('[data-purchase-limit-custom]');
+    if (!select || !custom) return;
+
+    const value = limit ? String(limit) : '';
+    const preset = ['', '1', '2', '5', '10'].includes(value);
+
+    select.value = preset ? value : 'custom';
+    custom.value = preset ? '' : value;
+    custom.classList.toggle('d-none', select.value !== 'custom');
+    custom.required = select.value === 'custom';
+  }
+
+  function syncEventSaveLabel() {
+    const form = $('[data-organizer-event-form]');
+    const button = $('[data-event-save]');
+    if (!form || !button) return;
+
+    const isExisting = !!form.elements.event_id.value;
+    const wantsPublished = form.elements.status.value === 'published';
+
+    if (!isExisting && wantsPublished) {
+      button.textContent = 'Create & Publish';
+    } else if (!isExisting) {
+      button.textContent = 'Create Draft';
+    } else if (wantsPublished) {
+      button.textContent = 'Save Published Event';
+    } else {
+      button.textContent = 'Save event';
+    }
   }
 
   async function showEventAnalytics(eventId) {
@@ -706,6 +740,7 @@
         <div><dt>Name</dt><dd>${esc(ticket.attendee?.name || 'Guest')}</dd></div>
         <div><dt>Email</dt><dd>${esc(ticket.attendee?.email || '-')}</dd></div>
         <div><dt>Phone</dt><dd>${esc(ticket.attendee?.phone || '-')}</dd></div>
+        <div><dt>Purchased by</dt><dd>${esc(ticket.purchaser?.name || ticket.order?.purchaser?.name || '-')} · ${esc(ticket.purchaser?.email || ticket.order?.purchaser?.email || '-')}</dd></div>
         <div><dt>Status</dt><dd>${statusBadge(ticket.status)}</dd></div>
         <div><dt>Ticket</dt><dd>${esc(ticket.ticket_code)}</dd></div>
         <div><dt>Ticket type</dt><dd>${esc(ticket.ticket_type?.name || '-')}</dd></div>
@@ -774,6 +809,15 @@
       state.pendingImages = files;
       updateImageName(files);
     });
+    $('[data-purchase-limit-select]')?.addEventListener('change', (event) => {
+      const custom = $('[data-purchase-limit-custom]');
+      if (!custom) return;
+      custom.classList.toggle('d-none', event.target.value !== 'custom');
+      custom.required = event.target.value === 'custom';
+      if (event.target.value !== 'custom') custom.value = '';
+      if (event.target.value === 'custom') custom.focus();
+    });
+    $('[data-organizer-event-form] [name="status"]')?.addEventListener('change', syncEventSaveLabel);
 
     document.addEventListener('click', async (event) => {
       const tierDelete = event.target.closest('[data-tier-delete]');

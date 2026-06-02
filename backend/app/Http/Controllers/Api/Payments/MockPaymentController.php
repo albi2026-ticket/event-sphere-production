@@ -4,17 +4,20 @@ namespace App\Http\Controllers\Api\Payments;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\Orders\OrderService;
 use App\Services\Tickets\TicketInventoryService;
 use App\Services\Tickets\TicketService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class MockPaymentController extends Controller
 {
     public function __construct(
         private readonly TicketInventoryService $inventory,
         private readonly TicketService $tickets,
+        private readonly OrderService $orders,
     ) {}
 
     public function store(Request $request): JsonResponse
@@ -29,31 +32,37 @@ class MockPaymentController extends Controller
 
         abort_unless($order->user_id === $request->user()?->id || $request->user()?->isAdmin(), 403);
 
-        $order = DB::transaction(function () use ($order): Order {
-            $locked = Order::query()
-                ->with(['items.ticketType'])
-                ->whereKey($order->id)
-                ->lockForUpdate()
-                ->firstOrFail();
+        try {
+            $order = DB::transaction(function () use ($order): Order {
+                $locked = Order::query()
+                    ->with(['items.ticketType'])
+                    ->whereKey($order->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-            if ($locked->payment_status !== Order::PAYMENT_STATUS_PAID) {
-                foreach ($locked->items as $item) {
-                    $this->inventory->commitSale($item->ticketType, $item->quantity);
+                if ($locked->payment_status !== Order::PAYMENT_STATUS_PAID) {
+                    foreach ($locked->items as $item) {
+                        $this->inventory->commitSale($item->ticketType, $item->quantity);
+                    }
+
+                    $this->tickets->generateForPaidOrder($locked);
+
+                    $locked->forceFill([
+                        'status' => Order::STATUS_PAID,
+                        'payment_status' => Order::PAYMENT_STATUS_PAID,
+                        'payment_provider' => 'mock',
+                        'payment_reference' => 'mock-'.$locked->order_number,
+                        'paid_at' => now(),
+                    ])->save();
                 }
 
-                $this->tickets->generateForPaidOrder($locked);
+                return $locked->fresh(['items', 'tickets']);
+            });
+        } catch (Throwable $exception) {
+            $this->orders->cancelUnpaidOrder($order, Order::PAYMENT_STATUS_FAILED);
 
-                $locked->forceFill([
-                    'status' => Order::STATUS_PAID,
-                    'payment_status' => Order::PAYMENT_STATUS_PAID,
-                    'payment_provider' => 'mock',
-                    'payment_reference' => 'mock-'.$locked->order_number,
-                    'paid_at' => now(),
-                ])->save();
-            }
-
-            return $locked->fresh(['items', 'tickets']);
-        });
+            throw $exception;
+        }
 
         return response()->json([
             'data' => [

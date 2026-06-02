@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'ticket_type_name',
     'event_title',
     'event_starts_at',
+    'attendee_details',
 ])]
 class OrderItem extends Model
 {
@@ -52,6 +53,7 @@ class OrderItem extends Model
             'service_fee' => 'decimal:2',
             'total' => 'decimal:2',
             'event_starts_at' => 'datetime',
+            'attendee_details' => 'array',
         ];
     }
 }

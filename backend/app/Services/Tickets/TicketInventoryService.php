@@ -91,21 +91,30 @@ class TicketInventoryService
 
     protected function ensurePurchasable(TicketType $ticketType, int $quantity): void
     {
+        $ticketType->loadMissing('event');
+
         if (! $ticketType->isOnSale()) {
             throw ValidationException::withMessages([
                 'ticket_type' => 'This ticket type is not currently on sale.',
             ]);
         }
 
-        if ($quantity < $ticketType->min_per_order || $quantity > $ticketType->max_per_order) {
+        if ($quantity < $ticketType->min_per_order) {
             throw ValidationException::withMessages([
-                'quantity' => "Quantity must be between {$ticketType->min_per_order} and {$ticketType->max_per_order}.",
+                'quantity' => "Quantity must be at least {$ticketType->min_per_order}.",
             ]);
         }
 
         if ($ticketType->availableQuantity() < $quantity) {
             throw ValidationException::withMessages([
                 'quantity' => 'Not enough tickets are available.',
+            ]);
+        }
+
+        $eventLimit = $ticketType->event?->max_tickets_per_user;
+        if ($eventLimit && $quantity > $eventLimit) {
+            throw ValidationException::withMessages([
+                'quantity' => "This event has a limit of {$eventLimit} ticket(s) per user.",
             ]);
         }
     }

@@ -15,6 +15,11 @@
     return u().formatMoney(amount, currency || 'USD');
   }
 
+  function eventLimit(event) {
+    const limit = Number(event.max_tickets_per_user || 0);
+    return Number.isInteger(limit) && limit > 0 ? limit : null;
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(location.search);
     const slug = params.get('slug');
@@ -62,6 +67,12 @@
       const priceEl = $('[data-event-price]');
       const lowestPrice = eventsApi().lowestAvailablePrice(event);
       if (priceEl) priceEl.textContent = money(lowestPrice.amount, lowestPrice.currency);
+      const purchaseLimit = eventLimit(event);
+      const purchaseLimitEl = $('[data-event-purchase-limit]');
+      if (purchaseLimitEl) {
+        purchaseLimitEl.hidden = !purchaseLimit;
+        purchaseLimitEl.textContent = purchaseLimit ? `Limit ${purchaseLimit} ticket${purchaseLimit === 1 ? '' : 's'} per user for this event.` : '';
+      }
 
       const countdown = $('[data-countdown]');
       if (countdown && event.starts_at) {
@@ -74,7 +85,7 @@
       const types = event.ticket_types || [];
       if (select) {
         select.innerHTML = types.map((t) =>
-          `<option value="${t.id}" data-price="${t.price}" data-currency="${t.currency || event.currency || 'USD'}" data-min="${t.min_per_order || 1}" data-max="${t.max_per_order || 10}" ${Number(t.quantity_available ?? t.available_quantity ?? 0) <= 0 || t.status === 'sold_out' || t.status === 'inactive' ? 'disabled' : ''}>${u().escapeHtml(t.name)} · ${money(t.price, t.currency || event.currency)} · ${Number(t.quantity_available ?? t.available_quantity ?? 0)} left${t.status === 'sold_out' ? ' · Sold out' : ''}</option>`,
+          `<option value="${t.id}" data-price="${t.price}" data-currency="${t.currency || event.currency || 'USD'}" data-min="${t.min_per_order || 1}" data-available="${Number(t.quantity_available ?? t.available_quantity ?? 0)}" ${Number(t.quantity_available ?? t.available_quantity ?? 0) <= 0 || t.status === 'sold_out' || t.status === 'inactive' ? 'disabled' : ''}>${u().escapeHtml(t.name)} · ${money(t.price, t.currency || event.currency)} · ${Number(t.quantity_available ?? t.available_quantity ?? 0)} left${t.status === 'sold_out' ? ' · Sold out' : ''}</option>`,
         ).join('') || '<option disabled>No ticket tiers available</option>';
         select.disabled = !types.length;
       }
@@ -90,8 +101,9 @@
           const input = qtyWrap.querySelector('input');
           if (input) {
             input.min = selectedType.min_per_order || 1;
-            input.max = selectedType.max_per_order || 10;
-            input.value = Math.max(Number(input.min || 1), Math.min(Number(input.value || 1), Number(input.max || 10)));
+            const available = Number(selectedType.quantity_available ?? selectedType.available_quantity ?? selectedType.remaining ?? 0);
+            input.max = purchaseLimit ? Math.min(available, purchaseLimit) : available;
+            input.value = Math.max(Number(input.min || 1), Math.min(Number(input.value || 1), Number(input.max || available || 1)));
           }
           const out = qtyWrap.querySelector('[data-qty-total]');
           if (out) out.textContent = money(Number(input?.value || 1) * Number(selectedType.price || 0), selectedType.currency || event.currency);

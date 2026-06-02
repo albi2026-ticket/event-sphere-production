@@ -9,6 +9,14 @@ class OrderResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $attendeeCount = null;
+
+        if ($this->resource->relationLoaded('tickets')) {
+            $attendeeCount = $this->tickets->count();
+        } elseif ($this->resource->relationLoaded('items')) {
+            $attendeeCount = $this->items->sum('quantity');
+        }
+
         return [
             'id' => $this->id,
             'order_number' => $this->order_number,
@@ -23,6 +31,17 @@ class OrderResource extends JsonResource
             'currency' => $this->currency,
             'promo_code' => $this->promo_code,
             'payment_provider' => $this->payment_provider,
+            'purchaser' => [
+                'name' => trim($this->billing_first_name.' '.$this->billing_last_name),
+                'email' => $this->billing_email,
+                'phone' => $this->billing_phone,
+                'user' => $this->whenLoaded('user', fn () => [
+                    'id' => $this->user->id,
+                    'name' => $this->user->name,
+                    'email' => $this->user->email,
+                ]),
+            ],
+            'attendee_count' => $attendeeCount,
             'paid_at' => $this->paid_at,
             'cancelled_at' => $this->cancelled_at,
             'refunded_at' => $this->refunded_at,

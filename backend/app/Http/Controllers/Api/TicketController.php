@@ -18,7 +18,7 @@ class TicketController extends Controller
     {
         return TicketResource::collection(
             Ticket::query()
-                ->with(['event', 'ticketType', 'order'])
+                ->with(['user', 'event', 'ticketType', 'order.user'])
                 ->where('user_id', $request->user()->id)
                 ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
                 ->latest()
@@ -28,7 +28,7 @@ class TicketController extends Controller
 
     public function show(Request $request, Ticket $ticket): TicketResource
     {
-        $ticket->load(['user', 'event', 'ticketType', 'order', 'checkedInBy']);
+        $ticket->load(['user', 'event', 'ticketType', 'order.user', 'checkedInBy']);
 
         abort_unless($request->user()->can('view', $ticket), 403);
 
@@ -49,7 +49,7 @@ class TicketController extends Controller
 
     public function download(Request $request, Ticket $ticket): Response
     {
-        $ticket->load(['user', 'event', 'ticketType', 'order']);
+        $ticket->load(['user', 'event', 'ticketType', 'order.user']);
 
         abort_unless($request->user()->can('download', $ticket), 403);
 
@@ -65,7 +65,7 @@ class TicketController extends Controller
     {
         return TicketResource::collection(
             Ticket::query()
-                ->with(['event', 'ticketType', 'order'])
+                ->with(['user', 'event', 'ticketType', 'order.user'])
                 ->where('order_id', $order)
                 ->where('user_id', $request->user()->id)
                 ->latest()

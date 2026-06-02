@@ -456,6 +456,7 @@
     const res = await api().fetch(`/admin/payments/${orderId}`);
     const order = res.data;
     const items = order.items || [];
+    const tickets = order.tickets || [];
     setModal(`Payment ${order.order_number}`, `
       ${detailList([
         ['Customer', u().escapeHtml(order.user?.name || order.user?.email || order.billing_email || '-')],
@@ -471,6 +472,8 @@
       ])}
       <h6 class="mt-4">Items</h6>
       ${items.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${items.map((item) => `<tr><td>${u().escapeHtml(item.event_title || item.event?.title || '-')}</td><td>${u().escapeHtml(item.ticket_type_name || item.ticket_type?.name || '-')}</td><td>x${item.quantity}</td><td>${money(item.total, order.currency)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No line items.</p>'}
+      <h6 class="mt-4">Tickets and attendees</h6>
+      ${tickets.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${tickets.map((ticket) => `<tr><td><div class="fw-semibold">${u().escapeHtml(ticket.attendee_name || ticket.user?.name || 'Guest')}</div><small>${u().escapeHtml(ticket.attendee_email || ticket.user?.email || '')}</small></td><td>${u().escapeHtml(ticket.event?.title || '-')}</td><td>${u().escapeHtml(ticket.ticket_type?.name || '-')}</td><td><small>Paid by ${u().escapeHtml(order.user?.name || order.billing_email || '-')}</small></td><td>${u().escapeHtml(ticket.ticket_code || '-')}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No tickets issued yet.</p>'}
     `);
   }
 

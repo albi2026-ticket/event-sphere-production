@@ -186,7 +186,7 @@
             <div class="col-md-6"><label class="form-label">Venue</label><input class="form-control" name="venue_name" required maxlength="255"/></div>
             <div class="col-md-6"><label class="form-label">City</label><input class="form-control" name="city" required maxlength="255"/></div>
             <div class="col-md-6"><label class="form-label">Address</label><input class="form-control" name="address"/></div>
-            <div class="col-md-6"><label class="form-label">Cover image URL</label><input class="form-control" name="banner_image_url" type="url" placeholder="https://..."/></div>
+            <div class="col-md-6"><label class="form-label">Max tickets per user</label><select class="form-select" name="max_tickets_per_user" data-purchase-limit-select><option value="">No Limit</option><option value="1">1 ticket</option><option value="2">2 tickets</option><option value="5">5 tickets</option><option value="10">10 tickets</option><option value="custom">Custom</option></select><input class="form-control mt-2 d-none" name="max_tickets_per_user_custom" type="number" min="1" step="1" placeholder="Custom limit" data-purchase-limit-custom/></div>
             <div class="col-12"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="4"></textarea></div>
             <div class="col-md-6">
               <label class="form-label">Event images</label>

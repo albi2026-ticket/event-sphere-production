@@ -224,7 +224,13 @@ class StripePaymentService
 
     protected function markCheckoutSessionFailed(mixed $session): void
     {
-        $this->markOrderPaymentStatus($this->findOrderForSession($session), Order::PAYMENT_STATUS_FAILED, [
+        $order = $this->findOrderForSession($session);
+
+        if (! $order || $order->payment_status === Order::PAYMENT_STATUS_PAID) {
+            return;
+        }
+
+        $this->orders->cancelUnpaidOrder($order, Order::PAYMENT_STATUS_FAILED, [
             'stripe_payment_status' => $session->payment_status ?? 'failed',
         ]);
     }
@@ -233,13 +239,11 @@ class StripePaymentService
     {
         $order = $this->findOrderForSession($session);
 
-        if ($order && $order->payment_status !== Order::PAYMENT_STATUS_PAID) {
-            $this->orders->releaseReservations($order);
+        if (! $order || $order->payment_status === Order::PAYMENT_STATUS_PAID) {
+            return;
         }
 
-        $this->markOrderPaymentStatus($order, Order::PAYMENT_STATUS_CANCELLED, [
-            'status' => Order::STATUS_CANCELLED,
-            'cancelled_at' => now(),
+        $this->orders->cancelUnpaidOrder($order, Order::PAYMENT_STATUS_CANCELLED, [
             'stripe_payment_status' => $session->payment_status ?? 'expired',
         ]);
     }
@@ -251,7 +255,11 @@ class StripePaymentService
             ->orWhere('id', $paymentIntent->metadata->order_id ?? null)
             ->first();
 
-        $this->markOrderPaymentStatus($order, Order::PAYMENT_STATUS_FAILED, [
+        if (! $order || $order->payment_status === Order::PAYMENT_STATUS_PAID) {
+            return;
+        }
+
+        $this->orders->cancelUnpaidOrder($order, Order::PAYMENT_STATUS_FAILED, [
             'stripe_payment_intent_id' => $paymentIntent->id,
             'stripe_payment_status' => $paymentIntent->status ?? 'failed',
         ]);
@@ -300,8 +308,27 @@ class StripePaymentService
             ]);
         }
 
+        if ($order->checkout_expires_at && $order->checkout_expires_at->isPast()) {
+            throw ValidationException::withMessages([
+                'order' => 'This checkout session has expired. Please start checkout again.',
+            ]);
+        }
+
         foreach ($order->items as $item) {
-            if (! $item->ticketType instanceof TicketType || ! $item->ticketType->isAvailableForPurchase($item->quantity)) {
+            if (! $item->ticketType instanceof TicketType || ! $item->ticketType->isOnSale()) {
+                throw ValidationException::withMessages([
+                    'items' => "Ticket inventory is no longer available for {$item->ticket_type_name}.",
+                ]);
+            }
+
+            if ($item->quantity < $item->ticketType->min_per_order) {
+                throw ValidationException::withMessages([
+                    'items' => "Quantity must be at least {$item->ticketType->min_per_order} for {$item->ticket_type_name}.",
+                ]);
+            }
+
+            $inventoryCommittedToOrders = $item->ticketType->quantity_sold + $item->ticketType->quantity_reserved;
+            if ($inventoryCommittedToOrders > $item->ticketType->quantity_total) {
                 throw ValidationException::withMessages([
                     'items' => "Ticket inventory is no longer available for {$item->ticket_type_name}.",
                 ]);

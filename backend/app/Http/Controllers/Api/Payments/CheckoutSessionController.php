@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api\Payments;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Payments\CreateCheckoutSessionRequest;
 use App\Models\Order;
+use App\Services\Orders\OrderService;
 use App\Services\Payments\StripePaymentService;
 use App\Services\Tickets\TicketInventoryService;
 use App\Services\Tickets\TicketService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class CheckoutSessionController extends Controller
 {
@@ -17,6 +20,7 @@ class CheckoutSessionController extends Controller
         private readonly StripePaymentService $stripe,
         private readonly TicketInventoryService $inventory,
         private readonly TicketService $tickets,
+        private readonly OrderService $orders,
     ) {}
 
     public function show(CreateCheckoutSessionRequest $request, Order $order): JsonResponse
@@ -47,7 +51,13 @@ class CheckoutSessionController extends Controller
             return $this->completeLocalCheckout($order);
         }
 
-        $session = $this->stripe->createCheckoutSession($order);
+        try {
+            $session = $this->stripe->createCheckoutSession($order);
+        } catch (Throwable $exception) {
+            $this->orders->cancelUnpaidOrder($order, Order::PAYMENT_STATUS_FAILED);
+
+            throw $exception;
+        }
 
         return response()->json([
             'data' => [
@@ -70,36 +80,50 @@ class CheckoutSessionController extends Controller
     {
         $secret = config('services.stripe.secret');
 
-        return app()->environment('local') && (! is_string($secret) || $secret === '');
+        return app()->environment(['local', 'testing']) && (! is_string($secret) || $secret === '');
     }
 
     protected function completeLocalCheckout(Order $order): JsonResponse
     {
-        $order = DB::transaction(function () use ($order): Order {
-            $locked = Order::query()
-                ->with(['items.ticketType'])
-                ->whereKey($order->id)
-                ->lockForUpdate()
-                ->firstOrFail();
+        if ($order->checkout_expires_at && $order->checkout_expires_at->isPast()) {
+            $this->orders->cancelUnpaidOrder($order, Order::PAYMENT_STATUS_CANCELLED);
 
-            if ($locked->payment_status !== Order::PAYMENT_STATUS_PAID) {
-                foreach ($locked->items as $item) {
-                    $this->inventory->commitSale($item->ticketType, $item->quantity);
+            throw ValidationException::withMessages([
+                'order' => 'This checkout session has expired. Please start checkout again.',
+            ]);
+        }
+
+        try {
+            $order = DB::transaction(function () use ($order): Order {
+                $locked = Order::query()
+                    ->with(['items.ticketType'])
+                    ->whereKey($order->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($locked->payment_status !== Order::PAYMENT_STATUS_PAID) {
+                    foreach ($locked->items as $item) {
+                        $this->inventory->commitSale($item->ticketType, $item->quantity);
+                    }
+
+                    $this->tickets->generateForPaidOrder($locked);
+
+                    $locked->forceFill([
+                        'status' => Order::STATUS_PAID,
+                        'payment_status' => Order::PAYMENT_STATUS_PAID,
+                        'payment_provider' => 'local',
+                        'payment_reference' => 'local-'.$locked->order_number,
+                        'paid_at' => now(),
+                    ])->save();
                 }
 
-                $this->tickets->generateForPaidOrder($locked);
+                return $locked->fresh(['tickets', 'items']);
+            });
+        } catch (Throwable $exception) {
+            $this->orders->cancelUnpaidOrder($order, Order::PAYMENT_STATUS_FAILED);
 
-                $locked->forceFill([
-                    'status' => Order::STATUS_PAID,
-                    'payment_status' => Order::PAYMENT_STATUS_PAID,
-                    'payment_provider' => 'local',
-                    'payment_reference' => 'local-'.$locked->order_number,
-                    'paid_at' => now(),
-                ])->save();
-            }
-
-            return $locked->fresh(['tickets', 'items']);
-        });
+            throw $exception;
+        }
 
         $checkoutUrl = str_replace(
             ['{CHECKOUT_SESSION_ID}', '{ORDER_ID}', '{ORDER_NUMBER}'],

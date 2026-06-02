@@ -21,7 +21,7 @@ class OrganizerTicketController extends Controller
         abort_unless($event->organizer_id === $request->user()->id, 403);
 
         $tickets = Ticket::query()
-            ->with(['user', 'event', 'ticketType', 'order', 'checkedInBy'])
+            ->with(['user', 'event', 'ticketType', 'order.user', 'checkedInBy'])
             ->where('event_id', $event->id)
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
             ->latest()

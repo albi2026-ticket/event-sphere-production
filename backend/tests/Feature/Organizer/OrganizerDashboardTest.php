@@ -37,12 +37,14 @@ class OrganizerDashboardTest extends TestCase
                 'ends_at' => now()->addMonth()->addHours(3)->toIso8601String(),
                 'status' => 'draft',
                 'visibility' => 'public',
+                'max_tickets_per_user' => 5,
                 'banner_image_url' => 'https://example.test/cover.jpg',
                 'currency' => 'USD',
             ])
             ->assertCreated()
             ->assertJsonPath('data.category', 'Concert')
-            ->assertJsonPath('data.address', '100 Main Street');
+            ->assertJsonPath('data.address', '100 Main Street')
+            ->assertJsonPath('data.max_tickets_per_user', 5);
 
         $eventId = $eventResponse->json('data.id');
 
@@ -91,6 +93,7 @@ class OrganizerDashboardTest extends TestCase
         $this->getJson('/api/events/complete-creation-event')
             ->assertOk()
             ->assertJsonPath('data.status', 'published')
+            ->assertJsonPath('data.max_tickets_per_user', 5)
             ->assertJsonPath('data.ticket_types.0.name', 'Early Bird')
             ->assertJsonPath('data.ticket_types.0.price', '40.00');
     }

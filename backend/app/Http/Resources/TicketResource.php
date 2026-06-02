@@ -9,6 +9,8 @@ class TicketResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $purchaser = $this->resource->relationLoaded('user') ? $this->user : null;
+
         return [
             'id' => $this->id,
             'ticket_code' => $this->ticket_code,
@@ -25,7 +27,12 @@ class TicketResource extends JsonResource
             'checked_in_method' => $this->checked_in_method,
             'downloaded_at' => $this->downloaded_at,
             'download_count' => $this->download_count,
-            'attendee' => $this->whenLoaded('user', fn () => [
+            'attendee' => [
+                'name' => $this->attendee_name ?: ($purchaser->name ?? null),
+                'email' => $this->attendee_email ?: ($purchaser->email ?? null),
+                'phone' => $this->attendee_phone ?: ($purchaser->phone ?? null),
+            ],
+            'purchaser' => $this->whenLoaded('user', fn () => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
                 'email' => $this->user->email,
@@ -56,6 +63,10 @@ class TicketResource extends JsonResource
                 'payment_status' => $this->order->payment_status,
                 'total' => $this->order->total,
                 'currency' => $this->order->currency,
+                'purchaser' => [
+                    'name' => $this->order->relationLoaded('user') ? $this->order->user?->name : null,
+                    'email' => $this->order->relationLoaded('user') ? $this->order->user?->email : null,
+                ],
             ]),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

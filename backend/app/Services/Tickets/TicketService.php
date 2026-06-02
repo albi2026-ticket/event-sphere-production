@@ -22,7 +22,7 @@ class TicketService
     public function generateForPaidOrder(Order $order): array
     {
         return DB::transaction(function () use ($order): array {
-            $order->loadMissing(['items.ticketType', 'items.event']);
+            $order->loadMissing(['user', 'items.ticketType', 'items.event']);
             $tickets = [];
 
             foreach ($order->items as $item) {
@@ -39,9 +39,15 @@ class TicketService
     public function generateForOrderItem(Order $order, OrderItem $item): array
     {
         $existing = $item->tickets()->count();
+        $attendees = $item->attendee_details ?: [];
         $tickets = [];
 
         for ($i = $existing; $i < $item->quantity; $i++) {
+            $attendee = $attendees[$i] ?? [
+                'name' => $order->user?->name,
+                'email' => $order->user?->email ?: $order->billing_email,
+                'phone' => $order->user?->phone ?: $order->billing_phone,
+            ];
             $token = $this->newQrToken();
             $ticket = Ticket::query()->create([
                 'ticket_code' => $this->newTicketCode(),
@@ -52,6 +58,9 @@ class TicketService
                 'ticket_type_id' => $item->ticket_type_id,
                 'order_id' => $order->id,
                 'order_item_id' => $item->id,
+                'attendee_name' => $attendee['name'] ?? null,
+                'attendee_email' => $attendee['email'] ?? null,
+                'attendee_phone' => $attendee['phone'] ?? null,
                 'status' => Ticket::STATUS_ACTIVE,
             ]);
 
@@ -64,7 +73,7 @@ class TicketService
     public function findByScannerPayload(?string $token, ?string $ticketCode = null): Ticket
     {
         $ticket = Ticket::query()
-            ->with(['user', 'event.organizer', 'ticketType', 'order'])
+            ->with(['user', 'event.organizer', 'ticketType', 'order.user'])
             ->when($token, fn (EloquentBuilder $query) => $query->where('qr_token', $token))
             ->when(! $token && $ticketCode, fn (EloquentBuilder $query) => $query->where('ticket_code', $ticketCode))
             ->first();
@@ -99,7 +108,7 @@ class TicketService
     {
         return DB::transaction(function () use ($ticket, $checker, $method, $notes): Ticket {
             $locked = Ticket::query()
-                ->with(['user', 'event.organizer', 'ticketType', 'order'])
+                ->with(['user', 'event.organizer', 'ticketType', 'order.user'])
                 ->whereKey($ticket->id)
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -118,7 +127,7 @@ class TicketService
                 'checked_in_notes' => $notes,
             ])->save();
 
-            return $locked->fresh(['user', 'event.organizer', 'ticketType', 'order']);
+            return $locked->fresh(['user', 'event.organizer', 'ticketType', 'order.user']);
         });
     }
 
@@ -180,6 +189,8 @@ class TicketService
     {
         $ticket->loadMissing(['user', 'event', 'ticketType', 'order']);
         $qr = $this->qrDataUri($ticket, 280);
+        $attendeeName = $ticket->attendee_name ?: $ticket->user->name;
+        $attendeeEmail = $ticket->attendee_email ?: $ticket->user->email;
 
         return '<!doctype html><html><head><meta charset="utf-8"><title>Ticket '.$ticket->ticket_code.'</title></head><body style="font-family:Arial,sans-serif;margin:32px;color:#111827;">'
             .'<main style="max-width:720px;margin:0 auto;border:1px solid #d1d5db;padding:28px;border-radius:8px;">'
@@ -189,7 +200,8 @@ class TicketService
             .'<img src="'.$qr.'" alt="Ticket QR code" style="width:280px;height:280px;display:block;margin:0 0 20px;">'
             .'<p><strong>Ticket code:</strong> '.e($ticket->ticket_code).'</p>'
             .'<p><strong>Ticket type:</strong> '.e($ticket->ticketType->name).'</p>'
-            .'<p><strong>Attendee:</strong> '.e($ticket->user->name).' · '.e($ticket->user->email).'</p>'
+            .'<p><strong>Attendee:</strong> '.e($attendeeName).' · '.e($attendeeEmail).'</p>'
+            .'<p><strong>Purchased by:</strong> '.e($ticket->user->name).' · '.e($ticket->user->email).'</p>'
             .'<p><strong>Status:</strong> '.e($ticket->status).'</p>'
             .'<p style="color:#6b7280;font-size:13px;">Present this QR code at check-in. Screenshots and downloads are valid until the ticket is used, cancelled, or refunded.</p>'
             .'</main></body></html>';

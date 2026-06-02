@@ -22,7 +22,7 @@ class AdminPaymentController extends Controller
     public function index(Request $request): JsonResponse
     {
         $orders = Order::query()
-            ->with(['user:id,name,email', 'items.event:id,title,organizer_id', 'items.ticketType:id,name'])
+            ->with(['user:id,name,email', 'items.event:id,title,organizer_id', 'items.ticketType:id,name', 'tickets.user:id,name,email,phone', 'tickets.event:id,title', 'tickets.ticketType:id,name'])
             ->when($request->filled('payment_status'), fn ($query) => $query->where('payment_status', $request->input('payment_status')))
             ->when($request->filled('payment_provider'), fn ($query) => $query->where('payment_provider', $request->input('payment_provider')))
             ->latest()
@@ -33,7 +33,7 @@ class AdminPaymentController extends Controller
 
     public function show(Order $order): JsonResponse
     {
-        $order->load(['user:id,name,email', 'items.event:id,title,organizer_id', 'items.ticketType:id,name']);
+        $order->load(['user:id,name,email', 'items.event:id,title,organizer_id', 'items.ticketType:id,name', 'tickets.user:id,name,email,phone', 'tickets.event:id,title', 'tickets.ticketType:id,name']);
 
         return response()->json(['data' => $order]);
     }

@@ -20,7 +20,7 @@ class UserOrderController extends Controller
         return OrderResource::collection(
             $request->user()
                 ->orders()
-                ->with(['items.event', 'items.ticketType', 'tickets.event', 'tickets.ticketType'])
+                ->with(['user', 'items.event', 'items.ticketType', 'tickets.user', 'tickets.event', 'tickets.ticketType'])
                 ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
                 ->when($request->filled('payment_status'), fn ($query) => $query->where('payment_status', $request->input('payment_status')))
                 ->when($request->filled('search'), fn ($query) => $query->where('order_number', 'like', '%'.$request->input('search').'%'))
@@ -33,7 +33,7 @@ class UserOrderController extends Controller
     {
         abort_unless($order->user_id === $request->user()->id || $request->user()->isAdmin(), 403);
 
-        return new OrderResource($order->load(['items.event', 'items.ticketType', 'tickets.event', 'tickets.ticketType']));
+        return new OrderResource($order->load(['user', 'items.event', 'items.ticketType', 'tickets.user', 'tickets.event', 'tickets.ticketType']));
     }
 
     public function receipt(Request $request, Order $order): Response

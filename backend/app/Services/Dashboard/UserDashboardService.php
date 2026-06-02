@@ -49,7 +49,7 @@ class UserDashboardService
                     ->limit(5)
                     ->get(['id', 'order_number', 'status', 'payment_status', 'total', 'currency', 'created_at']),
                 'tickets' => $user->tickets()
-                    ->with(['event:id,title,slug,venue_name,city,starts_at', 'ticketType:id,name'])
+                    ->with(['user:id,name,email,phone', 'event:id,title,slug,venue_name,city,starts_at', 'ticketType:id,name'])
                     ->latest()
                     ->limit(5)
                     ->get(),

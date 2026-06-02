@@ -20,6 +20,10 @@
     const tt = event.ticket_types?.find((t) => t.id === ticketTypeId) ||
       event.ticketTypes?.find((t) => t.id === ticketTypeId);
     if (!tt) throw new Error('Ticket type not found');
+    const maxTicketsPerUser = Number(event.max_tickets_per_user || 0);
+    if (maxTicketsPerUser > 0 && quantity > maxTicketsPerUser) {
+      throw new Error(`This event has a limit of ${maxTicketsPerUser} ticket${maxTicketsPerUser === 1 ? '' : 's'} per user.`);
+    }
 
     setCart({
       event_slug: event.slug,
@@ -31,6 +35,7 @@
       starts_at: event.starts_at,
       timezone: event.timezone,
       currency: event.currency || tt.currency,
+      max_tickets_per_user: maxTicketsPerUser || null,
       items: [{ ticket_type_id: tt.id, ticket_type_name: tt.name, quantity, unit_price: tt.price }],
       refund_protection: !!options.refund_protection,
     });

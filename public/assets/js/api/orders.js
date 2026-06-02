@@ -13,6 +13,11 @@
     return data;
   }
 
+  async function cancelOrder(orderId) {
+    const { data } = await api().fetch(`/orders/${orderId}/cancel`, { method: 'POST' });
+    return data;
+  }
+
   async function completeMockPayment(orderId) {
     const { data } = await api().fetch('/payment/mock-success', {
       method: 'POST',
@@ -50,6 +55,7 @@
   window.EventSphereOrders = {
     createOrder,
     startCheckout,
+    cancelOrder,
     completeMockPayment,
     getPaymentStatus,
     getOrder,

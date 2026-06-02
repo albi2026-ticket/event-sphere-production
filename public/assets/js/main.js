@@ -208,7 +208,7 @@
     if (!input) return;
     const unit = Number(wrap.dataset.price || 0);
     const min = Number(input.min || 1);
-    const max = Number(input.max || 10);
+    const max = input.max ? Number(input.max) : Number.POSITIVE_INFINITY;
     const currency = wrap.dataset.currency || 'USD';
     const value = Math.max(min, Math.min(Number(input.value || min), max));
     input.value = value;
@@ -226,7 +226,7 @@
     const wrap = btn.closest('.qty-wrap');
     const input = wrap.querySelector('input');
     const min = Number(input.min || 1);
-    const max = Number(input.max || 10);
+    const max = input.max ? Number(input.max) : Number.POSITIVE_INFINITY;
     let v = Number(input.value || min);
     v = btn.dataset.qty === '+' ? Math.min(max, v + 1) : Math.max(min, v - 1);
     input.value = v;

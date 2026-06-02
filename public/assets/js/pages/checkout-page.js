@@ -13,6 +13,7 @@
     const summary = document.querySelector('[data-checkout-summary]');
     const form = document.querySelector('[data-checkout-form]');
     const payBtn = document.querySelector('[data-checkout-pay]');
+    const attendeeFields = document.querySelector('[data-attendee-fields]');
 
     if (!c || !c.items?.length) {
       window.tkToast?.('Your cart is empty', 'info');
@@ -32,7 +33,8 @@
           <img src="${u().escapeHtml(c.event_image)}" style="width:70px;height:70px;object-fit:cover;border-radius:10px"/>
           <div><div class="fw-semibold">${u().escapeHtml(c.event_title)}</div>
           <small class="text-muted-pro">${u().escapeHtml(c.venue_name || '')}</small><br>
-          <small class="text-muted-pro">${item.quantity}× ${u().escapeHtml(item.ticket_type_name)}</small></div>
+          <small class="text-muted-pro">${item.quantity}× ${u().escapeHtml(item.ticket_type_name)}</small>
+          ${c.max_tickets_per_user ? `<br><small class="text-muted-pro">Limit ${c.max_tickets_per_user} ticket${Number(c.max_tickets_per_user) === 1 ? '' : 's'} per user</small>` : ''}</div>
         </div>
         <div class="d-flex justify-content-between small mb-1"><span class="text-muted-pro">Subtotal</span><span>${u().formatMoney(subtotal, c.currency)}</span></div>
         <div class="d-flex justify-content-between small mb-1"><span class="text-muted-pro">Service fee</span><span>${u().formatMoney(serviceFee, c.currency)}</span></div>
@@ -47,6 +49,7 @@
     if (refundInput) refundInput.checked = !!c.refund_protection;
 
     const user = auth().getUser();
+    const purchaserName = (user?.name || `${user?.first_name || ''} ${user?.last_name || ''}`).trim();
     if (form && user) {
       const email = form.querySelector('[name="billing_email"]');
       if (email && !email.value) email.value = user.email || '';
@@ -56,14 +59,39 @@
       if (ln && !ln.value) ln.value = user.last_name || '';
     }
 
+    if (attendeeFields) {
+      const quantity = Math.max(1, Number(item.quantity || 1));
+      attendeeFields.innerHTML = Array.from({ length: quantity }, (_, index) => {
+        const isFirst = index === 0;
+        return `
+          <div class="${index > 0 ? 'pt-3 mt-3 border-top' : ''}" style="${index > 0 ? 'border-color:var(--border) !important' : ''}">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="fw-semibold">Ticket ${index + 1}</div>
+              <small class="text-muted-pro">${u().escapeHtml(item.ticket_type_name || 'Ticket')}</small>
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6"><label class="form-label">Full name</label><input class="form-control" name="attendees[${index}][name]" required placeholder="Attendee name" value="${isFirst ? u().escapeHtml(purchaserName) : ''}"/></div>
+              <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="attendees[${index}][email]" required placeholder="attendee@email.com" value="${isFirst ? u().escapeHtml(user?.email || '') : ''}"/></div>
+              <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="attendees[${index}][phone]" placeholder="+1 (555) 000-0000" value="${isFirst ? u().escapeHtml(user?.phone || '') : ''}"/></div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
     payBtn?.addEventListener('click', async (e) => {
       e.preventDefault();
       if (!form?.reportValidity()) return;
       payBtn.disabled = true;
       payBtn.textContent = 'Processing…';
+      let createdOrder = null;
       try {
         const fd = new FormData(form);
-        const order = await orders().createOrder({
+        const attendees = Array.from({ length: Math.max(1, Number(item.quantity || 1)) }, (_, index) => ({
+          name: String(fd.get(`attendees[${index}][name]`) || '').trim(),
+          email: String(fd.get(`attendees[${index}][email]`) || '').trim(),
+          phone: String(fd.get(`attendees[${index}][phone]`) || '').trim() || null,
+        }));
+        createdOrder = await orders().createOrder({
           items: c.items.map((i) => ({ ticket_type_id: i.ticket_type_id, quantity: i.quantity })),
           billing_email: fd.get('billing_email'),
           billing_phone: fd.get('billing_phone') || null,
@@ -74,15 +102,23 @@
           billing_state: fd.get('billing_state') || null,
           billing_zip: fd.get('billing_zip') || null,
           billing_country: fd.get('billing_country') || null,
+          attendees,
           refund_protection: !!fd.get('refund_protection'),
         });
 
-        sessionStorage.setItem('event_sphere_last_order_id', String(order.id));
-        const checkout = await orders().completeMockPayment(order.id);
+        sessionStorage.setItem('event_sphere_last_order_id', String(createdOrder.id));
+        const checkout = await orders().completeMockPayment(createdOrder.id);
         cart().clearCart();
         if (checkout.checkout_url) location.href = checkout.checkout_url;
-        else location.href = `checkout-success.html?order_id=${encodeURIComponent(order.id)}&mock=1`;
+        else location.href = `checkout-success.html?order_id=${encodeURIComponent(createdOrder.id)}&mock=1`;
       } catch (err) {
+        if (createdOrder?.id) {
+          try {
+            await orders().cancelOrder(createdOrder.id);
+          } catch (_) {
+            // Backend payment handlers may have already released the reservation.
+          }
+        }
         window.tkToast?.(err.message || 'Checkout failed', 'error');
         payBtn.disabled = false;
         payBtn.textContent = `Pay ${u().formatMoney(total, c.currency)}`;

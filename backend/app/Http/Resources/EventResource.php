@@ -36,6 +36,7 @@ class EventResource extends JsonResource
             'status' => $this->status,
             'visibility' => $this->visibility,
             'banner_image_url' => $bannerImageUrl,
+            'max_tickets_per_user' => $this->max_tickets_per_user,
             'base_price' => $this->base_price,
             'currency' => $this->currency,
             'is_featured' => $this->is_featured,

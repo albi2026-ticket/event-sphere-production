@@ -27,8 +27,20 @@ class OrderService
             ]);
         }
 
+        $this->releaseExpiredReservations();
+
         return DB::transaction(function () use ($user, $items, $billing): Order {
             $lineItems = [];
+            $requestedByEvent = [];
+            $attendeeCursor = 0;
+            $attendees = collect($billing['attendees'] ?? [])
+                ->map(fn (array $attendee): array => [
+                    'name' => trim((string) ($attendee['name'] ?? '')),
+                    'email' => strtolower(trim((string) ($attendee['email'] ?? ''))),
+                    'phone' => trim((string) ($attendee['phone'] ?? '')) ?: null,
+                ])
+                ->values()
+                ->all();
             $subtotal = 0.0;
             $currency = 'USD';
 
@@ -42,20 +54,61 @@ class OrderService
                 $quantity = (int) $line['quantity'];
                 $this->inventory->reserve($ticketType, $quantity);
                 $ticketType = $ticketType->fresh();
+                $event = $ticketType->event;
+                $requestedByEvent[$event->id] = ($requestedByEvent[$event->id] ?? 0) + $quantity;
 
                 $unitPrice = (float) $ticketType->price;
                 $lineTotal = round($unitPrice * $quantity, 2);
                 $lineFee = round($lineTotal * 0.05, 2);
                 $subtotal += $lineTotal;
                 $currency = strtoupper($ticketType->currency ?: $ticketType->event->currency ?: $currency);
+                $lineAttendees = array_slice($attendees, $attendeeCursor, $quantity);
+                $attendeeCursor += $quantity;
 
                 $lineItems[] = [
                     'ticket_type' => $ticketType,
+                    'event' => $event,
                     'quantity' => $quantity,
                     'unit_price' => $unitPrice,
                     'service_fee' => $lineFee,
                     'total' => $lineTotal + $lineFee,
+                    'attendee_details' => $lineAttendees,
                 ];
+            }
+
+            foreach ($lineItems as $line) {
+                $event = $line['event'];
+                $limit = $event->max_tickets_per_user;
+
+                if (! $limit) {
+                    continue;
+                }
+
+                $alreadyReservedOrPurchased = OrderItem::query()
+                    ->where('event_id', $event->id)
+                    ->whereHas('order', function ($query) use ($user): void {
+                        $query
+                            ->where('user_id', $user->id)
+                            ->whereNotIn('status', [Order::STATUS_CANCELLED, Order::STATUS_REFUNDED])
+                            ->whereNotIn('payment_status', [
+                                Order::PAYMENT_STATUS_FAILED,
+                                Order::PAYMENT_STATUS_CANCELLED,
+                                Order::PAYMENT_STATUS_REFUNDED,
+                            ]);
+                    })
+                    ->sum('quantity');
+
+                $requested = $requestedByEvent[$event->id] ?? 0;
+
+                if ($alreadyReservedOrPurchased + $requested > $limit) {
+                    $remaining = max(0, $limit - $alreadyReservedOrPurchased);
+
+                    throw ValidationException::withMessages([
+                        'items' => $remaining > 0
+                            ? "This event has a limit of {$limit} ticket(s) per user. You can buy {$remaining} more."
+                            : "This event has a limit of {$limit} ticket(s) per user, and you have already reached it.",
+                    ]);
+                }
             }
 
             $serviceFee = round(array_sum(array_column($lineItems, 'service_fee')), 2);
@@ -93,7 +146,7 @@ class OrderService
 
             foreach ($lineItems as $line) {
                 $ticketType = $line['ticket_type'];
-                $event = $ticketType->event;
+                $event = $line['event'];
 
                 OrderItem::query()->create([
                     'order_id' => $order->id,
@@ -106,6 +159,7 @@ class OrderService
                     'ticket_type_name' => $ticketType->name,
                     'event_title' => $event->title,
                     'event_starts_at' => $event->starts_at,
+                    'attendee_details' => $line['attendee_details'],
                 ]);
             }
 
@@ -118,12 +172,91 @@ class OrderService
         DB::transaction(function () use ($order): void {
             $order->loadMissing('items.ticketType');
 
-            foreach ($order->items as $item) {
-                if ($item->ticketType) {
-                    $this->inventory->release($item->ticketType, $item->quantity);
-                }
-            }
+            $this->releaseReservationItems($order);
         });
+    }
+
+    public function releaseExpiredReservations(?User $user = null): int
+    {
+        $query = Order::query()
+            ->where('status', Order::STATUS_PENDING)
+            ->whereIn('payment_status', [
+                Order::PAYMENT_STATUS_UNPAID,
+                Order::PAYMENT_STATUS_PENDING,
+            ])
+            ->whereNotNull('checkout_expires_at')
+            ->where('checkout_expires_at', '<', now());
+
+        if ($user) {
+            $query->where('user_id', $user->id);
+        }
+
+        $released = 0;
+
+        $query
+            ->pluck('id')
+            ->each(function (int $orderId) use (&$released): void {
+                $order = Order::query()->find($orderId);
+
+                if (! $order) {
+                    return;
+                }
+
+                $this->cancelUnpaidOrder($order, Order::PAYMENT_STATUS_CANCELLED);
+                $released++;
+            });
+
+        return $released;
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    public function cancelUnpaidOrder(
+        Order $order,
+        string $paymentStatus = Order::PAYMENT_STATUS_CANCELLED,
+        array $attributes = [],
+    ): Order {
+        return DB::transaction(function () use ($order, $paymentStatus, $attributes): Order {
+            $locked = Order::query()
+                ->with(['items.ticketType'])
+                ->whereKey($order->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($locked->payment_status === Order::PAYMENT_STATUS_PAID) {
+                return $locked->fresh(['items.event', 'items.ticketType', 'tickets']);
+            }
+
+            if (! in_array($locked->payment_status, [
+                Order::PAYMENT_STATUS_CANCELLED,
+                Order::PAYMENT_STATUS_FAILED,
+                Order::PAYMENT_STATUS_REFUNDED,
+            ], true)) {
+                $this->releaseReservationItems($locked);
+
+                $status = $paymentStatus === Order::PAYMENT_STATUS_CANCELLED
+                    ? Order::STATUS_CANCELLED
+                    : $locked->status;
+
+                $locked->forceFill(array_merge([
+                    'status' => $status,
+                    'payment_status' => $paymentStatus,
+                    'cancelled_at' => $paymentStatus === Order::PAYMENT_STATUS_CANCELLED ? now() : $locked->cancelled_at,
+                ], $attributes))->save();
+            }
+
+            return $locked->fresh(['items.event', 'items.ticketType', 'tickets']);
+        });
+    }
+
+    protected function releaseReservationItems(Order $order): void
+    {
+        foreach ($order->items as $item) {
+            if ($item->ticketType) {
+                $this->inventory->release($item->ticketType, $item->quantity);
+            }
+        }
     }
 
     protected function generateOrderNumber(): string

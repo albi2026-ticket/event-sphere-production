@@ -20,6 +20,7 @@ class OrderItemResource extends JsonResource
             'ticket_type_name' => $this->ticket_type_name,
             'event_title' => $this->event_title,
             'event_starts_at' => $this->event_starts_at,
+            'attendee_details' => $this->attendee_details ?: [],
             'event' => $this->whenLoaded('event', fn () => [
                 'id' => $this->event->id,
                 'title' => $this->event->title,

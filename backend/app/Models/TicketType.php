@@ -83,9 +83,12 @@ class TicketType extends Model
 
     public function isAvailableForPurchase(int $quantity = 1): bool
     {
+        $this->loadMissing('event');
+        $maxAllowed = $this->event?->max_tickets_per_user ?: $this->availableQuantity();
+
         return $this->isOnSale()
             && $quantity >= $this->min_per_order
-            && $quantity <= $this->max_per_order
+            && $quantity <= $maxAllowed
             && $this->availableQuantity() >= $quantity;
     }
 }

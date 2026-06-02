@@ -612,6 +612,9 @@
         <div><dt>Status</dt><dd>${statusBadge(ticket.status)}</dd></div>
         <div><dt>Ticket code</dt><dd>${escape(ticket.ticket_code)}</dd></div>
         <div><dt>Ticket type</dt><dd>${escape(ticket.ticket_type?.name || '-')}</dd></div>
+        <div><dt>Attendee</dt><dd>${escape(ticket.attendee?.name || 'Guest')}</dd></div>
+        <div><dt>Attendee email</dt><dd>${escape(ticket.attendee?.email || '-')}</dd></div>
+        <div><dt>Purchased by</dt><dd>${escape(ticket.purchaser?.name || ticket.order?.purchaser?.name || '-')}</dd></div>
         <div><dt>Date</dt><dd>${escape(dateLabel(ticket.event?.starts_at, ticket.event?.timezone))}</dd></div>
         <div><dt>Venue</dt><dd>${escape(ticket.event?.venue_name || '')}${ticket.event?.city ? `, ${escape(ticket.event.city)}` : ''}</dd></div>
         <div><dt>Seat</dt><dd>${escape(ticket.seat_label || '-')}</dd></div>
@@ -646,7 +649,8 @@
         <div><dt>Status</dt><dd>${statusBadge(order.status)}</dd></div>
         <div><dt>Purchased</dt><dd>${escape(shortDate(order.created_at))}</dd></div>
         <div><dt>Total</dt><dd>${u().formatMoney(order.total, order.currency)}</dd></div>
-        <div><dt>Tickets</dt><dd>${tickets.length}</dd></div>
+        <div><dt>Purchaser</dt><dd>${escape(order.purchaser?.name || '-')} · ${escape(order.purchaser?.email || '-')}</dd></div>
+        <div><dt>Attendees</dt><dd>${order.attendee_count ?? tickets.length}</dd></div>
       </div>
       <h6 class="mt-4">Items</h6>
       <div class="table-responsive"><table class="table table-borderless dashboard-table mb-0"><tbody>
@@ -654,7 +658,7 @@
       </tbody></table></div>
       <h6 class="mt-4">Ticket access</h6>
       <div class="dashboard-stack">
-        ${tickets.map((ticket) => `<div class="dashboard-mini-row"><div><div class="fw-semibold">${escape(ticket.ticket_code)}</div><small>${escape(ticket.event?.title || '')}</small></div><button class="btn btn-glass btn-sm" type="button" data-ticket-download="${ticket.id}" data-ticket-code="${escape(ticket.ticket_code)}"><i class="bi bi-download me-1"></i>Download</button></div>`).join('') || '<p class="text-muted-pro mb-0">No tickets attached to this order.</p>'}
+        ${tickets.map((ticket) => `<div class="dashboard-mini-row"><div><div class="fw-semibold">${escape(ticket.attendee?.name || 'Guest')}</div><small>${escape(ticket.ticket_code)} · ${escape(ticket.ticket_type?.name || ticket.event?.title || '')}</small></div><button class="btn btn-glass btn-sm" type="button" data-ticket-download="${ticket.id}" data-ticket-code="${escape(ticket.ticket_code)}"><i class="bi bi-download me-1"></i>Download</button></div>`).join('') || '<p class="text-muted-pro mb-0">No tickets attached to this order.</p>'}
       </div>
     `);
   }

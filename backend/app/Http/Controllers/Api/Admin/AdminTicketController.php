@@ -19,7 +19,7 @@ class AdminTicketController extends Controller
     public function index(Request $request): JsonResponse
     {
         $tickets = Ticket::query()
-            ->with(['user', 'event', 'ticketType', 'order', 'checkedInBy'])
+            ->with(['user', 'event', 'ticketType', 'order.user', 'checkedInBy'])
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
             ->when($request->filled('event_id'), fn ($query) => $query->where('event_id', $request->integer('event_id')))
             ->when($request->filled('user_id'), fn ($query) => $query->where('user_id', $request->integer('user_id')))
@@ -31,7 +31,7 @@ class AdminTicketController extends Controller
 
     public function show(Ticket $ticket): TicketResource
     {
-        return new TicketResource($ticket->load(['user', 'event', 'ticketType', 'order', 'checkedInBy']));
+        return new TicketResource($ticket->load(['user', 'event', 'ticketType', 'order.user', 'checkedInBy']));
     }
 
     public function validateTicket(ValidateTicketRequest $request): JsonResponse
@@ -74,7 +74,7 @@ class AdminTicketController extends Controller
             'checked_in_notes' => $request->input('notes', $ticket->checked_in_notes),
         ])->save();
 
-        return new TicketResource($ticket->fresh(['user', 'event', 'ticketType', 'order', 'checkedInBy']));
+        return new TicketResource($ticket->fresh(['user', 'event', 'ticketType', 'order.user', 'checkedInBy']));
     }
 
     protected function ensureEventMatchesRequest(Request $request, Ticket $ticket): void

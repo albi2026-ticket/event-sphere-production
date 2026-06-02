@@ -66,10 +66,11 @@
             <hr class="divider"/>
             <label class="form-label">Ticket type</label>
             <select class="form-select mb-3" data-ticket-type-select disabled><option>Loading ticket types...</option></select>
+            <div class="small text-muted-pro mb-3" data-event-purchase-limit hidden></div>
             <label class="form-label">Quantity</label>
             <div class="qty-wrap d-flex align-items-center gap-2 mb-3" data-qty data-price="0" data-currency="USD">
               <button class="btn btn-glass" type="button" data-qty="-">−</button>
-              <input class="form-control text-center" value="1" min="1" max="10" type="number" style="max-width:70px"/>
+              <input class="form-control text-center" value="1" min="1" type="number" style="max-width:70px"/>
               <button class="btn btn-glass" type="button" data-qty="+">+</button>
               <span class="ms-auto fw-bold" data-qty-total>$0.00</span>
             </div>
