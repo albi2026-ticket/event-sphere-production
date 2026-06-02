@@ -241,8 +241,16 @@
 
   /* ---------- Mobile dash sidebar ---------- */
   document.addEventListener('click', (e) => {
+    const side = document.querySelector('.dash-side');
+    if (!side) return;
+
     if (e.target.closest('[data-toggle-side]')) {
-      document.querySelector('.dash-side')?.classList.toggle('open');
+      side.classList.toggle('open');
+      return;
+    }
+
+    if (side.classList.contains('open') && (!e.target.closest('.dash-side') || e.target.closest('.dash-side a'))) {
+      side.classList.remove('open');
     }
   });
 

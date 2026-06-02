@@ -212,18 +212,18 @@
 
     body.innerHTML = state.users.map((usr) => `
       <tr>
-        <td>${userNameCell(usr)}</td>
-        <td>${u().escapeHtml(usr.email)}</td>
-        <td>${dateLabel(usr.created_at)}</td>
-        <td>${usr.orders_count ?? 0}</td>
-        <td>
+        <td data-label="User">${userNameCell(usr)}</td>
+        <td data-label="Email">${u().escapeHtml(usr.email)}</td>
+        <td data-label="Joined">${dateLabel(usr.created_at)}</td>
+        <td data-label="Orders">${usr.orders_count ?? 0}</td>
+        <td data-label="Role">
           <select class="form-select form-select-sm admin-select" data-user-role="${usr.id}">
             ${['user', 'organizer', 'admin'].map((role) => `<option value="${role}" ${usr.role === role ? 'selected' : ''}>${role}</option>`).join('')}
           </select>
         </td>
-        <td>${badge(usr.organizer_status)}</td>
-        <td>${badge(usr.status)}</td>
-        <td class="text-end">
+        <td data-label="Organizer">${badge(usr.organizer_status)}</td>
+        <td data-label="Status">${badge(usr.status)}</td>
+        <td data-label="Actions" class="text-end">
           <div class="admin-actions">
             ${buttonIcon('bi-eye', 'View profile', `data-view-user="${usr.id}"`)}
             ${buttonIcon('bi-save', 'Save role', `data-save-role="${usr.id}"`)}
@@ -251,11 +251,11 @@
     const organizers = state.users.filter((usr) => usr.role === 'organizer' || ['pending', 'approved', 'rejected'].includes(usr.organizer_status));
     body.innerHTML = organizers.map((usr) => `
       <tr>
-        <td>${userNameCell(usr)}</td>
-        <td>${u().escapeHtml(usr.email)}</td>
-        <td>${badge(usr.organizer_status)}</td>
-        <td>${usr.organized_events_count ?? 0}</td>
-        <td class="text-end">
+        <td data-label="Organizer">${userNameCell(usr)}</td>
+        <td data-label="Email">${u().escapeHtml(usr.email)}</td>
+        <td data-label="Status">${badge(usr.organizer_status)}</td>
+        <td data-label="Events">${usr.organized_events_count ?? 0}</td>
+        <td data-label="Actions" class="text-end">
           <div class="admin-actions">
             ${buttonIcon('bi-eye', 'View profile', `data-view-user="${usr.id}"`)}
             <button class="btn btn-glass btn-sm" type="button" data-approve-organizer="${usr.id}" ${usr.organizer_status === 'approved' ? 'disabled' : ''}>Approve</button>
@@ -280,13 +280,13 @@
 
     body.innerHTML = state.events.map((event) => `
       <tr>
-        <td><div class="fw-semibold">${u().escapeHtml(event.title)}</div><div class="small text-muted-pro">${u().escapeHtml(event.category || '')} · ${u().escapeHtml(event.city || '')}</div></td>
-        <td>${u().escapeHtml(event.organizer?.name || `#${event.organizer_id}`)}</td>
-        <td>${dateLabel(event.starts_at)}</td>
-        <td>${badge(event.status)}</td>
-        <td>${event.visibility ? badge(event.visibility) : '-'}</td>
-        <td><span class="small text-muted-pro">${u().escapeHtml(event.moderation_notes || '-')}</span></td>
-        <td class="text-end">
+        <td data-label="Event"><div class="fw-semibold">${u().escapeHtml(event.title)}</div><div class="small text-muted-pro">${u().escapeHtml(event.category || '')} · ${u().escapeHtml(event.city || '')}</div></td>
+        <td data-label="Organizer">${u().escapeHtml(event.organizer?.name || `#${event.organizer_id}`)}</td>
+        <td data-label="Date">${dateLabel(event.starts_at)}</td>
+        <td data-label="Status">${badge(event.status)}</td>
+        <td data-label="Visibility">${event.visibility ? badge(event.visibility) : '-'}</td>
+        <td data-label="Notes"><span class="small text-muted-pro">${u().escapeHtml(event.moderation_notes || '-')}</span></td>
+        <td data-label="Actions" class="text-end">
           <div class="admin-actions">
             ${buttonIcon('bi-eye', 'View event', `data-view-event="${event.id}"`)}
             <button class="btn btn-glass btn-sm" type="button" data-publish-event="${event.id}" ${event.status === 'published' ? 'disabled' : ''}>Approve</button>
@@ -301,12 +301,12 @@
   function paymentRow(order, actions) {
     return `
       <tr>
-        <td><div class="fw-semibold">${u().escapeHtml(order.order_number)}</div><div class="small text-muted-pro">${dateTimeLabel(order.created_at)}</div></td>
-        <td>${u().escapeHtml(order.user?.name || order.user?.email || order.billing_email || '-')}</td>
-        <td>${badge(order.payment_status)}</td>
-        <td>${u().escapeHtml(order.payment_provider || '-')}</td>
-        <td>${money(order.total, order.currency)}</td>
-        <td class="text-end"><div class="admin-actions">${actions(order)}</div></td>
+        <td data-label="Order"><div class="fw-semibold">${u().escapeHtml(order.order_number)}</div><div class="small text-muted-pro">${dateTimeLabel(order.created_at)}</div></td>
+        <td data-label="Customer">${u().escapeHtml(order.user?.name || order.user?.email || order.billing_email || '-')}</td>
+        <td data-label="Status">${badge(order.payment_status)}</td>
+        <td data-label="Provider">${u().escapeHtml(order.payment_provider || '-')}</td>
+        <td data-label="Total">${money(order.total, order.currency)}</td>
+        <td data-label="Actions" class="text-end"><div class="admin-actions">${actions(order)}</div></td>
       </tr>`;
   }
 

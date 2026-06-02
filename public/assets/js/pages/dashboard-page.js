@@ -332,12 +332,12 @@
     }
     body.innerHTML = state.orders.map((order) => `
       <tr>
-        <td><div class="fw-semibold">${escape(order.order_number)}</div><small class="text-muted-pro">${escape(order.status || '')}</small></td>
-        <td>${escape(shortDate(order.created_at))}</td>
-        <td>${statusBadge(order.payment_status)}</td>
-        <td>${u().formatMoney(order.total, order.currency)}</td>
-        <td>${rows(order.tickets).length}</td>
-        <td class="text-end">
+        <td data-label="Order"><div class="fw-semibold">${escape(order.order_number)}</div><small class="text-muted-pro">${escape(order.status || '')}</small></td>
+        <td data-label="Date">${escape(shortDate(order.created_at))}</td>
+        <td data-label="Payment">${statusBadge(order.payment_status)}</td>
+        <td data-label="Total">${u().formatMoney(order.total, order.currency)}</td>
+        <td data-label="Tickets">${rows(order.tickets).length}</td>
+        <td data-label="Actions" class="text-end">
           <div class="dashboard-actions">
             <button class="btn btn-glass btn-sm" type="button" data-order-details="${order.id}"><i class="bi bi-eye me-1"></i>Details</button>
             <button class="btn btn-glass btn-sm" type="button" data-order-receipt="${order.id}" data-order-number="${escape(order.order_number)}"><i class="bi bi-download me-1"></i>Receipt</button>
@@ -654,7 +654,7 @@
       </div>
       <h6 class="mt-4">Items</h6>
       <div class="table-responsive"><table class="table table-borderless dashboard-table mb-0"><tbody>
-        ${items.map((item) => `<tr><td>${escape(item.event_title || item.event?.title || 'Event')}</td><td>${escape(item.ticket_type_name || item.ticket_type?.name || 'Ticket')}</td><td>x${item.quantity}</td><td>${u().formatMoney(item.total, order.currency)}</td></tr>`).join('') || '<tr><td>No line items</td></tr>'}
+        ${items.map((item) => `<tr><td data-label="Event">${escape(item.event_title || item.event?.title || 'Event')}</td><td data-label="Ticket">${escape(item.ticket_type_name || item.ticket_type?.name || 'Ticket')}</td><td data-label="Qty">x${item.quantity}</td><td data-label="Total">${u().formatMoney(item.total, order.currency)}</td></tr>`).join('') || '<tr><td colspan="4">No line items</td></tr>'}
       </tbody></table></div>
       <h6 class="mt-4">Ticket access</h6>
       <div class="dashboard-stack">

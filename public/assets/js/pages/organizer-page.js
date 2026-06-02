@@ -263,13 +263,13 @@
       const available = Math.max(0, total - sold - reserved);
       const revenue = perf.revenue ?? 0;
       return `<tr>
-        <td><div class="fw-semibold">${esc(event.title)}</div><small class="text-muted-pro">${esc(event.city || '')}${event.venue_name ? ` · ${esc(event.venue_name)}` : ''}</small></td>
-        <td>${statusBadge(event.status)}</td>
-        <td>${esc(dateLabel(event.starts_at, event.timezone))}</td>
-        <td>${sold} sold / ${total} total</td>
-        <td>${u().formatMoney(revenue, event.currency || 'USD')}</td>
-        <td>${available} remaining</td>
-        <td class="text-end">
+        <td data-label="Event"><div class="fw-semibold">${esc(event.title)}</div><small class="text-muted-pro">${esc(event.city || '')}${event.venue_name ? ` · ${esc(event.venue_name)}` : ''}</small></td>
+        <td data-label="Status">${statusBadge(event.status)}</td>
+        <td data-label="Date">${esc(dateLabel(event.starts_at, event.timezone))}</td>
+        <td data-label="Sold">${sold} sold / ${total} total</td>
+        <td data-label="Revenue">${u().formatMoney(revenue, event.currency || 'USD')}</td>
+        <td data-label="Available">${available} remaining</td>
+        <td data-label="Actions" class="text-end">
           <div class="dashboard-actions">
             <button class="btn btn-glass btn-sm" type="button" data-event-edit="${event.id}"><i class="bi bi-pencil me-1"></i>Edit</button>
             ${event.status === 'published'
@@ -298,11 +298,11 @@
       const total = Number(item.tickets_total || 0);
       const pct = total ? Math.round((sold / total) * 100) : 0;
       return `<tr>
-        <td><div class="fw-semibold">${esc(item.title)}</div><small class="text-muted-pro">${statusBadge(item.status)}</small></td>
-        <td>${sold}</td>
-        <td>${item.tickets_available ?? 0}</td>
-        <td>${item.orders_count ?? 0}</td>
-        <td><div>${item.checked_in_count ?? 0} / ${item.attendees_count ?? 0}</div><div class="progress dashboard-progress"><div class="progress-bar" style="width:${pct}%"></div></div></td>
+        <td data-label="Event"><div class="fw-semibold">${esc(item.title)}</div><small class="text-muted-pro">${statusBadge(item.status)}</small></td>
+        <td data-label="Sold">${sold}</td>
+        <td data-label="Available">${item.tickets_available ?? 0}</td>
+        <td data-label="Orders">${item.orders_count ?? 0}</td>
+        <td data-label="Check-ins"><div>${item.checked_in_count ?? 0} / ${item.attendees_count ?? 0}</div><div class="progress dashboard-progress"><div class="progress-bar" style="width:${pct}%"></div></div></td>
       </tr>`;
     }).join('') || emptyRow(5, 'bi-graph-up', 'No ticket performance yet', 'Sales and attendance metrics will appear after tickets are purchased.');
   }
@@ -350,12 +350,12 @@
     }
     body.innerHTML = state.attendees.map((ticket) => `
       <tr>
-        <td><div class="fw-semibold">${esc(ticket.attendee?.name || 'Guest')}</div><small class="text-muted-pro">${esc(ticket.attendee?.email || '')}${ticket.attendee?.phone ? ` · ${esc(ticket.attendee.phone)}` : ''}</small></td>
-        <td>${esc(ticket.event?.title || '-')}</td>
-        <td><div>${esc(ticket.ticket_code)}</div><small class="text-muted-pro">${esc(ticket.ticket_type?.name || '')}</small></td>
-        <td><div>${esc(ticket.order?.order_number || '-')}</div><small class="text-muted-pro">Purchased by ${esc(ticket.purchaser?.name || ticket.order?.purchaser?.name || '-')}</small></td>
-        <td>${statusBadge(ticket.status)}</td>
-        <td class="text-end"><button class="btn btn-glass btn-sm" type="button" data-attendee-details="${ticket.id}"><i class="bi bi-eye me-1"></i>Details</button></td>
+        <td data-label="Attendee"><div class="fw-semibold">${esc(ticket.attendee?.name || 'Guest')}</div><small class="text-muted-pro">${esc(ticket.attendee?.email || '')}${ticket.attendee?.phone ? ` · ${esc(ticket.attendee.phone)}` : ''}</small></td>
+        <td data-label="Event">${esc(ticket.event?.title || '-')}</td>
+        <td data-label="Ticket"><div>${esc(ticket.ticket_code)}</div><small class="text-muted-pro">${esc(ticket.ticket_type?.name || '')}</small></td>
+        <td data-label="Order"><div>${esc(ticket.order?.order_number || '-')}</div><small class="text-muted-pro">Purchased by ${esc(ticket.purchaser?.name || ticket.order?.purchaser?.name || '-')}</small></td>
+        <td data-label="Status">${statusBadge(ticket.status)}</td>
+        <td data-label="Actions" class="text-end"><button class="btn btn-glass btn-sm" type="button" data-attendee-details="${ticket.id}"><i class="bi bi-eye me-1"></i>Details</button></td>
       </tr>
     `).join('') || emptyRow(6, 'bi-people', 'No attendees found', 'Attendees appear here after tickets are issued.');
     if (pager) pager.innerHTML = pagination(state.attendeeMeta, 'data-attendee-page');
@@ -377,10 +377,10 @@
     const byEvent = rows(state.revenue?.by_event);
     body.innerHTML = byEvent.map((item) => `
       <tr>
-        <td><div class="fw-semibold">${esc(item.title)}</div><small class="text-muted-pro">${esc(item.slug)}</small></td>
-        <td>${u().formatMoney(item.revenue, item.currency || 'USD')}</td>
-        <td>${item.tickets_sold ?? 0}</td>
-        <td>${item.orders_count ?? 0}</td>
+        <td data-label="Event"><div class="fw-semibold">${esc(item.title)}</div><small class="text-muted-pro">${esc(item.slug)}</small></td>
+        <td data-label="Revenue">${u().formatMoney(item.revenue, item.currency || 'USD')}</td>
+        <td data-label="Tickets">${item.tickets_sold ?? 0}</td>
+        <td data-label="Orders">${item.orders_count ?? 0}</td>
       </tr>
     `).join('') || emptyRow(4, 'bi-cash-stack', 'No revenue yet', 'Paid orders will populate this table.');
   }

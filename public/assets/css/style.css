@@ -929,3 +929,365 @@ a:hover { color: var(--secondary); }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--card-2); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+/* ---------- Mobile and tablet responsiveness ---------- */
+html, body { max-width: 100%; overflow-x: clip; }
+img, svg, canvas, video { max-width: 100%; }
+
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    padding: .85rem 0 1rem;
+  }
+  .navbar-collapse .navbar-nav {
+    gap: .25rem !important;
+    margin: .5rem 0 1rem !important;
+  }
+  .navbar-collapse .d-flex.align-items-center {
+    align-items: stretch !important;
+    flex-wrap: wrap;
+  }
+  .navbar-collapse .d-flex.align-items-center > .btn {
+    flex: 1 1 calc(50% - .25rem);
+    min-width: 0;
+  }
+  .navbar-collapse .dropdown-menu {
+    position: static !important;
+    width: 100%;
+    max-height: 60dvh;
+    overflow-y: auto;
+  }
+  .dash-main {
+    padding: 1.25rem;
+  }
+  .dash-side {
+    height: 100dvh;
+    box-shadow: var(--shadow-lg);
+  }
+  .dash-side.open::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    left: 260px;
+    background: rgba(0,0,0,.42);
+    pointer-events: none;
+  }
+  .sticky-checkout {
+    position: static;
+  }
+}
+
+@media (max-width: 767.98px) {
+  body {
+    font-size: 14px;
+  }
+  .container-xxl {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .section {
+    padding: 3rem 0;
+  }
+  .section-sm {
+    padding: 2rem 0;
+  }
+  .hero {
+    padding: 3.5rem 0 3rem;
+  }
+  .hero-stats {
+    gap: 1rem;
+  }
+  .newsletter {
+    padding: 2rem 1.25rem;
+  }
+  .footer {
+    padding: 3rem 0 1.5rem;
+    margin-top: 3rem;
+  }
+  .footer .legal,
+  .section-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .card-pro:hover,
+  .card-pro:hover .thumb img {
+    transform: none;
+  }
+  .card-pro .foot {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  .card-pro .foot .btn,
+  .dashboard-actions .btn,
+  .admin-actions .btn {
+    min-height: 40px;
+  }
+  .filter-card {
+    padding: 1rem;
+  }
+  [data-events-search] {
+    min-width: 0 !important;
+  }
+  [data-events-grid] .card-pro.d-flex,
+  [data-events-list] .card-pro.d-flex {
+    align-items: stretch !important;
+  }
+  [data-events-grid] .card-pro.d-flex img,
+  [data-events-list] .card-pro.d-flex img {
+    width: 100% !important;
+    height: 150px !important;
+  }
+  [data-event-root] {
+    height: 320px !important;
+  }
+  [data-event-root] h1 {
+    font-size: 2rem;
+  }
+  .countdown {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .countdown .unit {
+    min-width: 0;
+    padding: .65rem .5rem;
+  }
+  .stepper {
+    gap: .35rem;
+    margin-bottom: 1.25rem;
+  }
+  .stepper .step {
+    justify-content: center;
+    padding: .65rem .4rem;
+  }
+  .auth-split .form-side {
+    min-height: 100dvh;
+    padding: 1.5rem 1rem;
+  }
+  .dash-main {
+    padding: 1rem;
+  }
+  .dash-main > .d-flex.justify-content-between {
+    align-items: flex-start !important;
+    gap: .75rem;
+  }
+  .kpi {
+    padding: 1rem;
+  }
+  .kpi .value {
+    font-size: 1.45rem;
+  }
+  .dashboard-tabs {
+    display: flex;
+  }
+  .dashboard-tabs button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .dashboard-mini-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .dashboard-mini-row .btn {
+    width: 100%;
+  }
+  .dashboard-modal,
+  .admin-modal {
+    max-height: calc(100dvh - 1rem);
+  }
+  .modal-dialog {
+    margin: .5rem;
+  }
+  #organizerEventModal .modal-dialog,
+  #organizerEventModal .dashboard-modal {
+    max-height: calc(100dvh - 1rem);
+  }
+  #organizerEventModal .modal-footer {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+  #organizerEventModal .modal-footer .btn {
+    width: 100%;
+  }
+  .toast-stack {
+    left: 1rem;
+    right: 1rem;
+    top: 72px;
+  }
+  .toast-pro {
+    min-width: 0;
+    width: 100%;
+  }
+  .qr-ticket {
+    grid-template-columns: 1fr;
+  }
+  .qr-ticket .qr {
+    border-left: 0;
+    border-top: 2px dashed var(--border-strong);
+  }
+  .qr-ticket .qr::before,
+  .qr-ticket .qr::after {
+    display: none;
+  }
+  .qr-ticket .qr img {
+    width: min(220px, 100%) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+  }
+  .seatmap {
+    overflow-x: auto;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .navbar .container-xxl {
+    gap: .5rem;
+  }
+  .brand {
+    font-size: 1.1rem;
+  }
+  .brand-logo {
+    width: 30px;
+    height: 30px;
+  }
+  .navbar-collapse .d-flex.align-items-center > .btn,
+  .navbar-collapse .d-flex.align-items-center > .icon-btn {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .btn,
+  .form-control,
+  .form-select,
+  textarea.form-control {
+    min-height: 42px;
+  }
+  .btn-lg {
+    width: 100%;
+  }
+  .section-sm form > .d-flex.justify-content-between,
+  [data-checkout-form] > .d-flex.justify-content-between {
+    align-items: stretch !important;
+    flex-direction: column;
+  }
+  [data-checkout-form] > .d-flex.justify-content-between .form-check,
+  [data-checkout-form] > .d-flex.justify-content-between .btn,
+  [data-checkout-form] > .d-flex.justify-content-between a {
+    width: 100%;
+  }
+  .table-responsive {
+    border: 0;
+  }
+  .table-responsive > .dashboard-table,
+  [data-admin-users] table,
+  [data-admin-organizers] table,
+  [data-admin-events] table,
+  [data-admin-payments] table,
+  [data-admin-refunds] table {
+    min-width: 0;
+  }
+  .table-responsive > .dashboard-table thead,
+  [data-admin-users] thead,
+  [data-admin-organizers] thead,
+  [data-admin-events] thead,
+  [data-admin-payments] thead,
+  [data-admin-refunds] thead {
+    display: none;
+  }
+  .table-responsive > .dashboard-table,
+  .table-responsive > .dashboard-table tbody,
+  .table-responsive > .dashboard-table tr,
+  .table-responsive > .dashboard-table td,
+  [data-admin-users] table,
+  [data-admin-users] tbody,
+  [data-admin-users] tr,
+  [data-admin-users] td,
+  [data-admin-organizers] table,
+  [data-admin-organizers] tbody,
+  [data-admin-organizers] tr,
+  [data-admin-organizers] td,
+  [data-admin-events] table,
+  [data-admin-events] tbody,
+  [data-admin-events] tr,
+  [data-admin-events] td,
+  [data-admin-payments] table,
+  [data-admin-payments] tbody,
+  [data-admin-payments] tr,
+  [data-admin-payments] td,
+  [data-admin-refunds] table,
+  [data-admin-refunds] tbody,
+  [data-admin-refunds] tr,
+  [data-admin-refunds] td {
+    display: block;
+    width: 100%;
+  }
+  .table-responsive > .dashboard-table tr,
+  [data-admin-users] tr,
+  [data-admin-organizers] tr,
+  [data-admin-events] tr,
+  [data-admin-payments] tr,
+  [data-admin-refunds] tr {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: .75rem;
+    padding: .35rem .75rem;
+  }
+  .table-responsive > .dashboard-table td,
+  [data-admin-users] td,
+  [data-admin-organizers] td,
+  [data-admin-events] td,
+  [data-admin-payments] td,
+  [data-admin-refunds] td {
+    border: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .55rem 0;
+    text-align: right !important;
+    word-break: break-word;
+  }
+  .table-responsive > .dashboard-table td::before,
+  [data-admin-users] td::before,
+  [data-admin-organizers] td::before,
+  [data-admin-events] td::before,
+  [data-admin-payments] td::before,
+  [data-admin-refunds] td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    flex: 0 0 38%;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-align: left;
+    text-transform: uppercase;
+  }
+  .table-responsive > .dashboard-table td[colspan],
+  [data-admin-users] td[colspan],
+  [data-admin-organizers] td[colspan],
+  [data-admin-events] td[colspan],
+  [data-admin-payments] td[colspan],
+  [data-admin-refunds] td[colspan] {
+    display: block;
+    text-align: center !important;
+  }
+  .table-responsive > .dashboard-table td[colspan]::before,
+  [data-admin-users] td[colspan]::before,
+  [data-admin-organizers] td[colspan]::before,
+  [data-admin-events] td[colspan]::before,
+  [data-admin-payments] td[colspan]::before,
+  [data-admin-refunds] td[colspan]::before {
+    content: "";
+    display: none;
+  }
+  .dashboard-actions,
+  .admin-actions {
+    justify-content: flex-end;
+  }
+  .admin-select {
+    min-width: 0;
+    width: 100%;
+  }
+  .dashboard-pagination {
+    flex-wrap: wrap;
+  }
+}
