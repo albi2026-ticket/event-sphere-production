@@ -597,7 +597,7 @@ class MockPaymentTest extends TestCase
         $this->assertEquals(0.0, (float) $order->refund_protection_fee);
     }
 
-    public function test_order_creation_is_blocked_after_event_start_time(): void
+    public function test_order_creation_remains_available_for_live_event_before_end_time(): void
     {
         $user = User::factory()->create([
             'role' => User::ROLE_USER,
@@ -618,6 +618,62 @@ class MockPaymentTest extends TestCase
             'venue_name' => 'Event Sphere Hall',
             'city' => 'New York',
             'starts_at' => now()->subMinute(),
+            'ends_at' => now()->addHour(),
+            'status' => 'published',
+            'visibility' => 'public',
+            'currency' => 'USD',
+        ]);
+
+        $ticketType = TicketType::query()->create([
+            'event_id' => $event->id,
+            'name' => 'General Admission',
+            'price' => 25,
+            'currency' => 'USD',
+            'quantity_total' => 10,
+            'min_per_order' => 1,
+            'max_per_order' => 10,
+            'status' => TicketType::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/orders', [
+                'items' => [
+                    ['ticket_type_id' => $ticketType->id, 'quantity' => 1],
+                ],
+                'billing_email' => $user->email,
+                'billing_first_name' => 'Test',
+                'billing_last_name' => 'Buyer',
+                'attendees' => $this->attendees(1),
+            ])
+            ->assertCreated();
+
+        $ticketType->refresh();
+        $this->assertSame(1, $ticketType->quantity_reserved);
+        $this->assertSame(0, $ticketType->quantity_sold);
+    }
+
+    public function test_order_creation_is_blocked_after_event_end_time(): void
+    {
+        $user = User::factory()->create([
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $event = Event::query()->create([
+            'organizer_id' => $organizer->id,
+            'title' => 'Ended Checkout Event',
+            'slug' => 'ended-checkout-event',
+            'category' => 'Concerts',
+            'venue_name' => 'Event Sphere Hall',
+            'city' => 'New York',
+            'starts_at' => now()->subHours(2),
+            'ends_at' => now()->subMinute(),
             'status' => 'published',
             'visibility' => 'public',
             'currency' => 'USD',

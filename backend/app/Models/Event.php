@@ -41,6 +41,36 @@ class Event extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public function salesAreClosed(): bool
+    {
+        if (in_array($this->status, ['cancelled', 'completed'], true)) {
+            return true;
+        }
+
+        return $this->ends_at !== null && now()->gt($this->ends_at);
+    }
+
+    public function lifecycleState(int $availableInventory): array
+    {
+        if ($this->salesAreClosed()) {
+            return ['key' => 'ended', 'label' => 'Ended'];
+        }
+
+        if ($this->status !== 'published') {
+            return ['key' => 'draft', 'label' => 'Draft'];
+        }
+
+        if ($availableInventory <= 0) {
+            return ['key' => 'sold_out', 'label' => 'Sold Out'];
+        }
+
+        if ($this->starts_at && now()->gte($this->starts_at)) {
+            return ['key' => 'live', 'label' => 'Live'];
+        }
+
+        return ['key' => 'upcoming', 'label' => 'Upcoming'];
+    }
+
     public function organizer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'organizer_id');

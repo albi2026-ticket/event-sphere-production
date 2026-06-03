@@ -45,7 +45,13 @@
   function paintFavs() {
     const list = favs();
     document.querySelectorAll('[data-fav]').forEach(b => {
-      b.classList.toggle('active', list.includes(b.dataset.fav));
+      const active = list.includes(b.dataset.fav);
+      b.classList.toggle('active', active);
+      const icon = b.querySelector('i');
+      if (icon) {
+        icon.classList.toggle('bi-heart-fill', active);
+        icon.classList.toggle('bi-heart', !active);
+      }
     });
   }
   document.addEventListener('click', async (e) => {
@@ -53,10 +59,15 @@
     if (!b) return;
     e.preventDefault();
     const eventId = b.dataset.eventId;
-    if (eventId && window.EventSphereAuth?.isLoggedIn?.() && window.EventSphereFavorites) {
+    if (eventId && !window.EventSphereAuth?.isLoggedIn?.()) {
+      const next = encodeURIComponent(location.pathname.split('/').pop() + location.search);
+      location.href = `login.html?next=${next}`;
+      return;
+    }
+    if (eventId && window.EventSphereFavorites) {
       try {
         const result = await window.EventSphereFavorites.toggleFavorite(Number(eventId));
-        b.classList.toggle('active', result?.is_favorited);
+        window.EventSphereFavorites.updateFavoriteButtons?.(eventId, result?.is_favorited);
         window.tkToast(result?.is_favorited ? 'Saved to favorites' : 'Removed from favorites', result?.is_favorited ? 'success' : 'info');
       } catch (err) {
         window.tkToast(err.message || 'Favorite update failed', 'error');

@@ -52,9 +52,9 @@ class OrderService
                     ->firstOrFail();
 
                 $quantity = (int) $line['quantity'];
-                if ($ticketType->event?->starts_at && $ticketType->event->starts_at->lte(now())) {
+                if ($ticketType->event?->salesAreClosed()) {
                     throw ValidationException::withMessages([
-                        'items' => 'Ticket sales are closed because this event has already started.',
+                        'items' => 'Ticket sales are closed for this event.',
                     ]);
                 }
 

@@ -25,6 +25,51 @@
       .sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
   }
 
+  function inventorySummary(event) {
+    const tiers = event.ticket_types || [];
+    const total = Number(event.total_inventory ?? tiers.reduce((sum, tier) => sum + Number(tier.quantity_total || 0), 0));
+    const sold = Number(event.sold_tickets ?? tiers.reduce((sum, tier) => sum + Number(tier.quantity_sold || 0), 0));
+    const available = Number(event.available_inventory ?? tiers.reduce((sum, tier) => {
+      const tierAvailable = tier.quantity_available ?? tier.remaining ?? Math.max(0, Number(tier.quantity_total || 0) - Number(tier.quantity_sold || 0) - Number(tier.quantity_reserved || 0));
+      return sum + Number(tierAvailable || 0);
+    }, 0));
+
+    return { total, sold, available };
+  }
+
+  function salesStatus(event) {
+    const apiState = event?.event_state?.key;
+
+    if (apiState === 'ended') {
+      return { key: 'ended', label: 'Event Ended', priceLabel: 'Sales Closed', canBuy: false };
+    }
+    if (apiState === 'sold_out') {
+      return { key: 'sold_out', label: 'Sold Out', priceLabel: 'Sold Out', canBuy: false };
+    }
+    if (apiState === 'live') {
+      return { key: 'live', label: 'Live', priceLabel: '', canBuy: true };
+    }
+    if (apiState === 'upcoming') {
+      return { key: 'upcoming', label: 'Upcoming', priceLabel: '', canBuy: true };
+    }
+
+    if (u().isEventSalesClosed(event)) {
+      return { key: 'ended', label: 'Event Ended', priceLabel: 'Sales Closed', canBuy: false };
+    }
+
+    const inventory = inventorySummary(event);
+    if (inventory.available <= 0) {
+      return { key: 'sold_out', label: 'Sold Out', priceLabel: 'Sold Out', canBuy: false };
+    }
+
+    const start = event?.starts_at ? new Date(event.starts_at) : null;
+    if (start && !Number.isNaN(start.getTime()) && Date.now() >= start.getTime()) {
+      return { key: 'live', label: 'Live', priceLabel: '', canBuy: true };
+    }
+
+    return { key: 'upcoming', label: 'Upcoming', priceLabel: '', canBuy: true };
+  }
+
   function lowestAvailablePrice(event) {
     const tier = availableTicketTypes(event)[0] || (event.ticket_types || []).sort((a, b) => Number(a.price || 0) - Number(b.price || 0))[0];
     return tier ? { amount: tier.price, currency: tier.currency || event.currency } : { amount: event.base_price ?? 0, currency: event.currency || 'USD' };
@@ -68,7 +113,10 @@
     const img = u().eventImage(event);
     const date = u().formatEventDate(event.starts_at, event.timezone);
     const price = lowestAvailablePrice(event);
-    const cat = (event.category || 'EVENT').toUpperCase();
+    const status = salesStatus(event);
+    const cat = status.key === 'ended' || status.key === 'sold_out'
+      ? status.label.toUpperCase()
+      : (event.category || 'EVENT').toUpperCase();
     const slug = event.slug;
     const favKey = `event-${event.id}`;
 
@@ -84,7 +132,7 @@
         <div class="meta"><i class="bi bi-calendar3"></i> ${u().escapeHtml(date)}</div>
         <h3 class="title"><a href="event-details.html?slug=${encodeURIComponent(slug)}" style="color:inherit">${u().escapeHtml(event.title)}</a></h3>
         <div class="venue"><i class="bi bi-geo-alt"></i> ${u().escapeHtml(event.venue_name || '')}${event.city ? `, ${u().escapeHtml(event.city)}` : ''}</div>
-        <div class="foot"><div class="price">${u().isEventSalesClosed(event) ? 'Sales closed' : `From ${u().formatMoney(price.amount, price.currency)}`}</div><a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(slug)}">View</a></div>
+        <div class="foot"><div class="price">${status.canBuy ? `From ${u().formatMoney(price.amount, price.currency)}` : status.priceLabel}</div><a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(slug)}">View</a></div>
       </div>
     </article>
   </div>`;
@@ -94,6 +142,8 @@
     listEvents,
     getEvent,
     availableTicketTypes,
+    inventorySummary,
+    salesStatus,
     lowestAvailablePrice,
     serviceFeePercentage,
     priceBreakdown,

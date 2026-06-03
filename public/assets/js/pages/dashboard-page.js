@@ -151,11 +151,9 @@
 
     if (state.ticketView === 'active') {
       params.status = status || 'active';
-      params.sort = 'starts_at';
       params.upcoming = 1;
     } else if (state.ticketView === 'upcoming') {
       params.upcoming = 1;
-      params.sort = 'starts_at';
     } else if (state.ticketView === 'past') {
       params.per_page = 8;
     } else {
@@ -419,7 +417,7 @@
         detail: `${order.payment_status || order.status} · ${u().formatMoney(order.total, order.currency)}`,
       })),
       ...state.tickets.slice(0, 3).map((ticket) => ({
-        at: ticket.created_at,
+        at: ticket.order?.created_at || ticket.created_at,
         icon: 'bi-ticket-perforated',
         title: ticket.event?.title || ticket.ticket_code,
         detail: `Ticket ${ticket.ticket_code} · ${ticket.status}`,

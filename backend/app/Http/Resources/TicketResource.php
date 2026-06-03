@@ -64,6 +64,7 @@ class TicketResource extends JsonResource
                 'payment_status' => $this->order->payment_status,
                 'total' => $this->order->total,
                 'currency' => $this->order->currency,
+                'created_at' => $this->order->created_at,
                 'purchaser' => [
                     'name' => $this->order->relationLoaded('user') ? $this->order->user?->name : null,
                     'email' => $this->order->relationLoaded('user') ? $this->order->user?->email : null,

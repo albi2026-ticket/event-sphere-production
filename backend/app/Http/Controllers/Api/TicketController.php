@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TicketResource;
+use App\Models\Order;
 use App\Models\Ticket;
 use App\Services\Tickets\TicketService;
 use Illuminate\Http\Request;
@@ -21,7 +22,8 @@ class TicketController extends Controller
                 ->with(['user', 'event', 'ticketType', 'order.user'])
                 ->where('user_id', $request->user()->id)
                 ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
-                ->latest()
+                ->orderByDesc(Order::query()->select('created_at')->whereColumn('orders.id', 'tickets.order_id'))
+                ->orderByDesc('tickets.id')
                 ->paginate($request->integer('per_page', 15))
         );
     }
@@ -68,7 +70,7 @@ class TicketController extends Controller
                 ->with(['user', 'event', 'ticketType', 'order.user'])
                 ->where('order_id', $order)
                 ->where('user_id', $request->user()->id)
-                ->latest()
+                ->orderByDesc('tickets.id')
                 ->get()
         );
     }

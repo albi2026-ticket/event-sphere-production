@@ -8,6 +8,7 @@ use App\Models\OrderItem;
 use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -120,6 +121,107 @@ class AdminDashboardTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.status', 'rejected')
             ->assertJsonPath('data.moderation_notes', 'Policy issue.');
+    }
+
+    public function test_admin_event_index_includes_ticket_sales_inventory_totals(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $event = Event::query()->create([
+            'organizer_id' => $organizer->id,
+            'title' => 'Inventory Totals Event',
+            'slug' => 'inventory-totals-event',
+            'category' => 'Concerts',
+            'venue_name' => 'Event Sphere Hall',
+            'city' => 'New York',
+            'starts_at' => now()->addMonth(),
+            'status' => 'published',
+            'visibility' => 'public',
+            'currency' => 'USD',
+        ]);
+
+        TicketType::query()->create([
+            'event_id' => $event->id,
+            'name' => 'General Admission',
+            'price' => 25,
+            'currency' => 'USD',
+            'quantity_total' => 100,
+            'quantity_sold' => 3,
+            'quantity_reserved' => 2,
+            'min_per_order' => 1,
+            'max_per_order' => 10,
+            'status' => TicketType::STATUS_ACTIVE,
+        ]);
+
+        TicketType::query()->create([
+            'event_id' => $event->id,
+            'name' => 'VIP',
+            'price' => 75,
+            'currency' => 'USD',
+            'quantity_total' => 150,
+            'quantity_sold' => 54,
+            'quantity_reserved' => 0,
+            'min_per_order' => 1,
+            'max_per_order' => 10,
+            'status' => TicketType::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/events?q=Inventory%20Totals')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $event->id)
+            ->assertJsonPath('data.0.sold_tickets', 57)
+            ->assertJsonPath('data.0.total_inventory', 250)
+            ->assertJsonPath('data.0.available_inventory', 191);
+    }
+
+    public function test_admin_event_index_includes_computed_event_state_from_status_date_and_inventory(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-06-03 12:00:00', 'UTC'));
+
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $draft = $this->createAdminEventWithInventory($organizer, 'Admin Draft State Event', 'admin-draft-state-event', 'draft', now()->addMonth(), null, 100, 0);
+        $ended = $this->createAdminEventWithInventory($organizer, 'Admin Ended State Event', 'admin-ended-state-event', 'published', now()->subDay(), now()->subMinute(), 100, 0);
+        $soldOut = $this->createAdminEventWithInventory($organizer, 'Admin Sold Out State Event', 'admin-sold-out-state-event', 'published', now()->addMonth(), now()->addMonth()->addHours(3), 100, 100);
+        $upcoming = $this->createAdminEventWithInventory($organizer, 'Admin Upcoming State Event', 'admin-upcoming-state-event', 'published', now()->addMonth(), now()->addMonth()->addHours(3), 100, 25);
+        $live = $this->createAdminEventWithInventory($organizer, 'Admin Live State Event', 'admin-live-state-event', 'published', now()->subHour(), now()->addHour(), 100, 25);
+        $liveWithoutEnd = $this->createAdminEventWithInventory($organizer, 'Admin Live No End State Event', 'admin-live-no-end-state-event', 'published', now()->subDay(), null, 100, 25);
+
+        $response = $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/events?per_page=10')
+            ->assertOk();
+
+        $events = collect($response->json('data'))->keyBy('slug');
+
+        $this->assertSame('draft', $events[$draft->slug]['event_state']['key']);
+        $this->assertSame('ended', $events[$ended->slug]['event_state']['key']);
+        $this->assertSame('sold_out', $events[$soldOut->slug]['event_state']['key']);
+        $this->assertSame('upcoming', $events[$upcoming->slug]['event_state']['key']);
+        $this->assertSame('live', $events[$live->slug]['event_state']['key']);
+        $this->assertSame('live', $events[$liveWithoutEnd->slug]['event_state']['key']);
+        $this->assertSame(100, $events[$soldOut->slug]['sold_tickets']);
+        $this->assertSame(0, $events[$soldOut->slug]['available_inventory']);
+
+        Carbon::setTestNow();
     }
 
     public function test_admin_can_refund_mock_paid_orders(): void
@@ -259,5 +361,37 @@ class AdminDashboardTest extends TestCase
         $this->actingAs($organizer, 'sanctum')
             ->patchJson("/api/admin/events/{$event->id}/service-fee", ['service_fee_percentage' => 5])
             ->assertForbidden();
+    }
+
+    private function createAdminEventWithInventory(User $organizer, string $title, string $slug, string $status, mixed $startsAt, mixed $endsAt, int $total, int $sold): Event
+    {
+        $event = Event::query()->create([
+            'organizer_id' => $organizer->id,
+            'title' => $title,
+            'slug' => $slug,
+            'category' => 'Concerts',
+            'venue_name' => 'Event Sphere Hall',
+            'city' => 'New York',
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
+            'status' => $status,
+            'visibility' => 'public',
+            'currency' => 'USD',
+        ]);
+
+        TicketType::query()->create([
+            'event_id' => $event->id,
+            'name' => 'General Admission',
+            'price' => 25,
+            'currency' => 'USD',
+            'quantity_total' => $total,
+            'quantity_sold' => $sold,
+            'quantity_reserved' => 0,
+            'min_per_order' => 1,
+            'max_per_order' => 10,
+            'status' => TicketType::STATUS_ACTIVE,
+        ]);
+
+        return $event;
     }
 }

@@ -30,7 +30,9 @@ class TicketInventoryService
 
             if ($status) {
                 $locked->status = $status;
-            } elseif ($locked->availableQuantity() === 0 && $locked->status === TicketType::STATUS_ACTIVE) {
+            }
+
+            if ($locked->availableQuantity() === 0 && $locked->status === TicketType::STATUS_ACTIVE) {
                 $locked->status = TicketType::STATUS_SOLD_OUT;
             } elseif ($locked->availableQuantity() > 0 && $locked->status === TicketType::STATUS_SOLD_OUT) {
                 $locked->status = TicketType::STATUS_ACTIVE;
@@ -99,9 +101,9 @@ class TicketInventoryService
             ]);
         }
 
-        if ($ticketType->event?->starts_at && $ticketType->event->starts_at->lte(now())) {
+        if ($ticketType->event?->salesAreClosed()) {
             throw ValidationException::withMessages([
-                'ticket_type' => 'Ticket sales are closed because this event has already started.',
+                'ticket_type' => 'Ticket sales are closed for this event.',
             ]);
         }
 

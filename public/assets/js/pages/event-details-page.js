@@ -49,7 +49,8 @@
       const crumb = $('[data-event-breadcrumb]');
       if (crumb) crumb.textContent = event.title;
       const category = $('[data-event-category]');
-      if (category) category.textContent = (event.category || 'Event').toUpperCase();
+      const salesStatus = eventsApi().salesStatus(event);
+      if (category) category.textContent = salesStatus.key === 'available' ? (event.category || 'Event').toUpperCase() : salesStatus.label.toUpperCase();
       const dateEl = $('[data-event-meta-date]');
       if (dateEl) dateEl.innerHTML = `<i class="bi bi-calendar3 me-1"></i> ${u().escapeHtml(u().formatEventDate(event.starts_at, event.timezone))}`;
       const venueEl = $('[data-event-meta-venue]');
@@ -67,10 +68,11 @@
       const priceEl = $('[data-event-price]');
       const lowestPrice = eventsApi().lowestAvailablePrice(event);
       if (priceEl) {
-        priceEl.textContent = money(lowestPrice.amount, lowestPrice.currency);
+        priceEl.textContent = salesStatus.canBuy ? money(lowestPrice.amount, lowestPrice.currency) : salesStatus.priceLabel;
       }
       const purchaseLimit = eventLimit(event);
-      const salesClosed = u().isEventSalesClosed(event);
+      const salesClosed = salesStatus.key === 'ended';
+      const purchasingDisabled = !salesStatus.canBuy;
       const purchaseLimitEl = $('[data-event-purchase-limit]');
       if (purchaseLimitEl) {
         purchaseLimitEl.hidden = !purchaseLimit;
@@ -88,10 +90,10 @@
       const mobileSelect = $('[data-ticket-type-mobile]');
       const mobileSelectButton = $('[data-ticket-type-mobile-button]');
       const mobileSelectMenu = $('[data-ticket-type-mobile-menu]');
-      const types = salesClosed ? [] : (event.ticket_types || []);
+      const types = purchasingDisabled ? [] : (event.ticket_types || []);
       if (select) {
-        select.innerHTML = salesClosed
-          ? '<option disabled>Sales closed</option>'
+        select.innerHTML = purchasingDisabled
+          ? `<option disabled>${salesStatus.priceLabel}</option>`
           : types.map((t) =>
             `<option value="${t.id}" data-price="${t.price}" data-currency="${t.currency || event.currency || 'USD'}" data-min="${t.min_per_order || 1}" data-available="${Number(t.quantity_available ?? t.available_quantity ?? 0)}" ${Number(t.quantity_available ?? t.available_quantity ?? 0) <= 0 || t.status === 'sold_out' || t.status === 'inactive' ? 'disabled' : ''}>${u().escapeHtml(t.name)} · ${money(t.price, t.currency || event.currency)} · ${Number(t.quantity_available ?? t.available_quantity ?? 0)} left${t.status === 'sold_out' ? ' · Sold out' : ''}</option>`,
           ).join('') || '<option disabled>No ticket tiers available</option>';
@@ -101,9 +103,9 @@
         if (!mobileSelect || !mobileSelectButton || !mobileSelectMenu) return;
         mobileSelect.hidden = false;
         mobileSelectButton.disabled = !types.length;
-        mobileSelectButton.textContent = salesClosed ? 'Sales closed' : 'Select ticket type';
-        mobileSelectMenu.innerHTML = salesClosed
-          ? '<span class="dropdown-item-text text-muted-pro">Sales closed</span>'
+        mobileSelectButton.textContent = purchasingDisabled ? salesStatus.priceLabel : 'Select ticket type';
+        mobileSelectMenu.innerHTML = purchasingDisabled
+          ? `<span class="dropdown-item-text text-muted-pro">${salesStatus.priceLabel}</span>`
           : types.map((t) => {
             const available = Number(t.quantity_available ?? t.available_quantity ?? 0);
             const disabled = available <= 0 || t.status === 'sold_out' || t.status === 'inactive';
@@ -116,7 +118,7 @@
       syncMobileOptions();
 
       const qtyWrap = $('[data-qty]');
-      let selectedType = salesClosed ? null : (eventsApi().availableTicketTypes(event)[0] || null);
+      let selectedType = purchasingDisabled ? null : (eventsApi().availableTicketTypes(event)[0] || null);
       if (select && selectedType) select.value = String(selectedType.id);
 
       const syncSelectedType = () => {
@@ -161,16 +163,22 @@
       const qtyInput = qtyWrap?.querySelector('input');
       if (qtyInput) qtyInput.value = selectedType?.min_per_order || 1;
       syncSelectedType();
-      if (salesClosed || !types.length || !selectedType) {
+      const qtyDisabled = purchasingDisabled || !types.length || !selectedType;
+      if (qtyWrap) {
+        qtyWrap.querySelectorAll('button, input').forEach((control) => {
+          control.disabled = qtyDisabled;
+        });
+      }
+      if (qtyDisabled) {
         document.querySelectorAll('[data-event-buy]').forEach((btn) => {
           btn.classList.add('disabled');
           btn.setAttribute('aria-disabled', 'true');
-          btn.textContent = salesClosed ? 'Sales Closed' : 'Buy tickets';
+          btn.textContent = salesStatus.priceLabel || 'Buy tickets';
         });
         const availability = $('[data-event-availability]');
         if (availability) {
-          availability.textContent = salesClosed ? 'Sales Closed' : 'Unavailable';
-          availability.className = `badge status-badge ${salesClosed ? 'status-cancelled' : 'status-active'}`;
+          availability.textContent = salesStatus.label;
+          availability.className = `badge status-badge ${salesClosed ? 'status-cancelled' : 'status-sold_out'}`;
         }
       } else {
         document.querySelectorAll('[data-event-buy]').forEach((btn) => {
@@ -185,8 +193,8 @@
       document.querySelectorAll('[data-event-buy]').forEach((btn) => {
         btn.addEventListener('click', (e) => {
           e.preventDefault();
-          if (salesClosed) {
-            window.tkToast?.('Ticket sales are closed for this event.', 'error');
+          if (purchasingDisabled) {
+            window.tkToast?.(salesClosed ? 'Ticket sales are closed for this event.' : 'This event is sold out.', 'error');
             return;
           }
           if (!selectedType) {

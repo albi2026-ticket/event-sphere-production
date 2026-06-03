@@ -63,9 +63,37 @@
     };
   }
 
-  function statusBadge(status) {
+  function statusBadge(status, label) {
     const value = String(status || 'unknown').toLowerCase();
-    return `<span class="badge status-badge status-${esc(value)}">${esc(value.replace(/_/g, ' '))}</span>`;
+    const text = label || value.replace(/_/g, ' ');
+    return `<span class="badge status-badge status-${esc(value)}">${esc(text)}</span>`;
+  }
+
+  function eventInventory(event) {
+    const tiers = event.ticket_types || [];
+    const total = Number(event.total_inventory ?? tiers.reduce((sum, tier) => sum + Number(tier.quantity_total || 0), 0));
+    const sold = Number(event.sold_tickets ?? tiers.reduce((sum, tier) => sum + Number(tier.quantity_sold || 0), 0));
+    const reserved = tiers.reduce((sum, tier) => sum + Number(tier.quantity_reserved || 0), 0);
+    const available = Number(event.available_inventory ?? Math.max(0, total - sold - reserved));
+    return { total, sold, reserved, available };
+  }
+
+  function organizerEventState(event) {
+    if (event.event_state?.key) return event.event_state;
+    if (event.status === 'cancelled' || event.status === 'completed') return { key: 'ended', label: 'Ended' };
+    if (event.status !== 'published') return { key: 'draft', label: 'Draft' };
+
+    const end = event.ends_at ? new Date(event.ends_at) : null;
+    if (end && !Number.isNaN(end.getTime()) && Date.now() > end.getTime()) {
+      return { key: 'ended', label: 'Ended' };
+    }
+
+    if (eventInventory(event).available <= 0) return { key: 'sold_out', label: 'Sold Out' };
+
+    const start = event.starts_at ? new Date(event.starts_at) : null;
+    return start && !Number.isNaN(start.getTime()) && Date.now() >= start.getTime()
+      ? { key: 'live', label: 'Live' }
+      : { key: 'upcoming', label: 'Upcoming' };
   }
 
   function dateLabel(value, timezone) {
@@ -256,20 +284,17 @@
     }
     body.innerHTML = state.events.map((event) => {
       const perf = performanceFor(event.id);
-      const tiers = event.ticket_types || [];
-      const total = tiers.reduce((sum, tier) => sum + Number(tier.quantity_total || 0), 0);
-      const sold = tiers.reduce((sum, tier) => sum + Number(tier.quantity_sold || 0), 0);
-      const reserved = tiers.reduce((sum, tier) => sum + Number(tier.quantity_reserved || 0), 0);
-      const available = Math.max(0, total - sold - reserved);
+      const inventory = eventInventory(event);
+      const displayState = organizerEventState(event);
       const revenue = perf.revenue ?? 0;
       return `<tr>
         <td data-label="Event"><div class="fw-semibold">${esc(event.title)}</div><small class="text-muted-pro">${esc(event.city || '')}${event.venue_name ? ` · ${esc(event.venue_name)}` : ''}</small></td>
-        <td data-label="Status">${statusBadge(event.status)}</td>
+        <td data-label="Status">${statusBadge(displayState.key, displayState.label)}</td>
         <td data-label="Date">${esc(dateLabel(event.starts_at, event.timezone))}</td>
         <td data-label="Service Fee"><span class="fw-semibold">${Number(event.service_fee_percentage ?? 10)}%</span><br><small class="text-muted-pro">Applied at checkout</small></td>
-        <td data-label="Sold">${sold} sold / ${total} total</td>
+        <td data-label="Sold">${inventory.sold} sold / ${inventory.total} total</td>
         <td data-label="Revenue">${u().formatMoney(revenue, event.currency || 'USD')}</td>
-        <td data-label="Available">${available} remaining</td>
+        <td data-label="Available">${inventory.available} remaining</td>
         <td data-label="Actions" class="text-end">
           <div class="dashboard-actions">
             <button class="btn btn-glass btn-sm" type="button" data-event-edit="${event.id}"><i class="bi bi-pencil me-1"></i>Edit</button>
@@ -535,7 +560,7 @@
     }
     const wantsPublished = payload.status === 'published';
     if (wantsPublished && !tiers.some((tier) => tier.status === 'active' && Number(tier.quantity_total) > 0)) {
-      formError('Published events need at least one active ticket type with available inventory.');
+      formError('Published events need at least one active ticket type with inventory.');
       return;
     }
     const eventId = form.elements.event_id.value;
@@ -607,7 +632,7 @@
         <div class="col-md-4"><label class="form-label small">Name</label><input class="form-control" name="tier_name" value="${esc(tier.name || '')}" required/></div>
         <div class="col-md-3"><label class="form-label small">Price</label><input class="form-control" name="tier_price" type="number" min="0" step="0.01" value="${esc(tier.price ?? '0.00')}"/></div>
         <div class="col-md-3"><label class="form-label small">Inventory</label><input class="form-control" name="tier_quantity" type="number" min="0" step="1" value="${esc(tier.quantity_total ?? 0)}"/></div>
-        <div class="col-md-2"><label class="form-label small">Status</label><select class="form-select" name="tier_status"><option value="active" ${tier.status === 'active' ? 'selected' : ''}>Active</option><option value="inactive" ${tier.status === 'inactive' ? 'selected' : ''}>Inactive</option><option value="paused" ${tier.status === 'paused' ? 'selected' : ''}>Paused</option></select></div>
+        <div class="col-md-2"><label class="form-label small">Status</label><select class="form-select" name="tier_status"><option value="active" ${tier.status === 'active' || tier.status === 'sold_out' ? 'selected' : ''}>Active</option><option value="inactive" ${tier.status === 'inactive' ? 'selected' : ''}>Inactive</option><option value="paused" ${tier.status === 'paused' ? 'selected' : ''}>Paused</option></select></div>
         <div class="col-12 d-flex justify-content-between align-items-center gap-2">
           <small class="text-muted-pro">${Number(tier.quantity_sold || 0)} sold · ${Number(tier.quantity_reserved || 0)} reserved</small>
           <button class="btn btn-glass btn-sm" type="button" data-tier-delete><i class="bi bi-trash"></i></button>

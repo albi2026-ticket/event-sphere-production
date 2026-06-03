@@ -134,15 +134,16 @@ class TicketTypeController extends Controller
             ? (int) $changes['quantity_total']
             : $ticketType->quantity_total;
 
-        $thisTierWillRemainActive = $nextStatus === TicketType::STATUS_ACTIVE && $nextTotal > 0;
+        $inventoryKeepingStatuses = [TicketType::STATUS_ACTIVE, TicketType::STATUS_SOLD_OUT];
+        $thisTierWillKeepInventory = in_array($nextStatus, $inventoryKeepingStatuses, true) && $nextTotal > 0;
 
-        if ($thisTierWillRemainActive) {
+        if ($thisTierWillKeepInventory) {
             return;
         }
 
         $hasOtherActiveInventory = $event->ticketTypes()
             ->whereKeyNot($ticketType->id)
-            ->where('status', TicketType::STATUS_ACTIVE)
+            ->whereIn('status', $inventoryKeepingStatuses)
             ->where('quantity_total', '>', 0)
             ->exists();
 

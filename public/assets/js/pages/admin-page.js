@@ -46,9 +46,9 @@
     };
   }
 
-  function badge(value) {
+  function badge(value, label) {
     const key = String(value || 'none').toLowerCase();
-    const safe = u().escapeHtml(key.replace(/_/g, ' '));
+    const safe = u().escapeHtml(label || key.replace(/_/g, ' '));
     return `<span class="badge status-badge status-${u().escapeHtml(key)}">${safe}</span>`;
   }
 
@@ -66,16 +66,31 @@
     return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
   }
 
-  function eventLifecycleStatus(event) {
-    if (!event?.starts_at) return 'upcoming';
-    const now = new Date();
-    const start = new Date(event.starts_at);
-    const end = event.ends_at ? new Date(event.ends_at) : null;
+  function eventInventory(event) {
+    const tiers = event.ticket_types || [];
+    const total = Number(event.total_inventory ?? tiers.reduce((sum, tier) => sum + Number(tier.quantity_total || 0), 0));
+    const sold = Number(event.sold_tickets ?? tiers.reduce((sum, tier) => sum + Number(tier.quantity_sold || 0), 0));
+    const reserved = tiers.reduce((sum, tier) => sum + Number(tier.quantity_reserved || 0), 0);
+    const available = Number(event.available_inventory ?? Math.max(0, total - sold - reserved));
+    return { sold, total, available };
+  }
 
-    if (Number.isNaN(start.getTime())) return 'upcoming';
-    if (now < start) return 'upcoming';
-    if (!end || Number.isNaN(end.getTime()) || now <= end) return 'live';
-    return 'finished';
+  function adminEventState(event) {
+    if (event.event_state?.key) return event.event_state;
+    if (event.status === 'cancelled' || event.status === 'completed') return { key: 'ended', label: 'Ended' };
+    if (event.status !== 'published') return { key: 'draft', label: 'Draft' };
+
+    const end = event.ends_at ? new Date(event.ends_at) : null;
+    if (end && !Number.isNaN(end.getTime()) && Date.now() > end.getTime()) {
+      return { key: 'ended', label: 'Ended' };
+    }
+
+    if (eventInventory(event).available <= 0) return { key: 'sold_out', label: 'Sold Out' };
+
+    const start = event.starts_at ? new Date(event.starts_at) : null;
+    return start && !Number.isNaN(start.getTime()) && Date.now() >= start.getTime()
+      ? { key: 'live', label: 'Live' }
+      : { key: 'upcoming', label: 'Upcoming' };
   }
 
   function buttonIcon(icon, label, attrs, extraClass = 'btn-glass') {
@@ -290,31 +305,35 @@
       return;
     }
 
-    body.innerHTML = state.events.map((event) => `
-      <tr>
-        <td data-label="Event"><div class="fw-semibold">${u().escapeHtml(event.title)}</div><div class="small text-muted-pro">${u().escapeHtml(event.category || '')} · ${u().escapeHtml(event.city || '')}</div></td>
-        <td data-label="Organizer">${u().escapeHtml(event.organizer?.name || `#${event.organizer_id}`)}</td>
-        <td data-label="Date">${u().escapeHtml(u().formatEventDate(event.starts_at, event.timezone))}</td>
-        <td data-label="Event Status">${badge(eventLifecycleStatus(event))}</td>
-        <td data-label="Service Fee">
-          <div class="d-flex gap-2 align-items-center">
-            <input class="form-control form-control-sm admin-select" style="max-width:84px" type="number" min="0" max="30" step="0.01" value="${Number(event.service_fee_percentage ?? 10)}" data-event-fee-input="${event.id}"/>
-            <button class="btn btn-glass btn-sm" type="button" data-save-event-fee="${event.id}">Save</button>
-          </div>
-        </td>
-        <td data-label="Status">${badge(event.status)}</td>
-        <td data-label="Visibility">${event.visibility ? badge(event.visibility) : '-'}</td>
-        <td data-label="Notes"><span class="small text-muted-pro">${u().escapeHtml(event.moderation_notes || '-')}</span></td>
-        <td data-label="Actions" class="text-end">
-          <div class="admin-actions">
-            ${buttonIcon('bi-eye', 'View event', `data-view-event="${event.id}"`)}
-            <button class="btn btn-glass btn-sm" type="button" data-publish-event="${event.id}" ${event.status === 'published' ? 'disabled' : ''}>Approve</button>
-            <button class="btn btn-glass btn-sm" type="button" data-reject-event="${event.id}" ${event.status === 'rejected' ? 'disabled' : ''}>Reject</button>
-            <button class="btn btn-glass btn-sm" type="button" data-unpublish-event="${event.id}" ${event.status !== 'published' ? 'disabled' : ''}>Unpublish</button>
-          </div>
-        </td>
-      </tr>
-    `).join('') || emptyRow(9, 'bi-calendar-event', 'No events match these filters');
+    body.innerHTML = state.events.map((event) => {
+      const inventory = eventInventory(event);
+      const displayState = adminEventState(event);
+      return `
+        <tr>
+          <td data-label="Event"><div class="fw-semibold">${u().escapeHtml(event.title)}</div><div class="small text-muted-pro">${u().escapeHtml(event.category || '')} · ${u().escapeHtml(event.city || '')}</div></td>
+          <td data-label="Organizer">${u().escapeHtml(event.organizer?.name || `#${event.organizer_id}`)}</td>
+          <td data-label="Date">${u().escapeHtml(u().formatEventDate(event.starts_at, event.timezone))}</td>
+          <td data-label="Status">${badge(displayState.key, displayState.label)}</td>
+          <td data-label="Service Fee">
+            <div class="d-flex gap-2 align-items-center">
+              <input class="form-control form-control-sm admin-select" style="max-width:84px" type="number" min="0" max="30" step="0.01" value="${Number(event.service_fee_percentage ?? 10)}" data-event-fee-input="${event.id}"/>
+              <button class="btn btn-glass btn-sm" type="button" data-save-event-fee="${event.id}">Save</button>
+            </div>
+          </td>
+          <td data-label="Publish Status">${badge(event.status)}</td>
+          <td data-label="Visibility">${event.visibility ? badge(event.visibility) : '-'}</td>
+          <td data-label="Tickets Sold"><span class="fw-semibold">${inventory.sold} / ${inventory.total}</span></td>
+          <td data-label="Actions" class="text-end">
+            <div class="admin-actions">
+              ${buttonIcon('bi-eye', 'View event', `data-view-event="${event.id}"`)}
+              <button class="btn btn-glass btn-sm" type="button" data-publish-event="${event.id}" ${event.status === 'published' ? 'disabled' : ''}>Approve</button>
+              <button class="btn btn-glass btn-sm" type="button" data-reject-event="${event.id}" ${event.status === 'rejected' ? 'disabled' : ''}>Reject</button>
+              <button class="btn btn-glass btn-sm" type="button" data-unpublish-event="${event.id}" ${event.status !== 'published' ? 'disabled' : ''}>Unpublish</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('') || emptyRow(9, 'bi-calendar-event', 'No events match these filters');
   }
 
   function paymentRow(order, actions) {

@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Dashboard\DashboardListRequest;
 use App\Http\Resources\TicketResource;
 use App\Models\Event;
+use App\Models\Order;
 use App\Models\Ticket;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class UserTicketController extends Controller
@@ -27,10 +29,19 @@ class UserTicketController extends Controller
                     $searchQuery->where('ticket_code', 'like', $search)
                         ->orWhereHas('event', fn ($eventQuery) => $eventQuery->where('title', 'like', $search));
                 }))
-                ->when($sortColumn === 'starts_at', fn ($query) => $query->orderBy(
-                    Event::query()->select('starts_at')->whereColumn('events.id', 'tickets.event_id'),
-                    $sortDirection
-                ), fn ($query) => $query->orderBy($sortColumn, $sortDirection))
+                ->when(
+                    $sortColumn === 'starts_at',
+                    fn ($query) => $query
+                        ->orderBy(Event::query()->select('starts_at')->whereColumn('events.id', 'tickets.event_id'), $sortDirection)
+                        ->orderByDesc(Order::query()->select('created_at')->whereColumn('orders.id', 'tickets.order_id'))
+                        ->orderByDesc('tickets.id'),
+                    fn ($query) => $sortColumn === 'created_at'
+                        ? $this->orderByPurchaseDate($query, $sortDirection)
+                        : $query
+                            ->orderBy($sortColumn, $sortDirection)
+                            ->orderByDesc(Order::query()->select('created_at')->whereColumn('orders.id', 'tickets.order_id'))
+                            ->orderByDesc('tickets.id')
+                )
                 ->paginate($request->perPage())
         );
     }
@@ -49,8 +60,15 @@ class UserTicketController extends Controller
                 ->tickets()
                 ->with(['user', 'event', 'ticketType', 'order.user', 'checkedInBy'])
                 ->whereIn('status', [Ticket::STATUS_USED, Ticket::STATUS_CANCELLED, Ticket::STATUS_REFUNDED])
-                ->latest()
+                ->tap(fn (Builder $query) => $this->orderByPurchaseDate($query))
                 ->paginate($request->perPage())
         );
+    }
+
+    private function orderByPurchaseDate(Builder $query, string $direction = 'desc'): Builder
+    {
+        return $query
+            ->orderBy(Order::query()->select('created_at')->whereColumn('orders.id', 'tickets.order_id'), $direction)
+            ->orderBy('tickets.id', $direction);
     }
 }

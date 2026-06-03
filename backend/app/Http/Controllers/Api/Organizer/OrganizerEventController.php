@@ -87,11 +87,13 @@ class OrganizerEventController extends Controller
         }
 
         $payload['organizer_id'] = $organizerId;
-        $payload['status'] = $payload['status'] ?? 'draft';
-        $payload['visibility'] = $payload['visibility'] ?? 'public';
-        $payload['currency'] = strtoupper($payload['currency'] ?? 'USD');
         if (! $partial) {
+            $payload['status'] = $payload['status'] ?? 'draft';
+            $payload['visibility'] = $payload['visibility'] ?? 'public';
+            $payload['currency'] = strtoupper($payload['currency'] ?? 'USD');
             $payload['service_fee_percentage'] = 10;
+        } elseif (array_key_exists('currency', $payload)) {
+            $payload['currency'] = strtoupper($payload['currency']);
         }
 
         return $payload;
@@ -121,13 +123,13 @@ class OrganizerEventController extends Controller
         }
 
         $hasActiveInventory = $event->ticketTypes()
-            ->where('status', TicketType::STATUS_ACTIVE)
+            ->whereIn('status', [TicketType::STATUS_ACTIVE, TicketType::STATUS_SOLD_OUT])
             ->where('quantity_total', '>', 0)
             ->exists();
 
         if (! $hasActiveInventory) {
             throw ValidationException::withMessages([
-                'ticket_types' => 'Published events require at least one active ticket tier with available inventory.',
+                'ticket_types' => 'Published events require at least one ticket tier with inventory.',
             ]);
         }
     }

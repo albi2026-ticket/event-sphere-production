@@ -151,4 +151,108 @@ class UserDashboardTest extends TestCase
 
         $this->assertModelMissing($favorite);
     }
+
+    public function test_user_ticket_lists_are_ordered_by_newest_purchase_first(): void
+    {
+        $user = User::factory()->create([
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $event = Event::query()->create([
+            'organizer_id' => $organizer->id,
+            'title' => 'Purchase Ordered Event',
+            'slug' => 'purchase-ordered-event',
+            'category' => 'Concerts',
+            'venue_name' => 'Event Sphere Hall',
+            'city' => 'New York',
+            'starts_at' => now()->addMonth(),
+            'status' => 'published',
+            'visibility' => 'public',
+            'currency' => 'USD',
+        ]);
+
+        $ticketType = TicketType::query()->create([
+            'event_id' => $event->id,
+            'name' => 'General Admission',
+            'price' => 25,
+            'currency' => 'USD',
+            'quantity_total' => 10,
+            'quantity_sold' => 3,
+            'min_per_order' => 1,
+            'max_per_order' => 10,
+            'status' => TicketType::STATUS_ACTIVE,
+        ]);
+
+        $oldestTicket = $this->createPurchasedTicket($user, $event, $ticketType, 'ES-TICKET-C', now()->subWeek(), now());
+        $newestTicket = $this->createPurchasedTicket($user, $event, $ticketType, 'ES-TICKET-A', now(), now()->subWeek());
+        $middleTicket = $this->createPurchasedTicket($user, $event, $ticketType, 'ES-TICKET-B', now()->subDay(), now()->subDays(3));
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/me/tickets/active?per_page=10')
+            ->assertOk()
+            ->assertJsonPath('data.0.ticket_code', $newestTicket->ticket_code)
+            ->assertJsonPath('data.1.ticket_code', $middleTicket->ticket_code)
+            ->assertJsonPath('data.2.ticket_code', $oldestTicket->ticket_code);
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/me/dashboard/summary')
+            ->assertOk()
+            ->assertJsonPath('data.recent.tickets.0.ticket_code', $newestTicket->ticket_code)
+            ->assertJsonPath('data.recent.tickets.1.ticket_code', $middleTicket->ticket_code)
+            ->assertJsonPath('data.recent.tickets.2.ticket_code', $oldestTicket->ticket_code);
+    }
+
+    private function createPurchasedTicket(User $user, Event $event, TicketType $ticketType, string $ticketCode, mixed $orderCreatedAt, mixed $ticketCreatedAt): Ticket
+    {
+        $order = Order::query()->create([
+            'user_id' => $user->id,
+            'order_number' => 'ES-'.str_replace('ES-TICKET-', '', $ticketCode),
+            'status' => Order::STATUS_PAID,
+            'payment_status' => Order::PAYMENT_STATUS_PAID,
+            'subtotal' => 25,
+            'service_fee' => 1.25,
+            'total' => 26.25,
+            'currency' => 'USD',
+            'billing_email' => $user->email,
+            'billing_first_name' => 'Dashboard',
+            'billing_last_name' => 'User',
+            'paid_at' => $orderCreatedAt,
+        ]);
+        $order->forceFill(['created_at' => $orderCreatedAt, 'updated_at' => $orderCreatedAt])->save();
+
+        $item = OrderItem::query()->create([
+            'order_id' => $order->id,
+            'event_id' => $event->id,
+            'ticket_type_id' => $ticketType->id,
+            'quantity' => 1,
+            'unit_price' => 25,
+            'service_fee' => 1.25,
+            'total' => 26.25,
+            'ticket_type_name' => 'General Admission',
+            'event_title' => $event->title,
+            'event_starts_at' => $event->starts_at,
+        ]);
+
+        $ticket = Ticket::query()->create([
+            'ticket_code' => $ticketCode,
+            'qr_token' => $ticketCode.'-token',
+            'qr_payload' => '{}',
+            'user_id' => $user->id,
+            'event_id' => $event->id,
+            'ticket_type_id' => $ticketType->id,
+            'order_id' => $order->id,
+            'order_item_id' => $item->id,
+            'status' => Ticket::STATUS_ACTIVE,
+        ]);
+        $ticket->forceFill(['created_at' => $ticketCreatedAt, 'updated_at' => $ticketCreatedAt])->save();
+
+        return $ticket;
+    }
 }

@@ -41,7 +41,7 @@
           <div class="filter-group">
             <label class="form-label">Category</label>
             <div class="d-flex gap-2 flex-wrap">
-              <span class="chip active">All</span><span class="chip">Concerts</span><span class="chip">Sports</span><span class="chip">Festivals</span><span class="chip">Theater</span><span class="chip">Conferences</span>
+              <span class="chip active" data-filter-category-chip="">All</span><span class="chip" data-filter-category-chip="Concerts">Concerts</span><span class="chip" data-filter-category-chip="Sports">Sports</span><span class="chip" data-filter-category-chip="Festivals">Festivals</span><span class="chip" data-filter-category-chip="Theater">Theater</span><span class="chip" data-filter-category-chip="Comedy">Comedy</span><span class="chip" data-filter-category-chip="Family">Family</span><span class="chip" data-filter-category-chip="Conferences">Conferences</span>
             </div>
           </div>
           <div class="filter-group">
@@ -56,18 +56,6 @@
             <label class="form-label d-flex justify-content-between">Price <span class="text-muted-pro small">$0 – $500</span></label>
             <input type="range" class="form-range" min="0" max="500" value="500" data-filter-max-price/>
           </div>
-          <div class="filter-group">
-            <label class="form-label">Distance</label>
-            <select class="form-select"><option>Any</option><option>Within 5 mi</option><option>Within 25 mi</option><option>Within 100 mi</option></select>
-          </div>
-          <div class="filter-group">
-            <label class="form-label">Features</label>
-            <div class="form-check"><input class="form-check-input" type="checkbox" checked><label class="form-check-label">Verified resale</label></div>
-            <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-label">Instant transfer</label></div>
-            <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-label">Refundable</label></div>
-            <div class="form-check"><input class="form-check-input" type="checkbox"><label class="form-check-label">VIP available</label></div>
-          </div>
-          <input type="text" class="form-control mb-2" data-filter-category placeholder="Category"/>
           <button class="btn btn-primary-grad w-100 mt-2" type="button" data-events-apply-filters>Apply filters</button>
         </div>
       </aside>

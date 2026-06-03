@@ -13,6 +13,11 @@ class EventResource extends JsonResource
         $bannerImageUrl = $primaryImage instanceof \App\Models\EventImage
             ? $primaryImage->publicUrl()
             : $this->banner_image_url;
+        $ticketTypes = $this->relationLoaded('ticketTypes') ? $this->ticketTypes : collect();
+        $totalInventory = (int) $ticketTypes->sum('quantity_total');
+        $soldTickets = (int) $ticketTypes->sum('quantity_sold');
+        $availableInventory = (int) $ticketTypes->sum(fn ($type) => max(0, $type->quantity_total - $type->quantity_sold - $type->quantity_reserved));
+        $eventState = $this->lifecycleState($availableInventory);
 
         return [
             'id' => $this->id,
@@ -49,6 +54,10 @@ class EventResource extends JsonResource
             'views_count' => $this->views_count,
             'images' => EventImageResource::collection($this->whenLoaded('images')),
             'ticket_types' => TicketTypeResource::collection($this->whenLoaded('ticketTypes')),
+            'sold_tickets' => $soldTickets,
+            'total_inventory' => $totalInventory,
+            'available_inventory' => $availableInventory,
+            'event_state' => $eventState,
             'reviews_count' => $this->whenCounted('reviews'),
             'tickets_count' => $this->whenCounted('tickets'),
             'favorites_count' => $this->whenCounted('favorites'),

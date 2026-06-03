@@ -49,8 +49,9 @@ class UserDashboardService
                     ->limit(5)
                     ->get(['id', 'order_number', 'status', 'payment_status', 'total', 'currency', 'created_at']),
                 'tickets' => $user->tickets()
-                    ->with(['user:id,name,email,phone', 'event:id,title,slug,venue_name,city,starts_at', 'ticketType:id,name'])
-                    ->latest()
+                    ->with(['user:id,name,email,phone', 'event:id,title,slug,venue_name,city,starts_at', 'ticketType:id,name', 'order:id,order_number,status,payment_status,total,currency,created_at'])
+                    ->orderByDesc(Order::query()->select('created_at')->whereColumn('orders.id', 'tickets.order_id'))
+                    ->orderByDesc('tickets.id')
                     ->limit(5)
                     ->get(),
             ],

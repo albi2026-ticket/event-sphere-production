@@ -23,11 +23,26 @@
     }
   }
 
+  function calculationTimezone(timezone) {
+    return (timezone || EVENT_TIMEZONE) === EVENT_TIMEZONE ? EVENT_CALCULATION_TIMEZONE : (timezone || EVENT_TIMEZONE);
+  }
+
+  function timezoneOffsetLabel(date, timezone) {
+    try {
+      const value = new Intl.DateTimeFormat('en-US', {
+        timeZone: calculationTimezone(timezone),
+        timeZoneName: 'shortOffset',
+      }).formatToParts(date).find((part) => part.type === 'timeZoneName')?.value || '';
+      return value.replace('GMT', 'UTC');
+    } catch {
+      return timezone || EVENT_TIMEZONE;
+    }
+  }
+
   function formatEventDate(startsAt, timezone) {
     if (!startsAt) return '';
     const d = new Date(startsAt);
-    const tz = timezone || EVENT_TIMEZONE;
-    const calculationTz = tz === EVENT_TIMEZONE ? EVENT_CALCULATION_TIMEZONE : tz;
+    const calculationTz = calculationTimezone(timezone);
     return `${d.toLocaleString('en-US', {
       weekday: 'short',
       month: 'short',
@@ -35,27 +50,25 @@
       hour: 'numeric',
       minute: '2-digit',
       timeZone: calculationTz,
-    })} (${tz})`;
+    })} (${timezoneOffsetLabel(d, timezone)})`;
   }
 
   function formatEventTime(startsAt, timezone) {
     if (!startsAt) return '';
     const d = new Date(startsAt);
-    const tz = timezone || EVENT_TIMEZONE;
-    const calculationTz = tz === EVENT_TIMEZONE ? EVENT_CALCULATION_TIMEZONE : tz;
+    const calculationTz = calculationTimezone(timezone);
     return `${d.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
       timeZone: calculationTz,
-    })} (${tz})`;
+    })} (${timezoneOffsetLabel(d, timezone)})`;
   }
 
   function toEventDatetimeLocal(value, timezone) {
     if (!value) return '';
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return '';
-    const tz = timezone || EVENT_TIMEZONE;
-    const calculationTz = tz === EVENT_TIMEZONE ? EVENT_CALCULATION_TIMEZONE : tz;
+    const calculationTz = calculationTimezone(timezone);
     const parts = new Intl.DateTimeFormat('en-CA', {
       timeZone: calculationTz,
       year: 'numeric',
@@ -73,9 +86,11 @@
   }
 
   function isEventSalesClosed(event) {
-    if (!event?.starts_at) return false;
-    const start = new Date(event.starts_at);
-    return !Number.isNaN(start.getTime()) && Date.now() >= start.getTime();
+    if (event?.event_state?.key === 'ended') return true;
+    if (event?.status === 'cancelled' || event?.status === 'completed') return true;
+    if (!event?.ends_at) return false;
+    const end = new Date(event.ends_at);
+    return !Number.isNaN(end.getTime()) && Date.now() > end.getTime();
   }
 
   function eventImage(event) {

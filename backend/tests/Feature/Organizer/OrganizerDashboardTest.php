@@ -220,6 +220,69 @@ class OrganizerDashboardTest extends TestCase
         $this->assertTrue($event->starts_at->equalTo(Carbon::parse('2026-06-10 19:00', 'Europe/Belgrade')->utc()));
     }
 
+    public function test_organizer_can_edit_and_restock_sold_out_published_event(): void
+    {
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $event = Event::query()->create([
+            'organizer_id' => $organizer->id,
+            'title' => 'Sold Out Restock Event',
+            'slug' => 'sold-out-restock-event',
+            'category' => 'Concerts',
+            'venue_name' => 'Event Sphere Hall',
+            'city' => 'New York',
+            'starts_at' => now()->addMonth(),
+            'ends_at' => now()->addMonth()->addHours(3),
+            'status' => 'published',
+            'visibility' => 'public',
+            'currency' => 'USD',
+        ]);
+
+        $ticketType = TicketType::query()->create([
+            'event_id' => $event->id,
+            'name' => 'VIP',
+            'price' => 100,
+            'currency' => 'USD',
+            'quantity_total' => 100,
+            'quantity_sold' => 100,
+            'quantity_reserved' => 0,
+            'min_per_order' => 1,
+            'max_per_order' => 10,
+            'status' => TicketType::STATUS_SOLD_OUT,
+        ]);
+
+        $this->actingAs($organizer, 'sanctum')
+            ->patchJson("/api/organizer/events/{$event->id}", [
+                'title' => 'Sold Out Restock Event Updated',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.title', 'Sold Out Restock Event Updated')
+            ->assertJsonPath('data.status', 'published')
+            ->assertJsonPath('data.event_state.key', 'sold_out');
+
+        $this->actingAs($organizer, 'sanctum')
+            ->patchJson("/api/organizer/ticket-types/{$ticketType->id}", [
+                'quantity_total' => 150,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.quantity_total', 150)
+            ->assertJsonPath('data.quantity_sold', 100)
+            ->assertJsonPath('data.quantity_available', 50)
+            ->assertJsonPath('data.status', TicketType::STATUS_ACTIVE);
+
+        $this->actingAs($organizer, 'sanctum')
+            ->getJson("/api/organizer/events/{$event->id}")
+            ->assertOk()
+            ->assertJsonPath('data.sold_tickets', 100)
+            ->assertJsonPath('data.total_inventory', 150)
+            ->assertJsonPath('data.available_inventory', 50)
+            ->assertJsonPath('data.event_state.key', 'upcoming');
+    }
+
     public function test_organizer_dashboard_endpoints_support_events_analytics_and_attendee_search(): void
     {
         $organizer = User::factory()->create([
@@ -338,5 +401,72 @@ class OrganizerDashboardTest extends TestCase
             ->patchJson("/api/organizer/events/{$event->id}", ['status' => 'draft'])
             ->assertOk()
             ->assertJsonPath('data.status', 'draft');
+    }
+
+    public function test_organizer_events_include_computed_event_state_from_status_date_and_inventory(): void
+    {
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        Carbon::setTestNow(Carbon::parse('2026-06-03 12:00:00', 'UTC'));
+
+        $draft = $this->createOrganizerEventWithInventory($organizer, 'Draft Inventory Event', 'draft-inventory-event', 'draft', now()->addMonth(), null, 100, 0);
+        $ended = $this->createOrganizerEventWithInventory($organizer, 'Ended Inventory Event', 'ended-inventory-event', 'published', now()->subDay(), now()->subMinute(), 100, 0);
+        $soldOut = $this->createOrganizerEventWithInventory($organizer, 'Sold Out Inventory Event', 'sold-out-inventory-event', 'published', now()->addMonth(), now()->addMonth()->addHours(3), 100, 100);
+        $upcoming = $this->createOrganizerEventWithInventory($organizer, 'Upcoming Inventory Event', 'upcoming-inventory-event', 'published', now()->addMonth(), now()->addMonth()->addHours(3), 100, 25);
+        $live = $this->createOrganizerEventWithInventory($organizer, 'Live Inventory Event', 'live-inventory-event', 'published', now()->subHour(), now()->addHour(), 100, 25);
+        $liveWithoutEnd = $this->createOrganizerEventWithInventory($organizer, 'Live No End Inventory Event', 'live-no-end-inventory-event', 'published', now()->subDay(), null, 100, 25);
+
+        $response = $this->actingAs($organizer, 'sanctum')
+            ->getJson('/api/organizer/events?per_page=10')
+            ->assertOk();
+
+        $events = collect($response->json('data'))->keyBy('slug');
+
+        $this->assertSame('draft', $events[$draft->slug]['event_state']['key']);
+        $this->assertSame('ended', $events[$ended->slug]['event_state']['key']);
+        $this->assertSame('sold_out', $events[$soldOut->slug]['event_state']['key']);
+        $this->assertSame('upcoming', $events[$upcoming->slug]['event_state']['key']);
+        $this->assertSame('live', $events[$live->slug]['event_state']['key']);
+        $this->assertSame('live', $events[$liveWithoutEnd->slug]['event_state']['key']);
+        $this->assertSame(100, $events[$soldOut->slug]['sold_tickets']);
+        $this->assertSame(0, $events[$soldOut->slug]['available_inventory']);
+
+        Carbon::setTestNow();
+    }
+
+    private function createOrganizerEventWithInventory(User $organizer, string $title, string $slug, string $status, mixed $startsAt, mixed $endsAt, int $total, int $sold): Event
+    {
+        $event = Event::query()->create([
+            'organizer_id' => $organizer->id,
+            'title' => $title,
+            'slug' => $slug,
+            'category' => 'Concerts',
+            'venue_name' => 'Event Sphere Hall',
+            'city' => 'New York',
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
+            'status' => $status,
+            'visibility' => 'public',
+            'currency' => 'USD',
+        ]);
+
+        TicketType::query()->create([
+            'event_id' => $event->id,
+            'name' => 'General Admission',
+            'price' => 40,
+            'currency' => 'USD',
+            'quantity_total' => $total,
+            'quantity_sold' => $sold,
+            'quantity_reserved' => 0,
+            'min_per_order' => 1,
+            'max_per_order' => 10,
+            'status' => TicketType::STATUS_ACTIVE,
+        ]);
+
+        return $event;
     }
 }
