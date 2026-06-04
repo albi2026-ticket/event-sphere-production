@@ -150,7 +150,7 @@
     if (status) params.status = status;
 
     if (state.ticketView === 'active') {
-      params.status = status || 'active';
+      params.status = status || 'valid';
       params.upcoming = 1;
     } else if (state.ticketView === 'upcoming') {
       params.upcoming = 1;
@@ -266,7 +266,7 @@
     const stats = state.summary?.stats || {};
     kpiRow.innerHTML = `
       <div class="col-md-3"><div class="kpi"><div class="label">Upcoming events</div><div class="value">${stats.upcoming_events_count ?? 0}</div><div class="delta">From active tickets</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Active tickets</div><div class="value">${stats.active_tickets_count ?? 0}</div><div class="delta">${stats.tickets_count ?? 0} total tickets</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">Valid tickets</div><div class="value">${stats.active_tickets_count ?? 0}</div><div class="delta">${stats.tickets_count ?? 0} total tickets</div></div></div>
       <div class="col-md-3"><div class="kpi"><div class="label">Total orders</div><div class="value">${stats.orders_count ?? 0}</div><div class="delta">${u().formatMoney(stats.total_spent || 0, 'USD')} spent</div></div></div>
       <div class="col-md-3"><div class="kpi"><div class="label">Favorites</div><div class="value">${stats.favorites_count ?? 0}</div><div class="delta">Saved events</div></div></div>`;
   }

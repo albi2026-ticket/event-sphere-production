@@ -9,11 +9,14 @@
     orders: [],
     users: [],
     events: [],
+    checkInLogs: [],
+    checkInStats: null,
     userFilters: {},
     eventFilters: {},
     paymentFilters: {},
-    loading: { users: false, events: false, payments: false },
-    errors: { users: null, events: null, payments: null },
+    checkInFilters: {},
+    loading: { users: false, events: false, payments: false, checkIns: false },
+    errors: { users: null, events: null, payments: null, checkIns: null },
   };
 
   function rows(payload) {
@@ -162,6 +165,7 @@
       const query = qs({ per_page: 100, sort: 'newest', ...state.eventFilters });
       const res = await api().fetch(`/admin/events${query ? `?${query}` : ''}`);
       state.events = rows(res.data);
+      hydrateCheckInEvents();
     } catch (err) {
       state.errors.events = err.message || 'Failed to load events';
     } finally {
@@ -171,6 +175,35 @@
       renderEvents();
       renderActivity();
     }
+  }
+
+  async function loadCheckIns() {
+    state.loading.checkIns = true;
+    state.errors.checkIns = null;
+    renderCheckIns();
+    try {
+      const statsQuery = qs({ event_id: state.checkInFilters.event_id });
+      const logsQuery = qs({ per_page: 20, ...state.checkInFilters });
+      const [stats, logs] = await Promise.all([
+        api().fetch(`/admin/tickets/check-in-stats${statsQuery ? `?${statsQuery}` : ''}`),
+        api().fetch(`/admin/validation-logs${logsQuery ? `?${logsQuery}` : ''}`),
+      ]);
+      state.checkInStats = stats.data;
+      state.checkInLogs = rows(logs.data);
+    } catch (err) {
+      state.errors.checkIns = err.message || 'Failed to load check-in monitoring';
+    } finally {
+      state.loading.checkIns = false;
+      renderCheckIns();
+    }
+  }
+
+  function hydrateCheckInEvents() {
+    const select = document.querySelector('[data-admin-checkin-event]');
+    if (!select) return;
+    const current = select.value;
+    select.innerHTML = '<option value="">All events</option>' + state.events.map((event) => `<option value="${event.id}">${u().escapeHtml(event.title)}</option>`).join('');
+    select.value = current;
   }
 
   function renderKpis() {
@@ -374,6 +407,37 @@
     refundsBody.innerHTML = refunds.map((order) => paymentRow(order, (o) => buttonIcon('bi-receipt', 'Refund details', `data-view-payment="${o.id}"`))).join('') || emptyRow(6, 'bi-arrow-counterclockwise', 'No refunded orders yet');
   }
 
+  function renderCheckIns() {
+    const statsRow = document.querySelector('[data-admin-checkin-stats]');
+    const body = document.querySelector('[data-admin-checkin-logs]');
+    if (statsRow) {
+      const stats = state.checkInStats || { tickets_sold: 0, checked_in: 0, remaining: 0 };
+      statsRow.innerHTML = `
+        <div class="col-md-4"><div class="kpi"><div class="label">Tickets Sold</div><div class="value">${stats.tickets_sold ?? 0}</div></div></div>
+        <div class="col-md-4"><div class="kpi"><div class="label">Checked In</div><div class="value">${stats.checked_in ?? 0}</div></div></div>
+        <div class="col-md-4"><div class="kpi"><div class="label">Remaining</div><div class="value">${stats.remaining ?? 0}</div></div></div>`;
+    }
+    if (!body) return;
+    if (state.loading.checkIns) {
+      body.innerHTML = loadingRow(6, 'Loading validation logs...');
+      return;
+    }
+    if (state.errors.checkIns) {
+      body.innerHTML = errorRow(6, state.errors.checkIns, 'data-retry-checkins');
+      return;
+    }
+    body.innerHTML = state.checkInLogs.map((log) => `
+      <tr>
+        <td data-label="Result">${badge(log.result)}</td>
+        <td data-label="Event">${u().escapeHtml(log.event?.title || '-')}</td>
+        <td data-label="Attendee"><div class="fw-semibold">${u().escapeHtml(log.attendee?.name || '-')}</div><small class="text-muted-pro">${u().escapeHtml(log.attendee?.email || '')}</small></td>
+        <td data-label="Ticket">${u().escapeHtml(log.ticket_code || log.ticket_uuid || '-')}</td>
+        <td data-label="Scanned By">${u().escapeHtml(log.scanner?.name || log.scanner?.email || '-')}</td>
+        <td data-label="Time">${dateTimeLabel(log.scanned_at)}</td>
+      </tr>
+    `).join('') || emptyRow(6, 'bi-clock-history', 'No validation logs yet');
+  }
+
   function renderActivity() {
     const wrap = document.querySelector('[data-admin-activity]');
     if (!wrap) return;
@@ -400,12 +464,14 @@
     renderOrganizers();
     renderEvents();
     renderPayments();
+    renderCheckIns();
     renderActivity();
   }
 
   async function refreshAll() {
     renderAll();
     await Promise.all([loadPayments(), loadUsers(), loadEvents()]);
+    await loadCheckIns();
     renderAll();
   }
 
@@ -419,9 +485,11 @@
 
   async function refreshEvents() {
     await loadEvents();
+    await loadCheckIns();
     renderKpis();
     renderCharts();
     renderEvents();
+    renderCheckIns();
     renderActivity();
   }
 
@@ -431,6 +499,11 @@
     renderCharts();
     renderPayments();
     renderActivity();
+  }
+
+  async function refreshCheckIns() {
+    await loadCheckIns();
+    renderCheckIns();
   }
 
   function setModal(title, body) {
@@ -568,6 +641,14 @@
       await refreshPayments();
     });
 
+    document.querySelector('[data-admin-checkin-event]')?.addEventListener('change', async (event) => {
+      state.checkInFilters.event_id = event.target.value;
+      await refreshCheckIns();
+    });
+    document.querySelector('[data-admin-checkin-result]')?.addEventListener('change', async (event) => {
+      state.checkInFilters.result = event.target.value;
+      await refreshCheckIns();
+    });
   }
 
   function bindActions() {
@@ -581,6 +662,7 @@
         if (button.dataset.retryUsers !== undefined) await refreshUsers();
         if (button.dataset.retryEvents !== undefined) await refreshEvents();
         if (button.dataset.retryPayments !== undefined) await refreshPayments();
+        if (button.dataset.retryCheckins !== undefined) await refreshCheckIns();
 
         if (button.dataset.viewUser) await showUser(button.dataset.viewUser);
         if (button.dataset.viewEvent) showEvent(button.dataset.viewEvent);

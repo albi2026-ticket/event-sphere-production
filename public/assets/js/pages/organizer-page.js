@@ -14,6 +14,12 @@
     attendeeMeta: null,
     revenue: null,
     trends: [],
+    checkInStats: null,
+    checkInLogs: [],
+    checkInResult: null,
+    scannerStream: null,
+    scannerTimer: null,
+    lastScannedPayload: '',
     loading: {
       summary: true,
       events: true,
@@ -21,6 +27,7 @@
       inventory: true,
       attendees: true,
       revenue: true,
+      checkInLogs: true,
     },
     errors: {},
     attendeePage: 1,
@@ -259,7 +266,7 @@
     const cards = state.summary?.cards || {};
     kpiRow.innerHTML = `
       <div class="col-md-3"><div class="kpi"><div class="label">Revenue</div><div class="value">${u().formatMoney(cards.total_revenue || 0, 'USD')}</div><div class="delta">${cards.paid_orders_count ?? 0} paid orders</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Tickets sold</div><div class="value">${cards.tickets_sold ?? 0}</div><div class="delta">${cards.active_tickets_count ?? 0} active tickets</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">Tickets sold</div><div class="value">${cards.tickets_sold ?? 0}</div><div class="delta">${cards.active_tickets_count ?? 0} valid tickets</div></div></div>
       <div class="col-md-3"><div class="kpi"><div class="label">Published events</div><div class="value">${cards.published_events_count ?? 0}</div><div class="delta">${cards.events_count ?? 0} total events</div></div></div>
       <div class="col-md-3"><div class="kpi"><div class="label">Attendees</div><div class="value">${cards.attendees_count ?? 0}</div><div class="delta">${cards.checked_in_count ?? 0} checked in</div></div></div>`;
 
@@ -459,11 +466,20 @@
   }
 
   function hydrateEventFilter() {
-    const select = $('[data-attendee-event]');
-    if (!select) return;
-    const current = select.value;
-    select.innerHTML = '<option value="">All events</option>' + state.events.map((event) => `<option value="${event.id}">${esc(event.title)}</option>`).join('');
-    select.value = current;
+    const attendeeSelect = $('[data-attendee-event]');
+    if (attendeeSelect) {
+      const current = attendeeSelect.value;
+      attendeeSelect.innerHTML = '<option value="">All events</option>' + state.events.map((event) => `<option value="${event.id}">${esc(event.title)}</option>`).join('');
+      attendeeSelect.value = current;
+    }
+
+    const checkInSelect = $('[data-checkin-event]');
+    if (checkInSelect) {
+      const current = checkInSelect.value;
+      checkInSelect.innerHTML = '<option value="">Select event</option>' + state.events.map((event) => `<option value="${event.id}">${esc(event.title)}</option>`).join('');
+      checkInSelect.value = current;
+      if (!checkInSelect.value && state.events[0]) checkInSelect.value = String(state.events[0].id);
+    }
   }
 
   function renderAll() {
@@ -474,17 +490,224 @@
     renderInventory();
     renderAttendees();
     renderRevenue();
+    renderCheckInStats();
+    renderCheckInLogs();
   }
 
   async function refreshAll() {
     renderAll();
     await Promise.all([loadSummary(), loadEvents(), loadPerformance(), loadInventory(), loadAttendees(), loadRevenue()]);
+    await Promise.all([loadCheckInStats(), loadCheckInLogs()]);
     renderAll();
   }
 
   async function refreshEventsAndAnalytics() {
     await Promise.all([loadSummary(), loadEvents(), loadPerformance(), loadInventory(), loadRevenue()]);
+    await Promise.all([loadCheckInStats(), loadCheckInLogs()]);
     renderAll();
+  }
+
+  function selectedCheckInEventId() {
+    return $('[data-checkin-event]')?.value || '';
+  }
+
+  async function loadCheckInStats() {
+    const eventId = selectedCheckInEventId();
+    if (!eventId) {
+      state.checkInStats = null;
+      renderCheckInStats();
+      return;
+    }
+    try {
+      const { data } = await api().fetch(`/organizer/events/${eventId}/check-in-stats`);
+      state.checkInStats = data;
+    } catch (err) {
+      state.errors.checkIn = err.message || 'Failed to load check-in stats';
+    } finally {
+      renderCheckInStats();
+      renderAlert();
+    }
+  }
+
+  async function loadCheckInLogs() {
+    state.loading.checkInLogs = true;
+    const eventId = selectedCheckInEventId();
+    renderCheckInLogs();
+    try {
+      const query = qs({ per_page: 8, event_id: eventId });
+      const res = await api().fetch(`/organizer/validation-logs${query ? `?${query}` : ''}`);
+      state.checkInLogs = rows(res.data);
+    } catch (err) {
+      state.errors.checkInLogs = err.message || 'Failed to load validation logs';
+    } finally {
+      state.loading.checkInLogs = false;
+      renderCheckInLogs();
+      renderAlert();
+    }
+  }
+
+  function renderCheckInStats() {
+    const row = $('[data-checkin-stats]');
+    if (!row) return;
+    const stats = state.checkInStats || { tickets_sold: 0, checked_in: 0, remaining: 0 };
+    row.innerHTML = `
+      <div class="col-md-4"><div class="kpi"><div class="label">Tickets Sold</div><div class="value">${stats.tickets_sold ?? 0}</div></div></div>
+      <div class="col-md-4"><div class="kpi"><div class="label">Checked In</div><div class="value">${stats.checked_in ?? 0}</div></div></div>
+      <div class="col-md-4"><div class="kpi"><div class="label">Remaining</div><div class="value">${stats.remaining ?? 0}</div></div></div>`;
+  }
+
+  function renderCheckInLogs() {
+    const body = $('[data-checkin-logs]');
+    if (!body) return;
+    if (state.loading.checkInLogs) {
+      body.innerHTML = loadingRow(4, 'Loading validation logs...');
+      return;
+    }
+    if (state.errors.checkInLogs) {
+      body.innerHTML = errorRow(4, state.errors.checkInLogs, 'data-retry-checkin-logs');
+      return;
+    }
+    body.innerHTML = state.checkInLogs.map((log) => `
+      <tr>
+        <td data-label="Result">${statusBadge(log.result)}</td>
+        <td data-label="Attendee"><div class="fw-semibold">${esc(log.attendee?.name || '-')}</div><small class="text-muted-pro">${esc(log.attendee?.email || '')}</small></td>
+        <td data-label="Ticket">${esc(log.ticket_code || log.ticket_uuid || '-')}</td>
+        <td data-label="Scanned">${esc(dateLabel(log.scanned_at))}</td>
+      </tr>
+    `).join('') || emptyRow(4, 'bi-clock-history', 'No validation logs yet', 'Scans will appear here.');
+  }
+
+  function parseScannerPayload(raw) {
+    const value = String(raw || '').trim();
+    if (!value) return {};
+    try {
+      const parsed = JSON.parse(value);
+      return {
+        token: parsed.token || '',
+        ticket_uuid: parsed.ticket_uuid || parsed.uuid || '',
+      };
+    } catch {
+      return value.startsWith('ES-') ? { ticket_code: value } : { token: value };
+    }
+  }
+
+  function renderCheckInResult(payload) {
+    const wrap = $('[data-checkin-result]');
+    if (!wrap) return;
+    const validation = payload?.validation;
+    const ticket = payload?.ticket;
+    if (!validation) {
+      wrap.className = 'checkin-result is-empty';
+      wrap.innerHTML = `<i class="bi bi-qr-code-scan"></i><div><h5>Ready to validate tickets</h5><p>Select an event, scan a QR code, or search manually.</p></div>`;
+      return;
+    }
+    const result = validation.result || 'invalid';
+    const cls = result === 'valid' ? 'is-valid' : result === 'already_used' ? 'is-used' : 'is-invalid';
+    wrap.className = `checkin-result ${cls}`;
+    wrap.innerHTML = `
+      <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+        <div>
+          <div class="eyebrow">${esc(validation.title || 'Scan result')}</div>
+          <h5 class="mt-2">${esc(ticket?.attendee?.name || 'Unknown attendee')}</h5>
+          <p>${esc(validation.reason || '')}</p>
+        </div>
+        ${statusBadge(result)}
+      </div>
+      <div class="dashboard-detail-grid mt-3">
+        <div><dt>Event</dt><dd>${esc(ticket?.event?.title || '-')}</dd></div>
+        <div><dt>Ticket type</dt><dd>${esc(ticket?.ticket_type?.name || '-')}</dd></div>
+        <div><dt>Order</dt><dd>${esc(ticket?.order?.order_number || '-')}</dd></div>
+        <div><dt>Checked in</dt><dd>${ticket?.checked_in_at ? esc(dateLabel(ticket.checked_in_at)) : '-'}</dd></div>
+      </div>
+      ${validation.can_check_in ? `<button class="btn btn-primary-grad mt-3" type="button" data-checkin-confirm><i class="bi bi-check2-circle me-1"></i>Check In</button>` : ''}`;
+  }
+
+  async function validateTicket(payload, method = 'qr') {
+    const body = { ...payload, event_id: selectedCheckInEventId(), method };
+    const { data } = await api().fetch('/organizer/tickets/validate', { method: 'POST', body });
+    state.checkInResult = { ...data, payload: body };
+    renderCheckInResult(state.checkInResult);
+    await Promise.all([loadCheckInStats(), loadCheckInLogs()]);
+  }
+
+  async function confirmCheckIn() {
+    if (!state.checkInResult?.payload) return;
+    try {
+      const { data } = await api().fetch('/organizer/tickets/check-in', { method: 'POST', body: state.checkInResult.payload });
+      state.checkInResult = { ...data, payload: state.checkInResult.payload };
+      renderCheckInResult(state.checkInResult);
+      window.tkToast?.('Ticket checked in');
+      await Promise.all([loadCheckInStats(), loadCheckInLogs(), loadAttendees(), loadPerformance()]);
+    } catch (err) {
+      const data = err.payload?.data;
+      if (data?.validation) {
+        state.checkInResult = { ...data, payload: state.checkInResult.payload };
+        renderCheckInResult(state.checkInResult);
+      }
+      window.tkToast?.(err.message || 'Check-in failed', 'error');
+      await Promise.all([loadCheckInStats(), loadCheckInLogs()]);
+    }
+  }
+
+  async function lookupTickets(search) {
+    const wrap = $('[data-checkin-lookup-results]');
+    if (!wrap) return;
+    wrap.innerHTML = `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Looking up tickets...</span></div>`;
+    const query = qs({ q: search, event_id: selectedCheckInEventId() });
+    const res = await api().fetch(`/organizer/tickets/lookup${query ? `?${query}` : ''}`);
+    const tickets = rows(res.data);
+    wrap.innerHTML = tickets.map((ticket) => `
+      <button class="dashboard-mini-row w-100 text-start" type="button" data-checkin-ticket-code="${esc(ticket.ticket_code)}">
+        <div>
+          <div class="fw-semibold">${esc(ticket.attendee?.name || 'Guest')}</div>
+          <small>${esc(ticket.event?.title || '-')} · ${esc(ticket.ticket_type?.name || '-')} · ${esc(ticket.order?.order_number || '-')}</small>
+        </div>
+        ${statusBadge(ticket.status)}
+      </button>
+    `).join('') || emptyBlock('bi-search', 'No tickets found', 'Try a ticket code, attendee name, email, or order number.');
+  }
+
+  async function startScanner() {
+    const video = $('[data-checkin-video]');
+    const empty = $('[data-checkin-camera-empty]');
+    if (!video) return;
+    if (!('BarcodeDetector' in window)) {
+      if (empty) empty.innerHTML = '<i class="bi bi-camera-video-off"></i><span>Camera QR scanning is not supported in this browser. Use manual lookup.</span>';
+      return;
+    }
+    try {
+      state.scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      video.srcObject = state.scannerStream;
+      await video.play();
+      if (empty) empty.hidden = true;
+      const detector = new BarcodeDetector({ formats: ['qr_code'] });
+      clearInterval(state.scannerTimer);
+      state.scannerTimer = setInterval(async () => {
+        if (!video.videoWidth) return;
+        const codes = await detector.detect(video).catch(() => []);
+        const raw = codes[0]?.rawValue;
+        if (!raw || raw === state.lastScannedPayload) return;
+        state.lastScannedPayload = raw;
+        await validateTicket(parseScannerPayload(raw), 'mobile_scanner').catch((err) => window.tkToast?.(err.message || 'Scan failed', 'error'));
+      }, 700);
+    } catch (err) {
+      if (empty) empty.innerHTML = `<i class="bi bi-camera-video-off"></i><span>${esc(err.message || 'Camera unavailable. Use manual lookup.')}</span>`;
+    }
+  }
+
+  function stopScanner() {
+    clearInterval(state.scannerTimer);
+    state.scannerTimer = null;
+    state.lastScannedPayload = '';
+    state.scannerStream?.getTracks?.().forEach((track) => track.stop());
+    state.scannerStream = null;
+    const video = $('[data-checkin-video]');
+    if (video) video.srcObject = null;
+    const empty = $('[data-checkin-camera-empty]');
+    if (empty) {
+      empty.hidden = false;
+      empty.innerHTML = '<i class="bi bi-camera-video"></i><span>Start camera scanner or use manual lookup.</span>';
+    }
   }
 
   function eventPayload() {
@@ -810,6 +1033,11 @@
       await loadAttendees();
       renderAttendees();
     }, 250));
+    $('[data-checkin-event]')?.addEventListener('change', async () => {
+      state.checkInResult = null;
+      renderCheckInResult(null);
+      await Promise.all([loadCheckInStats(), loadCheckInLogs()]);
+    });
   }
 
   function bindActions() {
@@ -927,6 +1155,24 @@
         renderRevenue();
         return;
       }
+      const retryCheckInLogs = event.target.closest('[data-retry-checkin-logs]');
+      if (retryCheckInLogs) {
+        await loadCheckInLogs();
+        renderCheckInLogs();
+        return;
+      }
+
+      const checkInConfirm = event.target.closest('[data-checkin-confirm]');
+      if (checkInConfirm) {
+        await confirmCheckIn();
+        return;
+      }
+
+      const lookupTicket = event.target.closest('[data-checkin-ticket-code]');
+      if (lookupTicket) {
+        await validateTicket({ ticket_code: lookupTicket.dataset.checkinTicketCode }, 'manual');
+        return;
+      }
 
       const attendeePage = event.target.closest('[data-attendee-page]');
       if (attendeePage) {
@@ -966,6 +1212,15 @@
         await showAttendeeDetails(attendee.dataset.attendeeDetails);
       }
     });
+
+    $('[data-checkin-manual-form]')?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const search = String(new FormData(event.currentTarget).get('q') || '').trim();
+      if (!search) return;
+      await lookupTickets(search).catch((err) => window.tkToast?.(err.message || 'Lookup failed', 'error'));
+    });
+    $('[data-checkin-start-camera]')?.addEventListener('click', startScanner);
+    $('[data-checkin-stop-camera]')?.addEventListener('click', stopScanner);
 
     $$('[data-organizer-range]').forEach((button) => {
       button.addEventListener('click', async () => {

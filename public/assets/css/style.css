@@ -751,6 +751,61 @@ a:hover { color: var(--secondary); }
   background: var(--grad-primary);
 }
 
+.qr-scanner-panel {
+  position: relative;
+  min-height: 260px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card-2);
+}
+.qr-scanner-panel video {
+  width: 100%;
+  min-height: 260px;
+  object-fit: cover;
+  display: block;
+}
+.qr-scanner-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  gap: .6rem;
+  padding: 1.5rem;
+  color: var(--muted);
+  text-align: center;
+  background: color-mix(in oklab, var(--card) 88%, transparent);
+}
+.qr-scanner-empty i {
+  color: var(--text);
+  font-size: 2rem;
+}
+.checkin-result {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  background: var(--card);
+}
+.checkin-result h5 {
+  margin-bottom: .35rem;
+}
+.checkin-result p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+.checkin-result.is-valid {
+  border-color: color-mix(in oklab, var(--success-text) 35%, var(--border));
+  background: color-mix(in oklab, var(--success-soft) 42%, var(--card));
+}
+.checkin-result.is-used {
+  border-color: color-mix(in oklab, var(--warning-text) 35%, var(--border));
+  background: color-mix(in oklab, var(--warning-soft) 42%, var(--card));
+}
+.checkin-result.is-invalid {
+  border-color: color-mix(in oklab, var(--danger-text) 35%, var(--border));
+  background: color-mix(in oklab, var(--danger-soft) 42%, var(--card));
+}
+
 /* Footer */
 .footer { background: var(--bg-soft); border-top: 1px solid var(--border); padding: 3rem 0 1.5rem; margin-top: 3rem; }
 .footer h6 { color: var(--text); font-family: var(--font-display); font-weight: 600; margin-bottom: 1rem; font-size: .95rem; }
@@ -1385,6 +1440,7 @@ a:hover { color: var(--secondary); }
 .status-active,
 .status-approved,
 .status-available,
+.status-valid,
 .status-live,
 .status-paid,
 .status-published {
@@ -1422,6 +1478,7 @@ a:hover { color: var(--secondary); }
   border-color: color-mix(in oklab, var(--info-text) 22%, transparent);
 }
 .status-used,
+.status-checked_in,
 .status-completed,
 .status-finished,
 .status-none,

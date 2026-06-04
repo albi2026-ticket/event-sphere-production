@@ -13,12 +13,13 @@ class TicketResource extends JsonResource
 
         return [
             'id' => $this->id,
+            'ticket_uuid' => $this->ticket_uuid,
             'ticket_code' => $this->ticket_code,
             'status' => $this->status,
             'seat_label' => $this->seat_label,
-            'qr_payload' => $this->qr_payload,
             'qr_code_url' => url("/api/tickets/{$this->id}/qr-code"),
             'download_url' => url("/api/tickets/{$this->id}/download"),
+            'issued_at' => $this->issued_at,
             'checked_in_at' => $this->checked_in_at,
             'checked_in_by' => $this->whenLoaded('checkedInBy', fn () => [
                 'id' => $this->checkedInBy->id,

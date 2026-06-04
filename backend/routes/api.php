@@ -101,8 +101,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/payments', [OrganizerPaymentController::class, 'index']);
         Route::get('/payments/{order}', [OrganizerPaymentController::class, 'show']);
         Route::get('/events/{event}/attendees', [OrganizerTicketController::class, 'attendees']);
+        Route::get('/events/{event}/check-in-stats', [OrganizerTicketController::class, 'checkInStats']);
+        Route::get('/validation-logs', [OrganizerTicketController::class, 'validationLogs']);
         Route::post('/tickets/validate', [OrganizerTicketController::class, 'validateTicket']);
         Route::post('/tickets/check-in', [OrganizerTicketController::class, 'checkIn']);
+        Route::get('/tickets/lookup', [OrganizerTicketController::class, 'lookup']);
         Route::get('/events', [OrganizerEventController::class, 'index']);
         Route::post('/events', [OrganizerEventController::class, 'store']);
         Route::get('/events/{event}', [OrganizerEventController::class, 'show']);
@@ -132,6 +135,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/users', [AdminUserController::class, 'index']);
         Route::get('/users/{user}', [AdminUserController::class, 'show']);
         Route::get('/tickets', [AdminTicketController::class, 'index']);
+        Route::get('/tickets/lookup', [AdminTicketController::class, 'lookup']);
+        Route::get('/tickets/check-in-stats', [AdminTicketController::class, 'checkInStats']);
+        Route::get('/validation-logs', [AdminTicketController::class, 'validationLogs']);
         Route::post('/tickets/validate', [AdminTicketController::class, 'validateTicket']);
         Route::post('/tickets/check-in', [AdminTicketController::class, 'checkIn']);
         Route::get('/tickets/{ticket}', [AdminTicketController::class, 'show']);

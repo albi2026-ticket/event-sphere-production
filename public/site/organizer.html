@@ -17,6 +17,7 @@
       <a class="active" href="#overview"><i class="bi bi-speedometer2"></i> Overview</a>
       <a href="#events"><i class="bi bi-calendar-event"></i> Events</a>
       <a href="#analytics"><i class="bi bi-graph-up"></i> Analytics</a>
+      <a href="#check-in"><i class="bi bi-qr-code-scan"></i> Event Check-In</a>
       <a href="#attendees"><i class="bi bi-people"></i> Attendees</a>
       <a href="#revenue"><i class="bi bi-cash-stack"></i> Revenue</a>
       <hr class="divider"/>
@@ -67,6 +68,64 @@
           <h4 class="mb-3">Revenue by event</h4>
           <canvas id="chartCat" height="180"></canvas>
           <div data-organizer-event-revenue-empty></div>
+        </div>
+      </div>
+    </div>
+
+    <h4 id="check-in" class="mt-2 mb-3">Event Check-In</h4>
+    <div class="row g-3 mb-4">
+      <div class="col-xl-5">
+        <div class="card-pro p-3 h-100">
+          <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
+            <h5 class="m-0">Scanner</h5>
+            <select class="form-select form-select-sm dashboard-select" data-checkin-event>
+              <option value="">Select event</option>
+            </select>
+          </div>
+          <div class="qr-scanner-panel">
+            <video data-checkin-video playsinline muted></video>
+            <div class="qr-scanner-empty" data-checkin-camera-empty>
+              <i class="bi bi-camera-video"></i>
+              <span>Start camera scanner or use manual lookup.</span>
+            </div>
+          </div>
+          <div class="d-flex gap-2 mt-3 flex-wrap">
+            <button class="btn btn-primary-grad btn-sm" type="button" data-checkin-start-camera><i class="bi bi-camera-video me-1"></i>Start Scanner</button>
+            <button class="btn btn-glass btn-sm" type="button" data-checkin-stop-camera><i class="bi bi-stop-circle me-1"></i>Stop</button>
+          </div>
+          <form class="mt-3" data-checkin-manual-form>
+            <label class="form-label">Manual ticket or attendee lookup</label>
+            <div class="d-flex gap-2">
+              <input class="form-control" name="q" placeholder="Ticket code, attendee, email, or order number"/>
+              <button class="btn btn-glass" type="submit">Lookup</button>
+            </div>
+          </form>
+          <div class="dashboard-stack mt-3" data-checkin-lookup-results></div>
+        </div>
+      </div>
+      <div class="col-xl-7">
+        <div class="card-pro p-3 h-100">
+          <div class="row g-3 mb-3" data-checkin-stats>
+            <div class="col-md-4"><div class="kpi"><div class="label">Tickets Sold</div><div class="value">0</div></div></div>
+            <div class="col-md-4"><div class="kpi"><div class="label">Checked In</div><div class="value">0</div></div></div>
+            <div class="col-md-4"><div class="kpi"><div class="label">Remaining</div><div class="value">0</div></div></div>
+          </div>
+          <div data-checkin-result class="checkin-result is-empty">
+            <i class="bi bi-qr-code-scan"></i>
+            <div>
+              <h5>Ready to validate tickets</h5>
+              <p>Select an event, scan a QR code, or search manually.</p>
+            </div>
+          </div>
+          <h6 class="mt-4">Recent validation logs</h6>
+          <div class="table-responsive">
+            <table class="table table-borderless align-middle mb-0 dashboard-table">
+              <thead><tr><th>Result</th><th>Attendee</th><th>Ticket</th><th>Scanned</th></tr></thead>
+              <tbody data-checkin-logs>
+                <tr><td colspan="4"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading validation logs...</span></div></td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -132,8 +191,8 @@
           </select>
           <select class="form-select form-select-sm dashboard-select" data-attendee-status>
             <option value="">Any status</option>
-            <option value="active">Active</option>
-            <option value="used">Used</option>
+            <option value="valid">Valid</option>
+            <option value="checked_in">Checked in</option>
             <option value="refunded">Refunded</option>
             <option value="cancelled">Cancelled</option>
           </select>

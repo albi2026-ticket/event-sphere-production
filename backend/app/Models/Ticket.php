@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
+    'ticket_uuid',
     'ticket_code',
     'qr_token',
     'qr_payload',
@@ -26,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'checked_in_by',
     'checked_in_method',
     'checked_in_notes',
+    'issued_at',
     'transferred_to_user_id',
     'transferred_at',
     'downloaded_at',
@@ -35,9 +38,13 @@ class Ticket extends Model
 {
     use HasFactory;
 
-    public const STATUS_ACTIVE = 'active';
+    public const STATUS_VALID = 'valid';
 
-    public const STATUS_USED = 'used';
+    public const STATUS_CHECKED_IN = 'checked_in';
+
+    public const STATUS_ACTIVE = self::STATUS_VALID;
+
+    public const STATUS_USED = self::STATUS_CHECKED_IN;
 
     public const STATUS_CANCELLED = 'cancelled';
 
@@ -78,9 +85,15 @@ class Ticket extends Model
         return $this->belongsTo(User::class, 'transferred_to_user_id');
     }
 
+    public function validationLogs(): HasMany
+    {
+        return $this->hasMany(TicketValidationLog::class);
+    }
+
     protected function casts(): array
     {
         return [
+            'issued_at' => 'datetime',
             'checked_in_at' => 'datetime',
             'transferred_at' => 'datetime',
             'downloaded_at' => 'datetime',

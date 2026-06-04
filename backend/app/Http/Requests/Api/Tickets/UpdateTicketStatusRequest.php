@@ -22,6 +22,8 @@ class UpdateTicketStatusRequest extends FormRequest
             'status' => ['required', 'string', Rule::in([
                 Ticket::STATUS_ACTIVE,
                 Ticket::STATUS_USED,
+                Ticket::STATUS_VALID,
+                Ticket::STATUS_CHECKED_IN,
                 Ticket::STATUS_CANCELLED,
                 Ticket::STATUS_REFUNDED,
             ])],

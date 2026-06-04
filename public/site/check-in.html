@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="api-base" content="http://127.0.0.1:8000/api" />
+<title>QR Check-In - Event Sphere</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="dash-shell">
+  <aside class="dash-side">
+    <a class="brand mb-4" href="index.html"><span class="brand-logo"><i class="bi bi-qr-code-scan"></i></span>Check-In</a>
+    <nav class="menu">
+      <a class="active" href="#scanner"><i class="bi bi-qr-code-scan"></i> QR Scanner</a>
+      <a href="#manual"><i class="bi bi-search"></i> Manual Lookup</a>
+      <a href="#history"><i class="bi bi-clock-history"></i> Scan History</a>
+      <hr class="divider"/>
+      <a href="organizer.html" data-organizer-back><i class="bi bi-arrow-left"></i> Organizer dashboard</a>
+      <a href="admin.html" data-admin-back hidden><i class="bi bi-arrow-left"></i> Admin dashboard</a>
+      <a href="#" data-logout><i class="bi bi-box-arrow-right"></i> Sign out</a>
+    </nav>
+  </aside>
+
+  <main class="dash-main" id="scanner">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+      <div>
+        <button class="btn btn-glass d-lg-none" data-toggle-side><i class="bi bi-list"></i></button>
+        <h1 class="d-inline-block mb-0" style="font-size:1.8rem">QR Ticket Check-In</h1>
+        <p class="mb-0 text-muted-pro">Scan QR tickets, validate server-side, and check attendees in.</p>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <button class="icon-btn" data-theme-toggle title="Toggle theme"><i class="bi bi-sun" data-theme-icon></i></button>
+        <select class="form-select dashboard-select" data-scanner-event><option value="">Loading events...</option></select>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-4" data-scanner-stats>
+      <div class="col-md-4"><div class="kpi"><div class="label">Tickets Sold</div><div class="value">0</div></div></div>
+      <div class="col-md-4"><div class="kpi"><div class="label">Checked In</div><div class="value">0</div></div></div>
+      <div class="col-md-4"><div class="kpi"><div class="label">Remaining</div><div class="value">0</div></div></div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-lg-5">
+        <div class="card-pro p-3">
+          <h4 class="mb-3">Camera Scanner</h4>
+          <div class="qr-scanner-panel">
+            <video data-scanner-video playsinline muted></video>
+            <div class="qr-scanner-empty" data-scanner-empty><i class="bi bi-camera-video"></i><span>Start the camera or use manual lookup.</span></div>
+          </div>
+          <div class="d-flex gap-2 mt-3 flex-wrap">
+            <button class="btn btn-primary-grad" type="button" data-scanner-start><i class="bi bi-camera-video me-1"></i>Start Scanner</button>
+            <button class="btn btn-glass" type="button" data-scanner-stop><i class="bi bi-stop-circle me-1"></i>Stop</button>
+          </div>
+          <form id="manual" class="mt-4" data-scanner-manual-form>
+            <label class="form-label">Manual ticket or attendee lookup</label>
+            <div class="d-flex gap-2">
+              <input class="form-control" name="q" placeholder="Ticket code, attendee, email, or order number"/>
+              <button class="btn btn-glass" type="submit">Lookup</button>
+            </div>
+          </form>
+          <div class="dashboard-stack mt-3" data-scanner-lookup-results></div>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="card-pro p-3">
+          <h4 class="mb-3">Validation Result</h4>
+          <div data-scanner-result class="checkin-result is-empty">
+            <i class="bi bi-qr-code-scan"></i>
+            <div><h5>Ready to scan</h5><p>Validation happens on the server. A ticket cannot be checked in twice.</p></div>
+          </div>
+          <h6 id="history" class="mt-4">Recent scan history</h6>
+          <div class="table-responsive">
+            <table class="table table-borderless align-middle mb-0 dashboard-table">
+              <thead><tr><th>Result</th><th>Attendee</th><th>Ticket</th><th>Time</th></tr></thead>
+              <tbody data-scanner-logs><tr><td colspan="4" class="text-muted-pro">Loading scan history...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/api/config.js"></script>
+<script src="../assets/js/api/api-client.js"></script>
+<script src="../assets/js/api/auth.js"></script>
+<script src="../assets/js/api/utils.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/pages/check-in-page.js"></script>
+</body>
+</html>

@@ -271,14 +271,18 @@ class DatabaseSeeder extends Seeder
             );
 
             foreach (range(1, $quantity) as $index) {
+                $ticketUuid = (string) Str::uuid();
+                $qrToken = 'demo-ticket-token-'.$index;
                 Ticket::query()->updateOrCreate(
                     ['ticket_code' => 'ES-DEMO-TICKET-00'.$index],
                     [
-                        'qr_token' => 'demo-ticket-token-'.$index,
+                        'ticket_uuid' => $ticketUuid,
+                        'qr_token' => $qrToken,
                         'qr_payload' => json_encode([
-                            'ticket_code' => 'ES-DEMO-TICKET-00'.$index,
-                            'event_id' => $event->id,
-                            'order_number' => $order->order_number,
+                            'type' => 'event_sphere_ticket',
+                            'version' => 1,
+                            'ticket_uuid' => $ticketUuid,
+                            'token' => $qrToken,
                         ]),
                         'user_id' => $user->id,
                         'event_id' => $event->id,
@@ -286,8 +290,11 @@ class DatabaseSeeder extends Seeder
                         'order_id' => $order->id,
                         'order_item_id' => $item->id,
                         'seat_label' => 'GA-'.$index,
+                        'attendee_name' => $user->name,
+                        'attendee_email' => $user->email,
                         'status' => Ticket::STATUS_ACTIVE,
                         'transfer_status' => null,
+                        'issued_at' => now()->subDays(2),
                     ],
                 );
             }

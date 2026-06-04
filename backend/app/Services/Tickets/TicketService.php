@@ -5,6 +5,7 @@ namespace App\Services\Tickets;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Ticket;
+use App\Models\TicketValidationLog;
 use App\Models\User;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\ErrorCorrectionLevel;
@@ -49,10 +50,12 @@ class TicketService
                 'phone' => $order->user?->phone ?: $order->billing_phone,
             ];
             $token = $this->newQrToken();
+            $uuid = (string) Str::uuid();
             $ticket = Ticket::query()->create([
+                'ticket_uuid' => $uuid,
                 'ticket_code' => $this->newTicketCode(),
                 'qr_token' => $token,
-                'qr_payload' => $this->qrPayload($token),
+                'qr_payload' => $this->qrPayload($uuid, $token),
                 'user_id' => $order->user_id,
                 'event_id' => $item->event_id,
                 'ticket_type_id' => $item->ticket_type_id,
@@ -62,6 +65,7 @@ class TicketService
                 'attendee_email' => $attendee['email'] ?? null,
                 'attendee_phone' => $attendee['phone'] ?? null,
                 'status' => Ticket::STATUS_ACTIVE,
+                'issued_at' => now(),
             ]);
 
             $tickets[] = $ticket;
@@ -70,11 +74,12 @@ class TicketService
         return $tickets;
     }
 
-    public function findByScannerPayload(?string $token, ?string $ticketCode = null): Ticket
+    public function findByScannerPayload(?string $token, ?string $ticketCode = null, ?string $ticketUuid = null): Ticket
     {
         $ticket = Ticket::query()
             ->with(['user', 'event.organizer', 'ticketType', 'order.user'])
             ->when($token, fn (EloquentBuilder $query) => $query->where('qr_token', $token))
+            ->when($ticketUuid, fn (EloquentBuilder $query) => $query->where('ticket_uuid', $ticketUuid))
             ->when(! $token && $ticketCode, fn (EloquentBuilder $query) => $query->where('ticket_code', $ticketCode))
             ->first();
 
@@ -89,12 +94,24 @@ class TicketService
 
     public function validationResult(Ticket $ticket): array
     {
+        $result = match ($ticket->status) {
+            Ticket::STATUS_CHECKED_IN => TicketValidationLog::RESULT_ALREADY_USED,
+            Ticket::STATUS_VALID => TicketValidationLog::RESULT_VALID,
+            default => TicketValidationLog::RESULT_INVALID,
+        };
+
         return [
-            'is_valid' => $ticket->status === Ticket::STATUS_ACTIVE,
-            'can_check_in' => $ticket->status === Ticket::STATUS_ACTIVE,
+            'result' => $result,
+            'title' => match ($result) {
+                TicketValidationLog::RESULT_VALID => 'VALID TICKET',
+                TicketValidationLog::RESULT_ALREADY_USED => 'TICKET ALREADY USED',
+                default => 'INVALID TICKET',
+            },
+            'is_valid' => $ticket->status === Ticket::STATUS_VALID,
+            'can_check_in' => $ticket->status === Ticket::STATUS_VALID,
             'reason' => match ($ticket->status) {
-                Ticket::STATUS_ACTIVE => 'Ticket is active and ready for check-in.',
-                Ticket::STATUS_USED => 'Ticket has already been checked in.',
+                Ticket::STATUS_VALID => 'Ticket is valid and ready for check-in.',
+                Ticket::STATUS_CHECKED_IN => 'Ticket has already been checked in.',
                 Ticket::STATUS_CANCELLED => 'Ticket was cancelled.',
                 Ticket::STATUS_REFUNDED => 'Ticket was refunded.',
                 default => 'Ticket is not valid for check-in.',
@@ -114,18 +131,30 @@ class TicketService
                 ->firstOrFail();
 
             if ($locked->status !== Ticket::STATUS_ACTIVE) {
+                $this->logValidation($locked, $checker, [
+                    'result' => $this->validationResult($locked)['result'],
+                    'method' => $method ?: 'manual',
+                    'message' => $this->validationResult($locked)['reason'],
+                ]);
+
                 throw ValidationException::withMessages([
                     'ticket' => $this->validationResult($locked)['reason'],
                 ]);
             }
 
             $locked->forceFill([
-                'status' => Ticket::STATUS_USED,
+                'status' => Ticket::STATUS_CHECKED_IN,
                 'checked_in_at' => now(),
                 'checked_in_by' => $checker->id,
                 'checked_in_method' => $method ?: 'manual',
                 'checked_in_notes' => $notes,
             ])->save();
+
+            $this->logValidation($locked, $checker, [
+                'result' => TicketValidationLog::RESULT_VALID,
+                'method' => $method ?: 'manual',
+                'message' => 'Ticket checked in successfully.',
+            ]);
 
             return $locked->fresh(['user', 'event.organizer', 'ticketType', 'order.user']);
         });
@@ -135,7 +164,7 @@ class TicketService
     {
         return Ticket::query()
             ->where('order_id', $order->id)
-            ->where('status', '!=', Ticket::STATUS_USED)
+            ->where('status', '!=', Ticket::STATUS_CHECKED_IN)
             ->update(['status' => $status]);
     }
 
@@ -147,19 +176,19 @@ class TicketService
         ])->save();
     }
 
-    public function qrPayload(string $token): string
+    public function qrPayload(string $ticketUuid, string $token): string
     {
         return json_encode([
             'type' => 'event_sphere_ticket',
             'version' => 1,
+            'ticket_uuid' => $ticketUuid,
             'token' => $token,
-            'validation_url' => url('/api/tickets/validate'),
         ], JSON_THROW_ON_ERROR);
     }
 
     public function qrSvg(Ticket $ticket, int $size = 320): string
     {
-        $payload = $ticket->qr_payload ?: $this->qrPayload($ticket->qr_token);
+        $payload = $ticket->qr_payload ?: $this->qrPayload($ticket->ticket_uuid, $ticket->qr_token);
 
         return (new Builder(
             writer: new SvgWriter,
@@ -173,7 +202,7 @@ class TicketService
 
     public function qrDataUri(Ticket $ticket, int $size = 320): string
     {
-        $payload = $ticket->qr_payload ?: $this->qrPayload($ticket->qr_token);
+        $payload = $ticket->qr_payload ?: $this->qrPayload($ticket->ticket_uuid, $ticket->qr_token);
 
         return (new Builder(
             writer: new SvgWriter,
@@ -199,12 +228,39 @@ class TicketService
             .'<p style="margin:0 0 20px;color:#374151;">'.e($ticket->event->venue_name).' · '.e($ticket->event->city).'</p>'
             .'<img src="'.$qr.'" alt="Ticket QR code" style="width:280px;height:280px;display:block;margin:0 0 20px;">'
             .'<p><strong>Ticket code:</strong> '.e($ticket->ticket_code).'</p>'
+            .'<p><strong>Ticket UUID:</strong> '.e($ticket->ticket_uuid).'</p>'
+            .'<p><strong>Order:</strong> '.e($ticket->order->order_number).'</p>'
             .'<p><strong>Ticket type:</strong> '.e($ticket->ticketType->name).'</p>'
             .'<p><strong>Attendee:</strong> '.e($attendeeName).' · '.e($attendeeEmail).'</p>'
             .'<p><strong>Purchased by:</strong> '.e($ticket->user->name).' · '.e($ticket->user->email).'</p>'
             .'<p><strong>Status:</strong> '.e($ticket->status).'</p>'
             .'<p style="color:#6b7280;font-size:13px;">Present this QR code at check-in. Screenshots and downloads are valid until the ticket is used, cancelled, or refunded.</p>'
             .'</main></body></html>';
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    public function logValidation(?Ticket $ticket, ?User $scanner, array $context = []): TicketValidationLog
+    {
+        $token = $context['token'] ?? $ticket?->qr_token;
+
+        return TicketValidationLog::query()->create([
+            'event_id' => $context['event_id'] ?? $ticket?->event_id,
+            'ticket_id' => $ticket?->id,
+            'scanned_by' => $scanner?->id,
+            'result' => $context['result'] ?? ($ticket ? $this->validationResult($ticket)['result'] : TicketValidationLog::RESULT_INVALID),
+            'method' => $context['method'] ?? 'qr',
+            'scanned_at' => $context['scanned_at'] ?? now(),
+            'attendee_name' => $context['attendee_name'] ?? $ticket?->attendee_name ?? $ticket?->user?->name,
+            'attendee_email' => $context['attendee_email'] ?? $ticket?->attendee_email ?? $ticket?->user?->email,
+            'ticket_code' => $context['ticket_code'] ?? $ticket?->ticket_code,
+            'ticket_uuid' => $context['ticket_uuid'] ?? $ticket?->ticket_uuid,
+            'token_hash' => $token ? hash('sha256', (string) $token) : null,
+            'ip_address' => $context['ip_address'] ?? null,
+            'user_agent' => $context['user_agent'] ?? null,
+            'message' => $context['message'] ?? null,
+        ]);
     }
 
     protected function newTicketCode(): string

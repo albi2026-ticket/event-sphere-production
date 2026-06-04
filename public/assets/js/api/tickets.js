@@ -42,10 +42,11 @@
 
   function renderTicketCard(ticket) {
     const ev = ticket.event || {};
-    const status = (ticket.status || 'active').toUpperCase();
+    const status = (ticket.status || 'valid').replace(/_/g, ' ').toUpperCase();
     const date = u().formatEventDate(ev.starts_at, ev.timezone);
-    const seat = ticket.seat_label ? `Seat <b style="color:var(--text)">${u().escapeHtml(ticket.seat_label)}</b>` : `Code <b style="color:var(--text)">${u().escapeHtml(ticket.ticket_code)}</b>`;
     const attendee = ticket.attendee || {};
+    const orderNumber = ticket.order?.order_number || '-';
+    const ticketType = ticket.ticket_type?.name || 'Ticket';
 
     return `
       <div class="col-lg-6" data-ticket-id="${ticket.id}">
@@ -55,12 +56,16 @@
             <h5 class="mt-2">${u().escapeHtml(ev.title || 'Event')}</h5>
             <small class="text-muted-pro d-block"><i class="bi bi-geo-alt me-1"></i>${u().escapeHtml(ev.venue_name || '')}${ev.city ? `, ${u().escapeHtml(ev.city)}` : ''}</small>
             <small class="text-muted-pro d-block"><i class="bi bi-calendar3 me-1"></i>${u().escapeHtml(date)}</small>
+            <small class="text-muted-pro d-block"><i class="bi bi-ticket-perforated me-1"></i>${u().escapeHtml(ticketType)}</small>
             <small class="text-muted-pro d-block"><i class="bi bi-person me-1"></i>${u().escapeHtml(attendee.name || 'Guest')}${attendee.email ? ` · ${u().escapeHtml(attendee.email)}` : ''}</small>
-            <div class="mt-3 small">${seat}</div>
+            <div class="mt-3 small">
+              <div>Order <b style="color:var(--text)">${u().escapeHtml(orderNumber)}</b></div>
+              <div>Ticket <b style="color:var(--text)">${u().escapeHtml(ticket.ticket_code)}</b></div>
+            </div>
             <div class="mt-3 d-flex gap-2">
-              <button class="btn btn-primary-grad btn-sm" data-ticket-download="${ticket.id}" data-ticket-code="${u().escapeHtml(ticket.ticket_code)}"><i class="bi bi-download me-1"></i> Download</button>
+              <button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}"><i class="bi bi-qr-code me-1"></i> View QR</button>
+              <button class="btn btn-primary-grad btn-sm" data-ticket-download="${ticket.id}" data-ticket-code="${u().escapeHtml(ticket.ticket_code)}"><i class="bi bi-download me-1"></i> Download Ticket</button>
               <button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}"><i class="bi bi-info-circle me-1"></i> Details</button>
-              <button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}"><i class="bi bi-qr-code me-1"></i> QR</button>
             </div>
           </div>
           <div class="qr"><img alt="QR" data-ticket-qr="${ticket.id}" src="" style="min-width:180px;min-height:180px;background:#fff;border-radius:8px"/></div>
