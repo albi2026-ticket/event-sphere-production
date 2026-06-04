@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\AuthUserController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\EventImageController;
+use App\Http\Controllers\Api\NewsletterSubscriptionController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\Organizer\OrganizerDashboardController;
 use App\Http\Controllers\Api\Organizer\OrganizerEventController;
@@ -43,6 +44,7 @@ Route::get('/events/{event:slug}/ticket-types', [TicketTypeController::class, 'i
 Route::get('/events/{event:slug}', [EventController::class, 'show']);
 Route::get('/event-images/{eventImage}', [EventImageController::class, 'show']);
 Route::get('/ticket-types/{ticketType}', [TicketTypeController::class, 'show']);
+Route::post('/newsletter-subscriptions', [NewsletterSubscriptionController::class, 'store']);
 Route::post('/stripe/webhook', WebhookController::class);
 
 Route::middleware('auth:sanctum')->group(function (): void {

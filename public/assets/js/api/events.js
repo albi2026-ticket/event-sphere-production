@@ -114,7 +114,7 @@
     const date = u().formatEventDate(event.starts_at, event.timezone);
     const price = lowestAvailablePrice(event);
     const status = salesStatus(event);
-    const cat = status.key === 'ended' || status.key === 'sold_out'
+    const cat = status.key === 'ended' || status.key === 'sold_out' || status.key === 'live'
       ? status.label.toUpperCase()
       : (event.category || 'EVENT').toUpperCase();
     const slug = event.slug;

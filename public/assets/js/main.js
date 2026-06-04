@@ -88,6 +88,26 @@
   }, { threshold: 0.12 });
   const observeFades = () => document.querySelectorAll('.fade-up:not(.in)').forEach(el => io.observe(el));
 
+  /* ---------- Footer reveal ---------- */
+  const footerIo = 'IntersectionObserver' in window
+    ? new IntersectionObserver((entries) => {
+      entries.forEach(en => {
+        if (en.isIntersecting) {
+          en.target.classList.add('in');
+          footerIo.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.08 })
+    : null;
+  function observeFooters() {
+    document.querySelectorAll('.footer:not([data-footer-reveal-bound])').forEach((footer) => {
+      footer.dataset.footerRevealBound = 'true';
+      footer.classList.add('footer-reveal');
+      if (footerIo) footerIo.observe(footer);
+      else footer.classList.add('in');
+    });
+  }
+
   /* ---------- Animated counters ---------- */
   function animateCounter(el) {
     const target = +el.dataset.count;
@@ -269,6 +289,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     paintFavs();
     observeFades();
+    observeFooters();
     document.querySelectorAll('[data-count]').forEach(el => cio.observe(el));
     document.querySelectorAll('[data-countdown]').forEach(startCountdown);
     document.querySelectorAll('[data-seatmap]').forEach(buildSeatmap);
@@ -283,4 +304,5 @@
       if (h.endsWith(path)) a.classList.add('active');
     });
   });
+  document.addEventListener('event-sphere:partials-loaded', observeFooters);
 })();

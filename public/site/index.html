@@ -46,55 +46,14 @@
 </nav>
 
 <!-- ===== HERO ===== -->
-<section class="hero">
-  <div class="container-xxl position-relative" style="z-index:2">
-    <div class="row align-items-center g-5">
-      <div class="col-lg-7">
-        <span class="hero-eyebrow"><span style="width:8px;height:8px;border-radius:50%;background:var(--success)"></span> 1.2M+ live events worldwide</span>
-        <h1 class="mt-3">Find tickets to the <span class="grad-text">moments that matter.</span></h1>
-        <p class="mt-3 fs-5" style="max-width:560px">Concerts, sports, festivals, and conferences — all in one premium marketplace. Buy, sell and transfer tickets in seconds.</p>
-
-        <!-- Search -->
-        <div class="search-pill mt-4 ac-wrap">
-          <div class="field"><i class="bi bi-search"></i><input data-autocomplete data-home-search placeholder="Search artists, teams, venues" /></div>
-          <div class="field"><i class="bi bi-geo-alt"></i><input data-home-city placeholder="Any city" /></div>
-          <div class="field"><i class="bi bi-calendar3"></i><input data-home-date type="date" /></div>
-          <button class="btn btn-primary-grad btn-lg" type="button" data-home-search-btn>Search</button>
-        </div>
-
-        <div class="hero-stats">
-          <div class="stat"><b><span data-count="48000">0</span>+</b><span>Events live</span></div>
-          <div class="stat"><b><span data-count="180">0</span>+</b><span>Countries</span></div>
-          <div class="stat"><b><span data-count="12">0</span>M+</b><span>Happy fans</span></div>
-        </div>
-      </div>
-      <div class="col-lg-5 d-none d-lg-block">
-        <div class="position-relative">
-          <img class="rounded-pro float" style="width:100%;box-shadow:var(--shadow-lg)" src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=900&q=80" alt="Live concert crowd" loading="lazy"/>
-          <div class="glass p-3 position-absolute" style="bottom:-20px;left:-20px;width:230px">
-            <div class="d-flex align-items-center gap-2">
-              <div style="width:42px;height:42px;border-radius:12px;background:var(--grad-primary);display:grid;place-items:center"><i class="bi bi-ticket-perforated text-white"></i></div>
-              <div><div class="fw-semibold">Ticket secured</div><div class="text-muted-pro small">Coldplay · Row F</div></div>
-            </div>
-          </div>
-          <div class="glass p-3 position-absolute" style="top:-20px;right:-10px">
-            <div class="d-flex align-items-center gap-2">
-              <i class="bi bi-shield-check" style="color:var(--success);font-size:1.4rem"></i>
-              <div><div class="fw-semibold small">100% Verified</div><div class="text-muted-pro" style="font-size:.75rem">Refund guarantee</div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Trust marquee -->
-    <div class="marquee mt-5 pt-4">
-      <div class="marquee-track text-muted-pro fw-semibold" style="font-size:1.1rem;opacity:.7">
-        <span>SPOTIFY</span><span>LIVE NATION</span><span>UEFA</span><span>NBA</span><span>TED</span><span>F1</span><span>COACHELLA</span><span>SXSW</span>
-        <span>SPOTIFY</span><span>LIVE NATION</span><span>UEFA</span><span>NBA</span><span>TED</span><span>F1</span><span>COACHELLA</span><span>SXSW</span>
-      </div>
-    </div>
+<section class="hero hero-slider" data-hero-slider aria-label="Featured events">
+  <div class="hero-loading" data-hero-loading>
+    <div class="spinner-border text-light" role="status"><span class="visually-hidden">Loading featured events</span></div>
   </div>
+  <div class="hero-slides" data-hero-slides></div>
+  <button class="hero-nav hero-nav-prev" type="button" data-hero-prev aria-label="Previous featured event"><i class="bi bi-chevron-left"></i></button>
+  <button class="hero-nav hero-nav-next" type="button" data-hero-next aria-label="Next featured event"><i class="bi bi-chevron-right"></i></button>
+  <div class="hero-dots" data-hero-dots aria-label="Featured event slides"></div>
 </section>
 
 <!-- ===== TRENDING ===== -->
@@ -103,73 +62,103 @@
     <div class="section-title fade-up">
       <div>
         <div class="eyebrow">Trending now</div>
-        <h2 class="mt-2">Newest published events</h2>
+        <h2 class="mt-2">Events fans are watching</h2>
       </div>
-      <div class="d-flex gap-2">
-        <span class="chip active" data-home-trending-filter="all">All</span><span class="chip" data-home-trending-filter="week">This week</span><span class="chip" data-home-trending-filter="month">This month</span><span class="chip" data-home-trending-filter="near">Near me</span>
-      </div>
+      <a class="btn btn-ghost" href="events.html?sort=trending">Browse trending <i class="bi bi-arrow-right ms-1"></i></a>
     </div>
     <div class="row g-4 fade-up" data-home-trending>
     </div>
   </div>
 </section>
 
+<!-- ===== UPCOMING THIS WEEK ===== -->
+<section class="section-sm" data-home-week-section hidden>
+  <div class="container-xxl">
+    <div class="section-title fade-up">
+      <div>
+        <div class="eyebrow">Upcoming this week</div>
+        <h2 class="mt-2">Happening in the next 7 days</h2>
+      </div>
+      <a class="btn btn-ghost" href="events.html?sort=soonest">See all upcoming <i class="bi bi-arrow-right ms-1"></i></a>
+    </div>
+    <div class="row g-4 fade-up" data-home-week></div>
+  </div>
+</section>
+
 <div data-home-category-sections></div>
 
-<!-- ===== FEATURED CAROUSEL ===== -->
+<!-- ===== WHY CHOOSE ===== -->
 <section class="section-sm">
   <div class="container-xxl">
-    <div class="section-title fade-up"><div><div class="eyebrow">Featured</div><h2 class="mt-2">Curated by editors</h2></div></div>
-    <div id="featCarousel" class="carousel slide fade-up" data-bs-ride="carousel">
-      <div class="carousel-inner rounded-pro" style="height:380px">
-        <div class="carousel-item active h-100" style="background:url('https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=1600&q=80') center/cover">
-          <div class="h-100 d-flex align-items-end p-4 p-md-5" style="background:linear-gradient(180deg,transparent,rgba(0,0,0,.85))">
-            <div><span class="badge-soft" style="position:static">EDITOR'S PICK</span>
-              <h2 class="text-white mt-2">Tomorrowland 2026 — Mainstage Premiere</h2>
-              <p class="text-white-50 mb-3">Belgium · July 17–19</p>
-              <a class="btn btn-primary-grad" href="event-details.html">Get tickets</a>
-            </div>
-          </div>
-        </div>
-        <div class="carousel-item h-100" style="background:url('https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1600&q=80') center/cover">
-          <div class="h-100 d-flex align-items-end p-4 p-md-5" style="background:linear-gradient(180deg,transparent,rgba(0,0,0,.85))">
-            <div><span class="badge-soft" style="position:static">LIMITED</span>
-              <h2 class="text-white mt-2">Glastonbury — Pyramid Stage Weekend</h2>
-              <p class="text-white-50 mb-3">UK · June 24–28</p>
-              <a class="btn btn-primary-grad" href="event-details.html">Get tickets</a>
-            </div>
-          </div>
-        </div>
+    <div class="section-title fade-up">
+      <div>
+        <div class="eyebrow">Why choose Event Sphere</div>
+        <h2 class="mt-2">A safer way to book live events</h2>
       </div>
-      <button class="carousel-control-prev" data-bs-target="#featCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
-      <button class="carousel-control-next" data-bs-target="#featCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+    </div>
+    <div class="row g-4 fade-up">
+      <div class="col-md-6 col-xl-3">
+        <article class="trust-card">
+          <div class="trust-icon"><i class="bi bi-shield-lock"></i></div>
+          <h3>Secure Ticket Purchases</h3>
+          <p>Safe checkout flow with protected transactions from ticket selection through payment.</p>
+        </article>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <article class="trust-card">
+          <div class="trust-icon"><i class="bi bi-qr-code"></i></div>
+          <h3>Instant Ticket Delivery</h3>
+          <p>Receive tickets immediately after checkout with QR code access ready for entry.</p>
+        </article>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <article class="trust-card">
+          <div class="trust-icon"><i class="bi bi-patch-check"></i></div>
+          <h3>Verified Organizers</h3>
+          <p>Browse events from trusted organizers with clear event, venue, and ticket details.</p>
+        </article>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <article class="trust-card">
+          <div class="trust-icon"><i class="bi bi-compass"></i></div>
+          <h3>Easy Event Discovery</h3>
+          <p>Find events quickly by category, city, date, price, and trending status.</p>
+        </article>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ===== POPULAR CITIES ===== -->
+<!-- ===== HOW IT WORKS ===== -->
 <section class="section-sm">
   <div class="container-xxl">
-    <div class="section-title fade-up"><div><div class="eyebrow">Popular cities</div><h2 class="mt-2">Where the world goes out</h2></div></div>
-    <div class="row g-3 fade-up">
-      <div class="col-6 col-md-3 col-lg-2"><div class="city-card"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&q=80')"></div><div class="name">New York <span>1.2k</span></div></div></div>
-      <div class="col-6 col-md-3 col-lg-2"><div class="city-card"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&q=80')"></div><div class="name">Paris <span>820</span></div></div></div>
-      <div class="col-6 col-md-3 col-lg-2"><div class="city-card"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=600&q=80')"></div><div class="name">London <span>1.5k</span></div></div></div>
-      <div class="col-6 col-md-3 col-lg-2"><div class="city-card"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=600&q=80')"></div><div class="name">Tokyo <span>640</span></div></div></div>
-      <div class="col-6 col-md-3 col-lg-2"><div class="city-card"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1583422409516-2895a77efded?w=600&q=80')"></div><div class="name">Dubai <span>410</span></div></div></div>
-      <div class="col-6 col-md-3 col-lg-2"><div class="city-card"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1505761671935-60b3a7427bad?w=600&q=80')"></div><div class="name">Berlin <span>730</span></div></div></div>
+    <div class="section-title fade-up">
+      <div>
+        <div class="eyebrow">How it works</div>
+        <h2 class="mt-2">From discovery to the door</h2>
+      </div>
     </div>
-  </div>
-</section>
-
-<!-- ===== TESTIMONIALS ===== -->
-<section class="section">
-  <div class="container-xxl">
-    <div class="section-title fade-up"><div><div class="eyebrow">Loved by fans</div><h2 class="mt-2">A community of 12 million</h2></div></div>
-    <div class="row g-4 fade-up">
-      <div class="col-md-4"><div class="testimonial"><div class="stars">★★★★★</div><p class="mt-2 mb-0" style="color:var(--text)">"Got front-row tickets in under a minute. The QR transfer to my friend was instant. Best ticketing app I've used."</p><div class="who"><img src="https://i.pravatar.cc/100?img=12"/><div><div class="fw-semibold">Maya Chen</div><div class="text-muted-pro small">San Francisco</div></div></div></div></div>
-      <div class="col-md-4"><div class="testimonial"><div class="stars">★★★★★</div><p class="mt-2 mb-0" style="color:var(--text)">"Resold my Coachella tickets in 10 minutes when plans changed. Refund guarantee actually means something here."</p><div class="who"><img src="https://i.pravatar.cc/100?img=32"/><div><div class="fw-semibold">Liam Patel</div><div class="text-muted-pro small">London</div></div></div></div></div>
-      <div class="col-md-4"><div class="testimonial"><div class="stars">★★★★★</div><p class="mt-2 mb-0" style="color:var(--text)">"The seat map is gorgeous and accurate. I knew exactly what I was buying before paying."</p><div class="who"><img src="https://i.pravatar.cc/100?img=47"/><div><div class="fw-semibold">Sara Okafor</div><div class="text-muted-pro small">Berlin</div></div></div></div></div>
+    <div class="how-steps fade-up">
+      <article class="how-step">
+        <span>1</span>
+        <h3>Find an Event</h3>
+        <p>Explore trending, weekly, and category-based event listings.</p>
+      </article>
+      <article class="how-step">
+        <span>2</span>
+        <h3>Choose Your Tickets</h3>
+        <p>Select the ticket tier and quantity that fit your plan.</p>
+      </article>
+      <article class="how-step">
+        <span>3</span>
+        <h3>Complete Checkout</h3>
+        <p>Confirm attendee details and complete payment securely.</p>
+      </article>
+      <article class="how-step">
+        <span>4</span>
+        <h3>Receive QR Ticket</h3>
+        <p>Access your ticket instantly from your dashboard.</p>
+      </article>
     </div>
   </div>
 </section>
@@ -180,13 +169,17 @@
     <div class="newsletter fade-up">
       <div class="row align-items-center g-4 position-relative" style="z-index:2">
         <div class="col-md-7">
-          <h2>Never miss a drop.</h2>
-          <p class="mb-0" style="color:rgba(255,255,255,.85)">Get presale codes, early access and weekly picks tailored to your taste.</p>
+          <h2>Never Miss an Event</h2>
+          <p class="mb-2" style="color:rgba(255,255,255,.85)">Subscribe for concerts, sports, festivals, and special event updates.</p>
+          <div class="newsletter-tags"><span>Concerts</span><span>Sports</span><span>Festivals</span><span>Special events</span></div>
         </div>
         <div class="col-md-5">
-          <form class="d-flex gap-2" onsubmit="event.preventDefault();tkToast('Subscribed! Check your inbox.')">
-            <input class="form-control" type="email" placeholder="you@email.com" required/>
-            <button class="btn btn-light">Subscribe</button>
+          <form class="newsletter-form" data-newsletter-form novalidate>
+            <div class="d-flex gap-2">
+              <input class="form-control" type="email" placeholder="you@email.com" required data-newsletter-email/>
+              <button class="btn btn-light" type="submit" data-newsletter-submit>Subscribe</button>
+            </div>
+            <div class="newsletter-message" data-newsletter-message role="status" aria-live="polite"></div>
           </form>
         </div>
       </div>
@@ -197,18 +190,56 @@
 <!-- ===== FOOTER ===== -->
 <footer class="footer">
   <div class="container-xxl">
-    <div class="row g-4">
-      <div class="col-lg-4">
-        <a class="brand mb-3" href="index.html"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>TicketHub</a>
-        <p class="mt-3" style="max-width:340px">The premium marketplace to discover, buy and resell tickets to the world's best live events.</p>
-        <div class="d-flex gap-2 mt-3"><a href="#" class="icon-btn"><i class="bi bi-twitter-x"></i></a><a href="#" class="icon-btn"><i class="bi bi-instagram"></i></a><a href="#" class="icon-btn"><i class="bi bi-tiktok"></i></a><a href="#" class="icon-btn"><i class="bi bi-youtube"></i></a></div>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a class="brand mb-3" href="index.html"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Event Sphere</a>
+        <p>The premium marketplace to discover, buy, and manage tickets for live events with confidence.</p>
+        <div class="footer-social" aria-label="Social links">
+          <a href="https://www.facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+          <a href="https://www.instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+          <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="X Twitter"><i class="bi bi-twitter-x"></i></a>
+          <a href="https://www.linkedin.com" target="_blank" rel="noreferrer" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+        </div>
       </div>
-      <div class="col-6 col-lg-2"><h6>Discover</h6><a href="events.html">Concerts</a><a href="events.html">Sports</a><a href="events.html">Festivals</a><a href="events.html">Theater</a></div>
-      <div class="col-6 col-lg-2"><h6>Sell</h6><a href="organizer.html">Organizer tools</a><a href="organizer.html">List tickets</a><a href="#">Pricing</a><a href="#">Resources</a></div>
-      <div class="col-6 col-lg-2"><h6>Company</h6><a href="#">About</a><a href="#">Careers</a><a href="#">Press</a><a href="#">Contact</a></div>
-      <div class="col-6 col-lg-2"><h6>Support</h6><a href="#">Help center</a><a href="#">Refund policy</a><a href="#">Terms</a><a href="#">Privacy</a></div>
     </div>
-    <div class="legal"><div>© <span data-year></span> TicketHub Inc.</div><div class="d-flex gap-3"><a href="#">Cookies</a><a href="#">Accessibility</a><a href="#">Sitemap</a></div></div>
+
+    <div class="footer-links-grid">
+      <div>
+        <h6>Company</h6>
+        <a href="about.html">About Event Sphere</a>
+        <a href="help-center.html#contact">Contact Us</a>
+        <a href="careers.html">Careers</a>
+        <span>Blog</span>
+      </div>
+      <div>
+        <h6>Support</h6>
+        <a href="help-center.html">Help Center</a>
+        <a href="faqs.html">FAQs</a>
+        <a href="help-center.html#ticket-support">Ticket Support</a>
+        <a href="refund-policy.html">Refund Policy</a>
+      </div>
+      <div>
+        <h6>Organizers</h6>
+        <a href="organizer.html">Become an Organizer</a>
+        <a href="organizer-guide.html">Organizer Guide</a>
+        <a href="organizer.html">Create Event</a>
+      </div>
+      <div>
+        <h6>Legal</h6>
+        <a href="terms-of-service.html">Terms of Service</a>
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="privacy-policy.html#cookies">Cookie Policy</a>
+      </div>
+    </div>
+
+    <div class="legal">
+      <div>© Event Sphere <span data-year></span></div>
+      <div class="footer-badges">
+        <span><i class="bi bi-shield-check"></i> Secure Ticket Purchases</span>
+        <span><i class="bi bi-qr-code"></i> QR Ticket Entry</span>
+        <span><i class="bi bi-patch-check"></i> Verified Organizers</span>
+      </div>
+    </div>
   </div>
 </footer>
 
@@ -219,6 +250,7 @@
 <script src="../assets/js/api/utils.js"></script>
 <script src="../assets/js/api/events.js"></script>
 <script src="../assets/js/api/favorites.js"></script>
+<script src="../assets/js/api/cart.js"></script>
 <script src="../assets/js/main.js"></script>
 <script src="../assets/js/pages/index-page.js"></script>
 </body>
