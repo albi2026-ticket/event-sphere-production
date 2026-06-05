@@ -1066,10 +1066,12 @@ a:hover { color: var(--secondary); }
 .dash-side .menu a:hover, .dash-side .menu a.active { background: var(--card-2); color: var(--text); }
 .dash-side .menu a.active { color: var(--primary); }
 .dash-side .menu i { width: 18px; }
-.organizer-section {
+.organizer-section,
+.dashboard-section {
   display: none;
 }
 .organizer-section.active,
+.dashboard-section.active,
 .admin-section.active {
   display: block;
   animation: dashboardSectionIn .18s ease;

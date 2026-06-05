@@ -13,8 +13,10 @@
     summary: null,
     profile: null,
     upcomingEvents: [],
+    upcomingTickets: [],
     activeTickets: [],
     tickets: [],
+    historyTickets: [],
     ticketMeta: null,
     orders: [],
     orderMeta: null,
@@ -25,11 +27,13 @@
       profile: true,
       upcoming: true,
       tickets: true,
+      history: true,
       orders: true,
       favorites: true,
     },
     errors: {},
-    ticketView: 'active',
+    currentSection: 'overview',
+    ticketView: 'all',
     ticketPage: 1,
     orderPage: 1,
     favoritePage: 1,
@@ -60,6 +64,41 @@
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '-';
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function dateTimeLabel(value) {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+
+  function isUpcomingEvent(event) {
+    const date = event?.starts_at ? new Date(event.starts_at) : null;
+    return date && !Number.isNaN(date.getTime()) && date >= new Date();
+  }
+
+  function isEndedEvent(event) {
+    const date = event?.ends_at || event?.starts_at;
+    const parsed = date ? new Date(date) : null;
+    return parsed && !Number.isNaN(parsed.getTime()) && parsed < new Date();
+  }
+
+  function countdownLabel(value) {
+    const date = value ? new Date(value) : null;
+    if (!date || Number.isNaN(date.getTime())) return '-';
+    const diff = date.getTime() - Date.now();
+    if (diff <= 0) return 'Live or ended';
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    if (days > 0) return `${days}d ${hours}h`;
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    return `${hours}h ${minutes}m`;
+  }
+
+  function ticketDisplayStatus(ticket) {
+    if (isEndedEvent(ticket.event) && ticket.status === 'valid') return 'event ended';
+    return String(ticket.status || 'valid').replace(/_/g, ' ');
   }
 
   function emptyState(icon, title, detail, action = '') {
@@ -123,6 +162,8 @@
       state.loading.profile = false;
       renderGreeting();
       hydrateProfileForm();
+      renderProfileSummary();
+      renderNotifications();
     }
   }
 
@@ -133,6 +174,7 @@
     try {
       const result = await api().fetch('/me/dashboard/upcoming-events');
       state.upcomingEvents = rows(result.raw || result.data);
+      state.upcomingTickets = rows(result.raw?.included?.tickets || []);
     } catch (err) {
       state.errors.upcoming = err.message || 'Failed to load upcoming events';
     } finally {
@@ -145,20 +187,16 @@
   function ticketParams() {
     const search = document.querySelector('[data-ticket-search]')?.value;
     const status = document.querySelector('[data-ticket-status]')?.value;
-    const params = { per_page: 6, page: state.ticketPage };
+    const sort = document.querySelector('[data-ticket-sort]')?.value || '-created_at';
+    const params = { per_page: state.ticketView === 'ended' ? 100 : 6, page: state.ticketPage, sort };
 
     if (search) params.search = search;
     if (status) params.status = status;
 
-    if (state.ticketView === 'active') {
-      params.status = status || 'valid';
+    if (state.ticketView === 'upcoming') {
       params.upcoming = 1;
-    } else if (state.ticketView === 'upcoming') {
-      params.upcoming = 1;
-    } else if (state.ticketView === 'past') {
-      params.per_page = 8;
-    } else {
-      params.sort = '-created_at';
+    } else if (state.ticketView === 'checked_in') {
+      params.status = status || 'checked_in';
     }
 
     return params;
@@ -171,10 +209,10 @@
     try {
       const params = ticketParams();
       let result;
-      if (state.ticketView === 'past') {
-        result = await ticketsApi().listTicketHistory(params);
-      } else {
-        result = await ticketsApi().listTickets(params);
+      result = await ticketsApi().listTickets(params);
+      if (state.ticketView === 'ended') {
+        result.tickets = result.tickets.filter((ticket) => isEndedEvent(ticket.event));
+        result.meta = null;
       }
       state.tickets = result.tickets;
       state.ticketMeta = result.meta;
@@ -183,8 +221,26 @@
     } finally {
       state.loading.tickets = false;
       renderTickets();
+      renderAttendanceHistory();
+      renderUpcomingEvents();
       renderActivity();
       renderAlert();
+      renderNotifications();
+    }
+  }
+
+  async function loadHistoryTickets() {
+    state.loading.history = true;
+    state.errors.history = null;
+    renderAttendanceHistory();
+    try {
+      const result = await ticketsApi().listTicketHistory({ per_page: 100, sort: '-created_at' });
+      state.historyTickets = result.tickets;
+    } catch (err) {
+      state.errors.history = err.message || 'Failed to load attendance history';
+    } finally {
+      state.loading.history = false;
+      renderAttendanceHistory();
     }
   }
 
@@ -194,15 +250,19 @@
     renderOrders();
     try {
       const status = document.querySelector('[data-order-filter]')?.value;
+      const range = document.querySelector('[data-order-range]')?.value;
       const search = document.querySelector('[data-order-search]')?.value;
       const result = await ordersApi().listMyOrders({
         per_page: 8,
         page: state.orderPage,
         sort: '-created_at',
-        payment_status: status,
+        payment_status: status || (range === 'completed' ? 'paid' : ''),
         search,
       });
-      state.orders = result.orders;
+      state.orders = range === 'recent' ? result.orders.filter((order) => {
+        const date = new Date(order.created_at || 0);
+        return !Number.isNaN(date.getTime()) && (Date.now() - date.getTime()) <= 30 * 86400000;
+      }) : result.orders;
       state.orderMeta = result.meta;
     } catch (err) {
       state.errors.orders = err.message || 'Failed to load orders';
@@ -211,6 +271,7 @@
       renderOrders();
       renderActivity();
       renderAlert();
+      renderNotifications();
     }
   }
 
@@ -267,32 +328,54 @@
     const stats = state.summary?.stats || {};
     kpiRow.innerHTML = `
       <div class="col-md-3"><div class="kpi"><div class="label">Upcoming events</div><div class="value">${stats.upcoming_events_count ?? 0}</div><div class="delta">From active tickets</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Valid tickets</div><div class="value">${stats.active_tickets_count ?? 0}</div><div class="delta">${stats.tickets_count ?? 0} total tickets</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Total orders</div><div class="value">${stats.orders_count ?? 0}</div><div class="delta">${u().formatMoney(stats.total_spent || 0, 'USD')} spent</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Favorites</div><div class="value">${stats.favorites_count ?? 0}</div><div class="delta">Saved events</div></div></div>`;
+      <div class="col-md-3"><div class="kpi"><div class="label">Active Tickets</div><div class="value">${stats.active_tickets_count ?? 0}</div><div class="delta">${stats.tickets_count ?? 0} total tickets</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">Events Attended</div><div class="value">${stats.used_tickets_count ?? 0}</div><div class="delta">Checked-in tickets</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">Total orders</div><div class="value">${stats.orders_count ?? 0}</div><div class="delta">${u().formatMoney(stats.total_spent || 0, 'USD')} spent</div></div></div>`;
   }
 
   function renderUpcomingEvents() {
     const el = document.querySelector('[data-dashboard-upcoming-events]');
-    if (!el) return;
+    const detail = document.querySelector('[data-dashboard-upcoming-detail]');
+    if (!el && !detail) return;
     if (state.loading.upcoming) {
-      el.innerHTML = loadingState('Loading upcoming events...');
+      if (el) el.innerHTML = loadingState('Loading upcoming events...');
+      if (detail) detail.innerHTML = loadingState('Loading upcoming events...');
       return;
     }
     if (state.errors.upcoming) {
-      el.innerHTML = errorState(state.errors.upcoming, 'data-retry-upcoming');
+      if (el) el.innerHTML = errorState(state.errors.upcoming, 'data-retry-upcoming');
+      if (detail) detail.innerHTML = errorState(state.errors.upcoming, 'data-retry-upcoming');
       return;
     }
-    el.innerHTML = state.upcomingEvents.slice(0, 4).map((event) => `
+    const upcomingTickets = state.upcomingTickets.length ? state.upcomingTickets : state.tickets.filter((ticket) => isUpcomingEvent(ticket.event));
+    const ticketByEvent = new Map(upcomingTickets.map((ticket) => [String(ticket.event?.id), ticket]));
+    const empty = emptyState('bi-calendar2-plus', 'No upcoming events', 'When you buy tickets for future events, they will appear here.', '<a class="btn btn-glass btn-sm mt-2" href="events.html">Browse events</a>');
+    const compact = state.upcomingEvents.slice(0, 4).map((event) => `
       <a class="dashboard-event-row" href="event-details.html?slug=${encodeURIComponent(event.slug)}">
         <img src="${escape(u().eventImage(event))}" alt=""/>
         <div class="flex-grow-1">
           <div class="fw-semibold">${escape(event.title)}</div>
           <small>${escape(event.venue_name || '')}${event.city ? `, ${escape(event.city)}` : ''}</small>
         </div>
-        <div class="text-end small text-muted-pro">${escape(dateLabel(event.starts_at, event.timezone))}</div>
+        <div class="text-end small text-muted-pro">${escape(dateLabel(event.starts_at, event.timezone))}<br><span>${escape(countdownLabel(event.starts_at))}</span></div>
       </a>
-    `).join('') || emptyState('bi-calendar2-plus', 'No upcoming events', 'When you buy tickets for future events, they will appear here.', '<a class="btn btn-glass btn-sm mt-2" href="events.html">Browse events</a>');
+    `).join('') || empty;
+    if (el) el.innerHTML = compact;
+    if (detail) {
+      detail.innerHTML = state.upcomingEvents.map((event) => {
+        const ticket = ticketByEvent.get(String(event.id));
+        return `
+          <div class="dashboard-mini-row">
+            <div class="d-flex gap-3 align-items-center">
+              <img src="${escape(u().eventImage(event))}" alt="" class="rounded" style="width:76px;height:56px;object-fit:cover;background:var(--card-2)"/>
+              <span><span class="fw-semibold d-block">${escape(event.title)}</span><small>${escape(dateLabel(event.starts_at, event.timezone))} · ${escape(event.venue_name || '')}${event.city ? `, ${escape(event.city)}` : ''}</small><small class="d-block">Starts in ${escape(countdownLabel(event.starts_at))}</small></span>
+            </div>
+            <div class="dashboard-actions">
+              ${ticket ? `<button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}">View Ticket</button><button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}">View QR</button>` : `<a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(event.slug)}">View Event</a>`}
+            </div>
+          </div>`;
+      }).join('') || empty;
+    }
   }
 
   function renderTickets() {
@@ -321,30 +404,31 @@
     const pager = document.querySelector('[data-order-pagination]');
     if (!body) return;
     if (state.loading.orders) {
-      body.innerHTML = `<tr><td colspan="6">${loadingState('Loading orders...')}</td></tr>`;
+      body.innerHTML = `<tr><td colspan="7">${loadingState('Loading orders...')}</td></tr>`;
       if (pager) pager.innerHTML = '';
       return;
     }
     if (state.errors.orders) {
-      body.innerHTML = `<tr><td colspan="6">${errorState(state.errors.orders, 'data-retry-orders')}</td></tr>`;
+      body.innerHTML = `<tr><td colspan="7">${errorState(state.errors.orders, 'data-retry-orders')}</td></tr>`;
       if (pager) pager.innerHTML = '';
       return;
     }
     body.innerHTML = state.orders.map((order) => `
       <tr>
-        <td data-label="Order"><div class="fw-semibold">${escape(order.order_number)}</div><small class="text-muted-pro">${escape(order.status || '')}</small></td>
-        <td data-label="Date">${escape(shortDate(order.created_at))}</td>
-        <td data-label="Payment">${statusBadge(order.payment_status)}</td>
-        <td data-label="Total">${u().formatMoney(order.total, order.currency)}</td>
-        <td data-label="Tickets">${rows(order.tickets).length}</td>
+        <td data-label="Order Number"><div class="fw-semibold">${escape(order.order_number)}</div><small class="text-muted-pro">${escape(order.status || '')}</small></td>
+        <td data-label="Purchase Date">${escape(shortDate(order.created_at))}</td>
+        <td data-label="Event">${escape(rows(order.items)[0]?.event_title || rows(order.items)[0]?.event?.title || rows(order.tickets)[0]?.event?.title || 'Multiple events')}</td>
+        <td data-label="Quantity">${rows(order.tickets).length || rows(order.items).reduce((sum, item) => sum + Number(item.quantity || 0), 0)}</td>
+        <td data-label="Total Paid">${u().formatMoney(order.total, order.currency)}</td>
+        <td data-label="Payment Status">${statusBadge(order.payment_status)}</td>
         <td data-label="Actions" class="text-end">
           <div class="dashboard-actions">
-            <button class="btn btn-glass btn-sm" type="button" data-order-details="${order.id}"><i class="bi bi-eye me-1"></i>Details</button>
+            <button class="btn btn-glass btn-sm" type="button" data-order-details="${order.id}"><i class="bi bi-eye me-1"></i>View Order</button>
             <button class="btn btn-glass btn-sm" type="button" data-order-receipt="${order.id}" data-order-number="${escape(order.order_number)}"><i class="bi bi-download me-1"></i>Receipt</button>
           </div>
         </td>
       </tr>
-    `).join('') || `<tr><td colspan="6">${emptyState('bi-receipt', 'No orders found', 'Completed orders will appear here after checkout.')}</td></tr>`;
+    `).join('') || `<tr><td colspan="7">${emptyState('bi-receipt', 'No orders found', 'Completed orders will appear here after checkout.')}</td></tr>`;
     if (pager) pager.innerHTML = pagination(state.orderMeta, 'data-order-page');
   }
 
@@ -359,6 +443,7 @@
     const img = u().eventImage(event);
     const price = event.base_price ?? event.ticket_types?.[0]?.price ?? 0;
     const pricing = eventsApi().priceBreakdownHtml(price, event.currency || 'USD', event, true);
+    const stateBadge = event.event_state?.label || (event.is_sold_out ? 'Sold Out' : (isUpcomingEvent(event) ? 'Upcoming' : 'Ended'));
     return `
       <div class="col-md-6 col-xl-4">
         <article class="card-pro dashboard-favorite-card">
@@ -371,9 +456,9 @@
             <h3 class="title">${escape(event.title)}</h3>
             <div class="venue"><i class="bi bi-geo-alt"></i> ${escape(event.venue_name || '')}${event.city ? `, ${escape(event.city)}` : ''}</div>
             <div class="foot">
-              <div class="price">${pricing}</div>
+              <div class="price">${pricing}<div class="mt-1">${statusBadge(stateBadge)}</div></div>
               <div class="dashboard-actions">
-                <a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(event.slug)}">Open</a>
+                <a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(event.slug)}">View Event</a>
                 <button class="btn btn-glass btn-sm" type="button" data-remove-favorite="${event.id}"><i class="bi bi-heartbreak"></i></button>
               </div>
             </div>
@@ -414,14 +499,20 @@
       ...(state.summary?.recent?.orders || []).map((order) => ({
         at: order.created_at,
         icon: 'bi-receipt',
-        title: `Order ${order.order_number}`,
+        title: order.payment_status === 'paid' ? `Order Confirmed: ${order.order_number}` : `Order ${order.order_number}`,
         detail: `${order.payment_status || order.status} · ${u().formatMoney(order.total, order.currency)}`,
       })),
       ...state.tickets.slice(0, 3).map((ticket) => ({
         at: ticket.order?.created_at || ticket.created_at,
         icon: 'bi-ticket-perforated',
-        title: ticket.event?.title || ticket.ticket_code,
-        detail: `Ticket ${ticket.ticket_code} · ${ticket.status}`,
+        title: ticket.status === 'checked_in' ? `Ticket Checked In: ${ticket.event?.title || ticket.ticket_code}` : `Ticket Purchased: ${ticket.event?.title || ticket.ticket_code}`,
+        detail: `Ticket ${ticket.ticket_code} · ${ticketDisplayStatus(ticket)}`,
+      })),
+      ...state.upcomingEvents.slice(0, 2).map((event) => ({
+        at: event.starts_at,
+        icon: 'bi-bell',
+        title: `Event Reminder Sent: ${event.title}`,
+        detail: `${dateLabel(event.starts_at, event.timezone)} · ${countdownLabel(event.starts_at)}`,
       })),
       ...state.favorites.slice(0, 3).map((favorite) => {
         const event = favoriteEvent(favorite);
@@ -445,6 +536,95 @@
     `).join('') || `<li>${emptyState('bi-clock-history', 'No recent activity', 'Your purchases, tickets, and favorites will show here.')}</li>`;
   }
 
+  function attendedTickets() {
+    return state.historyTickets.filter((ticket) => ticket.status === 'checked_in' || ticket.checked_in_at);
+  }
+
+  function renderAttendanceHistory() {
+    const statsRow = document.querySelector('[data-attendance-stats]');
+    const body = document.querySelector('[data-attendance-history]');
+    const attended = attendedTickets();
+    const mostRecent = [...attended].sort((a, b) => new Date(b.checked_in_at || b.event?.starts_at || 0) - new Date(a.checked_in_at || a.event?.starts_at || 0))[0];
+    const categoryCounts = {};
+    attended.forEach((ticket) => {
+      const category = ticket.event?.category || 'Other';
+      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+    });
+    const favoriteCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
+
+    if (statsRow) {
+      statsRow.innerHTML = `
+        <div class="col-md-4"><div class="kpi"><div class="label">Total Events Attended</div><div class="value">${attended.length}</div><div class="delta">Checked-in tickets</div></div></div>
+        <div class="col-md-4"><div class="kpi"><div class="label">Most Recent Event</div><div class="value" style="font-size:1.05rem">${escape(mostRecent?.event?.title || '-')}</div><div class="delta">${escape(dateTimeLabel(mostRecent?.checked_in_at || mostRecent?.event?.starts_at))}</div></div></div>
+        <div class="col-md-4"><div class="kpi"><div class="label">Favorite Category</div><div class="value" style="font-size:1.25rem">${escape(favoriteCategory)}</div><div class="delta">Based on attendance</div></div></div>`;
+    }
+
+    if (!body) return;
+    if (state.loading.history) {
+      body.innerHTML = `<tr><td colspan="4">${loadingState('Loading attendance history...')}</td></tr>`;
+      return;
+    }
+    if (state.errors.history) {
+      body.innerHTML = `<tr><td colspan="4">${errorState(state.errors.history, 'data-retry-history')}</td></tr>`;
+      return;
+    }
+    body.innerHTML = attended.map((ticket) => `
+      <tr>
+        <td data-label="Event Name">${escape(ticket.event?.title || 'Event')}</td>
+        <td data-label="Event Date">${escape(dateLabel(ticket.event?.starts_at, ticket.event?.timezone))}</td>
+        <td data-label="Ticket Type">${escape(ticket.ticket_type?.name || 'Ticket')}</td>
+        <td data-label="Check-In Time">${escape(dateTimeLabel(ticket.checked_in_at))}</td>
+      </tr>
+    `).join('') || `<tr><td colspan="4">${emptyState('bi-clock-history', 'No attended events yet', 'Checked-in tickets will appear here after events.')}</td></tr>`;
+  }
+
+  function renderProfileSummary() {
+    const profile = state.profile || {};
+    const profileSummary = document.querySelector('[data-profile-summary]');
+    const security = document.querySelector('[data-security-summary]');
+    if (profileSummary) {
+      profileSummary.innerHTML = `
+        <div><dt>Full Name</dt><dd>${escape(profile.name || '-')}</dd></div>
+        <div><dt>Email</dt><dd>${escape(profile.email || '-')}</dd></div>
+        <div><dt>Phone Number</dt><dd>${escape(profile.phone || '-')}</dd></div>
+        <div><dt>Email Verification</dt><dd>${auth().hasVerifiedEmail(profile) ? statusBadge('Verified') : statusBadge('Not Verified')}</dd></div>`;
+    }
+    if (security) {
+      security.innerHTML = `
+        <div class="dashboard-mini-row"><span><span class="fw-semibold d-block">Email verification</span><small>${auth().hasVerifiedEmail(profile) ? 'Your email is verified.' : 'Verification is still pending.'}</small></span>${auth().hasVerifiedEmail(profile) ? statusBadge('Verified') : '<button class="btn btn-glass btn-sm" type="button" data-profile-resend-verification>Resend</button>'}</div>
+        <div class="dashboard-mini-row"><span><span class="fw-semibold d-block">Password reset</span><small>Use reset links for secure password changes.</small></span><a class="btn btn-glass btn-sm" href="forgot-password.html">Manage</a></div>
+        <div class="dashboard-mini-row"><span><span class="fw-semibold d-block">Account role</span><small>${escape(profile.role || 'user')}</small></span>${statusBadge(profile.status || 'active')}</div>`;
+    }
+  }
+
+  function renderNotifications() {
+    const wrap = document.querySelector('[data-dashboard-notifications]');
+    if (!wrap) return;
+    const notifications = [
+      ...state.orders.slice(0, 5).map((order) => ({
+        icon: 'bi-envelope-check',
+        title: `Order confirmation ${order.order_number}`,
+        detail: `${statusBadge(order.payment_status)} ${escape(shortDate(order.created_at))}`,
+      })),
+      ...state.upcomingEvents.slice(0, 5).map((event) => ({
+        icon: 'bi-alarm',
+        title: `Event reminder: ${event.title}`,
+        detail: `${escape(dateLabel(event.starts_at, event.timezone))} · ${escape(countdownLabel(event.starts_at))}`,
+      })),
+      ...(!auth().hasVerifiedEmail(state.profile || {}) ? [{
+        icon: 'bi-shield-exclamation',
+        title: 'Please verify your email address',
+        detail: '<button class="btn btn-glass btn-sm mt-2" type="button" data-profile-resend-verification>Resend Verification Email</button>',
+      }] : []),
+    ];
+    wrap.innerHTML = notifications.map((item, index) => `
+      <div class="dashboard-mini-row" data-notification-row="${index}">
+        <span><span class="fw-semibold d-block"><i class="bi ${item.icon} me-1"></i>${escape(item.title)}</span><small>${item.detail}</small></span>
+        <span class="dashboard-actions"><button class="btn btn-glass btn-sm" type="button" data-notification-read="${index}">Mark as Read</button><button class="btn btn-glass btn-sm" type="button" data-notification-delete="${index}"><i class="bi bi-trash"></i></button></span>
+      </div>
+    `).join('') || emptyState('bi-bell', 'No notifications', 'Order confirmations, event reminders, and system notices will appear here.');
+  }
+
   function hydrateProfileForm() {
     const profileForm = document.querySelector('[data-profile-form]');
     const profile = state.profile || {};
@@ -458,6 +638,8 @@
       input.disabled = false;
     });
     renderProfileEmailStatus(profile);
+    renderProfileSummary();
+    renderNotifications();
   }
 
   function renderProfileEmailStatus(profile = state.profile || {}) {
@@ -492,13 +674,16 @@
     renderTickets();
     renderOrders();
     renderFavorites();
+    renderAttendanceHistory();
+    renderProfileSummary();
+    renderNotifications();
     renderActivity();
     hydrateProfileForm();
   }
 
   async function refreshAll() {
     renderAll();
-    await Promise.all([loadSummary(), loadProfile(), loadUpcomingEvents(), loadTickets(), loadOrders(), loadFavorites()]);
+    await Promise.all([loadSummary(), loadProfile(), loadUpcomingEvents(), loadTickets(), loadHistoryTickets(), loadOrders(), loadFavorites()]);
     renderAll();
   }
 
@@ -526,6 +711,38 @@
   function showProfileError(message) {
     const el = document.querySelector('[data-profile-error]');
     if (el) el.innerHTML = message ? `<div class="alert border-pro text-danger dashboard-note">${escape(message)}</div>` : '';
+  }
+
+  function showSection(section) {
+    const target = section || 'overview';
+    const exists = !!document.querySelector(`[data-dashboard-section="${target}"]`);
+    state.currentSection = exists ? target : 'overview';
+    document.querySelectorAll('[data-dashboard-section]').forEach((panel) => {
+      const active = panel.dataset.dashboardSection === state.currentSection;
+      panel.classList.toggle('active', active);
+      panel.hidden = !active;
+    });
+    document.querySelectorAll('[data-dashboard-nav]').forEach((link) => {
+      link.classList.toggle('active', link.dataset.dashboardNav === state.currentSection);
+    });
+    document.querySelector('.dash-side')?.classList.remove('open');
+    if (location.hash.replace('#', '') !== state.currentSection) {
+      history.replaceState(null, '', `#${state.currentSection}`);
+    }
+  }
+
+  function bindSectionNavigation() {
+    document.querySelectorAll('[data-dashboard-nav], [data-section-link]').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        const section = link.dataset.dashboardNav || link.dataset.sectionLink;
+        if (!section) return;
+        event.preventDefault();
+        showSection(section);
+      });
+    });
+    document.querySelector('[data-toggle-side]')?.addEventListener('click', () => document.querySelector('.dash-side')?.classList.toggle('open'));
+    window.addEventListener('hashchange', () => showSection(location.hash.replace('#', '') || 'overview'));
+    showSection(location.hash.replace('#', '') || 'overview');
   }
 
   async function saveProfile(payload, button) {
@@ -603,6 +820,11 @@
       await refreshTickets();
     });
 
+    document.querySelector('[data-ticket-sort]')?.addEventListener('change', async () => {
+      state.ticketPage = 1;
+      await refreshTickets();
+    });
+
     const ticketSearch = document.querySelector('[data-ticket-search]');
     ticketSearch?.addEventListener('input', (event) => {
       clearTimeout(event.target._dashboardSearchTimer);
@@ -613,6 +835,11 @@
     });
 
     document.querySelector('[data-order-filter]')?.addEventListener('change', async () => {
+      state.orderPage = 1;
+      await refreshOrders();
+    });
+
+    document.querySelector('[data-order-range]')?.addEventListener('change', async () => {
       state.orderPage = 1;
       await refreshOrders();
     });
@@ -722,6 +949,12 @@
         return;
       }
 
+      const retryHistory = event.target.closest('[data-retry-history]');
+      if (retryHistory) {
+        await loadHistoryTickets();
+        return;
+      }
+
       const retryOrders = event.target.closest('[data-retry-orders]');
       if (retryOrders) {
         await refreshOrders();
@@ -819,6 +1052,21 @@
         } catch (err) {
           window.tkToast?.(err.message || 'Favorite removal failed', 'error');
         }
+        return;
+      }
+
+      const notificationRead = event.target.closest('[data-notification-read]');
+      if (notificationRead) {
+        const row = notificationRead.closest('[data-notification-row]');
+        row?.classList.add('opacity-75');
+        notificationRead.disabled = true;
+        notificationRead.textContent = 'Read';
+        return;
+      }
+
+      const notificationDelete = event.target.closest('[data-notification-delete]');
+      if (notificationDelete) {
+        notificationDelete.closest('[data-notification-row]')?.remove();
       }
     });
   }
@@ -827,6 +1075,7 @@
     const user = auth().requireAuth(['user', 'organizer', 'admin']);
     if (!user) return;
 
+    bindSectionNavigation();
     bindForms();
     bindActions();
 

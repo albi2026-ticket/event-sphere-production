@@ -14,18 +14,22 @@
   <aside class="dash-side">
     <a class="brand mb-4" href="index.html"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Event Sphere</a>
     <nav class="menu">
-      <a class="active" href="#overview"><i class="bi bi-grid-1x2"></i> Overview</a>
-      <a href="#tickets"><i class="bi bi-ticket-perforated"></i> My tickets</a>
-      <a href="#orders"><i class="bi bi-receipt"></i> Orders</a>
-      <a href="#fav"><i class="bi bi-heart"></i> Favorites</a>
-      <a href="#settings"><i class="bi bi-person-gear"></i> Profile</a>
+      <a class="active" href="#overview" data-dashboard-nav="overview"><i class="bi bi-grid-1x2"></i> Overview</a>
+      <a href="#tickets" data-dashboard-nav="tickets"><i class="bi bi-ticket-perforated"></i> My Tickets</a>
+      <a href="#orders" data-dashboard-nav="orders"><i class="bi bi-receipt"></i> Orders</a>
+      <a href="#saved" data-dashboard-nav="saved"><i class="bi bi-heart"></i> Saved Events</a>
+      <a href="#upcoming" data-dashboard-nav="upcoming"><i class="bi bi-calendar-event"></i> Upcoming Events</a>
+      <a href="#history" data-dashboard-nav="history"><i class="bi bi-clock-history"></i> Attendance History</a>
+      <a href="#profile" data-dashboard-nav="profile"><i class="bi bi-person-gear"></i> Profile</a>
+      <a href="#security" data-dashboard-nav="security"><i class="bi bi-shield-lock"></i> Security</a>
+      <a href="#notifications" data-dashboard-nav="notifications"><i class="bi bi-bell"></i> Notifications</a>
       <hr class="divider"/>
       <a href="index.html"><i class="bi bi-house"></i> Back to homepage</a>
       <a href="#" data-logout><i class="bi bi-box-arrow-right"></i> Sign out</a>
     </nav>
   </aside>
 
-  <main class="dash-main" id="overview">
+  <main class="dash-main">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
       <div>
         <button class="btn btn-glass d-lg-none" data-toggle-side><i class="bi bi-list"></i></button>
@@ -41,127 +45,63 @@
 
     <div data-dashboard-alert></div>
 
-    <div class="row g-3 mb-4" data-dashboard-kpis>
-      <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
-    </div>
+    <section id="overview" class="dashboard-section active" data-dashboard-section="overview">
+      <div class="row g-3 mb-4" data-dashboard-kpis>
+        <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
+        <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
+        <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
+        <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-xl-7"><div class="card-pro p-4 h-100"><div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap"><h4 class="m-0">Upcoming events</h4><a class="btn btn-glass btn-sm" href="#upcoming" data-section-link="upcoming">View all</a></div><div data-dashboard-upcoming-events class="dashboard-stack"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading upcoming events...</span></div></div></div></div>
+        <div class="col-xl-5"><div class="card-pro p-4 h-100"><h4 class="mb-3">Recent activity</h4><ul class="list-unstyled mb-0 dashboard-activity" data-dashboard-activity><li class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading activity...</span></li></ul></div></div>
+      </div>
+    </section>
 
-    <div class="row g-3 mb-4">
-      <div class="col-xl-7">
-        <div class="card-pro p-4 h-100">
-          <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
-            <h4 class="m-0">Upcoming events</h4>
-            <a class="btn btn-glass btn-sm" href="#tickets">View tickets</a>
-          </div>
-          <div data-dashboard-upcoming-events class="dashboard-stack">
-            <div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading upcoming events...</span></div>
-          </div>
+    <section id="tickets" class="dashboard-section" data-dashboard-section="tickets">
+      <div class="card-pro p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2"><div><h4 class="m-0">My Tickets</h4><p class="text-muted-pro mb-0">QR access, attendee details, and PDF downloads for each ticket.</p></div></div>
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <div class="dashboard-tabs" role="tablist" aria-label="Ticket filters"><button class="active" type="button" data-ticket-view="all">All Tickets</button><button type="button" data-ticket-view="upcoming">Upcoming</button><button type="button" data-ticket-view="checked_in">Checked In</button><button type="button" data-ticket-view="ended">Ended Events</button></div>
+          <div class="d-flex gap-2 flex-wrap"><input class="form-control form-control-sm dashboard-search" data-ticket-search placeholder="Search tickets"/><select class="form-select form-select-sm dashboard-select" data-ticket-status><option value="">Any status</option><option value="valid">Valid</option><option value="checked_in">Checked in</option><option value="refunded">Refunded</option><option value="cancelled">Cancelled</option></select><select class="form-select form-select-sm dashboard-select" data-ticket-sort><option value="-created_at">Newest Tickets First</option><option value="starts_at">Upcoming Events First</option></select></div>
         </div>
+        <div data-dashboard-tickets class="row g-3"><div class="col-12"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading tickets...</span></div></div></div>
+        <div data-ticket-pagination class="mt-3"></div>
       </div>
-      <div class="col-xl-5">
-        <div class="card-pro p-4 h-100">
-          <h4 class="mb-3">Recent activity</h4>
-          <ul class="list-unstyled mb-0 dashboard-activity" data-dashboard-activity>
-            <li class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading activity...</span></li>
-          </ul>
-        </div>
-      </div>
-    </div>
+    </section>
 
-    <h4 id="tickets" class="mt-2 mb-3">My tickets</h4>
-    <div class="card-pro p-3 mb-4">
-      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <div class="dashboard-tabs" role="tablist" aria-label="Ticket filters">
-          <button class="active" type="button" data-ticket-view="active">Valid</button>
-          <button type="button" data-ticket-view="upcoming">Upcoming</button>
-          <button type="button" data-ticket-view="past">Past</button>
-          <button type="button" data-ticket-view="all">All</button>
-        </div>
-        <div class="d-flex gap-2 flex-wrap">
-          <input class="form-control form-control-sm dashboard-search" data-ticket-search placeholder="Search tickets"/>
-          <select class="form-select form-select-sm dashboard-select" data-ticket-status>
-            <option value="">Any status</option>
-            <option value="valid">Valid</option>
-            <option value="checked_in">Checked in</option>
-            <option value="refunded">Refunded</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
+    <section id="orders" class="dashboard-section" data-dashboard-section="orders">
+      <div class="card-pro p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2"><div><h4 class="m-0">Orders</h4><p class="text-muted-pro mb-0">Complete purchase history and downloadable receipts.</p></div><div class="d-flex gap-2 flex-wrap"><input class="form-control form-control-sm dashboard-search" data-order-search placeholder="Search order"/><select class="form-select form-select-sm dashboard-select" data-order-range><option value="">All Orders</option><option value="recent">Recent Orders</option><option value="completed">Completed Orders</option></select><select class="form-select form-select-sm dashboard-select" data-order-filter><option value="">All payments</option><option value="paid">Paid</option><option value="pending">Pending</option><option value="refunded">Refunded</option><option value="failed">Failed</option></select></div></div>
+        <div class="table-responsive"><table class="table table-borderless align-middle mb-0 dashboard-table" data-dashboard-orders><thead><tr><th>Order Number</th><th>Purchase Date</th><th>Event</th><th>Quantity</th><th>Total Paid</th><th>Payment Status</th><th></th></tr></thead><tbody><tr><td colspan="7"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading orders...</span></div></td></tr></tbody></table></div>
+        <div data-order-pagination class="mt-3"></div>
       </div>
-      <div data-dashboard-tickets class="row g-3">
-        <div class="col-12"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading tickets...</span></div></div>
-      </div>
-      <div data-ticket-pagination class="mt-3"></div>
-    </div>
+    </section>
 
-    <h4 id="orders" class="mt-2 mb-3">Order history</h4>
-    <div class="card-pro p-3 mb-4">
-      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h5 class="m-0">Orders</h5>
-        <div class="d-flex gap-2 flex-wrap">
-          <input class="form-control form-control-sm dashboard-search" data-order-search placeholder="Search order"/>
-          <select class="form-select form-select-sm dashboard-select" data-order-filter>
-            <option value="">All payments</option>
-            <option value="paid">Paid</option>
-            <option value="pending">Pending</option>
-            <option value="refunded">Refunded</option>
-            <option value="failed">Failed</option>
-          </select>
-        </div>
-      </div>
-      <div class="table-responsive"><table class="table table-borderless align-middle mb-0 dashboard-table" data-dashboard-orders>
-        <thead><tr><th>Order</th><th>Date</th><th>Status</th><th>Total</th><th>Tickets</th><th></th></tr></thead>
-        <tbody><tr><td colspan="6"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading orders...</span></div></td></tr></tbody>
-      </table></div>
-      <div data-order-pagination class="mt-3"></div>
-    </div>
+    <section id="saved" class="dashboard-section" data-dashboard-section="saved">
+      <div class="card-pro p-3"><div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2"><div><h4 class="m-0">Saved Events</h4><p class="text-muted-pro mb-0">Followed events, wishlist items, and availability status.</p></div><div class="d-flex gap-2 flex-wrap"><input class="form-control form-control-sm dashboard-search" data-favorite-search placeholder="Search saved events"/><select class="form-select form-select-sm dashboard-select" data-favorite-sort><option value="-created_at">Newest saved</option><option value="starts_at">Event date</option></select></div></div><div class="row g-3" data-dashboard-favorites><div class="col-12"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading saved events...</span></div></div></div><div data-favorite-pagination class="mt-3"></div></div>
+    </section>
 
-    <h4 id="fav" class="mt-2 mb-3">Favorites</h4>
-    <div class="card-pro p-3 mb-4">
-      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h5 class="m-0">Saved events</h5>
-        <div class="d-flex gap-2 flex-wrap">
-          <input class="form-control form-control-sm dashboard-search" data-favorite-search placeholder="Search favorites"/>
-          <select class="form-select form-select-sm dashboard-select" data-favorite-sort>
-            <option value="-created_at">Newest saved</option>
-            <option value="starts_at">Event date</option>
-          </select>
-        </div>
-      </div>
-      <div class="row g-3" data-dashboard-favorites>
-        <div class="col-12"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading favorites...</span></div></div>
-      </div>
-      <div data-favorite-pagination class="mt-3"></div>
-    </div>
+    <section id="upcoming" class="dashboard-section" data-dashboard-section="upcoming">
+      <div class="card-pro p-4"><h4 class="mb-3">Upcoming Events</h4><div class="dashboard-stack" data-dashboard-upcoming-detail><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading upcoming events...</span></div></div></div>
+    </section>
 
-    <h4 id="settings" class="mt-2 mb-3">Profile and account</h4>
-    <div class="row g-3">
-      <div class="col-lg-7"><div class="card-pro p-4">
-        <form data-profile-form novalidate>
-          <h5>Profile</h5>
-          <div data-profile-error></div>
-          <div class="row g-3">
-            <div class="col-md-6"><label class="form-label mt-2">Name</label><input class="form-control" name="name" autocomplete="name" maxlength="255"/></div>
-            <div class="col-md-6"><label class="form-label mt-2">Email</label><input class="form-control" name="email" type="email" autocomplete="email" readonly/></div>
-            <div class="col-md-6"><label class="form-label mt-2">Phone</label><input class="form-control" name="phone" autocomplete="tel" maxlength="50"/></div>
-            <div class="col-md-6"><label class="form-label mt-2">Default city</label><input class="form-control" name="default_city" maxlength="100"/></div>
-          </div>
-          <div class="mt-3" data-profile-email-status></div>
-          <button type="submit" class="btn btn-primary-grad mt-3">Save profile</button>
-        </form>
-      </div></div>
-      <div class="col-lg-5"><div class="card-pro p-4">
-        <h5>Account settings</h5>
-        <div class="form-check form-switch mt-3"><input class="form-check-input" type="checkbox" name="email_notifications" data-preference-toggle><label class="form-check-label">Email notifications</label></div>
-        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="sms_reminders" data-preference-toggle><label class="form-check-label">SMS reminders</label></div>
-        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="marketing_emails" data-preference-toggle><label class="form-check-label">Marketing emails</label></div>
-        <div class="alert border-pro mt-4 mb-0 text-muted-pro dashboard-note">
-          <i class="bi bi-shield-lock me-2"></i>Password changes are handled through password reset for this account.
-        </div>
-      </div></div>
-    </div>
+    <section id="history" class="dashboard-section" data-dashboard-section="history">
+      <div class="row g-3 mb-4" data-attendance-stats></div>
+      <div class="card-pro p-3"><h4 class="mb-3">Attendance History</h4><div class="table-responsive"><table class="table table-borderless align-middle mb-0 dashboard-table"><thead><tr><th>Event Name</th><th>Event Date</th><th>Ticket Type</th><th>Check-In Time</th></tr></thead><tbody data-attendance-history><tr><td colspan="4"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading attendance history...</span></div></td></tr></tbody></table></div></div>
+    </section>
+
+    <section id="profile" class="dashboard-section" data-dashboard-section="profile">
+      <div class="row g-3"><div class="col-lg-7"><div class="card-pro p-4"><form data-profile-form novalidate><h4>Profile</h4><p class="text-muted-pro">Update your contact information for ticket delivery and event notices.</p><div data-profile-error></div><div class="row g-3"><div class="col-md-6"><label class="form-label mt-2">Full Name</label><input class="form-control" name="name" autocomplete="name" maxlength="255"/></div><div class="col-md-6"><label class="form-label mt-2">Email</label><input class="form-control" name="email" type="email" autocomplete="email" readonly/></div><div class="col-md-6"><label class="form-label mt-2">Phone Number</label><input class="form-control" name="phone" autocomplete="tel" maxlength="50"/></div><div class="col-md-6"><label class="form-label mt-2">Default city</label><input class="form-control" name="default_city" maxlength="100"/></div></div><div class="mt-3" data-profile-email-status></div><button type="submit" class="btn btn-primary-grad mt-3">Save profile</button></form></div></div><div class="col-lg-5"><div class="card-pro p-4"><h4 class="mb-3">Profile Summary</h4><div class="dashboard-detail-grid" data-profile-summary></div></div></div></div>
+    </section>
+
+    <section id="security" class="dashboard-section" data-dashboard-section="security">
+      <div class="row g-3"><div class="col-lg-6"><div class="card-pro p-4 h-100"><h4>Password Settings</h4><p class="text-muted-pro">Password updates use the secure reset flow so reset tokens expire and cannot be reused.</p><a class="btn btn-primary-grad" href="forgot-password.html"><i class="bi bi-key me-1"></i>Change Password</a></div></div><div class="col-lg-6"><div class="card-pro p-4 h-100"><h4>Account Security</h4><div class="dashboard-stack" data-security-summary></div></div></div></div>
+    </section>
+
+    <section id="notifications" class="dashboard-section" data-dashboard-section="notifications">
+      <div class="row g-3"><div class="col-xl-7"><div class="card-pro p-4 h-100"><h4 class="mb-3">Notifications</h4><div class="dashboard-stack" data-dashboard-notifications></div></div></div><div class="col-xl-5"><div class="card-pro p-4 h-100"><h4 class="mb-3">Notification Preferences</h4><div class="dashboard-stack"><label class="dashboard-mini-row"><span><span class="fw-semibold d-block">Email Notifications</span><small>Order confirmations and account notices</small></span><input class="form-check-input" type="checkbox" name="email_notifications" data-preference-toggle></label><label class="dashboard-mini-row"><span><span class="fw-semibold d-block">Event Reminder Notifications</span><small>Reminders before upcoming events</small></span><input class="form-check-input" type="checkbox" name="sms_reminders" data-preference-toggle></label><label class="dashboard-mini-row"><span><span class="fw-semibold d-block">System Notifications</span><small>Security and platform updates</small></span><input class="form-check-input" type="checkbox" name="marketing_emails" data-preference-toggle></label></div></div></div></div>
+    </section>
   </main>
 </div>
 

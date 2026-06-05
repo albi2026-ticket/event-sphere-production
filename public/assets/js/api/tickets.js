@@ -42,7 +42,9 @@
 
   function renderTicketCard(ticket) {
     const ev = ticket.event || {};
-    const status = (ticket.status || 'valid').replace(/_/g, ' ').toUpperCase();
+    const eventDate = ev.ends_at || ev.starts_at;
+    const ended = eventDate && new Date(eventDate) < new Date() && ticket.status === 'valid';
+    const status = (ended ? 'Event Ended' : (ticket.status || 'valid').replace(/_/g, ' ')).toUpperCase();
     const date = u().formatEventDate(ev.starts_at, ev.timezone);
     const attendee = ticket.attendee || {};
     const orderNumber = ticket.order?.order_number || '-';
@@ -62,10 +64,10 @@
               <div>Order <b style="color:var(--text)">${u().escapeHtml(orderNumber)}</b></div>
               <div>Ticket <b style="color:var(--text)">${u().escapeHtml(ticket.ticket_code)}</b></div>
             </div>
-            <div class="mt-3 d-flex gap-2">
+            <div class="mt-3 d-flex gap-2 flex-wrap">
+              <button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}"><i class="bi bi-eye me-1"></i> View Ticket</button>
               <button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}"><i class="bi bi-qr-code me-1"></i> View QR</button>
               <button class="btn btn-primary-grad btn-sm" data-ticket-download="${ticket.id}" data-ticket-code="${u().escapeHtml(ticket.ticket_code)}"><i class="bi bi-download me-1"></i> Download PDF</button>
-              <button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}"><i class="bi bi-info-circle me-1"></i> Details</button>
             </div>
           </div>
           <div class="qr"><img alt="QR" data-ticket-qr="${ticket.id}" src="" style="min-width:180px;min-height:180px;background:#fff;border-radius:8px"/></div>
