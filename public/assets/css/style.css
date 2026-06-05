@@ -443,6 +443,22 @@ a:hover { color: var(--secondary); }
   border: 1px solid var(--border-strong); backdrop-filter: blur(8px);
   font-weight: 500; font-size: .72rem; padding: .35rem .65rem; border-radius: 999px;
 }
+.badge-soft {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  border: 1px solid color-mix(in oklab, var(--info-text) 22%, transparent);
+  border-radius: 999px;
+  background: var(--info-soft);
+  color: var(--info-text);
+  font-size: .78rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: .35rem .6rem;
+}
+.card-pro .badge-soft {
+  color: #fff;
+}
 .card-pro .fav {
   position: absolute; top: 10px; right: 10px;
   width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
@@ -785,8 +801,34 @@ a:hover { color: var(--secondary); }
   border-radius: var(--radius);
   padding: 1.25rem;
   background: var(--card);
+  color: var(--text);
+}
+.checkin-result.is-empty {
+  align-items: center;
+  display: flex;
+  gap: .85rem;
+}
+.checkin-result > i {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  color: var(--primary);
+  font-size: 1.25rem;
+}
+.checkin-result .eyebrow {
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 .checkin-result h5 {
+  color: var(--text);
   margin-bottom: .35rem;
 }
 .checkin-result p {
@@ -938,6 +980,18 @@ a:hover { color: var(--secondary); }
   border-color: var(--primary); box-shadow: 0 0 0 4px rgba(91,140,255,0.15);
 }
 .form-control::placeholder { color: var(--muted); }
+.form-check-input {
+  background-color: var(--input-bg);
+  border-color: var(--border-strong);
+}
+.form-check-input:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+.form-check-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(91,140,255,0.15);
+}
 .form-select option {
   color: var(--text);
   background: var(--card);
@@ -1122,6 +1176,14 @@ a:hover { color: var(--secondary); }
   color: var(--text);
   border-top: 1px solid var(--border);
 }
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  --bs-table-accent-bg: var(--surface-hover);
+  color: var(--text);
+}
+.table-hover > tbody > tr:hover > * {
+  --bs-table-accent-bg: var(--surface-hover);
+  color: var(--text);
+}
 .dashboard-progress {
   height: 6px;
   background: var(--card-2);
@@ -1250,6 +1312,8 @@ a:hover { color: var(--secondary); }
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: .75rem;
+  background: color-mix(in oklab, var(--card-2) 45%, transparent);
+  color: var(--text);
 }
 .dashboard-mini-row small { color: var(--muted); }
 .dashboard-qr-wrap {
@@ -1443,7 +1507,9 @@ a:hover { color: var(--secondary); }
 .status-valid,
 .status-live,
 .status-paid,
-.status-published {
+.status-published,
+.status-sent,
+.status-verified {
   background: var(--success-soft);
   color: var(--success-text);
   border-color: color-mix(in oklab, var(--success-text) 22%, transparent);
@@ -1452,7 +1518,8 @@ a:hover { color: var(--secondary); }
 .status-pending_review,
 .status-draft,
 .status-upcoming,
-.status-unpaid {
+.status-unpaid,
+.status-not_sent {
   background: var(--warning-soft);
   color: var(--warning-text);
   border-color: color-mix(in oklab, var(--warning-text) 22%, transparent);
@@ -1467,7 +1534,8 @@ a:hover { color: var(--secondary); }
 .status-ended,
 .status-rejected,
 .status-banned,
-.status-suspended {
+.status-suspended,
+.status-not_verified {
   background: var(--danger-soft);
   color: var(--danger-text);
   border-color: color-mix(in oklab, var(--danger-text) 22%, transparent);
@@ -1478,6 +1546,7 @@ a:hover { color: var(--secondary); }
   border-color: color-mix(in oklab, var(--info-text) 22%, transparent);
 }
 .status-used,
+.status-already_used,
 .status-checked_in,
 .status-completed,
 .status-finished,
@@ -1989,5 +2058,48 @@ img, svg, canvas, video { max-width: 100%; }
   }
   .dashboard-pagination {
     flex-wrap: wrap;
+  }
+}
+
+.email-verify-banner {
+  background: color-mix(in oklab, var(--info-soft) 62%, var(--card));
+  border-bottom: 1px solid color-mix(in oklab, var(--info-text) 28%, var(--border));
+  color: var(--text);
+  position: relative;
+  z-index: 1080;
+}
+.email-verify-banner .btn-glass {
+  background: var(--card);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.email-verify-banner .btn-glass:hover,
+.email-verify-banner .btn-glass:focus {
+  background: var(--card-2);
+  color: var(--text);
+}
+.email-verify-banner-inner {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin: 0 auto;
+  max-width: 1180px;
+  padding: 10px 18px;
+}
+.email-verify-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+@media (max-width: 640px) {
+  .email-verify-banner-inner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .email-verify-actions {
+    justify-content: flex-start;
+    width: 100%;
   }
 }

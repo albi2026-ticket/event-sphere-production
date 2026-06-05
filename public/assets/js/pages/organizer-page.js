@@ -72,8 +72,9 @@
 
   function statusBadge(status, label) {
     const value = String(status || 'unknown').toLowerCase();
+    const classKey = value.replace(/\s+/g, '_');
     const text = label || value.replace(/_/g, ' ');
-    return `<span class="badge status-badge status-${esc(value)}">${esc(text)}</span>`;
+    return `<span class="badge status-badge status-${esc(classKey)}">${esc(text)}</span>`;
   }
 
   function eventInventory(event) {

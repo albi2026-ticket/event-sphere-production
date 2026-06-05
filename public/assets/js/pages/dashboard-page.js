@@ -47,7 +47,8 @@
 
   function statusBadge(status) {
     const value = String(status || 'unknown').toLowerCase();
-    return `<span class="badge status-badge status-${escape(value)}">${escape(value.replace(/_/g, ' '))}</span>`;
+    const classKey = value.replace(/\s+/g, '_');
+    return `<span class="badge status-badge status-${escape(classKey)}">${escape(value.replace(/_/g, ' '))}</span>`;
   }
 
   function dateLabel(value, timezone) {
@@ -456,6 +457,24 @@
       input.checked = !!profile[input.name];
       input.disabled = false;
     });
+    renderProfileEmailStatus(profile);
+  }
+
+  function renderProfileEmailStatus(profile = state.profile || {}) {
+    const el = document.querySelector('[data-profile-email-status]');
+    if (!el) return;
+    const verified = auth().hasVerifiedEmail(profile);
+    el.innerHTML = `
+      <div class="dashboard-mini-row">
+        <div>
+          <div class="fw-semibold">Email Status</div>
+          <small class="text-muted-pro">${verified ? 'Verified' : 'Not Verified'}</small>
+        </div>
+        ${verified
+          ? '<span class="badge-soft">Verified</span>'
+          : '<button class="btn btn-glass btn-sm" type="button" data-profile-resend-verification>Resend Verification Email</button>'}
+      </div>
+    `;
   }
 
   function detailModal(title, html) {
@@ -546,6 +565,22 @@
         phone: String(fd.get('phone') || '').trim(),
         default_city: String(fd.get('default_city') || '').trim(),
       }, button);
+    });
+
+    document.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-profile-resend-verification]');
+      if (!button) return;
+      button.disabled = true;
+      try {
+        await auth().resendVerificationEmail();
+        window.tkToast?.('Verification email sent. Check the Laravel log on localhost.', 'info');
+        state.profile = await auth().refreshUser();
+        hydrateProfileForm();
+      } catch (err) {
+        window.tkToast?.(err.message || 'Verification email failed', 'error');
+      } finally {
+        button.disabled = false;
+      }
     });
 
     document.querySelectorAll('[data-preference-toggle]').forEach((input) => {

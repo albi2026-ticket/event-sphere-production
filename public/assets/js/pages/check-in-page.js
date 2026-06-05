@@ -24,7 +24,8 @@
 
   function badge(value) {
     const key = String(value || 'unknown').toLowerCase();
-    return `<span class="badge status-badge status-${esc(key)}">${esc(key.replace(/_/g, ' '))}</span>`;
+    const classKey = key.replace(/\s+/g, '_');
+    return `<span class="badge status-badge status-${esc(classKey)}">${esc(key.replace(/_/g, ' '))}</span>`;
   }
 
   function dateTime(value) {

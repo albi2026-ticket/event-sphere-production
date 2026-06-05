@@ -84,6 +84,58 @@ class AdminDashboardTest extends TestCase
             ->assertUnprocessable();
     }
 
+    public function test_admin_can_filter_and_sort_users_by_email_verification(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $verified = User::factory()->create([
+            'name' => 'Verified Buyer',
+            'email' => 'verified-buyer@example.test',
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+            'email_verified_at' => now()->subDay(),
+        ]);
+
+        $newerVerified = User::factory()->create([
+            'name' => 'Recently Verified Buyer',
+            'email' => 'recently-verified@example.test',
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+            'email_verified_at' => now(),
+        ]);
+
+        $unverified = User::factory()->unverified()->create([
+            'name' => 'Unverified Buyer',
+            'email' => 'unverified-buyer@example.test',
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $verifiedResponse = $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/users?role=user&email_verification=verified&sort=-email_verified_at')
+            ->assertOk();
+
+        $verifiedEmails = collect($verifiedResponse->json('data'))->pluck('email');
+
+        $this->assertTrue($verifiedEmails->contains($newerVerified->email));
+        $this->assertTrue($verifiedEmails->contains($verified->email));
+        $this->assertFalse($verifiedEmails->contains($unverified->email));
+        $this->assertSame($newerVerified->email, $verifiedEmails->first());
+
+        $unverifiedResponse = $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/users?role=user&email_verification=unverified&sort=-verification_status')
+            ->assertOk();
+
+        $unverifiedEmails = collect($unverifiedResponse->json('data'))->pluck('email');
+
+        $this->assertTrue($unverifiedEmails->contains($unverified->email));
+        $this->assertFalse($unverifiedEmails->contains($verified->email));
+        $this->assertFalse($unverifiedEmails->contains($newerVerified->email));
+    }
+
     public function test_admin_can_unpublish_events_and_store_moderation_notes(): void
     {
         $admin = User::factory()->create([

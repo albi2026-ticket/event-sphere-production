@@ -60,6 +60,15 @@
     return raw.user;
   }
 
+  async function resendVerificationEmail() {
+    const { raw } = await api().fetch('/email/verification-notification', {
+      method: 'POST',
+      body: {},
+    });
+
+    return raw;
+  }
+
   async function logout() {
     try {
       if (getToken()) await api().fetch('/logout', { method: 'POST' });
@@ -154,13 +163,67 @@
         logout();
       });
     });
+    paintVerificationBanner(user);
+  }
+
+  function hasVerifiedEmail(user) {
+    return user?.email_verified === true || !!user?.email_verified_at;
+  }
+
+  function paintVerificationBanner(user = getUser()) {
+    let banner = document.querySelector('[data-email-verification-banner]');
+    const shouldShow = !!user && !hasVerifiedEmail(user);
+
+    if (!shouldShow) {
+      banner?.remove();
+      return;
+    }
+
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.setAttribute('data-email-verification-banner', 'true');
+      banner.className = 'email-verify-banner';
+      banner.innerHTML = `
+        <div class="email-verify-banner-inner">
+          <span><i class="bi bi-shield-exclamation me-2"></i>Please verify your email address to secure your account.</span>
+          <div class="email-verify-actions">
+            <button class="btn btn-primary-grad btn-sm" type="button" data-send-verification-email>Verify Email</button>
+            <button class="btn btn-glass btn-sm" type="button" data-send-verification-email>Resend Verification Email</button>
+          </div>
+        </div>
+      `;
+      document.body.insertBefore(banner, document.body.firstChild);
+    }
+
+    banner.querySelectorAll('[data-send-verification-email]').forEach((button) => {
+      if (button.dataset.verificationBound === 'true') return;
+      button.dataset.verificationBound = 'true';
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        try {
+          const response = await resendVerificationEmail();
+          window.tkToast?.(response.status === 'already-verified'
+            ? 'Email already verified'
+            : 'Verification email sent. Check the Laravel log on localhost.', 'info');
+          await refreshUser();
+        } catch (err) {
+          window.tkToast?.(err.message || 'Verification email failed', 'error');
+        } finally {
+          button.disabled = false;
+        }
+      });
+    });
   }
 
   async function syncAuthNav() {
     paintAuthNav();
     if (!getToken()) return;
     try {
-      await refreshUser();
+      const user = await refreshUser();
+      const params = new URLSearchParams(location.search);
+      if (params.get('verified') === '1' && hasVerifiedEmail(user)) {
+        window.tkToast?.('Email verified successfully', 'success');
+      }
     } catch {
       clearSession();
     }
@@ -177,11 +240,13 @@
     refreshUser,
     login,
     register,
+    resendVerificationEmail,
     logout,
     redirectByRole,
     requireAuth,
     roleHome,
     paintAuthNav,
+    hasVerifiedEmail,
     isLoggedIn: () => !!getToken(),
   };
 })();

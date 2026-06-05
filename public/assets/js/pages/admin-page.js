@@ -51,8 +51,14 @@
 
   function badge(value, label) {
     const key = String(value || 'none').toLowerCase();
+    const classKey = key.replace(/\s+/g, '_');
     const safe = u().escapeHtml(label || key.replace(/_/g, ' '));
-    return `<span class="badge status-badge status-${u().escapeHtml(key)}">${safe}</span>`;
+    return `<span class="badge status-badge status-${u().escapeHtml(classKey)}">${safe}</span>`;
+  }
+
+  function verificationBadge(user) {
+    const verified = Boolean(user.email_verified_at);
+    return `<span class="badge status-badge status-${verified ? 'verified' : 'not_verified'}"><i class="bi ${verified ? 'bi-check-circle' : 'bi-x-circle'} me-1"></i>${verified ? 'Verified' : 'Not Verified'}</span>`;
   }
 
   function dateLabel(value) {
@@ -262,11 +268,11 @@
     const body = document.querySelector('[data-admin-users] tbody');
     if (!body) return;
     if (state.loading.users) {
-      body.innerHTML = loadingRow(8, 'Loading users...');
+      body.innerHTML = loadingRow(9, 'Loading users...');
       return;
     }
     if (state.errors.users) {
-      body.innerHTML = errorRow(8, state.errors.users, 'data-retry-users');
+      body.innerHTML = errorRow(9, state.errors.users, 'data-retry-users');
       return;
     }
 
@@ -274,6 +280,7 @@
       <tr>
         <td data-label="User">${userNameCell(usr)}</td>
         <td data-label="Email">${u().escapeHtml(usr.email)}</td>
+        <td data-label="Email Verification"><div title="${usr.email_verified_at ? `Verified ${u().escapeHtml(dateTimeLabel(usr.email_verified_at))}` : 'Email not verified'}">${verificationBadge(usr)}</div><small class="text-muted-pro">${usr.email_verified_at ? dateTimeLabel(usr.email_verified_at) : ''}</small></td>
         <td data-label="Joined">${dateLabel(usr.created_at)}</td>
         <td data-label="Orders">${usr.orders_count ?? 0}</td>
         <td data-label="Role">
@@ -293,7 +300,7 @@
           </div>
         </td>
       </tr>
-    `).join('') || emptyRow(8, 'bi-people', 'No users match these filters');
+    `).join('') || emptyRow(9, 'bi-people', 'No users match these filters');
   }
 
   function renderOrganizers() {
@@ -532,6 +539,8 @@
         ['Role', badge(user.role)],
         ['Status', badge(user.status)],
         ['Organizer', badge(user.organizer_status)],
+        ['Email verification', verificationBadge(user)],
+        ['Verified at', dateTimeLabel(user.email_verified_at)],
         ['Joined', dateLabel(user.created_at)],
         ['Last login', dateTimeLabel(user.last_login_at)],
         ['Orders', String(user.orders_count ?? 0)],
@@ -607,7 +616,14 @@
     userForm?.addEventListener('submit', async (event) => {
       event.preventDefault();
       const fd = new FormData(userForm);
-      state.userFilters = { q: fd.get('q'), role: fd.get('role'), status: fd.get('status'), organizer_status: fd.get('organizer_status') };
+      state.userFilters = {
+        q: fd.get('q'),
+        role: fd.get('role'),
+        status: fd.get('status'),
+        organizer_status: fd.get('organizer_status'),
+        email_verification: fd.get('email_verification'),
+        sort: fd.get('sort'),
+      };
       await refreshUsers();
     });
 

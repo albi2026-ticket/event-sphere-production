@@ -29,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Ticket::class, TicketPolicy::class);
 
         ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
-            return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
+            return rtrim((string) config('services.frontend.url'), '/')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
         });
     }
 }

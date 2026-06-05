@@ -22,8 +22,19 @@ class AdminUserController extends Controller
                 User::ORGANIZER_STATUS_APPROVED,
                 User::ORGANIZER_STATUS_REJECTED,
             ])],
+            'email_verification' => ['nullable', Rule::in(['verified', 'unverified'])],
+            'sort' => ['nullable', Rule::in([
+                'newest',
+                'oldest',
+                'verification_status',
+                '-verification_status',
+                'email_verified_at',
+                '-email_verified_at',
+            ])],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
+
+        $sort = $validated['sort'] ?? 'newest';
 
         $users = User::query()
             ->withCount(['orders', 'organizedEvents'])
@@ -39,7 +50,24 @@ class AdminUserController extends Controller
             ->when($validated['role'] ?? null, fn ($query, string $role) => $query->where('role', $role))
             ->when($validated['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
             ->when($validated['organizer_status'] ?? null, fn ($query, string $status) => $query->where('organizer_status', $status))
-            ->latest()
+            ->when(($validated['email_verification'] ?? null) === 'verified', fn ($query) => $query->whereNotNull('email_verified_at'))
+            ->when(($validated['email_verification'] ?? null) === 'unverified', fn ($query) => $query->whereNull('email_verified_at'))
+            ->when($sort === 'oldest', fn ($query) => $query->oldest())
+            ->when($sort === 'newest', fn ($query) => $query->latest())
+            ->when($sort === 'verification_status', fn ($query) => $query
+                ->orderByRaw('email_verified_at IS NULL ASC')
+                ->latest())
+            ->when($sort === '-verification_status', fn ($query) => $query
+                ->orderByRaw('email_verified_at IS NULL DESC')
+                ->latest())
+            ->when($sort === 'email_verified_at', fn ($query) => $query
+                ->orderByRaw('email_verified_at IS NULL ASC')
+                ->orderBy('email_verified_at')
+                ->latest())
+            ->when($sort === '-email_verified_at', fn ($query) => $query
+                ->orderByRaw('email_verified_at IS NULL ASC')
+                ->orderByDesc('email_verified_at')
+                ->latest())
             ->paginate((int) ($validated['per_page'] ?? 25));
 
         return response()->json($users);
