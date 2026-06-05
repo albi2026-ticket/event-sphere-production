@@ -12,21 +12,23 @@
 <body>
 <div class="dash-shell">
   <aside class="dash-side">
-    <a class="brand mb-4" href="index.html"><span class="brand-logo"><i class="bi bi-bar-chart-fill"></i></span>Organizer</a>
+    <a class="brand mb-4" href="index.html"><span class="brand-logo"><i class="bi bi-bar-chart-fill"></i></span>Event Sphere</a>
     <nav class="menu">
-      <a class="active" href="#overview"><i class="bi bi-speedometer2"></i> Overview</a>
-      <a href="#events"><i class="bi bi-calendar-event"></i> Events</a>
-      <a href="#analytics"><i class="bi bi-graph-up"></i> Analytics</a>
-      <a href="#check-in"><i class="bi bi-qr-code-scan"></i> Event Check-In</a>
-      <a href="#attendees"><i class="bi bi-people"></i> Attendees</a>
-      <a href="#revenue"><i class="bi bi-cash-stack"></i> Revenue</a>
+      <a class="active" href="#overview" data-organizer-nav="overview"><i class="bi bi-speedometer2"></i> Overview</a>
+      <a href="#events" data-organizer-nav="events"><i class="bi bi-calendar-event"></i> Events</a>
+      <a href="#ticket-analytics" data-organizer-nav="ticket-analytics"><i class="bi bi-graph-up"></i> Ticket Analytics</a>
+      <a href="#revenue" data-organizer-nav="revenue"><i class="bi bi-cash-stack"></i> Revenue</a>
+      <a href="#attendees" data-organizer-nav="attendees"><i class="bi bi-people"></i> Attendees</a>
+      <a href="#check-in" data-organizer-nav="check-in"><i class="bi bi-qr-code-scan"></i> Check-In</a>
+      <a href="#reports" data-organizer-nav="reports"><i class="bi bi-file-earmark-bar-graph"></i> Reports</a>
+      <a href="#settings" data-organizer-nav="settings"><i class="bi bi-gear"></i> Settings</a>
       <hr class="divider"/>
       <a href="dashboard.html"><i class="bi bi-arrow-left"></i> User dashboard</a>
       <a href="#" data-logout><i class="bi bi-box-arrow-right"></i> Sign out</a>
     </nav>
   </aside>
 
-  <main class="dash-main" id="overview">
+  <main class="dash-main">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
       <div>
         <button class="btn btn-glass d-lg-none" data-toggle-side><i class="bi bi-list"></i></button>
@@ -41,185 +43,302 @@
 
     <div data-organizer-alert></div>
 
-    <div class="row g-3 mb-4" data-organizer-kpis>
-      <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
-    </div>
-
-    <div class="row g-3 mb-4" id="analytics">
-      <div class="col-lg-8">
-        <div class="card-pro p-4 h-100">
-          <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
-            <h4 class="m-0" id="revenue">Revenue trend</h4>
-            <div class="dashboard-tabs" data-organizer-range-tabs>
-              <button class="active" type="button" data-organizer-range="day">Day</button>
-              <button type="button" data-organizer-range="week">Week</button>
-              <button type="button" data-organizer-range="month">Month</button>
+    <section id="overview" class="organizer-section active" data-organizer-section="overview">
+      <div class="row g-3 mb-4" data-organizer-kpis>
+        <div class="col-md-4 col-xl-2"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
+        <div class="col-md-4 col-xl-2"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
+        <div class="col-md-4 col-xl-2"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
+        <div class="col-md-4 col-xl-2"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
+        <div class="col-md-4 col-xl-2"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
+        <div class="col-md-4 col-xl-2"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-xl-7">
+          <div class="card-pro p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
+              <h4 class="m-0">Recent activity</h4>
+              <button class="btn btn-glass btn-sm" type="button" data-retry-summary><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+            </div>
+            <div class="dashboard-stack" data-organizer-activity>
+              <div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading activity...</span></div>
             </div>
           </div>
-          <canvas id="chartRev" height="120"></canvas>
-          <div data-organizer-revenue-empty></div>
+        </div>
+        <div class="col-xl-5">
+          <div class="card-pro p-4 h-100">
+            <h4 class="mb-3">Upcoming and live events</h4>
+            <div class="dashboard-stack" data-organizer-upcoming>
+              <div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading events...</span></div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="col-lg-4">
-        <div class="card-pro p-4 h-100">
-          <h4 class="mb-3">Revenue by event</h4>
-          <canvas id="chartCat" height="180"></canvas>
-          <div data-organizer-event-revenue-empty></div>
-        </div>
-      </div>
-    </div>
+    </section>
 
-    <h4 id="check-in" class="mt-2 mb-3">Event Check-In</h4>
-    <div class="row g-3 mb-4">
-      <div class="col-xl-5">
-        <div class="card-pro p-3 h-100">
-          <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
-            <h5 class="m-0">Scanner</h5>
-            <select class="form-select form-select-sm dashboard-select" data-checkin-event>
-              <option value="">Select event</option>
+    <section id="events" class="organizer-section" data-organizer-section="events">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+          <h4 class="m-0">Event management</h4>
+          <p class="text-muted-pro mb-0">Manage publish status, inventory, and quick edits.</p>
+        </div>
+        <button class="btn btn-primary-grad btn-sm" type="button" data-organizer-new-event><i class="bi bi-plus-lg me-1"></i>New event</button>
+      </div>
+      <div class="card-pro p-3 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <div class="d-flex gap-2 flex-wrap">
+            <input class="form-control form-control-sm dashboard-search" data-organizer-event-search placeholder="Search events"/>
+            <select class="form-select form-select-sm dashboard-select" data-organizer-event-status>
+              <option value="">All statuses</option>
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+              <option value="pending_review">Pending review</option>
+              <option value="rejected">Rejected</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="completed">Completed</option>
             </select>
           </div>
-          <div class="qr-scanner-panel">
-            <video data-checkin-video playsinline muted></video>
-            <div class="qr-scanner-empty" data-checkin-camera-empty>
-              <i class="bi bi-camera-video"></i>
-              <span>Start camera scanner or use manual lookup.</span>
-            </div>
-          </div>
-          <div class="d-flex gap-2 mt-3 flex-wrap">
-            <button class="btn btn-primary-grad btn-sm" type="button" data-checkin-start-camera><i class="bi bi-camera-video me-1"></i>Start Scanner</button>
-            <button class="btn btn-glass btn-sm" type="button" data-checkin-stop-camera><i class="bi bi-stop-circle me-1"></i>Stop</button>
-          </div>
-          <form class="mt-3" data-checkin-manual-form>
-            <label class="form-label">Manual ticket or attendee lookup</label>
-            <div class="d-flex gap-2">
-              <input class="form-control" name="q" placeholder="Ticket code, attendee, email, or order number"/>
-              <button class="btn btn-glass" type="submit">Lookup</button>
-            </div>
-          </form>
-          <div class="dashboard-stack mt-3" data-checkin-lookup-results></div>
+          <button class="btn btn-glass btn-sm" type="button" data-retry-events><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-borderless align-middle mb-0 dashboard-table">
+            <thead><tr><th>Event</th><th>Status</th><th>Starts</th><th>Service Fee</th><th>Tickets</th><th>Revenue</th><th>Inventory</th><th></th></tr></thead>
+            <tbody data-organizer-events>
+              <tr><td colspan="8"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading events...</span></div></td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
-      <div class="col-xl-7">
-        <div class="card-pro p-3 h-100">
-          <div class="row g-3 mb-3" data-checkin-stats>
-            <div class="col-md-4"><div class="kpi"><div class="label">Tickets Sold</div><div class="value">0</div></div></div>
-            <div class="col-md-4"><div class="kpi"><div class="label">Checked In</div><div class="value">0</div></div></div>
-            <div class="col-md-4"><div class="kpi"><div class="label">Remaining</div><div class="value">0</div></div></div>
-          </div>
-          <div data-checkin-result class="checkin-result is-empty">
-            <i class="bi bi-qr-code-scan"></i>
-            <div>
-              <h5>Ready to validate tickets</h5>
-              <p>Select an event, scan a QR code, or search manually.</p>
+      <div class="row g-3">
+        <div class="col-lg-7">
+          <div class="card-pro p-3 h-100">
+            <h5 class="mb-3">Event performance</h5>
+            <div class="table-responsive">
+              <table class="table table-borderless align-middle mb-0 dashboard-table">
+                <thead><tr><th>Event</th><th>Sold</th><th>Remaining</th><th>Orders</th><th>Check-ins</th></tr></thead>
+                <tbody data-organizer-performance>
+                  <tr><td colspan="5"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading performance...</span></div></td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
-          <h6 class="mt-4">Recent validation logs</h6>
-          <div class="table-responsive">
-            <table class="table table-borderless align-middle mb-0 dashboard-table">
-              <thead><tr><th>Result</th><th>Attendee</th><th>Ticket</th><th>Scanned</th></tr></thead>
-              <tbody data-checkin-logs>
-                <tr><td colspan="4"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading validation logs...</span></div></td></tr>
-              </tbody>
-            </table>
+        </div>
+        <div class="col-lg-5">
+          <div class="card-pro p-3 h-100">
+            <h5 class="mb-3">Inventory remaining</h5>
+            <div data-organizer-inventory class="dashboard-stack">
+              <div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading inventory...</span></div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <h4 id="events" class="mt-2 mb-3">Event management</h4>
-    <div class="card-pro p-3 mb-4">
+    <section id="ticket-analytics" class="organizer-section" data-organizer-section="ticket-analytics">
       <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <div class="d-flex gap-2 flex-wrap">
-          <input class="form-control form-control-sm dashboard-search" data-organizer-event-search placeholder="Search events"/>
-          <select class="form-select form-select-sm dashboard-select" data-organizer-event-status>
-            <option value="">All statuses</option>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="pending_review">Pending review</option>
-            <option value="rejected">Rejected</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="completed">Completed</option>
-          </select>
+        <div>
+          <h4 class="m-0">Ticket analytics</h4>
+          <p class="text-muted-pro mb-0">Daily and weekly ticket sales, top sellers, and future conversion structure.</p>
         </div>
-        <button class="btn btn-glass btn-sm" type="button" data-retry-events><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+        <span class="badge status-badge status-pending">Conversion metrics prepared</span>
       </div>
-      <div class="table-responsive">
-        <table class="table table-borderless align-middle mb-0 dashboard-table">
-          <thead><tr><th>Event</th><th>Status</th><th>Starts</th><th>Service Fee</th><th>Tickets</th><th>Revenue</th><th>Inventory</th><th></th></tr></thead>
-          <tbody data-organizer-events>
-            <tr><td colspan="8"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading events...</span></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="row g-3 mb-4">
-      <div class="col-lg-7">
-        <h4 class="mb-3">Ticket performance</h4>
-        <div class="card-pro p-3 h-100">
-          <div class="table-responsive">
-            <table class="table table-borderless align-middle mb-0 dashboard-table">
-              <thead><tr><th>Event</th><th>Sold</th><th>Remaining</th><th>Orders</th><th>Check-ins</th></tr></thead>
-              <tbody data-organizer-performance>
-                <tr><td colspan="5"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading performance...</span></div></td></tr>
-              </tbody>
-            </table>
+      <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+          <div class="card-pro p-4 h-100">
+            <h5 class="mb-3">Sales by day</h5>
+            <canvas id="chartSalesDay" height="150"></canvas>
+            <div data-organizer-sales-day-empty></div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card-pro p-4 h-100">
+            <h5 class="mb-3">Sales by week</h5>
+            <canvas id="chartSalesWeek" height="150"></canvas>
+            <div data-organizer-sales-week-empty></div>
           </div>
         </div>
       </div>
-      <div class="col-lg-5">
-        <h4 class="mb-3">Inventory remaining</h4>
-        <div class="card-pro p-3 h-100">
-          <div data-organizer-inventory class="dashboard-stack">
-            <div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading inventory...</span></div>
+      <div class="card-pro p-3">
+        <h5 class="mb-3">Top performing events</h5>
+        <div data-organizer-top-events class="dashboard-stack">
+          <div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading top events...</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="revenue" class="organizer-section" data-organizer-section="revenue">
+      <div class="row g-3 mb-4" data-organizer-revenue-kpis>
+        <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
+        <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
+        <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
+        <div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>
+      </div>
+      <div class="row g-3 mb-4">
+        <div class="col-lg-8">
+          <div class="card-pro p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
+              <h4 class="m-0">Revenue trend</h4>
+              <div class="dashboard-tabs" data-organizer-range-tabs>
+                <button class="active" type="button" data-organizer-range="day">Day</button>
+                <button type="button" data-organizer-range="week">Week</button>
+                <button type="button" data-organizer-range="month">Month</button>
+              </div>
+            </div>
+            <canvas id="chartRev" height="120"></canvas>
+            <div data-organizer-revenue-empty></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card-pro p-4 h-100">
+            <h4 class="mb-3">Revenue by event</h4>
+            <canvas id="chartCat" height="180"></canvas>
+            <div data-organizer-event-revenue-empty></div>
           </div>
         </div>
       </div>
-    </div>
+      <div class="card-pro p-3">
+        <h5 class="mb-3">Revenue by event</h5>
+        <div class="table-responsive">
+          <table class="table table-borderless align-middle mb-0 dashboard-table">
+            <thead><tr><th>Event</th><th>Revenue</th><th>Tickets sold</th><th>Orders</th></tr></thead>
+            <tbody data-organizer-revenue-table>
+              <tr><td colspan="4"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading revenue...</span></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
-    <h4 id="attendees" class="mt-2 mb-3">Attendees</h4>
-    <div class="card-pro p-3 mb-4">
+    <section id="attendees" class="organizer-section" data-organizer-section="attendees">
+      <div class="card-pro p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <div>
+            <h4 class="m-0">Attendees</h4>
+            <p class="text-muted-pro mb-0">Search purchasers, attendees, tickets, and check-in status.</p>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <input class="form-control form-control-sm dashboard-search" data-attendee-search placeholder="Search attendees"/>
+            <select class="form-select form-select-sm dashboard-select" data-attendee-event>
+              <option value="">All events</option>
+            </select>
+            <select class="form-select form-select-sm dashboard-select" data-attendee-status>
+              <option value="">Any status</option>
+              <option value="valid">Valid</option>
+              <option value="checked_in">Checked in</option>
+              <option value="used">Checked in</option>
+              <option value="refunded">Refunded</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-borderless align-middle mb-0 dashboard-table">
+            <thead><tr><th>Attendee</th><th>Event</th><th>Ticket</th><th>Order</th><th>Purchase date</th><th>Status</th><th></th></tr></thead>
+            <tbody data-organizer-attendees>
+              <tr><td colspan="7"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading attendees...</span></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div data-attendee-pagination class="mt-3"></div>
+      </div>
+    </section>
+
+    <section id="check-in" class="organizer-section" data-organizer-section="check-in">
       <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <div class="d-flex gap-2 flex-wrap">
-          <input class="form-control form-control-sm dashboard-search" data-attendee-search placeholder="Search attendees"/>
-          <select class="form-select form-select-sm dashboard-select" data-attendee-event>
-            <option value="">All events</option>
-          </select>
-          <select class="form-select form-select-sm dashboard-select" data-attendee-status>
-            <option value="">Any status</option>
-            <option value="valid">Valid</option>
-            <option value="checked_in">Checked in</option>
-            <option value="refunded">Refunded</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+        <div>
+          <h4 class="m-0">Check-In</h4>
+          <p class="text-muted-pro mb-0">Validate existing QR tickets and monitor live attendance.</p>
         </div>
       </div>
-      <div class="table-responsive">
-        <table class="table table-borderless align-middle mb-0 dashboard-table">
-          <thead><tr><th>Attendee</th><th>Event</th><th>Ticket</th><th>Order</th><th>Status</th><th></th></tr></thead>
-          <tbody data-organizer-attendees>
-            <tr><td colspan="6"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading attendees...</span></div></td></tr>
-          </tbody>
-        </table>
+      <div class="row g-3">
+        <div class="col-xl-5">
+          <div class="card-pro p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
+              <h5 class="m-0">Scanner</h5>
+              <select class="form-select form-select-sm dashboard-select" data-checkin-event>
+                <option value="">Select event</option>
+              </select>
+            </div>
+            <div class="qr-scanner-panel">
+              <video data-checkin-video playsinline muted></video>
+              <div class="qr-scanner-empty" data-checkin-camera-empty>
+                <i class="bi bi-camera-video"></i>
+                <span>Start camera scanner or use manual lookup.</span>
+              </div>
+            </div>
+            <div class="d-flex gap-2 mt-3 flex-wrap">
+              <button class="btn btn-primary-grad btn-sm" type="button" data-checkin-start-camera><i class="bi bi-camera-video me-1"></i>Start Scanner</button>
+              <button class="btn btn-glass btn-sm" type="button" data-checkin-stop-camera><i class="bi bi-stop-circle me-1"></i>Stop</button>
+            </div>
+            <form class="mt-3" data-checkin-manual-form>
+              <label class="form-label">Manual ticket or attendee lookup</label>
+              <div class="d-flex gap-2">
+                <input class="form-control" name="q" placeholder="Ticket code, attendee, email, or order number"/>
+                <button class="btn btn-glass" type="submit">Lookup</button>
+              </div>
+            </form>
+            <div class="dashboard-stack mt-3" data-checkin-lookup-results></div>
+          </div>
+        </div>
+        <div class="col-xl-7">
+          <div class="card-pro p-3 h-100">
+            <div class="row g-3 mb-3" data-checkin-stats>
+              <div class="col-md-4"><div class="kpi"><div class="label">Tickets Sold</div><div class="value">0</div></div></div>
+              <div class="col-md-4"><div class="kpi"><div class="label">Checked In</div><div class="value">0</div></div></div>
+              <div class="col-md-4"><div class="kpi"><div class="label">Remaining</div><div class="value">0</div></div></div>
+            </div>
+            <div data-checkin-result class="checkin-result is-empty">
+              <i class="bi bi-qr-code-scan"></i>
+              <div>
+                <h5>Ready to validate tickets</h5>
+                <p>Select an event, scan a QR code, or search manually.</p>
+              </div>
+            </div>
+            <h6 class="mt-4">Recent validation logs</h6>
+            <div class="table-responsive">
+              <table class="table table-borderless align-middle mb-0 dashboard-table">
+                <thead><tr><th>Result</th><th>Attendee</th><th>Ticket</th><th>Scanned</th></tr></thead>
+                <tbody data-checkin-logs>
+                  <tr><td colspan="4"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading validation logs...</span></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
-      <div data-attendee-pagination class="mt-3"></div>
-    </div>
+    </section>
 
-    <h4 class="mt-2 mb-3">Revenue by event</h4>
-    <div class="card-pro p-3">
-      <div class="table-responsive">
-        <table class="table table-borderless align-middle mb-0 dashboard-table">
-          <thead><tr><th>Event</th><th>Revenue</th><th>Tickets sold</th><th>Orders</th></tr></thead>
-          <tbody data-organizer-revenue-table>
-            <tr><td colspan="4"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading revenue...</span></div></td></tr>
-          </tbody>
-        </table>
+    <section id="reports" class="organizer-section" data-organizer-section="reports">
+      <div class="row g-3">
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h5>Ticket sales report</h5><p class="text-muted-pro">Sold tickets, inventory, and event performance.</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-glass btn-sm" data-report-export="ticket-sales" data-report-format="csv">Export CSV</button><button class="btn btn-glass btn-sm" data-report-export="ticket-sales" data-report-format="pdf">Export PDF</button></div></div></div>
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h5>Attendee report</h5><p class="text-muted-pro">Attendee details, ticket types, orders, and check-in state.</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-glass btn-sm" data-report-export="attendees" data-report-format="csv">Export CSV</button><button class="btn btn-glass btn-sm" data-report-export="attendees" data-report-format="pdf">Export PDF</button></div></div></div>
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h5>Revenue report</h5><p class="text-muted-pro">Revenue trend and event revenue comparison.</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-glass btn-sm" data-report-export="revenue" data-report-format="csv">Export CSV</button><button class="btn btn-glass btn-sm" data-report-export="revenue" data-report-format="pdf">Export PDF</button></div></div></div>
       </div>
-    </div>
+    </section>
+
+    <section id="settings" class="organizer-section" data-organizer-section="settings">
+      <div class="row g-3">
+        <div class="col-lg-6">
+          <div class="card-pro p-4 h-100">
+            <h4 class="mb-3">Organizer profile</h4>
+            <div class="dashboard-detail-grid" data-organizer-settings-profile>
+              <div><dt>Name</dt><dd>Loading...</dd></div>
+              <div><dt>Email</dt><dd>Loading...</dd></div>
+              <div><dt>Status</dt><dd>Loading...</dd></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card-pro p-4 h-100">
+            <h4 class="mb-3">Notification preferences</h4>
+            <div class="dashboard-stack">
+              <label class="dashboard-mini-row"><span><span class="fw-semibold d-block">Ticket purchases</span><small>New sale notifications</small></span><input class="form-check-input" type="checkbox" checked disabled></label>
+              <label class="dashboard-mini-row"><span><span class="fw-semibold d-block">Check-in alerts</span><small>Event-day scan activity</small></span><input class="form-check-input" type="checkbox" checked disabled></label>
+              <label class="dashboard-mini-row"><span><span class="fw-semibold d-block">Event updates</span><small>Future organizer notifications</small></span><input class="form-check-input" type="checkbox" disabled></label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 </div>
 

@@ -73,6 +73,7 @@ class OrganizerDashboardController extends Controller
                 'revenue' => $this->dashboard->revenueByEvent($request->user(), $filters)->first(),
                 'sales_trends' => $this->dashboard->salesTrends($request->user(), $filters),
                 'inventory' => $this->dashboard->inventorySummary($request->user(), $filters),
+                'conversion_metrics' => $this->dashboard->conversionMetrics($request->user(), $filters)->first(),
             ],
         ]);
     }

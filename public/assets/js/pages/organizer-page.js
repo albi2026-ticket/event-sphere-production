@@ -14,6 +14,8 @@
     attendeeMeta: null,
     revenue: null,
     trends: [],
+    salesDayTrends: [],
+    salesWeekTrends: [],
     checkInStats: null,
     checkInLogs: [],
     checkInResult: null,
@@ -27,6 +29,7 @@
       inventory: true,
       attendees: true,
       revenue: true,
+      ticketAnalytics: true,
       checkInLogs: true,
     },
     errors: {},
@@ -35,6 +38,7 @@
     selectedEvent: null,
     pendingImages: [],
     busy: false,
+    currentSection: 'overview',
   };
 
   const $ = (sel, root = document) => root.querySelector(sel);
@@ -169,6 +173,8 @@
     } finally {
       state.loading.events = false;
       renderEvents();
+      renderKpis();
+      renderOverview();
       renderAlert();
     }
   }
@@ -185,6 +191,7 @@
     } finally {
       state.loading.performance = false;
       renderPerformance();
+      renderTopEvents();
       renderEvents();
       renderAlert();
     }
@@ -219,6 +226,27 @@
     } finally {
       state.loading.revenue = false;
       renderRevenue();
+      renderRevenueKpis();
+      renderAlert();
+    }
+  }
+
+  async function loadTicketAnalytics() {
+    state.loading.ticketAnalytics = true;
+    state.errors.ticketAnalytics = null;
+    renderTicketAnalytics();
+    try {
+      const [dayRes, weekRes] = await Promise.all([
+        api().fetch('/organizer/analytics/sales-trends?group_by=day'),
+        api().fetch('/organizer/analytics/sales-trends?group_by=week'),
+      ]);
+      state.salesDayTrends = rows(dayRes.data);
+      state.salesWeekTrends = rows(weekRes.data);
+    } catch (err) {
+      state.errors.ticketAnalytics = err.message || 'Failed to load ticket analytics';
+    } finally {
+      state.loading.ticketAnalytics = false;
+      renderTicketAnalytics();
       renderAlert();
     }
   }
@@ -261,18 +289,136 @@
     const kpiRow = $('[data-organizer-kpis]');
     if (!kpiRow) return;
     if (state.loading.summary) {
-      kpiRow.innerHTML = Array.from({ length: 4 }).map(() => '<div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>').join('');
+      kpiRow.innerHTML = Array.from({ length: 6 }).map(() => '<div class="col-md-4 col-xl-2"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>').join('');
       return;
     }
     const cards = state.summary?.cards || {};
+    const liveNow = state.events.filter((event) => organizerEventState(event).key === 'live').length;
     kpiRow.innerHTML = `
-      <div class="col-md-3"><div class="kpi"><div class="label">Revenue</div><div class="value">${u().formatMoney(cards.total_revenue || 0, 'USD')}</div><div class="delta">${cards.paid_orders_count ?? 0} paid orders</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Tickets sold</div><div class="value">${cards.tickets_sold ?? 0}</div><div class="delta">${cards.active_tickets_count ?? 0} valid tickets</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Published events</div><div class="value">${cards.published_events_count ?? 0}</div><div class="delta">${cards.events_count ?? 0} total events</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Attendees</div><div class="value">${cards.attendees_count ?? 0}</div><div class="delta">${cards.checked_in_count ?? 0} checked in</div></div></div>`;
+      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">Total Events</div><div class="value">${cards.events_count ?? 0}</div><div class="delta">${cards.past_events_count ?? 0} past</div></div></div>
+      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">Active Events</div><div class="value">${cards.published_events_count ?? 0}</div><div class="delta">${cards.sold_out_ticket_types_count ?? 0} sold-out tiers</div></div></div>
+      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">Tickets Sold</div><div class="value">${cards.tickets_sold ?? 0}</div><div class="delta">${cards.active_tickets_count ?? 0} valid tickets</div></div></div>
+      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">Revenue</div><div class="value">${u().formatMoney(cards.total_revenue || 0, 'USD')}</div><div class="delta">${cards.paid_orders_count ?? 0} paid orders</div></div></div>
+      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">Upcoming Events</div><div class="value">${cards.upcoming_events_count ?? 0}</div><div class="delta">${cards.attendees_count ?? 0} attendees</div></div></div>
+      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">Events Live Now</div><div class="value">${liveNow}</div><div class="delta">${cards.checked_in_count ?? 0} checked in</div></div></div>`;
 
     const subtitle = $('[data-organizer-subtitle]');
     if (subtitle) subtitle.textContent = `${cards.upcoming_events_count ?? 0} upcoming events · ${cards.sold_out_ticket_types_count ?? 0} sold-out ticket tiers`;
+    renderOverview();
+    renderRevenueKpis();
+    renderSettings();
+  }
+
+  function renderOverview() {
+    renderRecentActivity();
+    renderUpcomingEvents();
+    renderTopEvents();
+  }
+
+  function renderRecentActivity() {
+    const wrap = $('[data-organizer-activity]');
+    if (!wrap) return;
+    if (state.loading.summary || state.loading.events) {
+      wrap.innerHTML = `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading activity...</span></div>`;
+      return;
+    }
+
+    const orders = rows(state.summary?.recent_orders).map((order) => ({
+      icon: 'bi-ticket-perforated',
+      title: 'New ticket purchased',
+      detail: `${order.order_number || 'Order'} · ${u().formatMoney(order.total || 0, order.currency || 'USD')}`,
+      time: order.created_at,
+    }));
+    const checkIns = rows(state.summary?.recent_attendees)
+      .filter((ticket) => ticket.checked_in_at)
+      .map((ticket) => ({
+        icon: 'bi-check2-circle',
+        title: 'New attendee checked in',
+        detail: `${ticket.attendee_name || ticket.attendee?.name || 'Attendee'} · ${ticket.ticket_code || ''}`,
+        time: ticket.checked_in_at,
+      }));
+    const eventActivity = state.events.flatMap((event) => {
+      const activity = [];
+      if (event.status === 'published') {
+        activity.push({
+          icon: 'bi-broadcast',
+          title: 'Event published',
+          detail: event.title,
+          time: event.updated_at || event.created_at,
+        });
+      }
+      if (organizerEventState(event).key === 'sold_out') {
+        activity.push({
+          icon: 'bi-lightning-charge',
+          title: 'Event sold out',
+          detail: event.title,
+          time: event.updated_at || event.starts_at,
+        });
+      }
+      return activity;
+    });
+
+    const activity = [...orders, ...checkIns, ...eventActivity]
+      .filter((item) => item.time || item.detail)
+      .sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0))
+      .slice(0, 8);
+
+    wrap.innerHTML = activity.map((item) => `
+      <div class="dashboard-activity-item">
+        <span class="dashboard-activity-icon"><i class="bi ${item.icon}"></i></span>
+        <span class="flex-grow-1"><span class="fw-semibold d-block">${esc(item.title)}</span><small>${esc(item.detail || '')}</small></span>
+        <small class="text-muted-pro">${item.time ? esc(dateLabel(item.time)) : ''}</small>
+      </div>
+    `).join('') || emptyBlock('bi-clock-history', 'No recent activity yet', 'Purchases, check-ins, event updates, and sold-out events will appear here.');
+  }
+
+  function renderUpcomingEvents() {
+    const wrap = $('[data-organizer-upcoming]');
+    if (!wrap) return;
+    if (state.loading.events) {
+      wrap.innerHTML = `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading events...</span></div>`;
+      return;
+    }
+    const events = state.events
+      .filter((event) => ['live', 'upcoming'].includes(organizerEventState(event).key))
+      .sort((a, b) => new Date(a.starts_at || 0) - new Date(b.starts_at || 0))
+      .slice(0, 6);
+    wrap.innerHTML = events.map((event) => {
+      const inv = eventInventory(event);
+      const stateLabel = organizerEventState(event);
+      return `<div class="dashboard-mini-row">
+        <div>
+          <div class="fw-semibold">${esc(event.title)}</div>
+          <small>${esc(dateLabel(event.starts_at, event.timezone))} · ${inv.sold} sold · ${inv.available} remaining</small>
+        </div>
+        ${statusBadge(stateLabel.key, stateLabel.label)}
+      </div>`;
+    }).join('') || emptyBlock('bi-calendar-week', 'No upcoming events', 'Published future events and live events will appear here.');
+  }
+
+  function renderRevenueKpis() {
+    const row = $('[data-organizer-revenue-kpis]');
+    if (!row) return;
+    if (state.loading.revenue || state.loading.ticketAnalytics) {
+      row.innerHTML = Array.from({ length: 4 }).map(() => '<div class="col-md-3"><div class="kpi"><div class="skel dashboard-skel-line"></div><div class="skel dashboard-skel-value"></div></div></div>').join('');
+      return;
+    }
+    const now = new Date();
+    const todayKey = now.toISOString().slice(0, 10);
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const revenueFor = (predicate) => state.salesDayTrends
+      .filter((item) => predicate(new Date(item.period)))
+      .reduce((sum, item) => sum + Number(item.revenue || 0), 0);
+    const total = Number(state.revenue?.total_revenue || 0);
+    const today = state.salesDayTrends.find((item) => String(item.period).slice(0, 10) === todayKey);
+    row.innerHTML = `
+      <div class="col-md-3"><div class="kpi"><div class="label">Total Revenue</div><div class="value">${u().formatMoney(total, 'USD')}</div><div class="delta">${rows(state.revenue?.by_event).length} events selling</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">This Month</div><div class="value">${u().formatMoney(revenueFor((date) => date >= startOfMonth), 'USD')}</div><div class="delta">Month to date</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">This Week</div><div class="value">${u().formatMoney(revenueFor((date) => date >= startOfWeek), 'USD')}</div><div class="delta">Week to date</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">Today</div><div class="value">${u().formatMoney(today?.revenue || 0, 'USD')}</div><div class="delta">${today?.orders_count || 0} orders</div></div></div>`;
   }
 
   function performanceFor(eventId) {
@@ -373,12 +519,12 @@
     const pager = $('[data-attendee-pagination]');
     if (!body) return;
     if (state.loading.attendees) {
-      body.innerHTML = loadingRow(6, 'Loading attendees...');
+      body.innerHTML = loadingRow(7, 'Loading attendees...');
       if (pager) pager.innerHTML = '';
       return;
     }
     if (state.errors.attendees) {
-      body.innerHTML = errorRow(6, state.errors.attendees, 'data-retry-attendees');
+      body.innerHTML = errorRow(7, state.errors.attendees, 'data-retry-attendees');
       if (pager) pager.innerHTML = '';
       return;
     }
@@ -388,16 +534,18 @@
         <td data-label="Event">${esc(ticket.event?.title || '-')}</td>
         <td data-label="Ticket"><div>${esc(ticket.ticket_code)}</div><small class="text-muted-pro">${esc(ticket.ticket_type?.name || '')}</small></td>
         <td data-label="Order"><div>${esc(ticket.order?.order_number || '-')}</div><small class="text-muted-pro">Purchased by ${esc(ticket.purchaser?.name || ticket.order?.purchaser?.name || '-')}</small></td>
+        <td data-label="Purchase date">${esc(dateLabel(ticket.order?.created_at || ticket.created_at))}</td>
         <td data-label="Status">${statusBadge(ticket.status)}</td>
         <td data-label="Actions" class="text-end"><button class="btn btn-glass btn-sm" type="button" data-attendee-details="${ticket.id}"><i class="bi bi-eye me-1"></i>Details</button></td>
       </tr>
-    `).join('') || emptyRow(6, 'bi-people', 'No attendees found', 'Attendees appear here after tickets are issued.');
+    `).join('') || emptyRow(7, 'bi-people', 'No attendees found', 'Attendees appear here after tickets are issued.');
     if (pager) pager.innerHTML = pagination(state.attendeeMeta, 'data-attendee-page');
   }
 
   function renderRevenue() {
     renderRevenueChart();
     renderRevenueByEventChart();
+    renderRevenueKpis();
     const body = $('[data-organizer-revenue-table]');
     if (!body) return;
     if (state.loading.revenue) {
@@ -466,6 +614,71 @@
     });
   }
 
+  function renderTicketAnalytics() {
+    renderSalesChart('chartSalesDay', state.salesDayTrends, '[data-organizer-sales-day-empty]', 'Sales by day');
+    renderSalesChart('chartSalesWeek', state.salesWeekTrends, '[data-organizer-sales-week-empty]', 'Sales by week');
+    renderTopEvents();
+  }
+
+  function renderSalesChart(canvasId, data, emptySelector, label) {
+    const canvas = document.getElementById(canvasId);
+    const empty = $(emptySelector);
+    if (!canvas || !window.Chart) return;
+    const chartKey = canvasId === 'chartSalesWeek' ? '_chartSalesWeek' : '_chartSalesDay';
+    if (window[chartKey]) window[chartKey].destroy();
+    if (state.loading.ticketAnalytics) {
+      if (empty) empty.innerHTML = '';
+      return;
+    }
+    if (state.errors.ticketAnalytics) {
+      if (empty) empty.innerHTML = emptyBlock('bi-exclamation-triangle', `${label} unavailable`, state.errors.ticketAnalytics);
+      return;
+    }
+    const labels = data.map((item) => String(item.period).slice(0, 10));
+    const values = data.map((item) => Number(item.tickets_sold || 0));
+    if (!labels.length) {
+      if (empty) empty.innerHTML = emptyBlock('bi-bar-chart', `No ${label.toLowerCase()} yet`, 'Ticket sales charts appear after paid orders.');
+      return;
+    }
+    if (empty) empty.innerHTML = '';
+    const theme = chartTheme();
+    window[chartKey] = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{ label: 'Tickets sold', data: values, backgroundColor: 'rgba(91,140,255,.72)', borderColor: theme.primary, borderWidth: 1, borderRadius: 8 }],
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { color: theme.text, precision: 0 }, grid: { color: theme.grid } },
+          x: { ticks: { color: theme.text }, grid: { display: false } },
+        },
+      },
+    });
+  }
+
+  function renderTopEvents() {
+    const wrap = $('[data-organizer-top-events]');
+    if (!wrap) return;
+    if (state.loading.performance) {
+      wrap.innerHTML = `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading top events...</span></div>`;
+      return;
+    }
+    const top = [...state.performance]
+      .sort((a, b) => Number(b.tickets_sold || 0) - Number(a.tickets_sold || 0))
+      .slice(0, 6);
+    wrap.innerHTML = top.map((item, index) => `
+      <div class="dashboard-mini-row">
+        <div>
+          <div class="fw-semibold">${index + 1}. ${esc(item.title)}</div>
+          <small>${item.tickets_sold || 0} sold · ${u().formatMoney(item.revenue || 0, item.currency || 'USD')} revenue</small>
+        </div>
+        ${statusBadge(item.status)}
+      </div>
+    `).join('') || emptyBlock('bi-trophy', 'No top events yet', 'Best selling and highest revenue events will appear after sales.');
+  }
+
   function hydrateEventFilter() {
     const attendeeSelect = $('[data-attendee-event]');
     if (attendeeSelect) {
@@ -486,24 +699,28 @@
   function renderAll() {
     renderAlert();
     renderKpis();
+    renderOverview();
     renderEvents();
     renderPerformance();
     renderInventory();
     renderAttendees();
     renderRevenue();
+    renderRevenueKpis();
+    renderTicketAnalytics();
     renderCheckInStats();
     renderCheckInLogs();
+    renderSettings();
   }
 
   async function refreshAll() {
     renderAll();
-    await Promise.all([loadSummary(), loadEvents(), loadPerformance(), loadInventory(), loadAttendees(), loadRevenue()]);
+    await Promise.all([loadSummary(), loadEvents(), loadPerformance(), loadInventory(), loadAttendees(), loadRevenue(), loadTicketAnalytics()]);
     await Promise.all([loadCheckInStats(), loadCheckInLogs()]);
     renderAll();
   }
 
   async function refreshEventsAndAnalytics() {
-    await Promise.all([loadSummary(), loadEvents(), loadPerformance(), loadInventory(), loadRevenue()]);
+    await Promise.all([loadSummary(), loadEvents(), loadPerformance(), loadInventory(), loadRevenue(), loadTicketAnalytics()]);
     await Promise.all([loadCheckInStats(), loadCheckInLogs()]);
     renderAll();
   }
@@ -1010,6 +1227,129 @@
     bootstrap.Modal.getOrCreateInstance($('#organizerDetailModal')).show();
   }
 
+  function renderSettings() {
+    const wrap = $('[data-organizer-settings-profile]');
+    if (!wrap) return;
+    const user = auth().getUser();
+    const organizer = state.summary?.organizer || user || {};
+    wrap.innerHTML = `
+      <div><dt>Name</dt><dd>${esc(organizer.name || '-')}</dd></div>
+      <div><dt>Email</dt><dd>${esc(organizer.email || '-')}</dd></div>
+      <div><dt>Status</dt><dd>${statusBadge(organizer.organizer_status || 'approved')}</dd></div>
+      <div><dt>Role</dt><dd>${statusBadge(organizer.role || 'organizer')}</dd></div>`;
+  }
+
+  function showSection(section) {
+    const target = section || 'overview';
+    const exists = !!$(`[data-organizer-section="${target}"]`);
+    state.currentSection = exists ? target : 'overview';
+
+    $$('[data-organizer-section]').forEach((panel) => {
+      const active = panel.dataset.organizerSection === state.currentSection;
+      panel.classList.toggle('active', active);
+      panel.hidden = !active;
+    });
+    $$('[data-organizer-nav]').forEach((link) => {
+      link.classList.toggle('active', link.dataset.organizerNav === state.currentSection);
+    });
+    $('.dash-side')?.classList.remove('open');
+
+    if (location.hash.replace('#', '') !== state.currentSection) {
+      history.replaceState(null, '', `#${state.currentSection}`);
+    }
+
+    if (state.currentSection === 'revenue') renderRevenue();
+    if (state.currentSection === 'ticket-analytics') renderTicketAnalytics();
+  }
+
+  function bindSectionNavigation() {
+    $$('[data-organizer-nav]').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        showSection(link.dataset.organizerNav);
+      });
+    });
+    $('[data-toggle-side]')?.addEventListener('click', () => $('.dash-side')?.classList.toggle('open'));
+    window.addEventListener('hashchange', () => showSection(location.hash.replace('#', '') || 'overview'));
+    showSection(location.hash.replace('#', '') || 'overview');
+  }
+
+  function reportData(type) {
+    if (type === 'attendees') {
+      return {
+        title: 'Attendee Report',
+        headers: ['Attendee', 'Email', 'Event', 'Ticket Type', 'Order Number', 'Purchase Date', 'Check-In Status'],
+        rows: state.attendees.map((ticket) => [
+          ticket.attendee?.name || 'Guest',
+          ticket.attendee?.email || '',
+          ticket.event?.title || '',
+          ticket.ticket_type?.name || '',
+          ticket.order?.order_number || '',
+          dateLabel(ticket.order?.created_at || ticket.created_at),
+          ticket.status || '',
+        ]),
+      };
+    }
+
+    if (type === 'revenue') {
+      return {
+        title: 'Revenue Report',
+        headers: ['Event', 'Revenue', 'Tickets Sold', 'Orders'],
+        rows: rows(state.revenue?.by_event).map((item) => [
+          item.title || '',
+          u().formatMoney(item.revenue || 0, item.currency || 'USD'),
+          item.tickets_sold || 0,
+          item.orders_count || 0,
+        ]),
+      };
+    }
+
+    return {
+      title: 'Ticket Sales Report',
+      headers: ['Event', 'Status', 'Tickets Sold', 'Tickets Remaining', 'Orders', 'Check-Ins', 'Revenue'],
+      rows: state.performance.map((item) => [
+        item.title || '',
+        item.status || '',
+        item.tickets_sold || 0,
+        item.tickets_available || 0,
+        item.orders_count || 0,
+        `${item.checked_in_count || 0} / ${item.attendees_count || 0}`,
+        u().formatMoney(item.revenue || 0, item.currency || 'USD'),
+      ]),
+    };
+  }
+
+  function csvEscape(value) {
+    const text = String(value ?? '');
+    return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  }
+
+  function downloadCsv(type) {
+    const report = reportData(type);
+    const content = [report.headers, ...report.rows].map((row) => row.map(csvEscape).join(',')).join('\n');
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `event-sphere-${type}-report.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportReportPdf(type) {
+    const report = reportData(type);
+    const rowsHtml = report.rows.map((row) => `<tr>${row.map((cell) => `<td>${esc(cell)}</td>`).join('')}</tr>`).join('');
+    const win = window.open('', '_blank');
+    if (!win) {
+      window.tkToast?.('Popup blocked. Allow popups to export PDF.', 'error');
+      return;
+    }
+    win.document.write(`<!doctype html><html><head><title>${esc(report.title)}</title><style>
+      body{font-family:Arial,sans-serif;color:#111827;padding:28px}h1{margin:0 0 4px}p{color:#64748b}table{width:100%;border-collapse:collapse;margin-top:22px}th,td{border-bottom:1px solid #e5e7eb;padding:10px;text-align:left;font-size:12px}th{background:#f8fafc;text-transform:uppercase;color:#475569}.brand{font-weight:700;color:#2563eb}
+    </style></head><body><div class="brand">Event Sphere</div><h1>${esc(report.title)}</h1><p>Generated ${esc(dateLabel(new Date().toISOString()))}</p><table><thead><tr>${report.headers.map((header) => `<th>${esc(header)}</th>`).join('')}</tr></thead><tbody>${rowsHtml || `<tr><td colspan="${report.headers.length}">No report data available.</td></tr>`}</tbody></table><script>window.print();<\/script></body></html>`);
+    win.document.close();
+  }
+
   function bindFilters() {
     $('[data-organizer-event-status]')?.addEventListener('change', async () => {
       await loadEvents();
@@ -1045,6 +1385,7 @@
     document.addEventListener('event-sphere:theme-changed', () => {
       renderRevenueChart();
       renderRevenueByEventChart();
+      renderTicketAnalytics();
     });
 
     $('[data-organizer-new-event]')?.addEventListener('click', () => openEventModal());
@@ -1132,6 +1473,12 @@
         renderEvents();
         return;
       }
+      const retrySummary = event.target.closest('[data-retry-summary]');
+      if (retrySummary) {
+        await Promise.all([loadSummary(), loadEvents()]);
+        renderOverview();
+        return;
+      }
       const retryPerformance = event.target.closest('[data-retry-performance]');
       if (retryPerformance) {
         await loadPerformance();
@@ -1211,6 +1558,18 @@
       const attendee = event.target.closest('[data-attendee-details]');
       if (attendee) {
         await showAttendeeDetails(attendee.dataset.attendeeDetails);
+        return;
+      }
+
+      const report = event.target.closest('[data-report-export]');
+      if (report) {
+        const type = report.dataset.reportExport;
+        if (report.dataset.reportFormat === 'pdf') {
+          exportReportPdf(type);
+        } else {
+          downloadCsv(type);
+          window.tkToast?.('Report CSV exported');
+        }
       }
     });
 
@@ -1264,6 +1623,7 @@
     const user = auth().requireAuth(['organizer', 'admin'], { requireApprovedOrganizer: true });
     if (!user) return;
 
+    bindSectionNavigation();
     bindFilters();
     bindActions();
 

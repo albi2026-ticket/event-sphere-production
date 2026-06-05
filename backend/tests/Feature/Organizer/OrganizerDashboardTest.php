@@ -393,6 +393,14 @@ class OrganizerDashboardTest extends TestCase
             ->assertJsonPath('data.by_event.0.revenue', 84);
 
         $this->actingAs($organizer, 'sanctum')
+            ->getJson('/api/organizer/analytics')
+            ->assertOk()
+            ->assertJsonPath('data.conversion_metrics.0.event_id', $event->id)
+            ->assertJsonPath('data.conversion_metrics.0.event_views', null)
+            ->assertJsonPath('data.conversion_metrics.0.ticket_purchases', 1)
+            ->assertJsonPath('data.conversion_metrics.0.conversion_rate', null);
+
+        $this->actingAs($organizer, 'sanctum')
             ->getJson('/api/organizer/attendees?search=Search%20Match')
             ->assertOk()
             ->assertJsonPath('data.0.ticket_code', 'ES-ORG-TICKET-1');

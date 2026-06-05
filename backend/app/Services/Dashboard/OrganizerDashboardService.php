@@ -66,6 +66,7 @@ class OrganizerDashboardService
             'sales_trends' => $this->salesTrends($organizer, $filters),
             'ticket_inventory' => $this->inventorySummary($organizer, $filters),
             'event_performance' => $this->eventPerformance($organizer, $filters),
+            'conversion_metrics' => $this->conversionMetrics($organizer, $filters),
         ];
     }
 
@@ -130,6 +131,25 @@ class OrganizerDashboardService
             ->selectRaw('(SELECT COUNT(*) FROM ticket_types WHERE ticket_types.event_id = events.id AND ticket_types.status = ?) as sold_out_ticket_types_count', [TicketType::STATUS_SOLD_OUT])
             ->orderByDesc('revenue')
             ->get();
+    }
+
+    /**
+     * Future-ready conversion shape. Event view tracking is intentionally not
+     * implemented yet, so view counts and conversion rates remain nullable.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function conversionMetrics(User $organizer, array $filters = []): Collection
+    {
+        return $this->eventPerformance($organizer, $filters)
+            ->map(fn ($event) => [
+                'event_id' => $event->event_id,
+                'title' => $event->title,
+                'event_views' => null,
+                'ticket_purchases' => (int) $event->orders_count,
+                'tickets_sold' => (int) $event->tickets_sold,
+                'conversion_rate' => null,
+            ]);
     }
 
     /**
