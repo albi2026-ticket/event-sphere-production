@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Payments;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\Emails\OrderEmailService;
 use App\Services\Orders\OrderService;
 use App\Services\Tickets\TicketInventoryService;
 use App\Services\Tickets\TicketService;
@@ -18,6 +19,7 @@ class MockPaymentController extends Controller
         private readonly TicketInventoryService $inventory,
         private readonly TicketService $tickets,
         private readonly OrderService $orders,
+        private readonly OrderEmailService $emails,
     ) {}
 
     public function store(Request $request): JsonResponse
@@ -63,6 +65,8 @@ class MockPaymentController extends Controller
 
             throw $exception;
         }
+
+        $this->emails->sendOrderConfirmation($order);
 
         return response()->json([
             'data' => [

@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\StripeWebhookEvent;
 use App\Models\Ticket;
 use App\Models\TicketType;
+use App\Services\Emails\OrderEmailService;
 use App\Services\Orders\OrderService;
 use App\Services\Tickets\TicketInventoryService;
 use App\Services\Tickets\TicketService;
@@ -25,6 +26,7 @@ class StripePaymentService
         private readonly TicketInventoryService $inventory,
         private readonly TicketService $tickets,
         private readonly OrderService $orders,
+        private readonly OrderEmailService $emails,
     ) {}
 
     public function createCheckoutSession(Order $order): Session
@@ -220,6 +222,8 @@ class StripePaymentService
             'stripe_payment_status' => $session->payment_status,
             'paid_at' => now(),
         ])->save();
+
+        $this->emails->sendOrderConfirmation($locked);
     }
 
     protected function markCheckoutSessionFailed(mixed $session): void

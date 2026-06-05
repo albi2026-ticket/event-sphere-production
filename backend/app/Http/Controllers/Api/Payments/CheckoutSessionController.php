@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Payments;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Payments\CreateCheckoutSessionRequest;
 use App\Models\Order;
+use App\Services\Emails\OrderEmailService;
 use App\Services\Orders\OrderService;
 use App\Services\Payments\StripePaymentService;
 use App\Services\Tickets\TicketInventoryService;
@@ -21,6 +22,7 @@ class CheckoutSessionController extends Controller
         private readonly TicketInventoryService $inventory,
         private readonly TicketService $tickets,
         private readonly OrderService $orders,
+        private readonly OrderEmailService $emails,
     ) {}
 
     public function show(CreateCheckoutSessionRequest $request, Order $order): JsonResponse
@@ -124,6 +126,8 @@ class CheckoutSessionController extends Controller
 
             throw $exception;
         }
+
+        $this->emails->sendOrderConfirmation($order);
 
         $checkoutUrl = str_replace(
             ['{CHECKOUT_SESSION_ID}', '{ORDER_ID}', '{ORDER_NUMBER}'],

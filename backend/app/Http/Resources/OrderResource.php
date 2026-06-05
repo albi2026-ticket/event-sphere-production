@@ -42,6 +42,8 @@ class OrderResource extends JsonResource
             ],
             'attendee_count' => $attendeeCount,
             'paid_at' => $this->paid_at,
+            'order_confirmation_email_sent' => $this->order_confirmation_email_sent_at !== null,
+            'order_confirmation_email_sent_at' => $this->order_confirmation_email_sent_at,
             'cancelled_at' => $this->cancelled_at,
             'refunded_at' => $this->refunded_at,
             'receipt_url' => url("/api/me/orders/{$this->id}/receipt"),

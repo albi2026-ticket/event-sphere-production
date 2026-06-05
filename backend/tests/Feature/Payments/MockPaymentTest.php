@@ -2,12 +2,16 @@
 
 namespace Tests\Feature\Payments;
 
+use App\Mail\OrderConfirmationMail;
 use App\Models\Event;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Models\User;
+use App\Services\Emails\OrderEmailService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class MockPaymentTest extends TestCase
@@ -16,6 +20,8 @@ class MockPaymentTest extends TestCase
 
     public function test_mock_payment_marks_order_paid_and_generates_tickets(): void
     {
+        Mail::fake();
+
         $user = User::factory()->create([
             'role' => User::ROLE_USER,
             'status' => User::STATUS_ACTIVE,
@@ -97,9 +103,18 @@ class MockPaymentTest extends TestCase
         $this->assertSame(Order::PAYMENT_STATUS_PAID, $order->payment_status);
         $this->assertSame('mock-ES-2026-000001', $order->payment_reference);
         $this->assertNotNull($order->paid_at);
+        $this->assertNotNull($order->order_confirmation_email_sent_at);
         $this->assertSame(0, $ticketType->quantity_reserved);
         $this->assertSame(2, $ticketType->quantity_sold);
         $this->assertSame(2, $order->tickets()->count());
+
+        Mail::assertSent(OrderConfirmationMail::class, 1);
+
+        $this->actingAs($user, 'sanctum')->postJson('/api/payment/mock-success', [
+            'order_id' => $order->id,
+        ])->assertOk();
+
+        Mail::assertSent(OrderConfirmationMail::class, 1);
     }
 
     public function test_checkout_enforces_event_max_tickets_per_user(): void
@@ -192,6 +207,110 @@ class MockPaymentTest extends TestCase
             ])
             ->assertCreated()
             ->assertJsonPath('data.items.0.quantity', 1);
+    }
+
+    public function test_order_confirmation_email_renders_pristina_events_with_log_mailer(): void
+    {
+        config()->set('mail.default', 'log');
+
+        $user = User::factory()->create([
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $event = Event::query()->create([
+            'organizer_id' => $organizer->id,
+            'title' => 'Pristina Summer Event',
+            'slug' => 'pristina-summer-event',
+            'category' => 'Concerts',
+            'venue_name' => 'Event Sphere Hall',
+            'city' => 'Pristina',
+            'country' => 'Kosovo',
+            'starts_at' => '2026-07-10 18:00:00',
+            'timezone' => 'Europe/Pristina',
+            'status' => 'published',
+            'visibility' => 'public',
+            'currency' => 'USD',
+        ]);
+
+        $ticketType = TicketType::query()->create([
+            'event_id' => $event->id,
+            'name' => 'General Admission',
+            'price' => 25,
+            'currency' => 'USD',
+            'quantity_total' => 10,
+            'quantity_sold' => 1,
+            'min_per_order' => 1,
+            'max_per_order' => 10,
+            'status' => TicketType::STATUS_ACTIVE,
+        ]);
+
+        $order = Order::query()->create([
+            'user_id' => $user->id,
+            'order_number' => 'ES-2026-PRISTINA',
+            'status' => Order::STATUS_PAID,
+            'payment_status' => Order::PAYMENT_STATUS_PAID,
+            'subtotal' => 25,
+            'service_fee' => 2.50,
+            'total' => 27.50,
+            'currency' => 'USD',
+            'billing_email' => $user->email,
+            'billing_first_name' => 'Pristina',
+            'billing_last_name' => 'Buyer',
+            'paid_at' => now(),
+        ]);
+
+        $item = OrderItem::query()->create([
+            'order_id' => $order->id,
+            'event_id' => $event->id,
+            'ticket_type_id' => $ticketType->id,
+            'quantity' => 1,
+            'unit_price' => 25,
+            'service_fee' => 2.50,
+            'total' => 27.50,
+            'ticket_type_name' => 'General Admission',
+            'event_title' => $event->title,
+            'event_starts_at' => $event->starts_at,
+            'attendee_details' => [
+                ['name' => 'Pristina Guest', 'email' => 'guest@example.test'],
+            ],
+        ]);
+
+        Ticket::query()->create([
+            'ticket_uuid' => '00000000-0000-4000-8000-000000000001',
+            'ticket_code' => 'ES-PRISTINA-TEST',
+            'qr_token' => 'pristina-test-token',
+            'qr_payload' => '{}',
+            'user_id' => $user->id,
+            'event_id' => $event->id,
+            'ticket_type_id' => $ticketType->id,
+            'order_id' => $order->id,
+            'order_item_id' => $item->id,
+            'attendee_name' => 'Pristina Guest',
+            'attendee_email' => 'guest@example.test',
+            'status' => Ticket::STATUS_ACTIVE,
+            'issued_at' => now(),
+        ]);
+
+        $service = app(OrderEmailService::class);
+        $emailData = new \ReflectionMethod($service, 'emailData');
+        $emailData->setAccessible(true);
+
+        $this->assertSame(
+            'UTC+2 / Europe-Pristina',
+            $emailData->invoke($service, $order->load(['user', 'items.event', 'items.ticketType', 'tickets.event', 'tickets.ticketType']))['items'][0]['timezone_label'],
+        );
+
+        $sent = $service->sendOrderConfirmation($order);
+
+        $this->assertTrue($sent);
+        $this->assertNotNull($order->fresh()->order_confirmation_email_sent_at);
     }
 
     public function test_checkout_without_event_limit_allows_quantity_above_ten_when_inventory_exists(): void

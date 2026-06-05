@@ -370,12 +370,14 @@
   }
 
   function paymentRow(order, actions) {
+    const emailSent = Boolean(order.order_confirmation_email_sent_at);
     return `
       <tr>
         <td data-label="Order"><div class="fw-semibold">${u().escapeHtml(order.order_number)}</div><div class="small text-muted-pro">${dateTimeLabel(order.created_at)}</div></td>
         <td data-label="Customer">${u().escapeHtml(order.user?.name || order.user?.email || order.billing_email || '-')}</td>
         <td data-label="Status">${badge(order.payment_status)}</td>
         <td data-label="Provider">${u().escapeHtml(order.payment_provider || '-')}</td>
+        <td data-label="Email"><div>${badge(emailSent ? 'sent' : 'not sent')}</div><small class="text-muted-pro">${emailSent ? dateTimeLabel(order.order_confirmation_email_sent_at) : ''}</small></td>
         <td data-label="Total">${money(order.total, order.currency)}</td>
         <td data-label="Actions" class="text-end"><div class="admin-actions">${actions(order)}</div></td>
       </tr>`;
@@ -386,13 +388,13 @@
     const refundsBody = document.querySelector('[data-admin-refunds] tbody');
     if (!paymentsBody || !refundsBody) return;
     if (state.loading.payments) {
-      paymentsBody.innerHTML = loadingRow(6, 'Loading payments...');
-      refundsBody.innerHTML = loadingRow(6, 'Loading refunds...');
+      paymentsBody.innerHTML = loadingRow(7, 'Loading payments...');
+      refundsBody.innerHTML = loadingRow(7, 'Loading refunds...');
       return;
     }
     if (state.errors.payments) {
-      paymentsBody.innerHTML = errorRow(6, state.errors.payments, 'data-retry-payments');
-      refundsBody.innerHTML = errorRow(6, state.errors.payments, 'data-retry-payments');
+      paymentsBody.innerHTML = errorRow(7, state.errors.payments, 'data-retry-payments');
+      refundsBody.innerHTML = errorRow(7, state.errors.payments, 'data-retry-payments');
       return;
     }
 
@@ -402,9 +404,9 @@
     paymentsBody.innerHTML = payments.map((order) => paymentRow(order, (o) => `
       ${buttonIcon('bi-receipt', 'Payment details', `data-view-payment="${o.id}"`)}
       <button class="btn btn-glass btn-sm" type="button" data-refund-order="${o.id}" ${o.payment_status !== 'paid' ? 'disabled' : ''}>Refund</button>
-    `)).join('') || emptyRow(6, 'bi-credit-card', 'No payments found');
+    `)).join('') || emptyRow(7, 'bi-credit-card', 'No payments found');
 
-    refundsBody.innerHTML = refunds.map((order) => paymentRow(order, (o) => buttonIcon('bi-receipt', 'Refund details', `data-view-payment="${o.id}"`))).join('') || emptyRow(6, 'bi-arrow-counterclockwise', 'No refunded orders yet');
+    refundsBody.innerHTML = refunds.map((order) => paymentRow(order, (o) => buttonIcon('bi-receipt', 'Refund details', `data-view-payment="${o.id}"`))).join('') || emptyRow(7, 'bi-arrow-counterclockwise', 'No refunded orders yet');
   }
 
   function renderCheckIns() {
@@ -578,6 +580,8 @@
         ['Subtotal', money(order.subtotal, order.currency)],
         ['Service fee', money(order.service_fee, order.currency)],
         ['Paid at', dateTimeLabel(order.paid_at)],
+        ['Confirmation email', badge(order.order_confirmation_email_sent_at ? 'sent' : 'not sent')],
+        ['Email sent at', dateTimeLabel(order.order_confirmation_email_sent_at)],
         ['Refunded at', dateTimeLabel(order.refunded_at)],
         ['Reference', u().escapeHtml(order.payment_reference || '-')],
       ])}
