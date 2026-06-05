@@ -8,10 +8,10 @@
         window.tkToast?.(`${btn.dataset.socialAuth} sign-in is not enabled yet. Use email and password.`, 'info');
       });
     });
-    document.querySelector('[data-forgot-password]')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      window.tkToast?.('Password reset email flow is available through the API but has no email UI yet.', 'info');
-    });
+    const params = new URLSearchParams(location.search);
+    if (params.get('reset') === '1') {
+      window.tkToast?.('Your password has been updated successfully.', 'success');
+    }
     if (!form) return;
 
     form.addEventListener('submit', async (e) => {

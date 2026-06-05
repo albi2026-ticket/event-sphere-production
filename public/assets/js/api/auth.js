@@ -69,6 +69,26 @@
     return raw;
   }
 
+  async function requestPasswordReset(email) {
+    const { raw } = await api().fetch('/forgot-password', {
+      method: 'POST',
+      body: { email },
+      skipAuthRedirect: true,
+    });
+
+    return raw;
+  }
+
+  async function resetPassword(payload) {
+    const { raw } = await api().fetch('/reset-password', {
+      method: 'POST',
+      body: payload,
+      skipAuthRedirect: true,
+    });
+
+    return raw;
+  }
+
   async function logout() {
     try {
       if (getToken()) await api().fetch('/logout', { method: 'POST' });
@@ -241,6 +261,8 @@
     login,
     register,
     resendVerificationEmail,
+    requestPasswordReset,
+    resetPassword,
     logout,
     redirectByRole,
     requireAuth,
