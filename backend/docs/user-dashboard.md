@@ -68,10 +68,10 @@ QR display:
 Download:
 
 ```tsx
-<a href={`/api/tickets/${ticket.id}/download`}>Download ticket</a>
+<a href={`/api/tickets/${ticket.id}/download`}>Download PDF</a>
 ```
 
-If the frontend authenticates with bearer tokens, use `fetch`, convert the response to a blob, and open an object URL.
+Returns one attendee-specific PDF ticket with the ticket QR code. If the frontend authenticates with bearer tokens, use `fetch`, convert the response to a blob, and open an object URL.
 
 ## Orders
 

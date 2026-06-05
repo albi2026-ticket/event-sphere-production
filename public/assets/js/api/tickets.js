@@ -35,7 +35,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ticket-${ticketCode || ticketId}.html`;
+    a.download = `ticket-${ticketCode || ticketId}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -64,7 +64,7 @@
             </div>
             <div class="mt-3 d-flex gap-2">
               <button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}"><i class="bi bi-qr-code me-1"></i> View QR</button>
-              <button class="btn btn-primary-grad btn-sm" data-ticket-download="${ticket.id}" data-ticket-code="${u().escapeHtml(ticket.ticket_code)}"><i class="bi bi-download me-1"></i> Download Ticket</button>
+              <button class="btn btn-primary-grad btn-sm" data-ticket-download="${ticket.id}" data-ticket-code="${u().escapeHtml(ticket.ticket_code)}"><i class="bi bi-download me-1"></i> Download PDF</button>
               <button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}"><i class="bi bi-info-circle me-1"></i> Details</button>
             </div>
           </div>

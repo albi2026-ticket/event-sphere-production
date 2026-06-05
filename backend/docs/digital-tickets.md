@@ -64,7 +64,7 @@ GET /api/tickets/{ticket}/qr-code
 Authorization: Bearer <token>
 ```
 
-Download digital ticket:
+Download digital ticket PDF:
 
 ```http
 GET /api/tickets/{ticket}/download
@@ -206,10 +206,10 @@ Display QR codes with the SVG endpoint:
 Download with the existing button style:
 
 ```tsx
-<a href={`/api/tickets/${ticket.id}/download`}>Download ticket</a>
+<a href={`/api/tickets/${ticket.id}/download`}>Download PDF</a>
 ```
 
-If the frontend uses bearer tokens rather than cookies, fetch the download endpoint and create an object URL for the returned HTML blob.
+If the frontend uses bearer tokens rather than cookies, fetch the download endpoint and create an object URL for the returned PDF blob.
 
 ## Security Notes
 

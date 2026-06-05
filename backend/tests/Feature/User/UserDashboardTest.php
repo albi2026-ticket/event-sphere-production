@@ -82,15 +82,23 @@ class UserDashboardTest extends TestCase
             'event_starts_at' => $event->starts_at,
         ]);
 
-        Ticket::query()->create([
+        $ticket = Ticket::query()->create([
+            'ticket_uuid' => '00000000-0000-4000-8000-000000000101',
             'ticket_code' => 'ES-DASHBOARD-TEST',
             'qr_token' => 'dashboard-test-token',
-            'qr_payload' => '{}',
+            'qr_payload' => json_encode([
+                'type' => 'event_sphere_ticket',
+                'version' => 1,
+                'ticket_uuid' => '00000000-0000-4000-8000-000000000101',
+                'token' => 'dashboard-test-token',
+            ]),
             'user_id' => $user->id,
             'event_id' => $event->id,
             'ticket_type_id' => $ticketType->id,
             'order_id' => $order->id,
             'order_item_id' => $item->id,
+            'attendee_name' => 'Dashboard User',
+            'attendee_email' => $user->email,
             'status' => Ticket::STATUS_ACTIVE,
         ]);
 
@@ -139,6 +147,24 @@ class UserDashboardTest extends TestCase
             ->get("/api/me/orders/{$order->id}/receipt")
             ->assertOk()
             ->assertHeader('Content-Type', 'text/html; charset=UTF-8');
+
+        $download = $this->actingAs($user, 'sanctum')
+            ->get("/api/tickets/{$ticket->id}/download")
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('Content-Disposition', 'attachment; filename="event-sphere-ticket-ES-DASHBOARD-TEST.pdf"');
+
+        $this->assertStringStartsWith('%PDF-1.4', $download->getContent());
+        $this->assertSame(1, $ticket->fresh()->download_count);
+
+        $otherUser = User::factory()->create([
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($otherUser, 'sanctum')
+            ->get("/api/tickets/{$ticket->id}/download")
+            ->assertForbidden();
 
         $this->actingAs($user, 'sanctum')
             ->getJson('/api/me/favorites')

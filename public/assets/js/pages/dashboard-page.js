@@ -621,7 +621,7 @@
         <div><dt>Order</dt><dd>${escape(ticket.order?.order_number || '-')}</dd></div>
       </div>
       <div class="d-flex gap-2 mt-4 flex-wrap">
-        <button class="btn btn-primary-grad btn-sm" type="button" data-ticket-download="${ticket.id}" data-ticket-code="${escape(ticket.ticket_code)}"><i class="bi bi-download me-1"></i>Download ticket</button>
+        <button class="btn btn-primary-grad btn-sm" type="button" data-ticket-download="${ticket.id}" data-ticket-code="${escape(ticket.ticket_code)}"><i class="bi bi-download me-1"></i>Download PDF</button>
         <button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}"><i class="bi bi-qr-code me-1"></i>View QR code</button>
       </div>
     `);
@@ -660,7 +660,7 @@
       </tbody></table></div>
       <h6 class="mt-4">Ticket access</h6>
       <div class="dashboard-stack">
-        ${tickets.map((ticket) => `<div class="dashboard-mini-row"><div><div class="fw-semibold">${escape(ticket.attendee?.name || 'Guest')}</div><small>${escape(ticket.ticket_code)} · ${escape(ticket.ticket_type?.name || ticket.event?.title || '')}</small></div><button class="btn btn-glass btn-sm" type="button" data-ticket-download="${ticket.id}" data-ticket-code="${escape(ticket.ticket_code)}"><i class="bi bi-download me-1"></i>Download</button></div>`).join('') || '<p class="text-muted-pro mb-0">No tickets attached to this order.</p>'}
+        ${tickets.map((ticket) => `<div class="dashboard-mini-row"><div><div class="fw-semibold">${escape(ticket.attendee?.name || 'Guest')}</div><small>${escape(ticket.ticket_code)} · ${escape(ticket.ticket_type?.name || ticket.event?.title || '')}</small></div><button class="btn btn-glass btn-sm" type="button" data-ticket-download="${ticket.id}" data-ticket-code="${escape(ticket.ticket_code)}"><i class="bi bi-download me-1"></i>Download PDF</button></div>`).join('') || '<p class="text-muted-pro mb-0">No tickets attached to this order.</p>'}
       </div>
     `);
   }

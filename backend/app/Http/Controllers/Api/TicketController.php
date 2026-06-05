@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\TicketResource;
 use App\Models\Order;
 use App\Models\Ticket;
+use App\Services\Tickets\TicketPdfService;
 use App\Services\Tickets\TicketService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -13,7 +14,10 @@ use Illuminate\Http\Response;
 
 class TicketController extends Controller
 {
-    public function __construct(private readonly TicketService $tickets) {}
+    public function __construct(
+        private readonly TicketService $tickets,
+        private readonly TicketPdfService $ticketPdfs,
+    ) {}
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -51,15 +55,16 @@ class TicketController extends Controller
 
     public function download(Request $request, Ticket $ticket): Response
     {
-        $ticket->load(['user', 'event', 'ticketType', 'order.user']);
+        $ticket->load(['user', 'event', 'ticketType', 'order.user', 'orderItem']);
 
         abort_unless($request->user()->can('download', $ticket), 403);
 
         $this->tickets->markDownloaded($ticket);
+        $pdf = $this->ticketPdfs->download($ticket);
 
-        return response($this->tickets->downloadHtml($ticket), 200, [
-            'Content-Type' => 'text/html; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="event-sphere-ticket-'.$ticket->ticket_code.'.html"',
+        return response($pdf['content'], 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$pdf['filename'].'"',
         ]);
     }
 
