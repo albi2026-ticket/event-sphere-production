@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Payments\RefundPaymentRequest;
+use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\Ticket;
 use App\Services\Payments\StripePaymentService;
@@ -55,6 +56,7 @@ class AdminPaymentController extends Controller
             ])->save();
 
             $this->tickets->markOrderTickets($order, Ticket::STATUS_REFUNDED);
+            AuditLog::record($request->user(), 'payment.refunded', $order, ['reason' => $request->input('reason')], $request->ip());
 
             return response()->json([
                 'data' => [
@@ -70,6 +72,7 @@ class AdminPaymentController extends Controller
             $request->filled('amount') ? (float) $request->input('amount') : null,
             $request->input('reason')
         );
+        AuditLog::record($request->user(), 'payment.refunded', $order, ['reason' => $request->input('reason'), 'refund_id' => $refund->id], $request->ip());
 
         return response()->json([
             'data' => [

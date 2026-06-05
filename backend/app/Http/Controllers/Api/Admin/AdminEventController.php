@@ -8,7 +8,9 @@ use App\Http\Requests\Api\EventIndexRequest;
 use App\Http\Requests\Api\StoreEventRequest;
 use App\Http\Requests\Api\UpdateEventRequest;
 use App\Http\Resources\EventResource;
+use App\Models\AuditLog;
 use App\Models\Event;
+use App\Models\PlatformSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -41,9 +43,10 @@ class AdminEventController extends Controller
         $payload['status'] = $payload['status'] ?? 'draft';
         $payload['visibility'] = $payload['visibility'] ?? 'public';
         $payload['currency'] = strtoupper($payload['currency'] ?? 'USD');
-        $payload['service_fee_percentage'] = 10;
+        $payload['service_fee_percentage'] = PlatformSetting::getValue('default_service_fee_percentage', 10);
 
         $event = Event::create($payload);
+        AuditLog::record($request->user(), 'event.created', $event, ['title' => $event->title], $request->ip());
 
         return new EventResource($event->load(['organizer', 'images', 'ticketTypes']));
     }
@@ -66,6 +69,7 @@ class AdminEventController extends Controller
         }
 
         $event->update($payload);
+        AuditLog::record($request->user(), 'event.updated', $event, array_keys($payload), $request->ip());
 
         return new EventResource($event->fresh()->load(['organizer', 'images', 'ticketTypes']));
     }
@@ -79,20 +83,23 @@ class AdminEventController extends Controller
         $event->update([
             'service_fee_percentage' => round((float) $validated['service_fee_percentage'], 2),
         ]);
+        AuditLog::record($request->user(), 'event.service_fee_updated', $event, $validated, $request->ip());
 
         return new EventResource($event->fresh()->load(['organizer', 'images', 'ticketTypes']));
     }
 
-    public function destroy(Event $event): JsonResponse
+    public function destroy(Request $request, Event $event): JsonResponse
     {
+        AuditLog::record($request->user(), 'event.deleted', $event, ['title' => $event->title], $request->ip());
         $event->delete();
 
         return response()->json(['message' => 'Event deleted.']);
     }
 
-    public function publish(Event $event): EventResource
+    public function publish(Request $request, Event $event): EventResource
     {
         $event->update(['status' => 'published']);
+        AuditLog::record($request->user(), 'event.published', $event, ['title' => $event->title], $request->ip());
 
         return new EventResource($event->fresh());
     }
@@ -105,6 +112,7 @@ class AdminEventController extends Controller
             'status' => 'rejected',
             'moderation_notes' => $request->input('reason', $event->moderation_notes),
         ]);
+        AuditLog::record($request->user(), 'event.rejected', $event, ['reason' => $request->input('reason')], $request->ip());
 
         return new EventResource($event->fresh());
     }
@@ -117,6 +125,7 @@ class AdminEventController extends Controller
             'status' => 'draft',
             'moderation_notes' => $request->input('reason', $event->moderation_notes),
         ]);
+        AuditLog::record($request->user(), 'event.unpublished', $event, ['reason' => $request->input('reason')], $request->ip());
 
         return new EventResource($event->fresh());
     }

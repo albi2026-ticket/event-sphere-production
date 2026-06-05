@@ -11,7 +11,7 @@
         <li class="nav-item"><a class="nav-link nav-link-pro" href="events.html">Events</a></li>
         <li class="nav-item dropdown">
           <a class="nav-link nav-link-pro dropdown-toggle" data-bs-toggle="dropdown" href="#">Categories</a>
-          <ul class="dropdown-menu mt-2" style="background:var(--card);border:1px solid var(--border);border-radius:14px">
+          <ul class="dropdown-menu mt-2" data-nav-categories style="background:var(--card);border:1px solid var(--border);border-radius:14px">
             <li><a class="dropdown-item text-white-50" href="events.html?category=Concerts"><i class="bi bi-music-note-beamed me-2"></i>Concerts</a></li>
             <li><a class="dropdown-item text-white-50" href="events.html?category=Sports"><i class="bi bi-trophy me-2"></i>Sports</a></li>
             <li><a class="dropdown-item text-white-50" href="events.html?category=Festivals"><i class="bi bi-stars me-2"></i>Festivals</a></li>
@@ -86,5 +86,22 @@
 </footer>`;
   document.querySelectorAll('[data-partial="header"]').forEach(el => el.outerHTML = headerHTML);
   document.querySelectorAll('[data-partial="footer"]').forEach(el => el.outerHTML = footerHTML);
+  async function hydrateCategories() {
+    const menus = document.querySelectorAll('[data-nav-categories]');
+    if (!menus.length) return;
+    try {
+      const base = document.querySelector('meta[name="api-base"]')?.content || 'http://127.0.0.1:8000/api';
+      const response = await fetch(`${base.replace(/\/$/, '')}/categories`, { headers: { Accept: 'application/json' } });
+      const payload = await response.json();
+      const categories = Array.isArray(payload.data) ? payload.data : [];
+      if (!categories.length) return;
+      menus.forEach((menu) => {
+        menu.innerHTML = categories.map((category) => `<li><a class="dropdown-item text-white-50" href="events.html?category=${encodeURIComponent(category.name)}"><i class="bi ${category.icon || 'bi-tag'} me-2"></i>${category.name}</a></li>`).join('');
+      });
+    } catch {
+      /* keep static fallback */
+    }
+  }
+  hydrateCategories();
   document.dispatchEvent(new CustomEvent('event-sphere:partials-loaded'));
 })();

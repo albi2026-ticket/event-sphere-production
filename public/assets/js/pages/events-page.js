@@ -21,6 +21,25 @@
 
   let state = { page: 1, sort: 'trending', q: '', category: '', city: '', max_price: '', date_from: '', date_to: '', view: 'grid' };
 
+  async function loadCategories() {
+    const wrap = document.querySelector('[data-events-category-chips]');
+    if (!wrap) return;
+    try {
+      const base = document.querySelector('meta[name="api-base"]')?.content || 'http://127.0.0.1:8000/api';
+      const response = await fetch(`${base.replace(/\/$/, '')}/categories`, { headers: { Accept: 'application/json' } });
+      const payload = await response.json();
+      const categories = Array.isArray(payload.data) ? payload.data : [];
+      if (!categories.length) return;
+      wrap.innerHTML = '<span class="chip active" data-filter-category-chip="">All</span>' + categories
+        .map((category) => `<span class="chip" data-filter-category-chip="${u().escapeHtml(category.name)}">${u().escapeHtml(category.name)}</span>`)
+        .join('');
+      bindCategoryChips();
+      syncCategoryChips();
+    } catch {
+      /* keep static fallback */
+    }
+  }
+
   function normalizeCategory(value) {
     const raw = (value || '').trim();
     if (!raw || raw.toLowerCase() === 'all') return '';
@@ -202,14 +221,20 @@
       });
     });
 
-    document.querySelectorAll('[data-filter-category-chip]').forEach((chip) => {
-      chip.addEventListener('click', () => {
-        readFilterControls(chip.dataset.filterCategoryChip || '');
-        state.page = 1;
-        syncCategoryChips();
-        load();
+    bindCategoryChips();
+
+    function bindCategoryChips() {
+      document.querySelectorAll('[data-filter-category-chip]').forEach((chip) => {
+        if (chip.dataset.boundCategoryChip === 'true') return;
+        chip.dataset.boundCategoryChip = 'true';
+        chip.addEventListener('click', () => {
+          readFilterControls(chip.dataset.filterCategoryChip || '');
+          state.page = 1;
+          syncCategoryChips();
+          load();
+        });
       });
-    });
+    }
 
     const applyBtn = document.querySelector('[data-events-apply-filters]');
     if (applyBtn) {
@@ -248,6 +273,7 @@
       });
     });
 
+    loadCategories();
     load();
   });
 })();

@@ -20,6 +20,23 @@
 
   const categoryPriority = ['sports', 'concerts', 'festivals', 'comedy', 'theater', 'conferences', 'family', 'nightlife'];
 
+  async function hydrateNavCategories() {
+    const menus = document.querySelectorAll('[data-nav-categories]');
+    if (!menus.length) return;
+    try {
+      const base = document.querySelector('meta[name="api-base"]')?.content || 'http://127.0.0.1:8000/api';
+      const response = await fetch(`${base.replace(/\/$/, '')}/categories`, { headers: { Accept: 'application/json' } });
+      const payload = await response.json();
+      const categories = Array.isArray(payload.data) ? payload.data : [];
+      if (!categories.length) return;
+      menus.forEach((menu) => {
+        menu.innerHTML = categories.map((category) => `<li><a class="dropdown-item text-white-50" href="events.html?category=${encodeURIComponent(category.name)}"><i class="bi ${category.icon || 'bi-tag'} me-2"></i>${category.name}</a></li>`).join('');
+      });
+    } catch {
+      /* keep static fallback */
+    }
+  }
+
   function eventTimestamp(event, field) {
     const date = event?.[field] ? new Date(event[field]) : null;
     return date && !Number.isNaN(date.getTime()) ? date.getTime() : 0;
@@ -356,6 +373,7 @@
 
   document.addEventListener('DOMContentLoaded', async () => {
     setupNewsletter();
+    hydrateNavCategories();
 
     try {
       const events = await fetchHomepageEvents();

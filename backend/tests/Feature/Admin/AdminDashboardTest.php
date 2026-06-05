@@ -3,8 +3,11 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\Event;
+use App\Models\EmailTemplate;
+use App\Models\EventCategory;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\PlatformSetting;
 use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Models\User;
@@ -413,6 +416,143 @@ class AdminDashboardTest extends TestCase
         $this->actingAs($organizer, 'sanctum')
             ->patchJson("/api/admin/events/{$event->id}/service-fee", ['service_fee_percentage' => 5])
             ->assertForbidden();
+    }
+
+    public function test_admin_can_update_default_service_fee_without_code_changes(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/settings')
+            ->assertOk()
+            ->assertJsonPath('data.default_service_fee_percentage', 10);
+
+        $this->actingAs($admin, 'sanctum')
+            ->patchJson('/api/admin/settings', ['default_service_fee_percentage' => 12.75])
+            ->assertOk()
+            ->assertJsonPath('data.default_service_fee_percentage', 12.75);
+
+        $this->assertSame(12.75, (float) PlatformSetting::getValue('default_service_fee_percentage'));
+
+        $response = $this->actingAs($organizer, 'sanctum')
+            ->postJson('/api/organizer/events', [
+                'title' => 'Default Fee Event',
+                'category' => 'Concerts',
+                'venue_name' => 'Event Sphere Hall',
+                'city' => 'New York',
+                'starts_at' => now()->addMonth()->toIso8601String(),
+                'status' => 'draft',
+                'visibility' => 'public',
+                'currency' => 'USD',
+            ])
+            ->assertCreated();
+
+        $this->assertSame('12.75', Event::findOrFail($response->json('data.id'))->service_fee_percentage);
+
+        $this->actingAs($organizer, 'sanctum')
+            ->patchJson('/api/admin/settings', ['default_service_fee_percentage' => 5])
+            ->assertForbidden();
+    }
+
+    public function test_admin_can_manage_dynamic_categories_for_public_pages(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson('/api/admin/categories', [
+                'name' => 'Workshops',
+                'icon' => 'bi-tools',
+                'sort_order' => 1,
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.name', 'Workshops')
+            ->assertJsonPath('data.is_active', true);
+
+        $category = EventCategory::query()->where('name', 'Workshops')->firstOrFail();
+
+        $this->getJson('/api/categories')
+            ->assertOk()
+            ->assertJsonFragment(['name' => 'Workshops']);
+
+        $this->actingAs($admin, 'sanctum')
+            ->patchJson("/api/admin/categories/{$category->id}", [
+                'name' => 'Workshops & Classes',
+                'is_active' => false,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.name', 'Workshops & Classes')
+            ->assertJsonPath('data.is_active', false);
+
+        $this->getJson('/api/categories')
+            ->assertOk()
+            ->assertJsonMissing(['name' => 'Workshops & Classes']);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'category.created',
+            'auditable_type' => EventCategory::class,
+            'auditable_id' => $category->id,
+        ]);
+    }
+
+    public function test_admin_can_manage_platform_settings_email_templates_and_view_audit_logs(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $template = EmailTemplate::query()->where('key', 'order_confirmation')->firstOrFail();
+
+        $this->actingAs($admin, 'sanctum')
+            ->patchJson('/api/admin/settings', [
+                'platform_name' => 'Event Sphere Pro',
+                'support_email' => 'help@example.test',
+                'default_purchase_limit' => 8,
+                'maintenance_mode' => false,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.platform_name', 'Event Sphere Pro')
+            ->assertJsonPath('data.default_purchase_limit', 8);
+
+        $this->assertSame('Event Sphere Pro', PlatformSetting::getValue('platform_name'));
+
+        $this->actingAs($admin, 'sanctum')
+            ->patchJson("/api/admin/email-templates/{$template->id}", [
+                'subject' => 'Tickets for {{ $order->order_number }}',
+                'html_template' => '<h1>{{ $platform_name ?? "Event Sphere" }}</h1>',
+                'text_template' => '{{ $platform_name ?? "Event Sphere" }}',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.subject', 'Tickets for {{ $order->order_number }}');
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson("/api/admin/email-templates/{$template->id}/preview")
+            ->assertOk()
+            ->assertJsonPath('data.rendered', '<h1>Event Sphere</h1>');
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/email-center')
+            ->assertOk()
+            ->assertJsonStructure(['data' => ['email_statuses', 'templates', 'future_ready']]);
+
+        $response = $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/audit-logs?action=settings.updated')
+            ->assertOk();
+
+        $this->assertTrue(collect($response->json('data'))->contains(fn (array $log) => $log['action'] === 'settings.updated'));
+        $this->assertDatabaseHas('audit_logs', ['action' => 'email_template.updated']);
     }
 
     private function createAdminEventWithInventory(User $organizer, string $title, string $slug, string $status, mixed $startsAt, mixed $endsAt, int $total, int $sold): Event

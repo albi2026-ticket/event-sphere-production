@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Tickets\UpdateTicketStatusRequest;
 use App\Http\Requests\Api\Tickets\ValidateTicketRequest;
 use App\Http\Resources\TicketResource;
 use App\Http\Resources\TicketValidationLogResource;
+use App\Models\AuditLog;
 use App\Models\Ticket;
 use App\Models\TicketValidationLog;
 use App\Services\Tickets\TicketService;
@@ -184,6 +185,7 @@ class AdminTicketController extends Controller
             'status' => $request->input('status'),
             'checked_in_notes' => $request->input('notes', $ticket->checked_in_notes),
         ])->save();
+        AuditLog::record($request->user(), 'ticket.status_updated', $ticket, ['status' => $request->input('status')], $request->ip());
 
         return new TicketResource($ticket->fresh(['user', 'event', 'ticketType', 'order.user', 'checkedInBy']));
     }

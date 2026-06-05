@@ -1069,9 +1069,13 @@ a:hover { color: var(--secondary); }
 .organizer-section {
   display: none;
 }
-.organizer-section.active {
+.organizer-section.active,
+.admin-section.active {
   display: block;
   animation: dashboardSectionIn .18s ease;
+}
+.admin-section {
+  display: none;
 }
 @keyframes dashboardSectionIn {
   from { opacity: 0; transform: translateY(4px); }

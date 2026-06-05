@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,6 +34,7 @@ class UserRoleController extends Controller
         }
 
         $user->save();
+        AuditLog::record($request->user(), 'user.updated', $user, $validated, $request->ip());
 
         return response()->json(['data' => $user->fresh()]);
     }
@@ -45,6 +47,7 @@ class UserRoleController extends Controller
             'organizer_approved_at' => now(),
             'organizer_approved_by' => $request->user()->id,
         ])->save();
+        AuditLog::record($request->user(), 'organizer.approved', $user, ['email' => $user->email], $request->ip());
 
         return response()->json(['data' => $user->fresh()]);
     }
@@ -61,6 +64,7 @@ class UserRoleController extends Controller
             'organizer_approved_at' => null,
             'organizer_approved_by' => $request->user()->id,
         ])->save();
+        AuditLog::record($request->user(), 'organizer.rejected', $user, ['reason' => $request->input('reason')], $request->ip());
 
         return response()->json(['data' => $user->fresh()]);
     }
@@ -74,13 +78,15 @@ class UserRoleController extends Controller
         }
 
         $user->forceFill(['status' => User::STATUS_SUSPENDED])->save();
+        AuditLog::record($request->user(), 'user.suspended', $user, ['email' => $user->email], $request->ip());
 
         return response()->json(['data' => $user->fresh()]);
     }
 
-    public function reactivate(User $user): JsonResponse
+    public function reactivate(Request $request, User $user): JsonResponse
     {
         $user->forceFill(['status' => User::STATUS_ACTIVE])->save();
+        AuditLog::record($request->user(), 'user.reactivated', $user, ['email' => $user->email], $request->ip());
 
         return response()->json(['data' => $user->fresh()]);
     }

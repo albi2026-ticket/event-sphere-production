@@ -12,16 +12,21 @@
 <body>
 <div class="dash-shell">
   <aside class="dash-side">
-    <a class="brand mb-4" href="index.html"><span class="brand-logo"><i class="bi bi-shield-lock-fill"></i></span>Admin</a>
+    <a class="brand mb-4" href="index.html"><span class="brand-logo"><i class="bi bi-shield-lock-fill"></i></span>Event Sphere</a>
     <nav class="menu">
-      <a class="active" href="admin.html"><i class="bi bi-speedometer2"></i> Overview</a>
-      <a href="#users"><i class="bi bi-people"></i> Users</a>
-      <a href="#organizers"><i class="bi bi-person-check"></i> Organizers</a>
-      <a href="#events"><i class="bi bi-calendar-event"></i> Events</a>
-      <a href="#payments"><i class="bi bi-credit-card"></i> Payments</a>
-      <a href="#checkins"><i class="bi bi-qr-code-scan"></i> Check-Ins</a>
-      <a href="#refunds"><i class="bi bi-arrow-counterclockwise"></i> Refunds</a>
-      <a href="#activity"><i class="bi bi-clock-history"></i> Activity</a>
+      <a class="active" href="#overview" data-admin-nav="overview"><i class="bi bi-speedometer2"></i> Overview</a>
+      <a href="#events" data-admin-nav="events"><i class="bi bi-calendar-event"></i> Events</a>
+      <a href="#organizers" data-admin-nav="organizers"><i class="bi bi-person-check"></i> Organizers</a>
+      <a href="#users" data-admin-nav="users"><i class="bi bi-people"></i> Users</a>
+      <a href="#tickets" data-admin-nav="tickets"><i class="bi bi-ticket-perforated"></i> Tickets</a>
+      <a href="#revenue" data-admin-nav="revenue"><i class="bi bi-cash-stack"></i> Revenue</a>
+      <a href="#analytics" data-admin-nav="analytics"><i class="bi bi-graph-up-arrow"></i> Analytics</a>
+      <a href="#checkins" data-admin-nav="checkins"><i class="bi bi-qr-code-scan"></i> Check-In Monitoring</a>
+      <a href="#email-center" data-admin-nav="email-center"><i class="bi bi-envelope-paper"></i> Email Center</a>
+      <a href="#categories" data-admin-nav="categories"><i class="bi bi-tags"></i> Categories</a>
+      <a href="#platform-settings" data-admin-nav="platform-settings"><i class="bi bi-sliders"></i> Platform Settings</a>
+      <a href="#reports" data-admin-nav="reports"><i class="bi bi-file-earmark-bar-graph"></i> Reports</a>
+      <a href="#system-activity" data-admin-nav="system-activity"><i class="bi bi-activity"></i> System Activity</a>
       <hr class="divider"/>
       <a href="#" data-logout><i class="bi bi-box-arrow-right"></i> Sign out</a>
     </nav>
@@ -31,46 +36,60 @@
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
       <div>
         <button class="btn btn-glass d-lg-none" data-toggle-side><i class="bi bi-list"></i></button>
-        <h1 class="d-inline-block mb-0" style="font-size:1.8rem">Platform overview</h1>
-        <p class="mb-0 text-muted-pro">Users, organizers, events, payments, and refunds</p>
+        <h1 class="d-inline-block mb-0" style="font-size:1.8rem">Admin dashboard</h1>
+        <p class="mb-0 text-muted-pro">Platform operations, moderation, revenue, tickets, and check-ins</p>
       </div>
       <div class="d-flex gap-2"><button class="icon-btn" data-theme-toggle title="Toggle theme"><i class="bi bi-sun" data-theme-icon></i></button><button class="btn btn-glass" type="button" data-admin-export><i class="bi bi-download me-1"></i> Export</button><button class="btn btn-primary-grad" type="button" data-admin-alerts><i class="bi bi-bell me-1"></i> Alerts</button></div>
     </div>
 
-    <div class="row g-3 mb-4" data-admin-kpis>
-      <div class="col-md-3"><div class="kpi"><div class="label">Paid GMV</div><div class="value">$0</div><div class="delta">Loading</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Users</div><div class="value">0</div><div class="delta">Loading</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Moderation queue</div><div class="value">0</div><div class="delta">Loading</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Organizer requests</div><div class="value">0</div><div class="delta">Loading</div></div></div>
-    </div>
-
-    <div class="row g-3 mb-4">
-      <div class="col-lg-8"><div class="card-pro p-4"><h5 id="sales">Sales - last 12 months</h5><canvas id="salesChart" height="120"></canvas></div></div>
-      <div class="col-lg-4"><div class="card-pro p-4"><h5>Top categories</h5><canvas id="cat" height="180"></canvas></div></div>
-    </div>
-
-    <div class="row g-3 mb-4">
-      <div class="col-lg-8">
-        <h4 id="activity" class="mb-3">Recent activity</h4>
-        <div class="card-pro p-3" data-admin-activity>
-          <div class="admin-empty py-4"><i class="bi bi-clock-history"></i><span>Loading activity...</span></div>
-        </div>
+    <section id="overview" class="admin-section active" data-admin-section="overview">
+      <div class="row g-3 mb-4" data-admin-kpis>
+        <div class="col-md-3"><div class="kpi"><div class="label">Loading</div><div class="value">-</div><div class="delta">Syncing</div></div></div>
+        <div class="col-md-3"><div class="kpi"><div class="label">Loading</div><div class="value">-</div><div class="delta">Syncing</div></div></div>
+        <div class="col-md-3"><div class="kpi"><div class="label">Loading</div><div class="value">-</div><div class="delta">Syncing</div></div></div>
+        <div class="col-md-3"><div class="kpi"><div class="label">Loading</div><div class="value">-</div><div class="delta">Syncing</div></div></div>
       </div>
-      <div class="col-lg-4">
-        <h4 class="mb-3">Quick actions</h4>
-        <div class="card-pro p-3">
-          <div class="d-grid gap-2">
-            <a class="btn btn-glass text-start" href="#users"><i class="bi bi-search me-2"></i>Find a user</a>
-            <a class="btn btn-glass text-start" href="#organizers"><i class="bi bi-person-check me-2"></i>Review organizers</a>
-            <a class="btn btn-glass text-start" href="#events"><i class="bi bi-calendar-check me-2"></i>Moderate events</a>
-            <a class="btn btn-glass text-start" href="#payments"><i class="bi bi-receipt me-2"></i>Review payments</a>
-          </div>
-        </div>
+      <div class="row g-3">
+        <div class="col-xl-8"><div class="card-pro p-4 h-100"><h4 class="mb-3">Recent activity</h4><div data-admin-activity><div class="admin-empty py-4"><i class="bi bi-clock-history"></i><span>Loading activity...</span></div></div></div></div>
+        <div class="col-xl-4"><div class="card-pro p-4 h-100"><h4 class="mb-3">Platform health</h4><div class="dashboard-stack" data-admin-health></div></div></div>
       </div>
-    </div>
+    </section>
 
-    <h4 id="users" class="mt-2 mb-3">Users management</h4>
-    <div class="card-pro p-3 mb-4">
+    <section id="events" class="admin-section" data-admin-section="events">
+      <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap"><div><h4 class="m-0">Events Management</h4><p class="text-muted-pro mb-0">Moderation, publishing, service fees, inventory, and bulk actions.</p></div></div>
+      <div class="card-pro p-3 mb-4">
+        <form class="row g-2 mb-3" data-admin-event-filters>
+          <div class="col-md-5"><input class="form-control" name="q" placeholder="Search events, category, city"/></div>
+          <div class="col-md-3"><select class="form-select" name="status"><option value="">All statuses</option><option value="draft">Draft</option><option value="pending_review">Pending review</option><option value="published">Published</option><option value="rejected">Rejected</option><option value="cancelled">Cancelled</option><option value="completed">Completed</option></select></div>
+          <div class="col-md-2"><button class="btn btn-glass w-100" type="submit"><i class="bi bi-search me-1"></i> Search</button></div>
+          <div class="col-md-2"><button class="btn btn-glass w-100" type="button" data-reset-admin-events><i class="bi bi-x-circle me-1"></i> Clear</button></div>
+        </form>
+        <div class="d-flex gap-2 flex-wrap mb-3">
+          <button class="btn btn-glass btn-sm" type="button" data-bulk-event-action="publish">Bulk Publish</button>
+          <button class="btn btn-glass btn-sm" type="button" data-bulk-event-action="unpublish">Bulk Unpublish</button>
+          <button class="btn btn-glass btn-sm" type="button" data-bulk-event-action="category">Bulk Category Change</button>
+          <button class="btn btn-glass btn-sm" type="button" data-bulk-event-action="delete">Bulk Delete</button>
+        </div>
+        <div data-admin-events><div class="table-responsive"><table class="table table-borderless align-middle mb-0 dashboard-table">
+          <thead><tr><th><input class="form-check-input" type="checkbox" data-admin-select-all-events></th><th>Event</th><th>Category</th><th>Organizer</th><th>Status</th><th>Tickets Sold</th><th>Inventory</th><th>Revenue</th><th>Service Fee %</th><th>Created</th><th></th></tr></thead>
+          <tbody><tr><td colspan="11" class="text-muted-pro">Loading events...</td></tr></tbody>
+        </table></div></div>
+      </div>
+    </section>
+
+    <section id="organizers" class="admin-section" data-admin-section="organizers">
+      <div class="row g-3">
+        <div class="col-xl-8"><div class="card-pro p-3 h-100" data-admin-organizers><h4 class="mb-3">Organizers Management</h4><div class="table-responsive"><table class="table table-borderless align-middle mb-0 dashboard-table">
+          <thead><tr><th>Organizer Profile</th><th>Contact</th><th>Status</th><th>Events</th><th>Revenue</th><th>Tickets Sold</th><th></th></tr></thead>
+          <tbody><tr><td colspan="7" class="text-muted-pro">Loading organizers...</td></tr></tbody>
+        </table></div></div></div>
+        <div class="col-xl-4"><div class="card-pro p-3 h-100"><h4 class="mb-3">Performance Ranking</h4><div class="dashboard-stack" data-admin-organizer-ranking></div></div></div>
+      </div>
+    </section>
+
+    <section id="users" class="admin-section" data-admin-section="users">
+      <h4 class="mt-2 mb-3">Users Management</h4>
+      <div class="card-pro p-3 mb-4">
       <form class="row g-2 mb-3" data-admin-user-filters>
         <div class="col-md-3"><input class="form-control" name="q" placeholder="Search users by name or email"/></div>
         <div class="col-md-2"><select class="form-select" name="role"><option value="">All roles</option><option value="user">User</option><option value="organizer">Organizer</option><option value="admin">Admin</option></select></div>
@@ -81,33 +100,110 @@
         <div class="col-md-2"><button class="btn btn-glass w-100" type="submit"><i class="bi bi-search me-1"></i> Search</button></div>
         <div class="col-md-1"><button class="btn btn-glass w-100" type="button" data-reset-admin-users title="Clear filters"><i class="bi bi-x-circle"></i></button></div>
       </form>
-      <div data-admin-users><div class="table-responsive"><table class="table table-borderless align-middle mb-0" style="color:var(--text)">
+      <div data-admin-users><div class="table-responsive"><table class="table table-borderless align-middle mb-0 dashboard-table">
       <thead style="color:var(--muted)"><tr><th>User</th><th>Email</th><th>Verification</th><th>Joined</th><th>Orders</th><th>Role</th><th>Organizer</th><th>Status</th><th></th></tr></thead>
       <tbody><tr><td colspan="9" class="text-muted-pro">Loading users...</td></tr></tbody></table></div></div>
-    </div>
+      </div>
+    </section>
 
-    <h4 id="organizers" class="mt-2 mb-3">Organizer management</h4>
-    <div class="card-pro p-3 mb-4" data-admin-organizers><div class="table-responsive"><table class="table table-borderless align-middle mb-0" style="color:var(--text)">
-      <thead style="color:var(--muted)"><tr><th>Organizer</th><th>Email</th><th>Status</th><th>Events</th><th></th></tr></thead>
-      <tbody><tr><td colspan="5" class="text-muted-pro">Loading organizer requests...</td></tr></tbody>
-    </table></div></div>
+    <section id="tickets" class="admin-section" data-admin-section="tickets">
+      <div class="card-pro p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap"><div><h4 class="m-0">Tickets Management</h4><p class="text-muted-pro mb-0">Ticket status, QR access, attendee, purchaser, and manual validation.</p></div></div>
+        <form class="row g-2 mb-3" data-admin-ticket-filters>
+          <div class="col-md-3"><select class="form-select" name="status"><option value="">All statuses</option><option value="valid">Valid</option><option value="checked_in">Checked In</option><option value="cancelled">Cancelled</option><option value="refunded">Refunded</option></select></div>
+          <div class="col-md-3"><select class="form-select" name="event_id" data-admin-ticket-event><option value="">All events</option></select></div>
+          <div class="col-md-2"><button class="btn btn-glass w-100" type="submit">Filter</button></div>
+          <div class="col-md-2"><button class="btn btn-glass w-100" type="button" data-reset-admin-tickets>Clear</button></div>
+        </form>
+        <div class="table-responsive"><table class="table table-borderless align-middle mb-0 dashboard-table">
+          <thead><tr><th>Ticket Type</th><th>Event</th><th>Attendee</th><th>Purchaser</th><th>Status</th><th></th></tr></thead>
+          <tbody data-admin-tickets><tr><td colspan="6" class="text-muted-pro">Loading tickets...</td></tr></tbody>
+        </table></div>
+      </div>
+    </section>
 
-    <h4 id="events" class="mt-2 mb-3">Event moderation</h4>
-    <div class="card-pro p-3 mb-4">
-      <form class="row g-2 mb-3" data-admin-event-filters>
-        <div class="col-md-5"><input class="form-control" name="q" placeholder="Search events, category, city"/></div>
-        <div class="col-md-3"><select class="form-select" name="status"><option value="">All statuses</option><option value="draft">Draft</option><option value="pending_review">Pending review</option><option value="published">Published</option><option value="rejected">Rejected</option><option value="cancelled">Cancelled</option><option value="completed">Completed</option></select></div>
-        <div class="col-md-2"><button class="btn btn-glass w-100" type="submit"><i class="bi bi-search me-1"></i> Search</button></div>
-        <div class="col-md-2"><button class="btn btn-glass w-100" type="button" data-reset-admin-events><i class="bi bi-x-circle me-1"></i> Clear</button></div>
-      </form>
-      <div data-admin-events><div class="table-responsive"><table class="table table-borderless align-middle mb-0" style="color:var(--text)">
-        <thead style="color:var(--muted)"><tr><th>Event</th><th>Organizer</th><th>Date</th><th>Status</th><th>Service Fee %</th><th>Publish Status</th><th>Visibility</th><th>Tickets Sold</th><th></th></tr></thead>
-        <tbody><tr><td colspan="9" class="text-muted-pro">Loading events...</td></tr></tbody>
-      </table></div></div>
-    </div>
+    <section id="revenue" class="admin-section" data-admin-section="revenue">
+      <div class="row g-3 mb-4" data-admin-revenue-kpis></div>
+      <div class="row g-3 mb-4">
+        <div class="col-lg-8"><div class="card-pro p-4 h-100"><h4>Revenue Trend</h4><canvas id="adminRevenueTrend" height="120"></canvas></div></div>
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h4>Revenue By Event</h4><canvas id="adminRevenueEvent" height="190"></canvas></div></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-lg-6"><div class="card-pro p-4 h-100"><h4>Revenue By Category</h4><canvas id="adminRevenueCategory" height="170"></canvas></div></div>
+        <div class="col-lg-6"><div class="card-pro p-4 h-100"><h4>Revenue By Organizer</h4><canvas id="adminRevenueOrganizer" height="170"></canvas></div></div>
+      </div>
+      <div class="card-pro p-3 mt-4">
+        <h4 class="mb-3">Service Fee Management</h4>
+        <form class="row g-2 align-items-end" data-admin-default-fee-form>
+          <div class="col-md-3"><label class="form-label">Default fee %</label><input class="form-control" type="number" min="0" max="30" step="0.01" name="default_service_fee_percentage" data-admin-default-fee></div>
+          <div class="col-md-2"><button class="btn btn-primary-grad w-100" type="submit">Save Default</button></div>
+          <div class="col-md-7"><p class="text-muted-pro mb-0">Per-event fees remain editable in Events Management.</p></div>
+        </form>
+      </div>
+    </section>
 
-    <h4 id="checkins" class="mt-2 mb-3">Global Check-In Monitoring</h4>
-    <div class="card-pro p-3 mb-4">
+    <section id="analytics" class="admin-section" data-admin-section="analytics">
+      <div class="row g-3 mb-4">
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h4>Sales by Day</h4><canvas id="adminSalesDay" height="150"></canvas></div></div>
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h4>Sales by Week</h4><canvas id="adminSalesWeek" height="150"></canvas></div></div>
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h4>Sales by Month</h4><canvas id="salesChart" height="150"></canvas></div></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h4>Top Events</h4><div class="dashboard-stack" data-admin-top-events></div></div></div>
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h4>Top Organizers</h4><div class="dashboard-stack" data-admin-top-organizers></div></div></div>
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h4>Popular Categories</h4><canvas id="cat" height="190"></canvas></div></div>
+      </div>
+      <div class="card-pro p-3 mt-4"><h4>Conversion Tracking</h4><p class="text-muted-pro mb-0">Event views and conversion rate fields are prepared for future visitor tracking. No visitor tracking is enabled in Phase 1.</p></div>
+    </section>
+
+    <section id="email-center" class="admin-section" data-admin-section="email-center">
+      <div class="row g-3">
+        <div class="col-xl-7"><div class="card-pro p-3 h-100"><h4 class="mb-3">Email Status</h4><div class="table-responsive"><table class="table table-borderless align-middle mb-0 dashboard-table"><thead><tr><th>Type</th><th>Recipient</th><th>Reference</th><th>Status</th><th>Timestamp</th></tr></thead><tbody data-admin-email-statuses><tr><td colspan="5" class="text-muted-pro">Loading email statuses...</td></tr></tbody></table></div></div></div>
+        <div class="col-xl-5"><div class="card-pro p-3 h-100"><h4 class="mb-3">Template Editor</h4><select class="form-select mb-3" data-email-template-select></select><form data-email-template-form><label class="form-label">Subject</label><input class="form-control mb-2" name="subject"/><label class="form-label">HTML Template</label><textarea class="form-control mb-2" name="html_template" rows="7"></textarea><label class="form-label">Plain Text Template</label><textarea class="form-control mb-3" name="text_template" rows="5"></textarea><div class="d-flex gap-2 flex-wrap"><button class="btn btn-primary-grad btn-sm" type="submit">Save Template</button><button class="btn btn-glass btn-sm" type="button" data-preview-email-template>Preview</button></div></form><div class="border-pro rounded-pro p-3 mt-3" data-email-template-preview hidden></div></div></div>
+      </div>
+    </section>
+
+    <section id="categories" class="admin-section" data-admin-section="categories">
+      <div class="row g-3">
+        <div class="col-xl-8"><div class="card-pro p-3 h-100"><h4 class="mb-3">Categories Management</h4><div class="table-responsive"><table class="table table-borderless align-middle mb-0 dashboard-table"><thead><tr><th>Name</th><th>Slug</th><th>Icon</th><th>Events</th><th>Status</th><th></th></tr></thead><tbody data-admin-categories><tr><td colspan="6" class="text-muted-pro">Loading categories...</td></tr></tbody></table></div></div></div>
+        <div class="col-xl-4"><div class="card-pro p-3 h-100"><h4 class="mb-3">Create Category</h4><form data-admin-category-form><label class="form-label">Name</label><input class="form-control mb-2" name="name" required placeholder="Concerts"/><label class="form-label">Icon class</label><input class="form-control mb-2" name="icon" placeholder="bi-music-note-beamed"/><label class="form-label">Sort order</label><input class="form-control mb-3" name="sort_order" type="number" min="0" value="0"/><button class="btn btn-primary-grad w-100" type="submit">Create Category</button></form></div></div>
+      </div>
+    </section>
+
+    <section id="platform-settings" class="admin-section" data-admin-section="platform-settings">
+      <div class="card-pro p-3"><h4 class="mb-3">Platform Settings</h4><form class="row g-3" data-admin-platform-settings-form>
+        <div class="col-md-4"><label class="form-label">Platform Name</label><input class="form-control" name="platform_name"/></div>
+        <div class="col-md-4"><label class="form-label">Support Email</label><input class="form-control" name="support_email" type="email"/></div>
+        <div class="col-md-4"><label class="form-label">Contact Information</label><input class="form-control" name="contact_information"/></div>
+        <div class="col-md-3"><label class="form-label">Default Purchase Limit</label><input class="form-control" name="default_purchase_limit" type="number" min="1"/></div>
+        <div class="col-md-3"><label class="form-label">Default Service Fee</label><input class="form-control" name="default_service_fee_percentage" type="number" min="0" max="30" step="0.01"/></div>
+        <div class="col-md-3"><label class="form-label">Default Event Status</label><select class="form-select" name="default_event_status"><option value="draft">Draft</option><option value="pending_review">Pending Review</option><option value="published">Published</option></select></div>
+        <div class="col-md-3"><label class="form-label">Auto Archive Days</label><input class="form-control" name="auto_archive_days_after_event" type="number" min="0"/></div>
+        <div class="col-md-3"><label class="form-label">Reminder Timing Hours</label><input class="form-control" name="reminder_timing_hours" type="number" min="1"/></div>
+        <div class="col-md-3"><label class="form-label">Verification Expiration Minutes</label><input class="form-control" name="verification_link_expiration_minutes" type="number" min="5"/></div>
+        <div class="col-md-3"><label class="form-label">Maintenance Mode</label><select class="form-select" name="maintenance_mode"><option value="0">Off</option><option value="1">On</option></select></div>
+        <div class="col-md-3"><label class="form-label">Registration</label><select class="form-select" name="registration_enabled"><option value="1">Enabled</option><option value="0">Disabled</option></select></div>
+        <div class="col-12"><button class="btn btn-primary-grad" type="submit">Save Settings</button></div>
+      </form></div>
+    </section>
+
+    <section id="reports" class="admin-section" data-admin-section="reports">
+      <div class="card-pro p-3 mb-3"><h4 class="mb-3">Report Filters</h4><div class="row g-2"><div class="col-md-3"><input class="form-control" type="date" data-report-date-from></div><div class="col-md-3"><input class="form-control" type="date" data-report-date-to></div><div class="col-md-3"><select class="form-select" data-report-organizer><option value="">All organizers</option></select></div><div class="col-md-3"><select class="form-select" data-report-category><option value="">All categories</option></select></div></div></div>
+      <div class="row g-3">
+        <div class="col-md-6 col-xl-3"><div class="card-pro p-4 h-100"><h5>Revenue Report</h5><p class="text-muted-pro">Revenue and service fees.</p><button class="btn btn-glass btn-sm" data-admin-report="revenue" data-report-format="csv">CSV</button> <button class="btn btn-glass btn-sm" data-admin-report="revenue" data-report-format="pdf">PDF</button></div></div>
+        <div class="col-md-6 col-xl-3"><div class="card-pro p-4 h-100"><h5>Ticket Sales Report</h5><p class="text-muted-pro">Ticket volume by event.</p><button class="btn btn-glass btn-sm" data-admin-report="tickets" data-report-format="csv">CSV</button> <button class="btn btn-glass btn-sm" data-admin-report="tickets" data-report-format="pdf">PDF</button></div></div>
+        <div class="col-md-6 col-xl-3"><div class="card-pro p-4 h-100"><h5>Attendance Report</h5><p class="text-muted-pro">Check-ins and attendance rate.</p><button class="btn btn-glass btn-sm" data-admin-report="attendance" data-report-format="csv">CSV</button> <button class="btn btn-glass btn-sm" data-admin-report="attendance" data-report-format="pdf">PDF</button></div></div>
+        <div class="col-md-6 col-xl-3"><div class="card-pro p-4 h-100"><h5>Organizer Report</h5><p class="text-muted-pro">Organizer performance.</p><button class="btn btn-glass btn-sm" data-admin-report="organizers" data-report-format="csv">CSV</button> <button class="btn btn-glass btn-sm" data-admin-report="organizers" data-report-format="pdf">PDF</button></div></div>
+      </div>
+    </section>
+
+    <section id="system-activity" class="admin-section" data-admin-section="system-activity">
+      <div class="card-pro p-3"><div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3"><h4 class="m-0">System Activity</h4><form class="d-flex gap-2 flex-wrap" data-admin-audit-filters><input class="form-control form-control-sm dashboard-search" name="q" placeholder="Search logs"/><input class="form-control form-control-sm dashboard-search" name="action" placeholder="Action filter"/><button class="btn btn-glass btn-sm" type="submit">Filter</button></form></div><div class="table-responsive"><table class="table table-borderless align-middle mb-0 dashboard-table"><thead><tr><th>Admin</th><th>Action</th><th>Target</th><th>Timestamp</th></tr></thead><tbody data-admin-audit-logs><tr><td colspan="4" class="text-muted-pro">Loading audit logs...</td></tr></tbody></table></div><div class="mt-3" data-admin-audit-pagination></div></div>
+    </section>
+
+    <section id="checkins" class="admin-section" data-admin-section="checkins">
+      <h4 class="mt-2 mb-3">Check-In Monitoring</h4>
+      <div class="card-pro p-3 mb-4">
       <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
         <div class="d-flex gap-2 flex-wrap">
           <select class="form-select form-select-sm dashboard-select" data-admin-checkin-event>
@@ -135,27 +231,8 @@
           </tbody>
         </table>
       </div>
-    </div>
-
-    <h4 id="payments" class="mt-2 mb-3">Payments</h4>
-    <div class="card-pro p-3 mb-4">
-      <form class="row g-2 mb-3" data-admin-payment-filters>
-        <div class="col-md-3"><select class="form-select" name="payment_status"><option value="">All payment statuses</option><option value="unpaid">Unpaid</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option><option value="refunded">Refunded</option></select></div>
-        <div class="col-md-3"><input class="form-control" name="payment_provider" placeholder="Provider, e.g. stripe or mock"/></div>
-        <div class="col-md-2"><button class="btn btn-glass w-100" type="submit"><i class="bi bi-search me-1"></i> Filter</button></div>
-        <div class="col-md-2"><button class="btn btn-glass w-100" type="button" data-reset-admin-payments><i class="bi bi-x-circle me-1"></i> Clear</button></div>
-      </form>
-      <div data-admin-payments><div class="table-responsive"><table class="table table-borderless align-middle mb-0" style="color:var(--text)">
-        <thead style="color:var(--muted)"><tr><th>Order</th><th>Customer</th><th>Status</th><th>Provider</th><th>Email</th><th>Total</th><th></th></tr></thead>
-        <tbody><tr><td colspan="7" class="text-muted-pro">Loading payments...</td></tr></tbody>
-      </table></div></div>
-    </div>
-
-    <h4 id="refunds" class="mb-3">Refunds</h4>
-    <div class="card-pro p-3" data-admin-refunds><div class="table-responsive"><table class="table table-borderless align-middle mb-0" style="color:var(--text)">
-      <thead style="color:var(--muted)"><tr><th>Order</th><th>Customer</th><th>Status</th><th>Provider</th><th>Total</th><th></th></tr></thead>
-      <tbody><tr><td colspan="6" class="text-muted-pro">Loading refunds...</td></tr></tbody>
-    </table></div></div>
+      </div>
+    </section>
   </main>
 </div>
 

@@ -1,12 +1,17 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\AdminEventController;
+use App\Http\Controllers\Api\Admin\AdminAuditLogController;
+use App\Http\Controllers\Api\Admin\AdminCategoryController;
+use App\Http\Controllers\Api\Admin\AdminEmailCenterController;
 use App\Http\Controllers\Api\Admin\AdminOrganizerDashboardController;
 use App\Http\Controllers\Api\Admin\AdminPaymentController;
+use App\Http\Controllers\Api\Admin\AdminPlatformSettingController;
 use App\Http\Controllers\Api\Admin\AdminTicketController;
 use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\Admin\UserRoleController;
 use App\Http\Controllers\Api\AuthUserController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\EventImageController;
@@ -42,6 +47,7 @@ Route::get('/events', [EventController::class, 'index']);
 Route::get('/events/{event:slug}/images', [EventImageController::class, 'index']);
 Route::get('/events/{event:slug}/ticket-types', [TicketTypeController::class, 'index']);
 Route::get('/events/{event:slug}', [EventController::class, 'show']);
+Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/event-images/{eventImage}', [EventImageController::class, 'show']);
 Route::get('/ticket-types/{ticketType}', [TicketTypeController::class, 'show']);
 Route::post('/newsletter-subscriptions', [NewsletterSubscriptionController::class, 'store']);
@@ -122,6 +128,16 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::middleware('role:admin')->prefix('admin')->group(function (): void {
         Route::get('/dashboard', [DashboardController::class, 'admin']);
+        Route::get('/settings', [AdminPlatformSettingController::class, 'show']);
+        Route::patch('/settings', [AdminPlatformSettingController::class, 'update']);
+        Route::get('/categories', [AdminCategoryController::class, 'index']);
+        Route::post('/categories', [AdminCategoryController::class, 'store']);
+        Route::patch('/categories/{category}', [AdminCategoryController::class, 'update']);
+        Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy']);
+        Route::get('/email-center', [AdminEmailCenterController::class, 'index']);
+        Route::patch('/email-templates/{template}', [AdminEmailCenterController::class, 'updateTemplate']);
+        Route::get('/email-templates/{template}/preview', [AdminEmailCenterController::class, 'preview']);
+        Route::get('/audit-logs', [AdminAuditLogController::class, 'index']);
         Route::get('/organizers/{organizer}/dashboard/summary', [AdminOrganizerDashboardController::class, 'summary']);
         Route::get('/organizers/{organizer}/analytics', [AdminOrganizerDashboardController::class, 'analytics']);
         Route::get('/organizers/{organizer}/analytics/revenue', [AdminOrganizerDashboardController::class, 'revenue']);

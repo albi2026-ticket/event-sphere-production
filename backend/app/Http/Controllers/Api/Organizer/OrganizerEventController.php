@@ -9,6 +9,7 @@ use App\Http\Requests\Api\StoreEventRequest;
 use App\Http\Requests\Api\UpdateEventRequest;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
+use App\Models\PlatformSetting;
 use App\Models\TicketType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -91,7 +92,7 @@ class OrganizerEventController extends Controller
             $payload['status'] = $payload['status'] ?? 'draft';
             $payload['visibility'] = $payload['visibility'] ?? 'public';
             $payload['currency'] = strtoupper($payload['currency'] ?? 'USD');
-            $payload['service_fee_percentage'] = 10;
+            $payload['service_fee_percentage'] = PlatformSetting::getValue('default_service_fee_percentage', 10);
         } elseif (array_key_exists('currency', $payload)) {
             $payload['currency'] = strtoupper($payload['currency']);
         }
