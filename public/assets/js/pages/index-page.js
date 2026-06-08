@@ -30,7 +30,7 @@
       const categories = Array.isArray(payload.data) ? payload.data : [];
       if (!categories.length) return;
       menus.forEach((menu) => {
-        menu.innerHTML = categories.map((category) => `<li><a class="dropdown-item text-white-50" href="events.html?category=${encodeURIComponent(category.name)}"><i class="bi ${category.icon || 'bi-tag'} me-2"></i>${category.name}</a></li>`).join('');
+        menu.innerHTML = categories.map((category) => `<li><a class="dropdown-item text-white-50" href="${window.EventSphereCategories.href(category.slug || category.name)}"><i class="bi ${category.icon || 'bi-tag'} me-2"></i>${category.name}</a></li>`).join('');
       });
     } catch {
       /* keep static fallback */
@@ -56,8 +56,25 @@
     return [...events].sort((a, b) => {
       return (Number(Boolean(b.is_featured)) - Number(Boolean(a.is_featured)))
         || (Number(Boolean(b.is_trending)) - Number(Boolean(a.is_trending)))
+        || (discoveryScore(b) - discoveryScore(a))
         || (Number(hasEventImage(b)) - Number(hasEventImage(a)))
         || (eventTimestamp(b, 'created_at') - eventTimestamp(a, 'created_at'))
+        || (eventTimestamp(a, 'starts_at') - eventTimestamp(b, 'starts_at'));
+    });
+  }
+
+  function discoveryScore(event) {
+    return Number(event.popularity_score || 0)
+      || (Number(event.recent_tickets_sold_count || 0) * 5)
+      + (Number(event.tickets_sold_count || event.sold_tickets || 0) * 3)
+      + (Number(event.favorites_count || 0) * 2)
+      + Math.floor(Number(event.views_count || 0) / 10);
+  }
+
+  function sortByTrending(events) {
+    return [...events].sort((a, b) => {
+      return (discoveryScore(b) - discoveryScore(a))
+        || (Number(Boolean(b.is_trending)) - Number(Boolean(a.is_trending)))
         || (eventTimestamp(a, 'starts_at') - eventTimestamp(b, 'starts_at'));
     });
   }
@@ -289,7 +306,7 @@
   }
 
   function renderTrending(events) {
-    const trending = sortByHeroPriority(events.filter((event) => event.is_trending));
+    const trending = sortByTrending(events);
     renderEventGrid('[data-home-trending-section]', '[data-home-trending]', trending, 4);
   }
 
@@ -315,7 +332,7 @@
         <div class="container-xxl">
           <div class="section-title fade-up in">
             <div><div class="eyebrow">${window.EventSphereUtils.escapeHtml(category.label)}</div><h2 class="mt-2">${category.key === 'sports' ? 'Game day, every day' : `Newest ${window.EventSphereUtils.escapeHtml(category.label)} events`}</h2></div>
-            <a class="btn btn-ghost" href="events.html?category=${encodeURIComponent(category.label)}">Browse ${window.EventSphereUtils.escapeHtml(category.label)} <i class="bi bi-arrow-right ms-1"></i></a>
+            <a class="btn btn-ghost" href="${window.EventSphereCategories.href(category.key)}">Browse ${window.EventSphereUtils.escapeHtml(category.label)} <i class="bi bi-arrow-right ms-1"></i></a>
           </div>
           <div class="row g-4 fade-up in">${cards}</div>
         </div>

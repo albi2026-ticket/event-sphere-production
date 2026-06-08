@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -48,6 +49,38 @@ class Event extends Model
         }
 
         return $this->ends_at !== null && now()->gt($this->ends_at);
+    }
+
+    public function scopeNotEnded(Builder $query): Builder
+    {
+        return $query
+            ->whereNotIn('events.status', ['cancelled', 'completed'])
+            ->where(function (Builder $query): void {
+                $query->whereNull('events.ends_at')
+                    ->orWhere('events.ends_at', '>=', now());
+            });
+    }
+
+    public function scopePublicDiscovery(Builder $query): Builder
+    {
+        return $query
+            ->where('events.status', 'published')
+            ->where('events.visibility', 'public')
+            ->notEnded();
+    }
+
+    public function scopeWithDiscoveryMetrics(Builder $query): Builder
+    {
+        return $query
+            ->withSum([
+                'orderItems as tickets_sold_count' => fn (Builder $query) => $query
+                    ->whereHas('order', fn (Builder $query) => $query->where('payment_status', Order::PAYMENT_STATUS_PAID)),
+            ], 'quantity')
+            ->withSum([
+                'orderItems as recent_tickets_sold_count' => fn (Builder $query) => $query
+                    ->where('created_at', '>=', now()->subDays(7))
+                    ->whereHas('order', fn (Builder $query) => $query->where('payment_status', Order::PAYMENT_STATUS_PAID)),
+            ], 'quantity');
     }
 
     public function lifecycleState(int $availableInventory): array

@@ -16,6 +16,15 @@ class EventResource extends JsonResource
         $ticketTypes = $this->relationLoaded('ticketTypes') ? $this->ticketTypes : collect();
         $totalInventory = (int) $ticketTypes->sum('quantity_total');
         $soldTickets = (int) $ticketTypes->sum('quantity_sold');
+        $paidTicketsSold = (int) ($this->tickets_sold_count ?? $soldTickets);
+        $recentTicketsSold = (int) ($this->recent_tickets_sold_count ?? 0);
+        $favoritesCount = (int) ($this->favorites_count ?? 0);
+        $reviewsCount = (int) ($this->reviews_count ?? 0);
+        $popularityScore = ($recentTicketsSold * 5)
+            + ($paidTicketsSold * 3)
+            + ($favoritesCount * 2)
+            + $reviewsCount
+            + (int) floor(((int) $this->views_count) / 10);
         $availableInventory = (int) $ticketTypes->sum(fn ($type) => max(0, $type->quantity_total - $type->quantity_sold - $type->quantity_reserved));
         $eventState = $this->lifecycleState($availableInventory);
 
@@ -55,6 +64,9 @@ class EventResource extends JsonResource
             'images' => EventImageResource::collection($this->whenLoaded('images')),
             'ticket_types' => TicketTypeResource::collection($this->whenLoaded('ticketTypes')),
             'sold_tickets' => $soldTickets,
+            'tickets_sold_count' => $paidTicketsSold,
+            'recent_tickets_sold_count' => $recentTicketsSold,
+            'popularity_score' => $popularityScore,
             'total_inventory' => $totalInventory,
             'available_inventory' => $availableInventory,
             'event_state' => $eventState,

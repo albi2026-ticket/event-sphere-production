@@ -16,10 +16,10 @@ class EventController extends Controller
     public function index(EventIndexRequest $request): AnonymousResourceCollection
     {
         $query = Event::query()
-            ->with(['images', 'ticketTypes'])
+            ->with(['images', 'ticketTypes', 'organizer'])
             ->withCount(['reviews', 'favorites'])
-            ->where('status', 'published')
-            ->where('visibility', 'public');
+            ->withDiscoveryMetrics()
+            ->publicDiscovery();
 
         $this->applyEventFilters($query, $request);
 

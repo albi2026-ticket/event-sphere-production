@@ -5,21 +5,48 @@
   const u = () => window.EventSphereUtils;
 
   const categoryAliases = {
-    concerts: 'Concerts',
-    concert: 'Concerts',
-    sports: 'Sports',
-    sport: 'Sports',
-    festivals: 'Festivals',
-    festival: 'Festivals',
-    theater: 'Theater',
-    theatre: 'Theater',
-    comedy: 'Comedy',
-    family: 'Family',
-    conferences: 'Conferences',
-    conference: 'Conferences',
+    concert: 'concerts',
+    concerts: 'concerts',
+    sports: 'sports',
+    sport: 'sports',
+    festivals: 'festivals',
+    festival: 'festivals',
+    theater: 'theater',
+    theatre: 'theater',
+    comedy: 'comedy',
+    family: 'family',
+    conferences: 'conferences',
+    conference: 'conferences',
+  };
+
+  const categoryRoutes = () => window.EventSphereCategories || {
+    slug(value) {
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/&/g, 'and')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    },
   };
 
   let state = { page: 1, sort: 'trending', q: '', category: '', city: '', max_price: '', date_from: '', date_to: '', view: 'grid' };
+
+  function bindCategoryChips() {
+    document.querySelectorAll('[data-filter-category-chip]').forEach((chip) => {
+      if (chip.dataset.boundCategoryChip === 'true') return;
+      chip.dataset.boundCategoryChip = 'true';
+      chip.addEventListener('click', (event) => {
+        event.preventDefault();
+        const category = normalizeCategory(chip.dataset.filterCategoryChip || '');
+        readFilterControls(category);
+        state.page = 1;
+        syncCategoryChips();
+        syncUrl('push');
+        load();
+      });
+    });
+  }
 
   async function loadCategories() {
     const wrap = document.querySelector('[data-events-category-chips]');
@@ -31,7 +58,7 @@
       const categories = Array.isArray(payload.data) ? payload.data : [];
       if (!categories.length) return;
       wrap.innerHTML = '<span class="chip active" data-filter-category-chip="">All</span>' + categories
-        .map((category) => `<span class="chip" data-filter-category-chip="${u().escapeHtml(category.name)}">${u().escapeHtml(category.name)}</span>`)
+        .map((category) => `<span class="chip" data-filter-category-chip="${u().escapeHtml(normalizeCategory(category.slug || category.name))}">${u().escapeHtml(category.name)}</span>`)
         .join('');
       bindCategoryChips();
       syncCategoryChips();
@@ -43,7 +70,8 @@
   function normalizeCategory(value) {
     const raw = (value || '').trim();
     if (!raw || raw.toLowerCase() === 'all') return '';
-    return categoryAliases[raw.toLowerCase()] || raw;
+    const slug = categoryRoutes().slug(raw);
+    return categoryAliases[slug] || slug;
   }
 
   function normalizeSort(value) {
@@ -79,19 +107,48 @@
     state.date_to = range.date_to;
   }
 
-  function syncUrl() {
+  function categoryUrl(category) {
     const qs = new URLSearchParams();
-    Object.entries(state).forEach(([key, value]) => {
+    Object.entries({ ...state, category }).forEach(([key, value]) => {
       if (value && !['page', 'view'].includes(key)) qs.set(key, value);
     });
-    history.replaceState(null, '', `events.html${qs.toString() ? `?${qs}` : ''}`);
+    return `${location.pathname.split('/').pop() || 'events.html'}${qs.toString() ? `?${qs}` : ''}`;
+  }
+
+  function syncUrl(mode = 'replace') {
+    const url = categoryUrl(state.category);
+    if (mode === 'push') history.pushState(null, '', url);
+    else history.replaceState(null, '', url);
   }
 
   function syncCategoryChips() {
     document.querySelectorAll('[data-filter-category-chip]').forEach((chip) => {
       const value = chip.dataset.filterCategoryChip || '';
-      chip.classList.toggle('active', state.category ? value === state.category : value === '');
+      chip.classList.toggle('active', state.category ? normalizeCategory(value) === state.category : value === '');
     });
+  }
+
+  function syncStateFromUrl() {
+    const params = new URLSearchParams(location.search);
+    state.q = params.get('q') || '';
+    state.category = normalizeCategory(params.get('category') || params.get('cat') || '');
+    state.city = params.get('city') || '';
+    state.date_from = params.get('date_from') || '';
+    state.date_to = params.get('date_to') || '';
+    state.max_price = params.get('max_price') || '';
+    state.sort = normalizeSort(params.get('sort') || state.sort);
+    state.page = Number(params.get('page') || 1) || 1;
+  }
+
+  function syncControlsFromState() {
+    const search = document.querySelector('[data-events-search]');
+    if (search) search.value = state.q;
+    const cityInput = document.querySelector('[data-filter-city]');
+    if (cityInput) cityInput.value = state.city;
+    const priceInput = document.querySelector('[data-filter-max-price]');
+    if (priceInput && state.max_price) priceInput.value = state.max_price;
+    syncCategoryChips();
+    syncSortChips();
   }
 
   function syncSortChips() {
@@ -177,23 +234,12 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(location.search);
-    state.q = params.get('q') || '';
-    state.category = normalizeCategory(params.get('category') || params.get('cat') || '');
-    state.city = params.get('city') || '';
-    state.date_from = params.get('date_from') || '';
-    state.date_to = params.get('date_to') || '';
-    state.max_price = params.get('max_price') || '';
+    syncStateFromUrl();
 
     const search = document.querySelector('[data-events-search]');
-    if (search) search.value = state.q;
     const cityInput = document.querySelector('[data-filter-city]');
-    if (cityInput) cityInput.value = state.city;
     const priceInput = document.querySelector('[data-filter-max-price]');
-    if (priceInput && state.max_price) priceInput.value = state.max_price;
-    state.sort = normalizeSort(params.get('sort') || state.sort);
-    syncCategoryChips();
-    syncSortChips();
+    syncControlsFromState();
 
     const runSearch = () => {
       state.q = search?.value.trim() || '';
@@ -223,19 +269,6 @@
 
     bindCategoryChips();
 
-    function bindCategoryChips() {
-      document.querySelectorAll('[data-filter-category-chip]').forEach((chip) => {
-        if (chip.dataset.boundCategoryChip === 'true') return;
-        chip.dataset.boundCategoryChip = 'true';
-        chip.addEventListener('click', () => {
-          readFilterControls(chip.dataset.filterCategoryChip || '');
-          state.page = 1;
-          syncCategoryChips();
-          load();
-        });
-      });
-    }
-
     const applyBtn = document.querySelector('[data-events-apply-filters]');
     if (applyBtn) {
       applyBtn.addEventListener('click', () => {
@@ -256,6 +289,12 @@
       if (priceInput) priceInput.value = '500';
       const dateFilter = document.querySelector('[data-filter-date]');
       if (dateFilter) dateFilter.value = '';
+      load();
+    });
+
+    window.addEventListener('popstate', () => {
+      syncStateFromUrl();
+      syncControlsFromState();
       load();
     });
 

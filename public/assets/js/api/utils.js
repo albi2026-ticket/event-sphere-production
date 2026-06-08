@@ -99,6 +99,22 @@
     return img?.url || img?.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80';
   }
 
+  const categoryRoutes = window.EventSphereCategories || {
+    slug(value) {
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/&/g, 'and')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    },
+    href(value) {
+      const slug = this.slug(value);
+      return slug ? `events.html?category=${encodeURIComponent(slug)}` : 'events.html';
+    },
+  };
+  window.EventSphereCategories = categoryRoutes;
+
   function paginateLinks(meta, onPage) {
     if (!meta || meta.last_page <= 1) return '';
     const cur = meta.current_page;
@@ -124,5 +140,6 @@
     EVENT_CALCULATION_TIMEZONE,
     eventImage,
     paginateLinks,
+    categoryRoutes,
   };
 })();

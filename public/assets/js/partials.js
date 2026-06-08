@@ -1,5 +1,21 @@
 /* Injects shared header + footer into pages that include <div data-partial="header"></div> */
 (function(){
+  const CategoryRoutes = window.EventSphereCategories || {
+    slug(value) {
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/&/g, 'and')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    },
+    href(value) {
+      const slug = this.slug(value);
+      return slug ? `events.html?category=${encodeURIComponent(slug)}` : 'events.html';
+    },
+  };
+  window.EventSphereCategories = CategoryRoutes;
+
   const headerHTML = `
 <nav class="navbar navbar-expand-lg nav-blur">
   <div class="container-xxl">
@@ -12,10 +28,10 @@
         <li class="nav-item dropdown">
           <a class="nav-link nav-link-pro dropdown-toggle" data-bs-toggle="dropdown" href="#">Categories</a>
           <ul class="dropdown-menu mt-2" data-nav-categories style="background:var(--card);border:1px solid var(--border);border-radius:14px">
-            <li><a class="dropdown-item text-white-50" href="events.html?category=Concerts"><i class="bi bi-music-note-beamed me-2"></i>Concerts</a></li>
-            <li><a class="dropdown-item text-white-50" href="events.html?category=Sports"><i class="bi bi-trophy me-2"></i>Sports</a></li>
-            <li><a class="dropdown-item text-white-50" href="events.html?category=Festivals"><i class="bi bi-stars me-2"></i>Festivals</a></li>
-            <li><a class="dropdown-item text-white-50" href="events.html?category=Conferences"><i class="bi bi-mic me-2"></i>Conferences</a></li>
+            <li><a class="dropdown-item text-white-50" href="${CategoryRoutes.href('Concerts')}"><i class="bi bi-music-note-beamed me-2"></i>Concerts</a></li>
+            <li><a class="dropdown-item text-white-50" href="${CategoryRoutes.href('Sports')}"><i class="bi bi-trophy me-2"></i>Sports</a></li>
+            <li><a class="dropdown-item text-white-50" href="${CategoryRoutes.href('Festivals')}"><i class="bi bi-stars me-2"></i>Festivals</a></li>
+            <li><a class="dropdown-item text-white-50" href="${CategoryRoutes.href('Conferences')}"><i class="bi bi-mic me-2"></i>Conferences</a></li>
           </ul>
         </li>
       </ul>
@@ -96,7 +112,7 @@
       const categories = Array.isArray(payload.data) ? payload.data : [];
       if (!categories.length) return;
       menus.forEach((menu) => {
-        menu.innerHTML = categories.map((category) => `<li><a class="dropdown-item text-white-50" href="events.html?category=${encodeURIComponent(category.name)}"><i class="bi ${category.icon || 'bi-tag'} me-2"></i>${category.name}</a></li>`).join('');
+        menu.innerHTML = categories.map((category) => `<li><a class="dropdown-item text-white-50" href="${CategoryRoutes.href(category.slug || category.name)}"><i class="bi ${category.icon || 'bi-tag'} me-2"></i>${category.name}</a></li>`).join('');
       });
     } catch {
       /* keep static fallback */
