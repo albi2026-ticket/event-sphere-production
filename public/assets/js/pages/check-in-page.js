@@ -99,10 +99,10 @@
     if (!body) return;
     body.innerHTML = state.logs.map((log) => `
       <tr>
-        <td>${badge(log.result)}</td>
-        <td><div class="fw-semibold">${esc(log.attendee?.name || '-')}</div><small class="text-muted-pro">${esc(log.attendee?.email || '')}</small></td>
-        <td>${esc(log.ticket_code || log.ticket_uuid || '-')}</td>
-        <td>${dateTime(log.scanned_at)}</td>
+        <td data-label="Result">${badge(log.result)}</td>
+        <td data-label="Attendee"><div class="fw-semibold">${esc(log.attendee?.name || '-')}</div><small class="text-muted-pro">${esc(log.attendee?.email || '')}</small></td>
+        <td data-label="Ticket">${esc(log.ticket_code || log.ticket_uuid || '-')}</td>
+        <td data-label="Time">${dateTime(log.scanned_at)}</td>
       </tr>
     `).join('') || '<tr><td colspan="4" class="text-muted-pro">No scan history yet.</td></tr>';
   }

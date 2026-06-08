@@ -1267,7 +1267,7 @@
     $$('[data-organizer-nav]').forEach((link) => {
       link.classList.toggle('active', link.dataset.organizerNav === state.currentSection);
     });
-    $('.dash-side')?.classList.remove('open');
+    window.EventSphereDashboardNav?.close?.();
 
     if (location.hash.replace('#', '') !== state.currentSection) {
       history.replaceState(null, '', `#${state.currentSection}`);
@@ -1284,7 +1284,6 @@
         showSection(link.dataset.organizerNav);
       });
     });
-    $('[data-toggle-side]')?.addEventListener('click', () => $('.dash-side')?.classList.toggle('open'));
     window.addEventListener('hashchange', () => showSection(location.hash.replace('#', '') || 'overview'));
     showSection(location.hash.replace('#', '') || 'overview');
   }

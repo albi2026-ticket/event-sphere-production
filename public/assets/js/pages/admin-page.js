@@ -740,7 +740,7 @@
       } else {
         const statuses = state.emailCenter?.email_statuses || [];
         statusBody.innerHTML = statuses.map((email) => `
-          <tr><td>${u().escapeHtml(email.label)}</td><td>${u().escapeHtml(email.recipient || '-')}</td><td>${u().escapeHtml(email.reference || '-')}</td><td>${badge(email.sent ? 'sent' : 'not_sent')}</td><td>${dateTimeLabel(email.sent_at)}</td></tr>
+          <tr><td data-label="Type">${u().escapeHtml(email.label)}</td><td data-label="Recipient">${u().escapeHtml(email.recipient || '-')}</td><td data-label="Reference">${u().escapeHtml(email.reference || '-')}</td><td data-label="Status">${badge(email.sent ? 'sent' : 'not_sent')}</td><td data-label="Timestamp">${dateTimeLabel(email.sent_at)}</td></tr>
         `).join('') || emptyRow(5, 'bi-envelope', 'No email status records yet');
       }
     }
@@ -1094,7 +1094,7 @@
     document.querySelectorAll('[data-admin-nav]').forEach((link) => {
       link.classList.toggle('active', link.dataset.adminNav === state.currentSection);
     });
-    document.querySelector('.dash-side')?.classList.remove('open');
+    window.EventSphereDashboardNav?.close?.();
     if (location.hash.replace('#', '') !== state.currentSection) {
       history.replaceState(null, '', `#${state.currentSection}`);
     }
@@ -1108,7 +1108,6 @@
         showSection(link.dataset.adminNav);
       });
     });
-    document.querySelector('[data-toggle-side]')?.addEventListener('click', () => document.querySelector('.dash-side')?.classList.toggle('open'));
     window.addEventListener('hashchange', () => showSection(location.hash.replace('#', '') || 'overview'));
     showSection(location.hash.replace('#', '') || 'overview');
   }

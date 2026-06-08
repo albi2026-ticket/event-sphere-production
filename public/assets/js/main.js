@@ -421,18 +421,58 @@
   });
 
   /* ---------- Mobile dash sidebar ---------- */
-  document.addEventListener('click', (e) => {
+  function dashboardSidebar() {
     const side = document.querySelector('.dash-side');
-    if (!side) return;
+    if (!side) return null;
+    let backdrop = document.querySelector('[data-dash-backdrop]');
+    if (!backdrop) {
+      backdrop = document.createElement('button');
+      backdrop.type = 'button';
+      backdrop.className = 'dash-backdrop';
+      backdrop.dataset.dashBackdrop = 'true';
+      backdrop.setAttribute('aria-label', 'Close dashboard menu');
+      document.body.appendChild(backdrop);
+    }
+    return { side, backdrop };
+  }
 
-    if (e.target.closest('[data-toggle-side]')) {
-      side.classList.toggle('open');
+  function setDashboardSidebar(open) {
+    const parts = dashboardSidebar();
+    if (!parts) return;
+    const { side, backdrop } = parts;
+    side.classList.toggle('open', open);
+    backdrop.classList.toggle('open', open);
+    document.body.classList.toggle('dash-menu-open', open);
+    document.querySelectorAll('[data-toggle-side]').forEach((button) => {
+      button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  }
+
+  window.EventSphereDashboardNav = {
+    open: () => setDashboardSidebar(true),
+    close: () => setDashboardSidebar(false),
+    toggle: () => {
+      const parts = dashboardSidebar();
+      if (parts) setDashboardSidebar(!parts.side.classList.contains('open'));
+    },
+  };
+
+  document.addEventListener('click', (e) => {
+    const parts = dashboardSidebar();
+    if (!parts) return;
+    const toggle = e.target.closest('[data-toggle-side]');
+    if (toggle) {
+      e.preventDefault();
+      setDashboardSidebar(!parts.side.classList.contains('open'));
       return;
     }
-
-    if (side.classList.contains('open') && (!e.target.closest('.dash-side') || e.target.closest('.dash-side a'))) {
-      side.classList.remove('open');
+    if (e.target.closest('[data-dash-backdrop]') || (parts.side.classList.contains('open') && e.target.closest('.dash-side a'))) {
+      setDashboardSidebar(false);
     }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setDashboardSidebar(false);
   });
 
   /* ---------- Init ---------- */
@@ -443,6 +483,8 @@
     document.querySelectorAll('[data-count]').forEach(el => cio.observe(el));
     document.querySelectorAll('[data-countdown]').forEach(startCountdown);
     document.querySelectorAll('[data-seatmap]').forEach(buildSeatmap);
+    dashboardSidebar();
+    setDashboardSidebar(false);
 
     // Year
     document.querySelectorAll('[data-year]').forEach(el => el.textContent = new Date().getFullYear());

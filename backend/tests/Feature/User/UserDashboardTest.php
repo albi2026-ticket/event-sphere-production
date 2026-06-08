@@ -155,6 +155,8 @@ class UserDashboardTest extends TestCase
             ->assertHeader('Content-Disposition', 'attachment; filename="event-sphere-ticket-ES-DASHBOARD-TEST.pdf"');
 
         $this->assertStringStartsWith('%PDF-1.4', $download->getContent());
+        $this->assertSame(2, substr_count($download->getContent(), '/Type /Page /Parent'));
+        $this->assertStringContainsString($ticket->ticket_uuid, $download->getContent());
         $this->assertSame(1, $ticket->fresh()->download_count);
 
         $otherUser = User::factory()->create([

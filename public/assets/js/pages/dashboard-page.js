@@ -415,7 +415,7 @@
     }
     body.innerHTML = state.orders.map((order) => `
       <tr>
-        <td data-label="Order Number"><div class="fw-semibold">${escape(order.order_number)}</div><small class="text-muted-pro">${escape(order.status || '')}</small></td>
+        <td data-label="Order Number"><div class="fw-semibold order-code">${escape(order.order_number)}</div><small class="text-muted-pro">${escape(order.status || '')}</small></td>
         <td data-label="Purchase Date">${escape(shortDate(order.created_at))}</td>
         <td data-label="Event">${escape(rows(order.items)[0]?.event_title || rows(order.items)[0]?.event?.title || rows(order.tickets)[0]?.event?.title || 'Multiple events')}</td>
         <td data-label="Quantity">${rows(order.tickets).length || rows(order.items).reduce((sum, item) => sum + Number(item.quantity || 0), 0)}</td>
@@ -725,7 +725,7 @@
     document.querySelectorAll('[data-dashboard-nav]').forEach((link) => {
       link.classList.toggle('active', link.dataset.dashboardNav === state.currentSection);
     });
-    document.querySelector('.dash-side')?.classList.remove('open');
+    window.EventSphereDashboardNav?.close?.();
     if (location.hash.replace('#', '') !== state.currentSection) {
       history.replaceState(null, '', `#${state.currentSection}`);
     }
@@ -740,7 +740,6 @@
         showSection(section);
       });
     });
-    document.querySelector('[data-toggle-side]')?.addEventListener('click', () => document.querySelector('.dash-side')?.classList.toggle('open'));
     window.addEventListener('hashchange', () => showSection(location.hash.replace('#', '') || 'overview'));
     showSection(location.hash.replace('#', '') || 'overview');
   }
@@ -922,7 +921,7 @@
       </tbody></table></div>
       <h6 class="mt-4">Ticket access</h6>
       <div class="dashboard-stack">
-        ${tickets.map((ticket) => `<div class="dashboard-mini-row"><div><div class="fw-semibold">${escape(ticket.attendee?.name || 'Guest')}</div><small>${escape(ticket.ticket_code)} · ${escape(ticket.ticket_type?.name || ticket.event?.title || '')}</small></div><button class="btn btn-glass btn-sm" type="button" data-ticket-download="${ticket.id}" data-ticket-code="${escape(ticket.ticket_code)}"><i class="bi bi-download me-1"></i>Download PDF</button></div>`).join('') || '<p class="text-muted-pro mb-0">No tickets attached to this order.</p>'}
+        ${tickets.map((ticket) => `<div class="dashboard-mini-row"><div><div class="fw-semibold">${escape(ticket.attendee?.name || 'Guest')}</div><small><span class="ticket-code">${escape(ticket.ticket_code)}</span> · ${escape(ticket.ticket_type?.name || ticket.event?.title || '')}</small></div><button class="btn btn-glass btn-sm" type="button" data-ticket-download="${ticket.id}" data-ticket-code="${escape(ticket.ticket_code)}"><i class="bi bi-download me-1"></i>Download PDF</button></div>`).join('') || '<p class="text-muted-pro mb-0">No tickets attached to this order.</p>'}
       </div>
     `);
   }
