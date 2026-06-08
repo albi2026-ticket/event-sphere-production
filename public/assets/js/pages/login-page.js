@@ -19,8 +19,12 @@
       const btn = form.querySelector('button[type="submit"]');
      if (btn) btn.disabled = true;
       try {
-        const email = form.querySelector('[name="email"]').value.trim();
-        const password = form.querySelector('[name="password"]').value;
+        const emailInput = form.querySelector('[name="email"]');
+        const passwordInput = form.querySelector('[name="password"]');
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        if (!emailInput.checkValidity()) throw new Error('Please enter a valid email address.');
+        if (!password) throw new Error('Please enter your password.');
         const user = await window.EventSphereAuth.login(email, password);
         window.tkToast?.('Welcome back!');
         window.EventSphereAuth.redirectByRole(user);

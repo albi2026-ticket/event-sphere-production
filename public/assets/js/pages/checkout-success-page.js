@@ -24,6 +24,16 @@
         if (data.payment_status === 'paid' || data.status === 'paid') {
           if (statusEl) statusEl.textContent = `Order ${data.order_number || ''} confirmed. Your tickets are ready.`;
           if (link) link.href = 'dashboard.html';
+          const notificationKey = `order-confirmed-${data.id || orderId}`;
+          const exists = window.EventSphereNotifications?.list?.().some((item) => item.id === notificationKey);
+          if (!exists) {
+            window.EventSphereNotifications?.add({
+              id: notificationKey,
+              type: 'order',
+              title: 'Order Confirmed',
+              message: `Payment successful${data.order_number ? ` for order ${data.order_number}` : ''}. Your tickets are ready.`,
+            });
+          }
           return;
         }
         if (statusEl) statusEl.textContent = `Payment status: ${data.payment_status || 'pending'}…`;

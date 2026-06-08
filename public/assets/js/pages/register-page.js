@@ -21,11 +21,15 @@
       const btn = form.querySelector('button[type="submit"]');
       if (btn) btn.disabled = true;
       try {
-        const password = form.querySelector('[name="password"]').value;
+        const emailInput = form.querySelector('[name="email"]');
+        const passwordInput = form.querySelector('[name="password"]');
+        const password = passwordInput.value;
+        if (!emailInput.checkValidity()) throw new Error('Please enter a valid email address.');
+        if (password.length < 8) throw new Error('Password is too short.');
         const payload = {
           first_name: form.querySelector('[name="first_name"]').value.trim(),
           last_name: form.querySelector('[name="last_name"]').value.trim(),
-          email: form.querySelector('[name="email"]').value.trim(),
+          email: emailInput.value.trim(),
           password,
           password_confirmation: password,
         };

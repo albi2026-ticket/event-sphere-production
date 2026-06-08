@@ -147,6 +147,11 @@
       const { data } = await api().fetch(`${state.roleBase}/tickets/check-in`, { method: 'POST', body: state.result.payload });
       state.result = { ...data, payload: state.result.payload };
       renderResult(state.result);
+      window.EventSphereNotifications?.add({
+        type: 'system',
+        title: 'Check-In Completed',
+        message: 'Ticket check-in was completed successfully.',
+      });
       window.tkToast?.('Ticket checked in');
     } catch (err) {
       if (err.payload?.data?.validation) renderResult(err.payload.data);

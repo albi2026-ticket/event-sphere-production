@@ -36,6 +36,20 @@
       </ul>
       <div class="d-flex align-items-center gap-2">
         <button class="icon-btn" data-theme-toggle><i class="bi bi-sun" data-theme-icon></i></button>
+        <div class="notification-root" data-notification-root data-auth-user hidden>
+          <button class="icon-btn notification-toggle" type="button" data-notification-toggle aria-label="Notifications" aria-expanded="false">
+            <i class="bi bi-bell"></i>
+            <span class="notification-badge" data-notification-count hidden>0</span>
+          </button>
+          <div class="notification-panel" data-notification-panel hidden>
+            <div class="notification-head">
+              <div><strong>Notifications</strong><span>In-app updates</span></div>
+              <button type="button" data-notification-mark-all>Mark all read</button>
+            </div>
+            <div class="notification-list" data-notification-list></div>
+            <div class="notification-empty" data-notification-empty hidden>No notifications yet.</div>
+          </div>
+        </div>
         <a class="btn btn-ghost" href="login.html" data-auth-guest>Sign In</a>
         <a class="btn btn-primary-grad" href="register.html" data-auth-guest>Register</a>
         <a class="btn btn-ghost" href="dashboard.html" data-auth-user data-auth-dashboard-link hidden>My Tickets</a>

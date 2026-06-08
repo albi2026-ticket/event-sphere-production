@@ -225,6 +225,13 @@
           window.tkToast?.(response.status === 'already-verified'
             ? 'Email already verified'
             : 'Verification email sent. Check the Laravel log on localhost.', 'info');
+          if (response.status !== 'already-verified') {
+            window.EventSphereNotifications?.add({
+              type: 'system',
+              title: 'Verification Email Sent',
+              message: 'Check your inbox to finish securing your account.',
+            });
+          }
           await refreshUser();
         } catch (err) {
           window.tkToast?.(err.message || 'Verification email failed', 'error');
@@ -242,6 +249,11 @@
       const user = await refreshUser();
       const params = new URLSearchParams(location.search);
       if (params.get('verified') === '1' && hasVerifiedEmail(user)) {
+        window.EventSphereNotifications?.add({
+          type: 'system',
+          title: 'Email Verified',
+          message: 'Your email address has been verified successfully.',
+        });
         window.tkToast?.('Email verified successfully', 'success');
       }
     } catch {

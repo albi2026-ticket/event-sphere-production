@@ -38,6 +38,156 @@
     setTimeout(() => t.remove(), 3200);
   };
 
+  /* ---------- In-app notifications ---------- */
+  const NOTIFICATION_KEY = 'eventsphere-notifications';
+  const seedNotifications = [
+    {
+      id: 'welcome-notifications',
+      type: 'system',
+      title: 'Notifications ready',
+      message: 'Order updates, ticket activity, and account notices will appear here.',
+      created_at: new Date().toISOString(),
+      read: false,
+    },
+  ];
+  const notificationIcon = {
+    order: 'bi-receipt',
+    event: 'bi-calendar-event',
+    system: 'bi-shield-check',
+  };
+
+  function notificationUserKey() {
+    const user = window.EventSphereAuth?.getUser?.();
+    return user?.id ? `${NOTIFICATION_KEY}:${user.id}` : `${NOTIFICATION_KEY}:guest`;
+  }
+
+  function readNotifications() {
+    const key = notificationUserKey();
+    try {
+      const stored = JSON.parse(localStorage.getItem(key) || 'null');
+      if (Array.isArray(stored)) return stored;
+    } catch {
+      /* reset invalid local notification cache */
+    }
+    const initial = window.EventSphereAuth?.isLoggedIn?.() ? seedNotifications : [];
+    localStorage.setItem(key, JSON.stringify(initial));
+    return initial;
+  }
+
+  function writeNotifications(items) {
+    localStorage.setItem(notificationUserKey(), JSON.stringify(items));
+    document.dispatchEvent(new CustomEvent('event-sphere:notifications-changed', { detail: { notifications: items } }));
+  }
+
+  function addNotification(item) {
+    const notifications = readNotifications();
+    const notification = {
+      id: item.id || `notification-${Date.now()}`,
+      type: item.type || 'system',
+      title: item.title || 'Notification',
+      message: item.message || '',
+      created_at: item.created_at || new Date().toISOString(),
+      read: Boolean(item.read),
+      source: item.source || 'local',
+    };
+    writeNotifications([notification, ...notifications].slice(0, 30));
+    return notification;
+  }
+
+  function relativeTime(value) {
+    const date = value ? new Date(value) : null;
+    if (!date || Number.isNaN(date.getTime())) return 'Just now';
+    const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+    if (seconds < 60) return 'Just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.floor(hours / 24)}d ago`;
+  }
+
+  function renderNotifications() {
+    const panel = document.querySelector('[data-notification-panel]');
+    const list = document.querySelector('[data-notification-list]');
+    const badge = document.querySelector('[data-notification-count]');
+    const empty = document.querySelector('[data-notification-empty]');
+    if (!panel || !list || !badge) return;
+
+    const notifications = readNotifications();
+    const unread = notifications.filter((item) => !item.read).length;
+    badge.textContent = String(unread);
+    badge.hidden = unread === 0;
+    if (empty) empty.hidden = notifications.length > 0;
+    list.innerHTML = notifications.map((item) => `
+      <button class="notification-item${item.read ? '' : ' unread'}" type="button" data-notification-id="${String(item.id).replace(/"/g, '&quot;')}">
+        <span class="notification-icon"><i class="bi ${notificationIcon[item.type] || notificationIcon.system}"></i></span>
+        <span class="notification-copy">
+          <span class="notification-title">${String(item.title || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')}</span>
+          <span class="notification-message">${String(item.message || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')}</span>
+          <span class="notification-time">${relativeTime(item.created_at)}</span>
+        </span>
+      </button>
+    `).join('');
+  }
+
+  function markNotificationRead(id) {
+    writeNotifications(readNotifications().map((item) => String(item.id) === String(id) ? { ...item, read: true } : item));
+  }
+
+  function markAllNotificationsRead() {
+    writeNotifications(readNotifications().map((item) => ({ ...item, read: true })));
+  }
+
+  let notificationsBound = false;
+  function setupNotifications() {
+    renderNotifications();
+    if (notificationsBound) return;
+    notificationsBound = true;
+    document.addEventListener('click', (event) => {
+      const toggle = event.target.closest('[data-notification-toggle]');
+      const root = event.target.closest('[data-notification-root]');
+      const panel = document.querySelector('[data-notification-panel]');
+      if (toggle && panel) {
+        event.preventDefault();
+        const open = panel.hidden;
+        panel.hidden = !open;
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        renderNotifications();
+        return;
+      }
+      const markAll = event.target.closest('[data-notification-mark-all]');
+      if (markAll) {
+        markAllNotificationsRead();
+        return;
+      }
+      const item = event.target.closest('[data-notification-id]');
+      if (item) {
+        markNotificationRead(item.dataset.notificationId);
+        return;
+      }
+      if (!root && panel) {
+        panel.hidden = true;
+        document.querySelector('[data-notification-toggle]')?.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  window.EventSphereNotifications = {
+    list: readNotifications,
+    add: addNotification,
+    markRead: markNotificationRead,
+    markAllRead: markAllNotificationsRead,
+    render: renderNotifications,
+    syncFromServer(items = []) {
+      if (!Array.isArray(items)) return;
+      writeNotifications(items);
+    },
+  };
+  document.addEventListener('DOMContentLoaded', setupNotifications);
+  document.addEventListener('event-sphere:partials-loaded', setupNotifications);
+  document.addEventListener('event-sphere:auth-changed', () => renderNotifications());
+  document.addEventListener('event-sphere:notifications-changed', () => renderNotifications());
+
   /* ---------- Favorites ---------- */
   const FAV_KEY = 'tickethub-favs';
   const favs = () => JSON.parse(localStorage.getItem(FAV_KEY) || '[]');

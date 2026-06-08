@@ -30,7 +30,13 @@
       };
 
       if (payload.password !== payload.password_confirmation) {
-        error.textContent = 'Passwords must match.';
+        error.textContent = 'Passwords do not match.';
+        error.classList.remove('d-none');
+        if (btn) btn.disabled = false;
+        return;
+      }
+      if (payload.password.length < 8) {
+        error.textContent = 'Password is too short.';
         error.classList.remove('d-none');
         if (btn) btn.disabled = false;
         return;
@@ -38,6 +44,11 @@
 
       try {
         await window.EventSphereAuth.resetPassword(payload);
+        window.EventSphereNotifications?.add({
+          type: 'system',
+          title: 'Password Changed',
+          message: 'Your password was updated successfully.',
+        });
         window.tkToast?.('Your password has been updated successfully.', 'success');
         window.setTimeout(() => {
           location.href = 'login.html?reset=1';

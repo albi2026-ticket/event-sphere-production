@@ -1601,6 +1601,11 @@
           if (title) {
             button.disabled = true;
             await api().fetch(`/admin/events/${button.dataset.editEvent}`, { method: 'PATCH', body: { title } });
+            window.EventSphereNotifications?.add({
+              type: 'event',
+              title: 'Event Updated',
+              message: `${title} was updated successfully.`,
+            });
             window.tkToast?.('Event updated');
             await refreshEvents();
           }
@@ -1621,6 +1626,11 @@
           if (!confirm('Archive this event?')) return;
           button.disabled = true;
           await api().fetch(`/admin/events/${button.dataset.archiveEvent}`, { method: 'PATCH', body: { status: 'completed' } });
+          window.EventSphereNotifications?.add({
+            type: 'event',
+            title: 'Event Cancelled',
+            message: 'The event was archived and removed from active discovery.',
+          });
           window.tkToast?.('Event archived');
           await refreshEvents();
         }

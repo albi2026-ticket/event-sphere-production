@@ -1014,6 +1014,11 @@
       if (eventId) {
         const { data } = await api().fetch(`/organizer/events/${eventId}`, { method: 'PATCH', body: basePayload });
         savedEvent = data;
+        window.EventSphereNotifications?.add({
+          type: 'event',
+          title: 'Event Updated',
+          message: `${savedEvent.title || 'Your event'} was updated successfully.`,
+        });
         window.tkToast?.('Event updated');
       } else {
         const { data } = await api().fetch('/organizer/events', { method: 'POST', body: { ...basePayload, status: 'draft' } });
@@ -1024,6 +1029,11 @@
       await uploadPendingImages(savedEvent);
       if (shouldDeferPublish) {
         await api().fetch(`/organizer/events/${savedEvent.id}`, { method: 'PATCH', body: { status: 'published' } });
+        window.EventSphereNotifications?.add({
+          type: 'event',
+          title: 'Event Published',
+          message: `${savedEvent.title || 'Your event'} is now published.`,
+        });
         window.tkToast?.('Event published');
       }
       bootstrap.Modal.getOrCreateInstance($('#organizerEventModal')).hide();
@@ -1040,6 +1050,11 @@
     try {
       setBusy(true);
       await api().fetch(`/organizer/events/${eventId}`, { method: 'PATCH', body: { status } });
+      window.EventSphereNotifications?.add({
+        type: 'event',
+        title: status === 'published' ? 'Event Published' : 'Event Updated',
+        message: status === 'published' ? 'Your event is now published.' : 'Your event status was updated.',
+      });
       window.tkToast?.(status === 'published' ? 'Event published' : 'Event unpublished');
       await refreshEventsAndAnalytics();
     } catch (err) {
