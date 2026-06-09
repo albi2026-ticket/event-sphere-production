@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\CheckoutReservation;
 use App\Services\Dashboard\OrganizerDashboardService;
 use App\Services\Dashboard\UserDashboardService;
 use Illuminate\Http\JsonResponse;
@@ -35,10 +36,20 @@ class DashboardController extends Controller
 
     public function admin(): JsonResponse
     {
+        $reservationStats = CheckoutReservation::query()
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
         return response()->json([
             'data' => [
                 'scope' => 'platform',
                 'message' => 'Admin dashboard API access granted.',
+                'reservations' => [
+                    'active' => (int) ($reservationStats[CheckoutReservation::STATUS_ACTIVE] ?? 0),
+                    'expired' => (int) ($reservationStats[CheckoutReservation::STATUS_EXPIRED] ?? 0),
+                    'completed' => (int) ($reservationStats[CheckoutReservation::STATUS_COMPLETED] ?? 0),
+                ],
             ],
         ]);
     }

@@ -50,6 +50,11 @@ class TicketType extends Model
         return $this->hasMany(Ticket::class);
     }
 
+    public function checkoutReservations(): HasMany
+    {
+        return $this->hasMany(CheckoutReservation::class);
+    }
+
     protected function casts(): array
     {
         return [
@@ -67,9 +72,19 @@ class TicketType extends Model
         ];
     }
 
-    public function availableQuantity(): int
+    public function activeCheckoutReservedQuantity(?int $excludeReservationId = null): int
     {
-        return max(0, $this->quantity_total - $this->quantity_sold - $this->quantity_reserved);
+        return (int) $this->checkoutReservations()
+            ->where('status', CheckoutReservation::STATUS_ACTIVE)
+            ->whereNull('order_id')
+            ->where('expires_at', '>', now())
+            ->when($excludeReservationId, fn ($query) => $query->whereKeyNot($excludeReservationId))
+            ->sum('quantity');
+    }
+
+    public function availableQuantity(?int $excludeReservationId = null): int
+    {
+        return max(0, $this->quantity_total - $this->quantity_sold - $this->quantity_reserved - $this->activeCheckoutReservedQuantity($excludeReservationId));
     }
 
     public function isOnSale(): bool

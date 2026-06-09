@@ -44,7 +44,8 @@
     const ev = ticket.event || {};
     const eventDate = ev.ends_at || ev.starts_at;
     const ended = eventDate && new Date(eventDate) < new Date() && ticket.status === 'valid';
-    const status = (ended ? 'Event Ended' : (ticket.status || 'valid').replace(/_/g, ' ')).toUpperCase();
+    const eventCancelled = ev.status === 'cancelled';
+    const status = (eventCancelled ? 'Event Cancelled' : (ended ? 'Event Ended' : (ticket.status || 'valid').replace(/_/g, ' '))).toUpperCase();
     const date = u().formatEventDate(ev.starts_at, ev.timezone);
     const attendee = ticket.attendee || {};
     const orderNumber = ticket.order?.order_number || '-';

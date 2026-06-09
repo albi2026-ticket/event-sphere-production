@@ -30,6 +30,45 @@
     const subtotal = Number(item.unit_price) * Number(item.quantity);
     const serviceFee = Math.round(subtotal * (feePercentage / 100) * 100) / 100;
     const total = subtotal + serviceFee;
+    let checkoutReservation = null;
+    let reservationExpired = false;
+    let countdownInterval = null;
+
+    function reservationSecondsRemaining() {
+      if (!checkoutReservation?.expires_at) return 0;
+      return Math.max(0, Math.floor((new Date(checkoutReservation.expires_at).getTime() - Date.now()) / 1000));
+    }
+
+    function formatCountdown(seconds) {
+      const safeSeconds = Math.max(0, Number(seconds) || 0);
+      const minutes = Math.floor(safeSeconds / 60);
+      const remainder = safeSeconds % 60;
+      return `${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
+    }
+
+    function markReservationExpired() {
+      reservationExpired = true;
+      if (countdownInterval) clearInterval(countdownInterval);
+      document.querySelector('[data-reservation-countdown]')?.replaceChildren(document.createTextNode('00:00'));
+      document.querySelector('[data-reservation-message]')?.replaceChildren(document.createTextNode('Your reservation has expired.'));
+      if (payBtn) {
+        payBtn.disabled = true;
+        payBtn.textContent = 'Reservation expired';
+      }
+    }
+
+    function startCountdown() {
+      const tick = () => {
+        const seconds = reservationSecondsRemaining();
+        const countdown = document.querySelector('[data-reservation-countdown]');
+        if (countdown) countdown.textContent = formatCountdown(seconds);
+        if (seconds <= 0) markReservationExpired();
+      };
+
+      tick();
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(tick, 1000);
+    }
 
     if (summary) {
       const inner = `
@@ -43,11 +82,33 @@
         <div class="d-flex justify-content-between small mb-1"><span class="text-muted-pro">Subtotal</span><span>${u().formatMoney(subtotal, c.currency)}</span></div>
         <div class="d-flex justify-content-between small mb-1"><span class="text-muted-pro">Service fee (${feePercentage}%)</span><span>${u().formatMoney(serviceFee, c.currency)}</span></div>
         <hr class="divider"/>
+        <div class="d-flex align-items-center justify-content-between gap-3 mb-3 rounded-3 p-3" style="background:rgba(49,130,206,.08);border:1px solid rgba(49,130,206,.18)">
+          <small class="text-muted-pro" data-reservation-message>Your tickets are reserved for 5 minutes.</small>
+          <span class="fw-bold" data-reservation-countdown>05:00</span>
+        </div>
         <div class="d-flex justify-content-between fw-bold fs-5"><span>Total</span><span>${u().formatMoney(total, c.currency)}</span></div>`;
       summary.innerHTML = `<h6 class="mb-3">Order summary</h6>${inner}`;
     }
 
     if (payBtn) payBtn.textContent = `Pay ${u().formatMoney(total, c.currency)}`;
+
+    try {
+      checkoutReservation = await orders().createCheckoutReservation(item.ticket_type_id, item.quantity);
+      cart().setCart(Object.assign({}, c, {
+        checkout_reservation_id: checkoutReservation.id,
+        checkout_reservation_expires_at: checkoutReservation.expires_at,
+      }));
+      startCountdown();
+    } catch (err) {
+      window.tkToast?.(err.message || 'Unable to reserve these tickets.', 'error');
+      if (payBtn) {
+        payBtn.disabled = true;
+        payBtn.textContent = 'Tickets unavailable';
+      }
+      document.querySelector('[data-reservation-message]')?.replaceChildren(document.createTextNode('Unable to reserve these tickets.'));
+      document.querySelector('[data-reservation-countdown]')?.replaceChildren(document.createTextNode('--:--'));
+      return;
+    }
 
     const user = auth().getUser();
     const purchaserName = (user?.name || `${user?.first_name || ''} ${user?.last_name || ''}`).trim();
@@ -86,6 +147,11 @@
     payBtn?.addEventListener('click', async (e) => {
       e.preventDefault();
       if (!form?.reportValidity()) return;
+      if (!checkoutReservation || reservationExpired || reservationSecondsRemaining() <= 0) {
+        markReservationExpired();
+        window.tkToast?.('Your reservation has expired.', 'error');
+        return;
+      }
       payBtn.disabled = true;
       payBtn.textContent = 'Processing…';
       let createdOrder = null;
@@ -108,6 +174,7 @@
           billing_zip: fd.get('billing_zip') || null,
           billing_country: fd.get('billing_country') || null,
           attendees,
+          checkout_reservation_id: checkoutReservation.id,
         });
 
         sessionStorage.setItem('event_sphere_last_order_id', String(createdOrder.id));

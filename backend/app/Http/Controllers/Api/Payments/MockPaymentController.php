@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Payments;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\CheckoutReservation;
+use App\Services\Checkout\CheckoutReservationService;
 use App\Services\Emails\OrderEmailService;
 use App\Services\Orders\OrderService;
 use App\Services\Tickets\TicketInventoryService;
@@ -20,6 +22,7 @@ class MockPaymentController extends Controller
         private readonly TicketService $tickets,
         private readonly OrderService $orders,
         private readonly OrderEmailService $emails,
+        private readonly CheckoutReservationService $checkoutReservations,
     ) {}
 
     public function store(Request $request): JsonResponse
@@ -43,6 +46,8 @@ class MockPaymentController extends Controller
                     ->firstOrFail();
 
                 if ($locked->payment_status !== Order::PAYMENT_STATUS_PAID) {
+                    $this->checkoutReservations->ensureOrderReservationIsPayable($locked);
+
                     foreach ($locked->items as $item) {
                         $this->inventory->commitSale($item->ticketType, $item->quantity);
                     }
@@ -61,11 +66,13 @@ class MockPaymentController extends Controller
                 return $locked->fresh(['items', 'tickets']);
             });
         } catch (Throwable $exception) {
+            $this->checkoutReservations->cancelForOrder($order, CheckoutReservation::STATUS_EXPIRED);
             $this->orders->cancelUnpaidOrder($order, Order::PAYMENT_STATUS_FAILED);
 
             throw $exception;
         }
 
+        $this->checkoutReservations->completeForOrder($order);
         $this->emails->sendOrderConfirmation($order);
 
         return response()->json([

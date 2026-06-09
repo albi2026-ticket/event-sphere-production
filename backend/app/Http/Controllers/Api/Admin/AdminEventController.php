@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Events\EventCancelled;
 use App\Http\Controllers\Api\Concerns\FiltersEvents;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\EventIndexRequest;
@@ -59,6 +60,8 @@ class AdminEventController extends Controller
     public function update(UpdateEventRequest $request, Event $event): EventResource
     {
         $payload = $request->validated();
+        $wasPublished = $event->status === 'published';
+        $isCancelling = ($payload['status'] ?? null) === 'cancelled';
 
         if (isset($payload['title']) && ! isset($payload['slug'])) {
             $payload['slug'] = $this->uniqueSlug($payload['title'], $event);
@@ -68,8 +71,16 @@ class AdminEventController extends Controller
             $payload['currency'] = strtoupper($payload['currency']);
         }
 
+        if ($isCancelling && ! $event->cancelled_at) {
+            $payload['cancelled_at'] = now();
+        }
+
         $event->update($payload);
         AuditLog::record($request->user(), 'event.updated', $event, array_keys($payload), $request->ip());
+
+        if ($wasPublished && $isCancelling) {
+            event(new EventCancelled($event->fresh(['organizer']), $request->user(), $request->ip()));
+        }
 
         return new EventResource($event->fresh()->load(['organizer', 'images', 'ticketTypes']));
     }

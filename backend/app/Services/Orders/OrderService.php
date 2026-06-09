@@ -6,6 +6,8 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\TicketType;
 use App\Models\User;
+use App\Models\CheckoutReservation;
+use App\Services\Checkout\CheckoutReservationService;
 use App\Services\Tickets\TicketInventoryService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -13,7 +15,10 @@ use Illuminate\Validation\ValidationException;
 
 class OrderService
 {
-    public function __construct(private readonly TicketInventoryService $inventory) {}
+    public function __construct(
+        private readonly TicketInventoryService $inventory,
+        private readonly CheckoutReservationService $checkoutReservations,
+    ) {}
 
     /**
      * @param  array<int, array{ticket_type_id: int, quantity: int}>  $items
@@ -28,8 +33,12 @@ class OrderService
         }
 
         $this->releaseExpiredReservations();
+        $this->checkoutReservations->expireStaleReservations($user);
 
         return DB::transaction(function () use ($user, $items, $billing): Order {
+            $checkoutReservation = isset($billing['checkout_reservation_id'])
+                ? $this->checkoutReservations->validateForOrder($user, (int) $billing['checkout_reservation_id'], $items)
+                : null;
             $lineItems = [];
             $requestedByEvent = [];
             $attendeeCursor = 0;
@@ -58,7 +67,7 @@ class OrderService
                     ]);
                 }
 
-                $this->inventory->reserve($ticketType, $quantity);
+                $this->inventory->reserve($ticketType, $quantity, $checkoutReservation?->id);
                 $ticketType = $ticketType->fresh();
                 $event = $ticketType->event;
                 $requestedByEvent[$event->id] = ($requestedByEvent[$event->id] ?? 0) + $quantity;
@@ -144,7 +153,8 @@ class OrderService
                 'billing_state' => $billing['billing_state'] ?? null,
                 'billing_zip' => $billing['billing_zip'] ?? null,
                 'billing_country' => $billing['billing_country'] ?? null,
-                'checkout_expires_at' => now()->addMinutes(30),
+                'checkout_expires_at' => $checkoutReservation?->expires_at ?: now()->addMinutes(30),
+                'checkout_reservation_id' => $checkoutReservation?->id,
             ]);
 
             foreach ($lineItems as $line) {
@@ -164,6 +174,10 @@ class OrderService
                     'event_starts_at' => $event->starts_at,
                     'attendee_details' => $line['attendee_details'],
                 ]);
+            }
+
+            if ($checkoutReservation) {
+                $this->checkoutReservations->attachOrder($checkoutReservation, $order);
             }
 
             return $order->load(['items.event', 'items.ticketType']);
@@ -205,6 +219,7 @@ class OrderService
                     return;
                 }
 
+                $this->checkoutReservations->cancelForOrder($order, CheckoutReservation::STATUS_EXPIRED);
                 $this->cancelUnpaidOrder($order, Order::PAYMENT_STATUS_CANCELLED);
                 $released++;
             });
@@ -236,6 +251,7 @@ class OrderService
                 Order::PAYMENT_STATUS_FAILED,
                 Order::PAYMENT_STATUS_REFUNDED,
             ], true)) {
+                $this->checkoutReservations->cancelForOrder($locked);
                 $this->releaseReservationItems($locked);
 
                 $status = $paymentStatus === Order::PAYMENT_STATUS_CANCELLED

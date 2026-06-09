@@ -36,6 +36,7 @@ class StoreOrderRequest extends FormRequest
             'attendees.*.email' => ['required', 'string', 'email', 'max:255'],
             'attendees.*.phone' => ['nullable', 'string', 'max:255'],
             'promo_code' => ['nullable', 'string', 'max:64'],
+            'checkout_reservation_id' => ['nullable', 'integer', 'exists:checkout_reservations,id'],
         ];
     }
 

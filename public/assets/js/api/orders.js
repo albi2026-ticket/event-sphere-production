@@ -18,6 +18,27 @@
     return data;
   }
 
+  async function createCheckoutReservation(ticketTypeId, quantity) {
+    const { data } = await api().fetch('/checkout-reservations', {
+      method: 'POST',
+      body: { ticket_type_id: ticketTypeId, quantity },
+    });
+    return data;
+  }
+
+  async function getCheckoutReservation(reservationId) {
+    const { data } = await api().fetch(`/checkout-reservations/${reservationId}`);
+    return data;
+  }
+
+  async function cancelCheckoutReservation(reservationId, status = 'cancelled') {
+    const { data } = await api().fetch(`/checkout-reservations/${reservationId}`, {
+      method: 'DELETE',
+      body: { status },
+    });
+    return data;
+  }
+
   async function completeMockPayment(orderId) {
     const { data } = await api().fetch('/payment/mock-success', {
       method: 'POST',
@@ -56,6 +77,9 @@
     createOrder,
     startCheckout,
     cancelOrder,
+    createCheckoutReservation,
+    getCheckoutReservation,
+    cancelCheckoutReservation,
     completeMockPayment,
     getPaymentStatus,
     getOrder,

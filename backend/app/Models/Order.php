@@ -42,6 +42,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'cancelled_at',
     'refunded_at',
     'checkout_expires_at',
+    'checkout_reservation_id',
 ])]
 class Order extends Model
 {
@@ -85,6 +86,11 @@ class Order extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
+    }
+
+    public function checkoutReservation(): BelongsTo
+    {
+        return $this->belongsTo(CheckoutReservation::class);
     }
 
     protected function casts(): array

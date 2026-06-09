@@ -407,8 +407,13 @@ class OrganizerDashboardTest extends TestCase
 
         $this->actingAs($organizer, 'sanctum')
             ->patchJson("/api/organizer/events/{$event->id}", ['status' => 'draft'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('status');
+
+        $this->actingAs($organizer, 'sanctum')
+            ->patchJson("/api/organizer/events/{$event->id}", ['status' => 'cancelled'])
             ->assertOk()
-            ->assertJsonPath('data.status', 'draft');
+            ->assertJsonPath('data.status', 'cancelled');
     }
 
     public function test_organizer_events_include_computed_event_state_from_status_date_and_inventory(): void

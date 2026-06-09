@@ -36,6 +36,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'allow_resale',
     'refund_policy',
     'moderation_notes',
+    'cancelled_at',
+    'cancellation_notifications_sent_at',
     'views_count',
 ])]
 class Event extends Model
@@ -147,6 +149,8 @@ class Event extends Model
         return [
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
+            'cancelled_at' => 'datetime',
+            'cancellation_notifications_sent_at' => 'datetime',
             'max_tickets_per_user' => 'integer',
             'service_fee_percentage' => 'decimal:2',
             'base_price' => 'decimal:2',

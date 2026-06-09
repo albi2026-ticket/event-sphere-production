@@ -94,6 +94,17 @@ class TicketService
 
     public function validationResult(Ticket $ticket): array
     {
+        $ticket->loadMissing('event');
+
+        $eventBlock = $this->eventValidationBlock($ticket);
+        if ($eventBlock !== null) {
+            return array_merge($eventBlock, [
+                'ticket_status' => $ticket->status,
+                'event_status' => $ticket->event?->status,
+                'checked_in_at' => $ticket->checked_in_at,
+            ]);
+        }
+
         $result = match ($ticket->status) {
             Ticket::STATUS_CHECKED_IN => TicketValidationLog::RESULT_ALREADY_USED,
             Ticket::STATUS_VALID => TicketValidationLog::RESULT_VALID,
@@ -117,6 +128,7 @@ class TicketService
                 default => 'Ticket is not valid for check-in.',
             },
             'ticket_status' => $ticket->status,
+            'event_status' => $ticket->event?->status,
             'checked_in_at' => $ticket->checked_in_at,
         ];
     }
@@ -130,15 +142,17 @@ class TicketService
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if ($locked->status !== Ticket::STATUS_ACTIVE) {
+            $validation = $this->validationResult($locked);
+
+            if (! $validation['can_check_in']) {
                 $this->logValidation($locked, $checker, [
-                    'result' => $this->validationResult($locked)['result'],
+                    'result' => $validation['result'],
                     'method' => $method ?: 'manual',
-                    'message' => $this->validationResult($locked)['reason'],
+                    'message' => $validation['reason'],
                 ]);
 
                 throw ValidationException::withMessages([
-                    'ticket' => $this->validationResult($locked)['reason'],
+                    'ticket' => $validation['reason'],
                 ]);
             }
 
@@ -166,6 +180,39 @@ class TicketService
             ->where('order_id', $order->id)
             ->where('status', '!=', Ticket::STATUS_CHECKED_IN)
             ->update(['status' => $status]);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function eventValidationBlock(Ticket $ticket): ?array
+    {
+        $status = $ticket->event?->status;
+
+        return match ($status) {
+            'published' => null,
+            'cancelled' => [
+                'result' => TicketValidationLog::RESULT_INVALID,
+                'title' => 'EVENT CANCELLED',
+                'is_valid' => false,
+                'can_check_in' => false,
+                'reason' => 'Event cancelled.',
+            ],
+            'completed', 'ended' => [
+                'result' => TicketValidationLog::RESULT_INVALID,
+                'title' => 'INVALID EVENT',
+                'is_valid' => false,
+                'can_check_in' => false,
+                'reason' => 'Event has ended.',
+            ],
+            default => [
+                'result' => TicketValidationLog::RESULT_INVALID,
+                'title' => 'EVENT NOT PUBLISHED',
+                'is_valid' => false,
+                'can_check_in' => false,
+                'reason' => 'Event is not published.',
+            ],
+        };
     }
 
     public function markDownloaded(Ticket $ticket): void

@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\Admin\UserRoleController;
 use App\Http\Controllers\Api\AuthUserController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\CheckoutReservationController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\EventImageController;
@@ -82,6 +83,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/me/favorites', [UserFavoriteController::class, 'store']);
         Route::post('/me/favorites/toggle', [UserFavoriteController::class, 'toggle']);
         Route::delete('/me/favorites/{event}', [UserFavoriteController::class, 'destroy']);
+        Route::post('/checkout-reservations', [CheckoutReservationController::class, 'store']);
+        Route::get('/checkout-reservations/{checkoutReservation}', [CheckoutReservationController::class, 'show']);
+        Route::delete('/checkout-reservations/{checkoutReservation}', [CheckoutReservationController::class, 'cancel']);
         Route::post('/ticket-types/{ticketType}/reserve', [TicketTypeController::class, 'reserve']);
         Route::post('/orders', [OrderController::class, 'store']);
         Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);

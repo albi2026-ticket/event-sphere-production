@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\CheckoutReservation;
 use App\Models\Event;
 use App\Models\EmailTemplate;
 use App\Models\EventCategory;
@@ -18,6 +19,68 @@ use Tests\TestCase;
 class AdminDashboardTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_admin_dashboard_includes_checkout_reservation_statistics(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $user = User::factory()->create([
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $event = Event::query()->create([
+            'organizer_id' => $organizer->id,
+            'title' => 'Admin Reservation Stats Event',
+            'slug' => 'admin-reservation-stats-event',
+            'category' => 'Concerts',
+            'venue_name' => 'Event Sphere Hall',
+            'city' => 'New York',
+            'starts_at' => now()->addMonth(),
+            'status' => 'published',
+            'visibility' => 'public',
+            'currency' => 'USD',
+        ]);
+
+        $ticketType = TicketType::query()->create([
+            'event_id' => $event->id,
+            'name' => 'General Admission',
+            'price' => 25,
+            'currency' => 'USD',
+            'quantity_total' => 10,
+            'min_per_order' => 1,
+            'max_per_order' => 10,
+            'status' => TicketType::STATUS_ACTIVE,
+        ]);
+
+        foreach ([CheckoutReservation::STATUS_ACTIVE, CheckoutReservation::STATUS_EXPIRED, CheckoutReservation::STATUS_COMPLETED] as $status) {
+            CheckoutReservation::query()->create([
+                'user_id' => $user->id,
+                'event_id' => $event->id,
+                'ticket_type_id' => $ticketType->id,
+                'quantity' => 1,
+                'reserved_at' => now()->subMinute(),
+                'expires_at' => $status === CheckoutReservation::STATUS_ACTIVE ? now()->addMinutes(4) : now()->subMinute(),
+                'status' => $status,
+            ]);
+        }
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.reservations.active', 1)
+            ->assertJsonPath('data.reservations.expired', 1)
+            ->assertJsonPath('data.reservations.completed', 1);
+    }
 
     public function test_admin_can_filter_users_change_roles_and_approve_organizers(): void
     {

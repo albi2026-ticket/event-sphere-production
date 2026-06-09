@@ -16,6 +16,7 @@
     auditMeta: null,
     checkInLogs: [],
     checkInStats: null,
+    adminDashboard: null,
     settings: null,
     userFilters: {},
     eventFilters: {},
@@ -335,6 +336,17 @@
     select.value = current;
   }
 
+  async function loadAdminDashboard() {
+    try {
+      const { data } = await api().fetch('/admin/dashboard');
+      state.adminDashboard = data;
+    } catch (err) {
+      state.adminDashboard = null;
+    } finally {
+      renderKpis();
+    }
+  }
+
   function renderKpis() {
     const paidOrders = state.orders.filter((o) => o.payment_status === 'paid');
     const totalGmv = paidOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
@@ -350,6 +362,7 @@
     const ticketsSold = state.tickets.length || state.events.reduce((sum, event) => sum + eventInventory(event).sold, 0);
     const checkedIn = Number(state.checkInStats?.checked_in || state.tickets.filter((ticket) => ticket.status === 'checked_in').length);
     const attendanceRate = ticketsSold ? Math.round((checkedIn / ticketsSold) * 100) : 0;
+    const reservationStats = state.adminDashboard?.reservations || {};
     const row = document.querySelector('[data-admin-kpis]');
 
     if (!row) return;
@@ -366,6 +379,9 @@
         ['Verified Users', verifiedUsers, 'Email verified'],
         ['Unverified Users', unverifiedUsers, 'Need verification'],
         ['Tickets Sold', ticketsSold, `${checkedIn} checked in`],
+        ['Active Reservations', Number(reservationStats.active || 0), 'Checkout holds'],
+        ['Expired Reservations', Number(reservationStats.expired || 0), 'Audit retained'],
+        ['Completed Reservations', Number(reservationStats.completed || 0), 'Converted to orders'],
         ['Revenue Generated', money(totalGmv, 'USD'), `${paidOrders.length} paid orders`],
         ['Service Fees Collected', money(serviceFees, 'USD'), `${Number(state.settings?.default_service_fee_percentage ?? 10)}% default`],
         ['Check-Ins Completed', checkedIn, `${Number(state.checkInStats?.remaining || 0)} remaining`],
@@ -380,9 +396,12 @@
     const pendingEvents = state.events.filter((e) => ['draft', 'pending_review'].includes(e.status)).length;
     const pendingOrganizers = state.users.filter((usr) => usr.organizer_status === 'pending').length;
     const refunds = state.orders.filter((o) => o.payment_status === 'refunded' || o.refunded_at).length;
+    const reservationStats = state.adminDashboard?.reservations || {};
     wrap.innerHTML = [
       ['Moderation Queue', pendingEvents, 'pending_review'],
       ['Organizer Requests', pendingOrganizers, 'pending'],
+      ['Active Reservations', Number(reservationStats.active || 0), 'active'],
+      ['Expired Reservations', Number(reservationStats.expired || 0), 'expired'],
       ['Refunds Tracked', refunds, refunds ? 'refunded' : 'valid'],
       ['Default Service Fee', `${Number(state.settings?.default_service_fee_percentage ?? 10)}%`, 'active'],
     ].map(([label, value, status]) => `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${label}</span><small>Platform status</small></span>${badge(status, String(value))}</div>`).join('');
@@ -1016,7 +1035,7 @@
 
   async function refreshAll() {
     renderAll();
-    await Promise.all([loadSettings(), loadPayments(), loadUsers(), loadEvents(), loadTickets(), loadCategories(), loadEmailCenter(), loadAuditLogs()]);
+    await Promise.all([loadAdminDashboard(), loadSettings(), loadPayments(), loadUsers(), loadEvents(), loadTickets(), loadCategories(), loadEmailCenter(), loadAuditLogs()]);
     await loadCheckIns();
     renderAll();
   }

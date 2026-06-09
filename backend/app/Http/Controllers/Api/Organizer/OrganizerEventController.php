@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Organizer;
 
+use App\Events\EventCancelled;
 use App\Http\Controllers\Api\Concerns\FiltersEvents;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\EventIndexRequest;
@@ -62,9 +63,20 @@ class OrganizerEventController extends Controller
     public function update(UpdateEventRequest $request, Event $event): EventResource
     {
         $payload = $this->eventPayload($request, $event->organizer_id, true);
+        $this->ensureCanMoveToDraft($event, $payload['status'] ?? null);
         $this->ensurePublishable($event, $payload['status'] ?? $event->status);
+        $wasPublished = $event->status === 'published';
+        $isCancelling = ($payload['status'] ?? null) === 'cancelled';
+
+        if ($isCancelling && ! $event->cancelled_at) {
+            $payload['cancelled_at'] = now();
+        }
 
         $event->update($payload);
+
+        if ($wasPublished && $isCancelling) {
+            event(new EventCancelled($event->fresh(['organizer']), $request->user(), $request->ip()));
+        }
 
         return new EventResource($event->fresh()->load(['images', 'ticketTypes']));
     }
@@ -131,6 +143,19 @@ class OrganizerEventController extends Controller
         if (! $hasActiveInventory) {
             throw ValidationException::withMessages([
                 'ticket_types' => 'Published events require at least one ticket tier with inventory.',
+            ]);
+        }
+    }
+
+    protected function ensureCanMoveToDraft(Event $event, ?string $status = null): void
+    {
+        if ($event->status !== 'published' || $status !== 'draft') {
+            return;
+        }
+
+        if ($event->tickets()->exists()) {
+            throw ValidationException::withMessages([
+                'status' => 'This event has sold tickets and cannot be unpublished.',
             ]);
         }
     }

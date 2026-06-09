@@ -2,6 +2,9 @@
 
 namespace Tests\Feature\Tickets;
 
+use App\Mail\EventCancelledAdminMail;
+use App\Mail\EventCancelledOrganizerMail;
+use App\Mail\EventCancelledUserMail;
 use App\Models\Event;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -11,6 +14,7 @@ use App\Models\TicketValidationLog;
 use App\Models\User;
 use App\Services\Tickets\TicketService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -87,6 +91,125 @@ class TicketCheckInTest extends TestCase
             'ticket_id' => $ticket->id,
             'result' => TicketValidationLog::RESULT_ALREADY_USED,
         ]);
+    }
+
+    public function test_ticket_validation_rejects_non_published_event_statuses(): void
+    {
+        $cases = [
+            'completed' => ['INVALID EVENT', 'Event has ended.'],
+            'cancelled' => ['EVENT CANCELLED', 'Event cancelled.'],
+            'draft' => ['EVENT NOT PUBLISHED', 'Event is not published.'],
+        ];
+
+        foreach ($cases as $eventStatus => [$title, $reason]) {
+            [, $organizer, $event, , $order] = $this->createOrder(quantity: 1);
+            $ticket = app(TicketService::class)->generateForPaidOrder($order)[0];
+            $event->forceFill(['status' => $eventStatus])->save();
+
+            $payload = [
+                'token' => $ticket->qr_token,
+                'ticket_uuid' => $ticket->ticket_uuid,
+                'event_id' => $ticket->event_id,
+                'method' => 'qr',
+            ];
+
+            $this->actingAs($organizer, 'sanctum')
+                ->postJson('/api/organizer/tickets/validate', $payload)
+                ->assertOk()
+                ->assertJsonPath('data.validation.result', TicketValidationLog::RESULT_INVALID)
+                ->assertJsonPath('data.validation.title', $title)
+                ->assertJsonPath('data.validation.reason', $reason)
+                ->assertJsonPath('data.validation.can_check_in', false)
+                ->assertJsonPath('data.validation.event_status', $eventStatus);
+
+            $this->actingAs($organizer, 'sanctum')
+                ->postJson('/api/organizer/tickets/check-in', $payload)
+                ->assertUnprocessable()
+                ->assertJsonPath('data.validation.title', $title)
+                ->assertJsonPath('data.validation.can_check_in', false);
+
+            $this->assertSame(Ticket::STATUS_VALID, $ticket->fresh()->status);
+        }
+    }
+
+    public function test_organizer_cannot_unpublish_event_with_sold_tickets_but_can_cancel_it(): void
+    {
+        [$user, $organizer, $event, , $order] = $this->createOrder(quantity: 1);
+        app(TicketService::class)->generateForPaidOrder($order);
+
+        $this->actingAs($organizer, 'sanctum')
+            ->patchJson("/api/organizer/events/{$event->id}", ['status' => 'draft'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('status')
+            ->assertJsonFragment(['This event has sold tickets and cannot be unpublished.']);
+
+        $this->assertSame('published', $event->fresh()->status);
+
+        $this->actingAs($organizer, 'sanctum')
+            ->patchJson("/api/organizer/events/{$event->id}", ['status' => 'cancelled'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'cancelled');
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/me/tickets')
+            ->assertOk()
+            ->assertJsonPath('data.0.event.status', 'cancelled');
+    }
+
+    public function test_event_cancellation_sends_notifications_and_audit_once(): void
+    {
+        Mail::fake();
+
+        $admin = User::factory()->create([
+            'name' => 'Platform Admin',
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        [$user, $organizer, $event, , $order] = $this->createOrder(quantity: 2);
+        app(TicketService::class)->generateForPaidOrder($order);
+
+        $this->actingAs($organizer, 'sanctum')
+            ->patchJson("/api/organizer/events/{$event->id}", ['status' => 'cancelled'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'cancelled');
+
+        Mail::assertSent(EventCancelledUserMail::class, function (EventCancelledUserMail $mail) use ($order, $event) {
+            return $mail->hasTo($order->billing_email)
+                && $mail->event->is($event)
+                && $mail->order->is($order)
+                && $mail->envelope()->subject === "Event Cancelled - {$event->title}";
+        });
+
+        Mail::assertSent(EventCancelledAdminMail::class, function (EventCancelledAdminMail $mail) use ($admin, $event) {
+            return $mail->hasTo($admin->email)
+                && $mail->event->is($event)
+                && $mail->emailData['tickets_sold'] === 2
+                && $mail->emailData['revenue_generated'] === 'USD 50.00';
+        });
+
+        Mail::assertSent(EventCancelledOrganizerMail::class, function (EventCancelledOrganizerMail $mail) use ($organizer, $event) {
+            return $mail->hasTo($organizer->email)
+                && $mail->event->is($event)
+                && $mail->emailData['ticket_holders_notified'] === 1;
+        });
+
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $organizer->id,
+            'action' => 'event.cancelled',
+            'auditable_type' => Event::class,
+            'auditable_id' => $event->id,
+        ]);
+        $this->assertNotNull($event->fresh()->cancellation_notifications_sent_at);
+
+        $this->actingAs($organizer, 'sanctum')
+            ->patchJson("/api/organizer/events/{$event->id}", ['status' => 'cancelled'])
+            ->assertOk();
+
+        Mail::assertSent(EventCancelledUserMail::class, 1);
+        Mail::assertSent(EventCancelledAdminMail::class, 1);
+        Mail::assertSent(EventCancelledOrganizerMail::class, 1);
+        $this->assertSame(1, \App\Models\AuditLog::query()->where('action', 'event.cancelled')->where('auditable_id', $event->id)->count());
     }
 
     public function test_invalid_qr_scan_returns_invalid_result_and_creates_log(): void

@@ -43,6 +43,10 @@ return [
         'email_link_expiration_days' => env('TICKET_EMAIL_LINK_EXPIRATION_DAYS', 30),
     ],
 
+    'checkout' => [
+        'reservation_minutes' => env('CHECKOUT_RESERVATION_MINUTES', 5),
+    ],
+
     'stripe' => [
         'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),

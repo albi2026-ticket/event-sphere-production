@@ -441,6 +441,12 @@
       const inventory = eventInventory(event);
       const displayState = organizerEventState(event);
       const revenue = perf.revenue ?? 0;
+      const hasSoldTickets = Number(inventory.sold || 0) > 0;
+      const statusAction = event.status === 'published'
+        ? (hasSoldTickets
+            ? `<button class="btn btn-glass btn-sm" type="button" data-event-cancel="${event.id}">Cancel Event</button>`
+            : `<button class="btn btn-glass btn-sm" type="button" data-event-unpublish="${event.id}">Unpublish</button>`)
+        : `<button class="btn btn-glass btn-sm" type="button" data-event-publish="${event.id}">Publish</button>`;
       return `<tr>
         <td data-label="Event"><div class="fw-semibold">${esc(event.title)}</div><small class="text-muted-pro">${esc(event.city || '')}${event.venue_name ? ` · ${esc(event.venue_name)}` : ''}</small></td>
         <td data-label="Status">${statusBadge(displayState.key, displayState.label)}</td>
@@ -452,9 +458,7 @@
         <td data-label="Actions" class="text-end">
           <div class="dashboard-actions">
             <button class="btn btn-glass btn-sm" type="button" data-event-edit="${event.id}"><i class="bi bi-pencil me-1"></i>Edit</button>
-            ${event.status === 'published'
-              ? `<button class="btn btn-glass btn-sm" type="button" data-event-unpublish="${event.id}">Unpublish</button>`
-              : `<button class="btn btn-glass btn-sm" type="button" data-event-publish="${event.id}">Publish</button>`}
+            ${statusAction}
             <button class="btn btn-glass btn-sm" type="button" data-event-analytics="${event.id}"><i class="bi bi-graph-up"></i></button>
           </div>
         </td>
@@ -1039,8 +1043,9 @@
       bootstrap.Modal.getOrCreateInstance($('#organizerEventModal')).hide();
       await refreshEventsAndAnalytics();
     } catch (err) {
-      formError(err.message || 'Event save failed');
-      window.tkToast?.(err.message || 'Event save failed', 'error');
+      const message = err.originalMessage || err.message || 'Event save failed';
+      formError(message);
+      window.tkToast?.(message, 'error');
     } finally {
       setBusy(false);
     }
@@ -1052,13 +1057,13 @@
       await api().fetch(`/organizer/events/${eventId}`, { method: 'PATCH', body: { status } });
       window.EventSphereNotifications?.add({
         type: 'event',
-        title: status === 'published' ? 'Event Published' : 'Event Updated',
-        message: status === 'published' ? 'Your event is now published.' : 'Your event status was updated.',
+        title: status === 'published' ? 'Event Published' : (status === 'cancelled' ? 'Event Cancelled' : 'Event Updated'),
+        message: status === 'published' ? 'Your event is now published.' : (status === 'cancelled' ? 'Your event was cancelled.' : 'Your event status was updated.'),
       });
-      window.tkToast?.(status === 'published' ? 'Event published' : 'Event unpublished');
+      window.tkToast?.(status === 'published' ? 'Event published' : (status === 'cancelled' ? 'Event cancelled' : 'Event unpublished'));
       await refreshEventsAndAnalytics();
     } catch (err) {
-      window.tkToast?.(err.message || 'Event status update failed', 'error');
+      window.tkToast?.(err.originalMessage || err.message || 'Event status update failed', 'error');
     } finally {
       setBusy(false);
     }
@@ -1563,6 +1568,14 @@
         return;
       }
 
+      const cancel = event.target.closest('[data-event-cancel]');
+      if (cancel) {
+        if (confirm('Cancel this event? Tickets will no longer be valid for check-in.')) {
+          await quickStatus(cancel.dataset.eventCancel, 'cancelled');
+        }
+        return;
+      }
+
       const analytics = event.target.closest('[data-event-analytics]');
       if (analytics) {
         await showEventAnalytics(analytics.dataset.eventAnalytics);
@@ -1608,7 +1621,7 @@
 
   function setBusy(busy) {
     state.busy = busy;
-    $$('[data-event-save], [data-event-edit], [data-event-publish], [data-event-unpublish], [data-organizer-new-event]').forEach((button) => {
+    $$('[data-event-save], [data-event-edit], [data-event-publish], [data-event-unpublish], [data-event-cancel], [data-organizer-new-event]').forEach((button) => {
       button.disabled = busy;
     });
   }

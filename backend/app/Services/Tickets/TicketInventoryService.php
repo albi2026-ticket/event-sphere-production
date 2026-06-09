@@ -8,9 +8,9 @@ use Illuminate\Validation\ValidationException;
 
 class TicketInventoryService
 {
-    public function availableQuantity(TicketType $ticketType): int
+    public function availableQuantity(TicketType $ticketType, ?int $excludeReservationId = null): int
     {
-        return $ticketType->availableQuantity();
+        return $ticketType->availableQuantity($excludeReservationId);
     }
 
     public function adjustTotal(TicketType $ticketType, int $quantityTotal, ?string $status = null): TicketType
@@ -44,12 +44,12 @@ class TicketInventoryService
         });
     }
 
-    public function reserve(TicketType $ticketType, int $quantity): TicketType
+    public function reserve(TicketType $ticketType, int $quantity, ?int $excludeReservationId = null): TicketType
     {
-        return DB::transaction(function () use ($ticketType, $quantity): TicketType {
+        return DB::transaction(function () use ($ticketType, $quantity, $excludeReservationId): TicketType {
             $locked = TicketType::query()->whereKey($ticketType->id)->lockForUpdate()->firstOrFail();
 
-            $this->ensurePurchasable($locked, $quantity);
+            $this->ensurePurchasable($locked, $quantity, $excludeReservationId);
 
             $locked->increment('quantity_reserved', $quantity);
 
@@ -91,7 +91,7 @@ class TicketInventoryService
         });
     }
 
-    protected function ensurePurchasable(TicketType $ticketType, int $quantity): void
+    protected function ensurePurchasable(TicketType $ticketType, int $quantity, ?int $excludeReservationId = null): void
     {
         $ticketType->loadMissing('event');
 
@@ -113,7 +113,7 @@ class TicketInventoryService
             ]);
         }
 
-        if ($ticketType->availableQuantity() < $quantity) {
+        if ($ticketType->availableQuantity($excludeReservationId) < $quantity) {
             throw ValidationException::withMessages([
                 'quantity' => 'Not enough tickets are available.',
             ]);

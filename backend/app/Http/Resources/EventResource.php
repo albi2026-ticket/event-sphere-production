@@ -25,7 +25,7 @@ class EventResource extends JsonResource
             + ($favoritesCount * 2)
             + $reviewsCount
             + (int) floor(((int) $this->views_count) / 10);
-        $availableInventory = (int) $ticketTypes->sum(fn ($type) => max(0, $type->quantity_total - $type->quantity_sold - $type->quantity_reserved));
+        $availableInventory = (int) $ticketTypes->sum(fn ($type) => $type->availableQuantity());
         $eventState = $this->lifecycleState($availableInventory);
 
         return [
