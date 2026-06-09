@@ -4,9 +4,11 @@ namespace App\Services\Emails;
 
 use App\Mail\OrderConfirmationMail;
 use App\Models\Order;
+use App\Support\AppUrls;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Throwable;
 
 class OrderEmailService
@@ -74,8 +76,7 @@ class OrderEmailService
      */
     protected function emailData(Order $order): array
     {
-        $frontendUrl = rtrim((string) config('services.frontend.url'), '/');
-        $dashboardUrl = $frontendUrl.'/site/dashboard.html';
+        $dashboardUrl = AppUrls::frontend('/site/dashboard.html#tickets');
 
         return [
             'brand' => 'Event Sphere',
@@ -102,12 +103,21 @@ class OrderEmailService
                 'attendee_email' => $ticket->attendee_email ?: $order->user?->email ?: $order->billing_email,
                 'ticket_type' => $ticket->ticketType?->name,
                 'event_name' => $ticket->event?->title,
-                'qr_url' => url("/api/tickets/{$ticket->id}/qr-code"),
-                'download_url' => url("/api/tickets/{$ticket->id}/download"),
+                'qr_url' => $this->signedTicketUrl('tickets.email.qr-code', $ticket->id),
+                'download_url' => $this->signedTicketUrl('tickets.email.download', $ticket->id),
                 'has_qr' => (bool) $ticket->qr_token,
             ])->values()->all(),
             'has_qr_tickets' => $order->tickets->contains(fn ($ticket): bool => (bool) $ticket->qr_token),
         ];
+    }
+
+    protected function signedTicketUrl(string $routeName, int $ticketId): string
+    {
+        return URL::temporarySignedRoute(
+            $routeName,
+            now()->addDays((int) config('services.tickets.email_link_expiration_days', 30)),
+            ['ticket' => $ticketId],
+        );
     }
 
     protected function purchaserName(Order $order): string

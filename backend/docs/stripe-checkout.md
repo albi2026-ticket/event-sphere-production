@@ -14,7 +14,7 @@ For local webhook testing:
 
 ```bash
 stripe login
-stripe listen --forward-to http://localhost:8000/api/stripe/webhook
+stripe listen --forward-to http://127.0.0.1:8000/api/stripe/webhook
 ```
 
 Copy the webhook signing secret printed by the Stripe CLI into `STRIPE_WEBHOOK_SECRET`.
@@ -22,7 +22,7 @@ Copy the webhook signing secret printed by the Stripe CLI into `STRIPE_WEBHOOK_S
 ## Environment
 
 ```env
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:8080
 STRIPE_SECRET=sk_test_your_secret_key
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_signing_secret
 STRIPE_CURRENCY=USD

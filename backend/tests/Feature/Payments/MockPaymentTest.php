@@ -108,7 +108,36 @@ class MockPaymentTest extends TestCase
         $this->assertSame(2, $ticketType->quantity_sold);
         $this->assertSame(2, $order->tickets()->count());
 
-        Mail::assertSent(OrderConfirmationMail::class, 1);
+        Mail::assertSent(OrderConfirmationMail::class, function (OrderConfirmationMail $mail) {
+            $emailData = $mail->emailData;
+            $frontendUrl = rtrim((string) config('services.frontend.url'), '/');
+            $backendUrl = rtrim((string) config('app.url'), '/');
+
+            $this->assertSame($frontendUrl.'/site/dashboard.html#tickets', $emailData['my_tickets_url']);
+            $this->assertNotEmpty($emailData['tickets']);
+
+            foreach ($emailData['tickets'] as $ticket) {
+                $this->assertStringStartsWith($backendUrl.'/api/tickets/', $ticket['download_url']);
+                $this->assertStringContainsString('/email-download?', $ticket['download_url']);
+                $this->assertStringContainsString('signature=', $ticket['download_url']);
+                $this->assertStringStartsWith($backendUrl.'/api/tickets/', $ticket['qr_url']);
+                $this->assertStringContainsString('/email-qr-code?', $ticket['qr_url']);
+                $this->assertStringContainsString('signature=', $ticket['qr_url']);
+
+                $this->get($ticket['download_url'])
+                    ->assertOk()
+                    ->assertHeader('Content-Type', 'application/pdf');
+
+                $this->get($ticket['qr_url'])
+                    ->assertOk()
+                    ->assertHeader('Content-Type', 'image/svg+xml');
+
+                $this->get($ticket['download_url'].'-tampered')
+                    ->assertForbidden();
+            }
+
+            return true;
+        });
 
         $this->actingAs($user, 'sanctum')->postJson('/api/payment/mock-success', [
             'order_id' => $order->id,

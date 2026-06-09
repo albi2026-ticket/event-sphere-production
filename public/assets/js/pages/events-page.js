@@ -52,7 +52,7 @@
     const wrap = document.querySelector('[data-events-category-chips]');
     if (!wrap) return;
     try {
-      const base = document.querySelector('meta[name="api-base"]')?.content || 'http://127.0.0.1:8000/api';
+      const base = window.EventSphereConfig?.API_BASE_URL || document.querySelector('meta[name="api-base"]')?.content;
       const response = await fetch(`${base.replace(/\/$/, '')}/categories`, { headers: { Accept: 'application/json' } });
       const payload = await response.json();
       const categories = Array.isArray(payload.data) ? payload.data : [];

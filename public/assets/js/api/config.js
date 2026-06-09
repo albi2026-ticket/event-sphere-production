@@ -4,7 +4,8 @@
   const meta = document.querySelector('meta[name="api-base"]');
   const fromMeta = meta?.getAttribute('content')?.trim();
   const fromWindow = window.__EVENT_SPHERE_API__?.trim();
-  const fallback = 'http://127.0.0.1:8000/api';
+  const fallbackHost = location.hostname || '127.0.0.1';
+  const fallback = `${location.protocol || 'http:'}//${fallbackHost}:8000/api`;
 
   const base = (fromWindow || fromMeta || fallback).replace(/\/$/, '');
 

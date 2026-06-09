@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\AppUrls;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -17,8 +18,8 @@ class TicketResource extends JsonResource
             'ticket_code' => $this->ticket_code,
             'status' => $this->status,
             'seat_label' => $this->seat_label,
-            'qr_code_url' => url("/api/tickets/{$this->id}/qr-code"),
-            'download_url' => url("/api/tickets/{$this->id}/download"),
+            'qr_code_url' => AppUrls::api("/tickets/{$this->id}/qr-code"),
+            'download_url' => AppUrls::api("/tickets/{$this->id}/download"),
             'issued_at' => $this->issued_at,
             'checked_in_at' => $this->checked_in_at,
             'checked_in_by' => $this->whenLoaded('checkedInBy', fn () => [

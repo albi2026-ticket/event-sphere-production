@@ -30,9 +30,18 @@ class PasswordResetTest extends TestCase
                 'html' => 'emails.auth.reset-password',
                 'text' => 'emails.auth.reset-password-text',
             ], $mail->view);
-            $this->assertStringContainsString('/site/reset-password.html?', $mail->viewData['resetUrl']);
-            $this->assertStringContainsString('token=', $mail->viewData['resetUrl']);
-            $this->assertStringContainsString('email='.urlencode($user->email), $mail->viewData['resetUrl']);
+
+            $resetUrl = $mail->viewData['resetUrl'];
+            $parts = parse_url($resetUrl);
+            parse_str($parts['query'] ?? '', $query);
+            $frontendUrl = rtrim((string) config('services.frontend.url'), '/');
+
+            $this->assertStringStartsWith($frontendUrl.'/site/reset-password.html?', $resetUrl);
+            $this->assertSame(parse_url($frontendUrl, PHP_URL_HOST), $parts['host'] ?? null);
+            $this->assertSame(parse_url($frontendUrl, PHP_URL_PORT), $parts['port'] ?? null);
+            $this->assertSame('/site/reset-password.html', $parts['path'] ?? null);
+            $this->assertSame($notification->token, $query['token'] ?? null);
+            $this->assertSame($user->email, $query['email'] ?? null);
 
             return true;
         });

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\AppUrls;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -46,7 +47,7 @@ class OrderResource extends JsonResource
             'order_confirmation_email_sent_at' => $this->order_confirmation_email_sent_at,
             'cancelled_at' => $this->cancelled_at,
             'refunded_at' => $this->refunded_at,
-            'receipt_url' => url("/api/me/orders/{$this->id}/receipt"),
+            'receipt_url' => AppUrls::api("/me/orders/{$this->id}/receipt"),
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
             'tickets' => TicketResource::collection($this->whenLoaded('tickets')),
             'created_at' => $this->created_at,

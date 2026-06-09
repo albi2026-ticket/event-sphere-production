@@ -50,6 +50,12 @@ Route::get('/events/{event:slug}', [EventController::class, 'show']);
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/event-images/{eventImage}', [EventImageController::class, 'show']);
 Route::get('/ticket-types/{ticketType}', [TicketTypeController::class, 'show']);
+Route::get('/tickets/{ticket}/email-qr-code', [TicketController::class, 'emailQrCode'])
+    ->middleware('signed')
+    ->name('tickets.email.qr-code');
+Route::get('/tickets/{ticket}/email-download', [TicketController::class, 'emailDownload'])
+    ->middleware('signed')
+    ->name('tickets.email.download');
 Route::post('/newsletter-subscriptions', [NewsletterSubscriptionController::class, 'store']);
 Route::post('/stripe/webhook', WebhookController::class);
 

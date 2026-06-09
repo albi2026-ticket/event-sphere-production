@@ -27,6 +27,8 @@ class EmailVerificationTest extends TestCase
             ['id' => $user->id, 'hash' => sha1($user->email)]
         );
 
+        $this->assertStringStartsWith(rtrim((string) config('app.url'), '/').'/verify-email/', $verificationUrl);
+
         $response = $this->get($verificationUrl);
 
         Event::assertDispatched(Verified::class);
@@ -68,6 +70,15 @@ class EmailVerificationTest extends TestCase
         $user = User::query()->where('email', 'test@example.com')->firstOrFail();
 
         Notification::assertSentTo($user, EventSphereVerifyEmail::class);
+        Notification::assertSentTo($user, EventSphereVerifyEmail::class, function (EventSphereVerifyEmail $notification) use ($user) {
+            $mail = $notification->toMail($user);
+            $verificationUrl = $mail->viewData['verificationUrl'];
+
+            $this->assertStringStartsWith(rtrim((string) config('app.url'), '/').'/verify-email/', $verificationUrl);
+            $this->assertStringContainsString('signature=', $verificationUrl);
+
+            return true;
+        });
 
         $this->postJson('/api/login', [
             'email' => 'test@example.com',

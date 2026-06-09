@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\AppUrls;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,6 +31,6 @@ class VerifyEmailController extends Controller
 
     protected function frontendDashboardUrl(): string
     {
-        return rtrim((string) config('services.frontend.url'), '/').'/site/dashboard.html?verified=1';
+        return AppUrls::frontend('/site/dashboard.html', ['verified' => 1]);
     }
 }

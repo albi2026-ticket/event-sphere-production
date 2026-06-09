@@ -36,15 +36,19 @@ return [
     ],
 
     'frontend' => [
-        'url' => env('FRONTEND_URL', 'http://localhost:5173'),
+        'url' => env('FRONTEND_URL', 'http://localhost:8080'),
+    ],
+
+    'tickets' => [
+        'email_link_expiration_days' => env('TICKET_EMAIL_LINK_EXPIRATION_DAYS', 30),
     ],
 
     'stripe' => [
         'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
         'currency' => env('STRIPE_CURRENCY', 'USD'),
-        'success_url' => env('STRIPE_CHECKOUT_SUCCESS_URL', env('FRONTEND_URL', 'http://localhost:5173').'/site/checkout-success.html?session_id={CHECKOUT_SESSION_ID}&order_id={ORDER_ID}'),
-        'cancel_url' => env('STRIPE_CHECKOUT_CANCEL_URL', env('FRONTEND_URL', 'http://localhost:5173').'/site/checkout-cancelled.html?order={ORDER_NUMBER}'),
+        'success_url' => env('STRIPE_CHECKOUT_SUCCESS_URL', env('FRONTEND_URL', 'http://localhost:8080').'/site/checkout-success.html?session_id={CHECKOUT_SESSION_ID}&order_id={ORDER_ID}'),
+        'cancel_url' => env('STRIPE_CHECKOUT_CANCEL_URL', env('FRONTEND_URL', 'http://localhost:8080').'/site/checkout-cancelled.html?order={ORDER_NUMBER}'),
     ],
 
 ];
