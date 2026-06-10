@@ -25,6 +25,10 @@
     auditFilters: {},
     checkInFilters: {},
     currentSection: 'overview',
+    sectionLoaded: {},
+    sectionRequests: {},
+    dataLoaded: {},
+    dataRequests: {},
     loading: { users: false, events: false, payments: false, tickets: false, categories: false, emailCenter: false, auditLogs: false, checkIns: false, settings: false },
     errors: { users: null, events: null, payments: null, tickets: null, categories: null, emailCenter: null, auditLogs: null, checkIns: null, settings: null },
   };
@@ -1035,25 +1039,114 @@
 
   async function refreshAll() {
     renderAll();
-    await Promise.all([loadAdminDashboard(), loadSettings(), loadPayments(), loadUsers(), loadEvents(), loadTickets(), loadCategories(), loadEmailCenter(), loadAuditLogs()]);
-    await loadCheckIns();
+    await loadSection(state.currentSection || 'overview', true);
     renderAll();
   }
 
+  async function loadData(key, loader, force = false) {
+    if (!force && state.dataLoaded[key]) return;
+    if (!force && state.dataRequests[key]) return state.dataRequests[key];
+
+    const request = Promise.resolve()
+      .then(loader)
+      .then((result) => {
+        state.dataLoaded[key] = true;
+        return result;
+      })
+      .finally(() => {
+        delete state.dataRequests[key];
+      });
+
+    state.dataRequests[key] = request;
+    return request;
+  }
+
+  async function loadSection(section, force = false) {
+    const target = section || 'overview';
+    if (!force && state.sectionLoaded[target]) return;
+    if (!force && state.sectionRequests[target]) return state.sectionRequests[target];
+
+    const loaders = {
+      overview: () => loadData('adminDashboard', loadAdminDashboard, force),
+      events: () => Promise.all([
+        loadData('events', loadEvents, force),
+        loadData('payments', loadPayments, force),
+      ]),
+      organizers: () => Promise.all([
+        loadData('users', loadUsers, force),
+        loadData('events', loadEvents, force),
+        loadData('payments', loadPayments, force),
+      ]),
+      users: () => loadData('users', loadUsers, force),
+      tickets: () => Promise.all([
+        loadData('events', loadEvents, force),
+        loadData('tickets', loadTickets, force),
+      ]),
+      revenue: () => Promise.all([
+        loadData('payments', loadPayments, force),
+        loadData('events', loadEvents, force),
+      ]),
+      analytics: () => Promise.all([
+        loadData('payments', loadPayments, force),
+        loadData('events', loadEvents, force),
+        loadData('users', loadUsers, force),
+      ]),
+      checkins: () => Promise.all([
+        loadData('events', loadEvents, force),
+        loadData('checkIns', loadCheckIns, force),
+      ]),
+      'email-center': () => loadData('emailCenter', loadEmailCenter, force),
+      categories: () => loadData('categories', loadCategories, force),
+      'platform-settings': () => loadData('settings', loadSettings, force),
+      reports: () => Promise.all([
+        loadData('users', loadUsers, force),
+        loadData('events', loadEvents, force),
+        loadData('tickets', loadTickets, force),
+        loadData('payments', loadPayments, force),
+        loadData('categories', loadCategories, force),
+      ]),
+      'system-activity': () => Promise.all([
+        loadData('users', loadUsers, force),
+        loadData('events', loadEvents, force),
+        loadData('payments', loadPayments, force),
+        loadData('checkIns', loadCheckIns, force),
+        loadData('auditLogs', loadAuditLogs, force),
+      ]),
+    };
+
+    const request = Promise.resolve()
+      .then(loaders[target] || loaders.overview)
+      .then((result) => {
+        state.sectionLoaded[target] = true;
+        renderAll();
+        return result;
+      })
+      .catch((err) => {
+        window.tkToast?.(err.message || 'Failed to load admin section', 'error');
+        throw err;
+      })
+      .finally(() => {
+        delete state.sectionRequests[target];
+      });
+
+    state.sectionRequests[target] = request;
+    return request;
+  }
+
   async function refreshCategories() {
-    await loadCategories();
+    await loadData('categories', loadCategories, true);
   }
 
   async function refreshEmailCenter() {
-    await loadEmailCenter();
+    await loadData('emailCenter', loadEmailCenter, true);
   }
 
   async function refreshAuditLogs(page = 1) {
-    await loadAuditLogs(page);
+    await loadData('auditLogs', () => loadAuditLogs(page), true);
   }
 
   async function refreshUsers() {
-    await loadUsers();
+    await loadData('users', loadUsers, true);
     renderKpis();
     renderUsers();
     renderOrganizers();
@@ -1061,9 +1154,9 @@
   }
 
   async function refreshEvents() {
-    await loadEvents();
-    await loadTickets();
-    await loadCheckIns();
+    await loadData('events', loadEvents, true);
+    if (state.sectionLoaded.tickets) await loadData('tickets', loadTickets, true);
+    if (state.sectionLoaded.checkins) await loadData('checkIns', loadCheckIns, true);
     renderKpis();
     renderCharts();
     renderEvents();
@@ -1072,7 +1165,7 @@
   }
 
   async function refreshPayments() {
-    await loadPayments();
+    await loadData('payments', loadPayments, true);
     renderKpis();
     renderRevenueKpis();
     renderCharts();
@@ -1081,14 +1174,14 @@
   }
 
   async function refreshCheckIns() {
-    await loadCheckIns();
+    await loadData('checkIns', loadCheckIns, true);
     renderKpis();
     renderCheckIns();
     renderActivity();
   }
 
   async function refreshTickets() {
-    await loadTickets();
+    await loadData('tickets', loadTickets, true);
     renderKpis();
     renderTickets();
   }
@@ -1118,6 +1211,7 @@
       history.replaceState(null, '', `#${state.currentSection}`);
     }
     renderCharts();
+    loadSection(state.currentSection).catch(() => {});
   }
 
   function bindSectionNavigation() {
@@ -1497,6 +1591,7 @@
         if (button.dataset.retryAuditLogs !== undefined) await refreshAuditLogs();
 
         if (button.dataset.adminReport) {
+          await loadSection('reports');
           exportReport(button.dataset.adminReport, button.dataset.reportFormat || 'csv');
         }
 
@@ -1692,6 +1787,7 @@
         }
 
         if (button.dataset.adminExport) {
+          await loadSection('reports');
           const csv = [
             ['section', 'id', 'name', 'status'],
             ...state.users.map((usr) => ['user', usr.id, usr.email, usr.status]),
@@ -1722,7 +1818,7 @@
     bindActions();
 
     try {
-      await refreshAll();
+      await loadSection(state.currentSection || 'overview');
     } catch (err) {
       window.tkToast?.(err.message || 'Failed to load admin dashboard', 'error');
     }

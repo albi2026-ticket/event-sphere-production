@@ -192,7 +192,9 @@ class EventCategoryFilteringTest extends TestCase
         $response->assertOk();
         $this->assertSame([$live->id, $upcoming->id], $ids);
         $response->assertJsonPath('data.0.event_state.key', 'live');
-        $response->assertJsonPath('data.0.tickets_sold_count', 10);
+        $response->assertJsonMissingPath('data.0.tickets_sold_count');
+        $response->assertJsonMissingPath('data.0.ticket_types');
+        $response->assertJsonMissingPath('data.0.organizer');
     }
 
     /**

@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\CheckoutReservationController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\EventImageController;
+use App\Http\Controllers\Api\HomepageController;
 use App\Http\Controllers\Api\NewsletterSubscriptionController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\Organizer\OrganizerDashboardController;
@@ -45,8 +46,14 @@ Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->
 Route::post('/reset-password', [NewPasswordController::class, 'store'])->middleware('guest');
 
 Route::get('/events', [EventController::class, 'index']);
+Route::get('/homepage/featured-events', [HomepageController::class, 'featured']);
+Route::get('/homepage/trending-events', [HomepageController::class, 'trending']);
+Route::get('/homepage/upcoming-events', [HomepageController::class, 'upcoming']);
+Route::get('/homepage/recommendations', [HomepageController::class, 'recommendations']);
+Route::get('/homepage/categories', [HomepageController::class, 'categories']);
 Route::get('/events/{event:slug}/images', [EventImageController::class, 'index']);
 Route::get('/events/{event:slug}/ticket-types', [TicketTypeController::class, 'index']);
+Route::get('/events/{event:slug}/related', [EventController::class, 'related']);
 Route::get('/events/{event:slug}', [EventController::class, 'show']);
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/event-images/{eventImage}', [EventImageController::class, 'show']);
@@ -80,6 +87,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/me/orders/{order}', [UserOrderController::class, 'show']);
         Route::get('/me/orders/{order}/receipt', [UserOrderController::class, 'receipt']);
         Route::get('/me/favorites', [UserFavoriteController::class, 'index']);
+        Route::get('/me/favorites/{event}/status', [UserFavoriteController::class, 'status']);
         Route::post('/me/favorites', [UserFavoriteController::class, 'store']);
         Route::post('/me/favorites/toggle', [UserFavoriteController::class, 'toggle']);
         Route::delete('/me/favorites/{event}', [UserFavoriteController::class, 'destroy']);

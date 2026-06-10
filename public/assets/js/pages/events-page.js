@@ -30,7 +30,9 @@
     },
   };
 
-  let state = { page: 1, sort: 'trending', q: '', category: '', city: '', max_price: '', date_from: '', date_to: '', view: 'grid' };
+  let state = { page: 1, sort: 'trending', q: '', category: '', city: '', max_price: '', date_from: '', date_to: '', view: 'grid', loadRequestId: 0 };
+  const eventCache = new Map();
+  const eventRequests = new Map();
 
   function bindCategoryChips() {
     document.querySelectorAll('[data-filter-category-chip]').forEach((chip) => {
@@ -186,49 +188,95 @@
     return events.map((e, i) => eventsApi().renderEventCard(e, i)).join('');
   }
 
+  function eventRequestParams() {
+    return {
+      page: state.page,
+      per_page: 9,
+      sort: state.sort,
+      q: state.q || undefined,
+      category: state.category || undefined,
+      city: state.city || undefined,
+      max_price: state.max_price || undefined,
+      date_from: state.date_from || undefined,
+      date_to: state.date_to || undefined,
+    };
+  }
+
+  function requestKey(params) {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') qs.set(key, String(value));
+    });
+    return qs.toString();
+  }
+
+  async function fetchEvents(params) {
+    const key = requestKey(params);
+    if (eventCache.has(key)) return eventCache.get(key);
+    if (eventRequests.has(key)) return eventRequests.get(key);
+
+    const request = eventsApi().listEvents(params)
+      .then((result) => {
+        eventCache.set(key, result);
+        return result;
+      })
+      .finally(() => {
+        eventRequests.delete(key);
+      });
+
+    eventRequests.set(key, request);
+    return request;
+  }
+
+  function renderPage(events, meta, grid, pagination) {
+    if (!events.length) {
+      grid.innerHTML = '<div class="col-12 text-center text-muted-pro py-5">No events found.</div>';
+    } else {
+      grid.innerHTML = renderEvents(events);
+    }
+
+    if (pagination) {
+      pagination.innerHTML = meta ? u().paginateLinks(meta) : '';
+      pagination.querySelectorAll('[data-page]').forEach((a) => {
+        a.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          const p = Number(a.dataset.page);
+          if (p >= 1 && (!meta || p <= meta.last_page)) {
+            state.page = p;
+            load();
+          }
+        });
+      });
+    }
+
+    window.EventSphereFavorites?.syncFavoriteButtons();
+    syncUrl();
+  }
+
   async function load() {
     const grid = document.getElementById('grid');
     const pagination = document.getElementById('events-pagination');
     if (!grid) return;
 
+    const params = eventRequestParams();
+    const key = requestKey(params);
+    const requestId = state.loadRequestId + 1;
+    state.loadRequestId = requestId;
+
+    if (eventCache.has(key)) {
+      const { events, meta } = eventCache.get(key);
+      renderPage(events, meta, grid, pagination);
+      return;
+    }
+
     grid.innerHTML = '<div class="col-12 text-center text-muted-pro py-5">Loading events…</div>';
 
     try {
-      const { events, meta } = await eventsApi().listEvents({
-        page: state.page,
-        per_page: 9,
-        sort: state.sort,
-        q: state.q || undefined,
-        category: state.category || undefined,
-        city: state.city || undefined,
-        max_price: state.max_price || undefined,
-        date_from: state.date_from || undefined,
-        date_to: state.date_to || undefined,
-      });
-
-      if (!events.length) {
-        grid.innerHTML = '<div class="col-12 text-center text-muted-pro py-5">No events found.</div>';
-      } else {
-        grid.innerHTML = renderEvents(events);
-      }
-
-      if (pagination) {
-        pagination.innerHTML = meta ? u().paginateLinks(meta) : '';
-        pagination.querySelectorAll('[data-page]').forEach((a) => {
-          a.addEventListener('click', (ev) => {
-            ev.preventDefault();
-            const p = Number(a.dataset.page);
-            if (p >= 1 && (!meta || p <= meta.last_page)) {
-              state.page = p;
-              load();
-            }
-          });
-        });
-      }
-
-      window.EventSphereFavorites?.syncFavoriteButtons();
-      syncUrl();
+      const { events, meta } = await fetchEvents(params);
+      if (requestId !== state.loadRequestId) return;
+      renderPage(events, meta, grid, pagination);
     } catch (err) {
+      if (requestId !== state.loadRequestId) return;
       grid.innerHTML = `<div class="col-12 text-center text-danger py-5">${u().escapeHtml(err.message)}</div>`;
     }
   }

@@ -23,6 +23,11 @@
     return { event_id: eventId, is_favorited: false };
   }
 
+  async function getFavoriteStatus(eventId) {
+    const { data } = await api().fetch(`/me/favorites/${eventId}/status`);
+    return data;
+  }
+
   function paintFavoriteButton(btn, isFavorited) {
     btn.classList.toggle('active', !!isFavorited);
     const icon = btn.querySelector('i');
@@ -41,12 +46,20 @@
   }
 
   async function syncFavoriteButtons() {
-    document.querySelectorAll('[data-event-id][data-fav]').forEach((btn) => paintFavoriteButton(btn, false));
+    const buttons = Array.from(document.querySelectorAll('[data-event-id][data-fav]'));
+    buttons.forEach((btn) => paintFavoriteButton(btn, false));
     if (!auth().isLoggedIn()) return;
     try {
+      const uniqueIds = [...new Set(buttons.map((btn) => btn.getAttribute('data-event-id')).filter(Boolean))];
+      if (uniqueIds.length === 1) {
+        const status = await getFavoriteStatus(uniqueIds[0]);
+        updateFavoriteButtons(uniqueIds[0], status?.is_favorited);
+        return;
+      }
+
       const favs = await listFavorites();
       const ids = new Set(favs.map((f) => String(f.event_id || f.id)));
-      document.querySelectorAll('[data-event-id][data-fav]').forEach((btn) => {
+      buttons.forEach((btn) => {
         const id = btn.getAttribute('data-event-id');
         paintFavoriteButton(btn, ids.has(String(id)));
       });
@@ -55,5 +68,5 @@
     }
   }
 
-  window.EventSphereFavorites = { listFavorites, toggleFavorite, removeFavorite, syncFavoriteButtons, updateFavoriteButtons };
+  window.EventSphereFavorites = { listFavorites, getFavoriteStatus, toggleFavorite, removeFavorite, syncFavoriteButtons, updateFavoriteButtons };
 })();

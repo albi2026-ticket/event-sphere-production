@@ -9,7 +9,7 @@ class TicketTypeResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $activeCheckoutReservations = $this->activeCheckoutReservedQuantity();
+        $activeCheckoutReservations = (int) ($this->active_checkout_reserved_quantity ?? $this->activeCheckoutReservedQuantity());
         $available = max(0, $this->quantity_total - $this->quantity_sold - $this->quantity_reserved - $activeCheckoutReservations);
         $onSale = $this->isOnSale();
 

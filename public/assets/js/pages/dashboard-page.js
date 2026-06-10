@@ -23,16 +23,20 @@
     favorites: [],
     favoriteMeta: null,
     loading: {
-      summary: true,
-      profile: true,
-      upcoming: true,
-      tickets: true,
-      history: true,
-      orders: true,
-      favorites: true,
+      summary: false,
+      profile: false,
+      upcoming: false,
+      tickets: false,
+      history: false,
+      orders: false,
+      favorites: false,
     },
     errors: {},
     currentSection: 'overview',
+    sectionLoaded: {},
+    sectionRequests: {},
+    dataLoaded: {},
+    dataRequests: {},
     ticketView: 'all',
     ticketPage: 1,
     orderPage: 1,
@@ -683,29 +687,87 @@
 
   async function refreshAll() {
     renderAll();
-    await Promise.all([loadSummary(), loadProfile(), loadUpcomingEvents(), loadTickets(), loadHistoryTickets(), loadOrders(), loadFavorites()]);
+    await loadSection(state.currentSection || 'overview', true);
     renderAll();
   }
 
   async function refreshTickets() {
-    await loadTickets();
+    await loadData('tickets', loadTickets, true);
     renderKpis();
     renderTickets();
     renderActivity();
   }
 
   async function refreshOrders() {
-    await loadOrders();
+    await loadData('orders', loadOrders, true);
     renderKpis();
     renderOrders();
     renderActivity();
   }
 
   async function refreshFavorites() {
-    await loadFavorites();
+    await loadData('favorites', loadFavorites, true);
     renderKpis();
     renderFavorites();
     renderActivity();
+  }
+
+  async function loadData(key, loader, force = false) {
+    if (!force && state.dataLoaded[key]) return;
+    if (!force && state.dataRequests[key]) return state.dataRequests[key];
+
+    const request = Promise.resolve()
+      .then(loader)
+      .then((result) => {
+        state.dataLoaded[key] = true;
+        return result;
+      })
+      .finally(() => {
+        delete state.dataRequests[key];
+      });
+
+    state.dataRequests[key] = request;
+    return request;
+  }
+
+  async function loadSection(section, force = false) {
+    const target = section || 'overview';
+    if (!force && state.sectionLoaded[target]) return;
+    if (!force && state.sectionRequests[target]) return state.sectionRequests[target];
+
+    const loaders = {
+      overview: () => loadData('summary', loadSummary, force),
+      tickets: () => loadData('tickets', loadTickets, force),
+      orders: () => loadData('orders', loadOrders, force),
+      saved: () => loadData('favorites', loadFavorites, force),
+      upcoming: () => loadData('upcoming', loadUpcomingEvents, force),
+      history: () => loadData('history', loadHistoryTickets, force),
+      profile: () => loadData('profile', loadProfile, force),
+      security: () => loadData('profile', loadProfile, force),
+      notifications: () => Promise.all([
+        loadData('profile', loadProfile, force),
+        loadData('orders', loadOrders, force),
+        loadData('upcoming', loadUpcomingEvents, force),
+      ]),
+    };
+
+    const request = Promise.resolve()
+      .then(loaders[target] || loaders.overview)
+      .then((result) => {
+        state.sectionLoaded[target] = true;
+        renderAll();
+        return result;
+      })
+      .catch((err) => {
+        window.tkToast?.(err.message || 'Failed to load dashboard section', 'error');
+        throw err;
+      })
+      .finally(() => {
+        delete state.sectionRequests[target];
+      });
+
+    state.sectionRequests[target] = request;
+    return request;
   }
 
   function showProfileError(message) {
@@ -729,6 +791,7 @@
     if (location.hash.replace('#', '') !== state.currentSection) {
       history.replaceState(null, '', `#${state.currentSection}`);
     }
+    loadSection(state.currentSection).catch(() => {});
   }
 
   function bindSectionNavigation() {
@@ -930,14 +993,14 @@
     document.addEventListener('click', async (event) => {
       const retrySummary = event.target.closest('[data-retry-summary]');
       if (retrySummary) {
-        await loadSummary();
+        await loadData('summary', loadSummary, true);
         renderAll();
         return;
       }
 
       const retryUpcoming = event.target.closest('[data-retry-upcoming]');
       if (retryUpcoming) {
-        await loadUpcomingEvents();
+        await loadData('upcoming', loadUpcomingEvents, true);
         renderUpcomingEvents();
         return;
       }
@@ -950,7 +1013,7 @@
 
       const retryHistory = event.target.closest('[data-retry-history]');
       if (retryHistory) {
-        await loadHistoryTickets();
+        await loadData('history', loadHistoryTickets, true);
         return;
       }
 
@@ -1044,7 +1107,10 @@
         try {
           await favApi().removeFavorite(Number(removeFavorite.dataset.removeFavorite));
           window.tkToast?.('Removed from favorites', 'info');
-          await Promise.all([loadSummary(), loadFavorites()]);
+          await Promise.all([
+            loadData('summary', loadSummary, true),
+            loadData('favorites', loadFavorites, true),
+          ]);
           renderKpis();
           renderFavorites();
           renderActivity();
@@ -1079,7 +1145,7 @@
     bindActions();
 
     try {
-      await refreshAll();
+      await loadSection(state.currentSection || 'overview');
     } catch (err) {
       window.tkToast?.(err.message || 'Failed to load dashboard', 'error');
     }

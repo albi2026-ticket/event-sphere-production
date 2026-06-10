@@ -23,14 +23,14 @@
     scannerTimer: null,
     lastScannedPayload: '',
     loading: {
-      summary: true,
-      events: true,
-      performance: true,
-      inventory: true,
-      attendees: true,
-      revenue: true,
-      ticketAnalytics: true,
-      checkInLogs: true,
+      summary: false,
+      events: false,
+      performance: false,
+      inventory: false,
+      attendees: false,
+      revenue: false,
+      ticketAnalytics: false,
+      checkInLogs: false,
     },
     errors: {},
     attendeePage: 1,
@@ -39,6 +39,10 @@
     pendingImages: [],
     busy: false,
     currentSection: 'overview',
+    sectionLoaded: {},
+    sectionRequests: {},
+    dataLoaded: {},
+    dataRequests: {},
   };
 
   const $ = (sel, root = document) => root.querySelector(sel);
@@ -718,15 +722,99 @@
 
   async function refreshAll() {
     renderAll();
-    await Promise.all([loadSummary(), loadEvents(), loadPerformance(), loadInventory(), loadAttendees(), loadRevenue(), loadTicketAnalytics()]);
-    await Promise.all([loadCheckInStats(), loadCheckInLogs()]);
+    await loadSection(state.currentSection || 'overview', true);
     renderAll();
   }
 
   async function refreshEventsAndAnalytics() {
-    await Promise.all([loadSummary(), loadEvents(), loadPerformance(), loadInventory(), loadRevenue(), loadTicketAnalytics()]);
-    await Promise.all([loadCheckInStats(), loadCheckInLogs()]);
+    await Promise.all([
+      loadData('summary', loadSummary, true),
+      loadData('events', loadEvents, true),
+      loadData('performance', loadPerformance, true),
+      loadData('inventory', loadInventory, true),
+      loadData('revenue', loadRevenue, true),
+      loadData('ticketAnalytics', loadTicketAnalytics, true),
+    ]);
+    if (state.sectionLoaded['check-in']) {
+      await Promise.all([
+        loadData('checkInStats', loadCheckInStats, true),
+        loadData('checkInLogs', loadCheckInLogs, true),
+      ]);
+    }
     renderAll();
+  }
+
+  async function loadData(key, loader, force = false) {
+    if (!force && state.dataLoaded[key]) return;
+    if (!force && state.dataRequests[key]) return state.dataRequests[key];
+
+    const request = Promise.resolve()
+      .then(loader)
+      .then((result) => {
+        state.dataLoaded[key] = true;
+        return result;
+      })
+      .finally(() => {
+        delete state.dataRequests[key];
+      });
+
+    state.dataRequests[key] = request;
+    return request;
+  }
+
+  async function loadSection(section, force = false) {
+    const target = section || 'overview';
+    if (!force && state.sectionLoaded[target]) return;
+    if (!force && state.sectionRequests[target]) return state.sectionRequests[target];
+
+    const loaders = {
+      overview: () => loadData('summary', loadSummary, force),
+      events: () => Promise.all([
+        loadData('events', loadEvents, force),
+        loadData('performance', loadPerformance, force),
+      ]),
+      'ticket-analytics': () => Promise.all([
+        loadData('performance', loadPerformance, force),
+        loadData('ticketAnalytics', loadTicketAnalytics, force),
+      ]),
+      revenue: () => Promise.all([
+        loadData('revenue', loadRevenue, force),
+        loadData('ticketAnalytics', loadTicketAnalytics, force),
+      ]),
+      attendees: () => Promise.all([
+        loadData('events', loadEvents, force),
+        loadData('attendees', loadAttendees, force),
+      ]),
+      'check-in': () => Promise.all([
+        loadData('events', loadEvents, force),
+        loadData('checkInStats', loadCheckInStats, force),
+        loadData('checkInLogs', loadCheckInLogs, force),
+      ]),
+      reports: () => Promise.all([
+        loadData('performance', loadPerformance, force),
+        loadData('revenue', loadRevenue, force),
+        loadData('attendees', loadAttendees, force),
+      ]),
+      settings: () => loadData('summary', loadSummary, force),
+    };
+
+    const request = Promise.resolve()
+      .then(loaders[target] || loaders.overview)
+      .then((result) => {
+        state.sectionLoaded[target] = true;
+        renderAll();
+        return result;
+      })
+      .catch((err) => {
+        window.tkToast?.(err.message || 'Failed to load organizer section', 'error');
+        throw err;
+      })
+      .finally(() => {
+        delete state.sectionRequests[target];
+      });
+
+    state.sectionRequests[target] = request;
+    return request;
   }
 
   function selectedCheckInEventId() {
@@ -1280,6 +1368,7 @@
 
     if (state.currentSection === 'revenue') renderRevenue();
     if (state.currentSection === 'ticket-analytics') renderTicketAnalytics();
+    loadSection(state.currentSection).catch(() => {});
   }
 
   function bindSectionNavigation() {
@@ -1371,32 +1460,35 @@
 
   function bindFilters() {
     $('[data-organizer-event-status]')?.addEventListener('change', async () => {
-      await loadEvents();
+      await loadData('events', loadEvents, true);
       renderEvents();
     });
     $('[data-organizer-event-search]')?.addEventListener('input', debounce(async () => {
-      await loadEvents();
+      await loadData('events', loadEvents, true);
       renderEvents();
     }, 250));
     $('[data-attendee-event]')?.addEventListener('change', async () => {
       state.attendeePage = 1;
-      await loadAttendees();
+      await loadData('attendees', loadAttendees, true);
       renderAttendees();
     });
     $('[data-attendee-status]')?.addEventListener('change', async () => {
       state.attendeePage = 1;
-      await loadAttendees();
+      await loadData('attendees', loadAttendees, true);
       renderAttendees();
     });
     $('[data-attendee-search]')?.addEventListener('input', debounce(async () => {
       state.attendeePage = 1;
-      await loadAttendees();
+      await loadData('attendees', loadAttendees, true);
       renderAttendees();
     }, 250));
     $('[data-checkin-event]')?.addEventListener('change', async () => {
       state.checkInResult = null;
       renderCheckInResult(null);
-      await Promise.all([loadCheckInStats(), loadCheckInLogs()]);
+      await Promise.all([
+        loadData('checkInStats', loadCheckInStats, true),
+        loadData('checkInLogs', loadCheckInLogs, true),
+      ]);
     });
   }
 
@@ -1488,43 +1580,46 @@
 
       const retryEvents = event.target.closest('[data-retry-events]');
       if (retryEvents) {
-        await loadEvents();
+        await loadData('events', loadEvents, true);
         renderEvents();
         return;
       }
       const retrySummary = event.target.closest('[data-retry-summary]');
       if (retrySummary) {
-        await Promise.all([loadSummary(), loadEvents()]);
+        await Promise.all([
+          loadData('summary', loadSummary, true),
+          loadData('events', loadEvents, true),
+        ]);
         renderOverview();
         return;
       }
       const retryPerformance = event.target.closest('[data-retry-performance]');
       if (retryPerformance) {
-        await loadPerformance();
+        await loadData('performance', loadPerformance, true);
         renderPerformance();
         return;
       }
       const retryInventory = event.target.closest('[data-retry-inventory]');
       if (retryInventory) {
-        await loadInventory();
+        await loadData('inventory', loadInventory, true);
         renderInventory();
         return;
       }
       const retryAttendees = event.target.closest('[data-retry-attendees]');
       if (retryAttendees) {
-        await loadAttendees();
+        await loadData('attendees', loadAttendees, true);
         renderAttendees();
         return;
       }
       const retryRevenue = event.target.closest('[data-retry-revenue]');
       if (retryRevenue) {
-        await loadRevenue();
+        await loadData('revenue', loadRevenue, true);
         renderRevenue();
         return;
       }
       const retryCheckInLogs = event.target.closest('[data-retry-checkin-logs]');
       if (retryCheckInLogs) {
-        await loadCheckInLogs();
+        await loadData('checkInLogs', loadCheckInLogs, true);
         renderCheckInLogs();
         return;
       }
@@ -1544,7 +1639,7 @@
       const attendeePage = event.target.closest('[data-attendee-page]');
       if (attendeePage) {
         state.attendeePage = Number(attendeePage.dataset.attendeePage);
-        await loadAttendees();
+        await loadData('attendees', loadAttendees, true);
         renderAttendees();
         return;
       }
@@ -1613,7 +1708,7 @@
       button.addEventListener('click', async () => {
         $$('[data-organizer-range]').forEach((btn) => btn.classList.toggle('active', btn === button));
         state.groupBy = button.dataset.organizerRange;
-        await loadRevenue();
+        await loadData('revenue', loadRevenue, true);
         renderRevenue();
       });
     });
@@ -1655,7 +1750,7 @@
     bindActions();
 
     try {
-      await refreshAll();
+      await loadSection(state.currentSection || 'overview');
     } catch (err) {
       window.tkToast?.(err.message || 'Failed to load organizer dashboard', 'error');
     }

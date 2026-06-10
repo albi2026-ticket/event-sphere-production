@@ -65,6 +65,21 @@ class UserFavoriteController extends Controller
         return response()->json(['message' => 'Favorite removed.']);
     }
 
+    public function status(Request $request, Event $event): JsonResponse
+    {
+        abort_unless($event->status === 'published' && $event->visibility === 'public', 404);
+
+        return response()->json([
+            'data' => [
+                'event_id' => $event->id,
+                'is_favorited' => Favorite::query()
+                    ->where('user_id', $request->user()->id)
+                    ->where('event_id', $event->id)
+                    ->exists(),
+            ],
+        ]);
+    }
+
     public function toggle(StoreFavoriteRequest $request): JsonResponse
     {
         Event::query()

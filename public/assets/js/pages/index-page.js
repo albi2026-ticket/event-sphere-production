@@ -140,17 +140,36 @@
       .sort(categorySort);
   }
 
-  async function fetchHomepageEvents() {
-    const first = await window.EventSphereEvents.listEvents({ sort: 'newest', per_page: 100 });
-    const events = [...first.events];
-    const lastPage = Number(first.meta?.last_page || 1);
+  async function fetchHomepageSection(path, params = {}) {
+    const qs = new URLSearchParams({ limit: 8, ...params });
+    const result = await window.EventSphereApi.fetch(`${path}?${qs.toString()}`);
+    return result.data;
+  }
 
-    for (let page = 2; page <= lastPage; page += 1) {
-      const result = await window.EventSphereEvents.listEvents({ sort: 'newest', per_page: 100, page });
-      events.push(...result.events);
-    }
+  function uniqueEvents(...groups) {
+    const seen = new Set();
+    return groups.flat().filter((event) => {
+      const key = String(event?.id || '');
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
 
-    return events.filter(isPublicActiveEvent);
+  async function fetchHomepageData() {
+    const [featured, trending, upcoming, categories] = await Promise.all([
+      fetchHomepageSection('/homepage/featured-events', { limit: 8 }),
+      fetchHomepageSection('/homepage/trending-events', { limit: 8 }),
+      fetchHomepageSection('/homepage/upcoming-events', { limit: 8 }),
+      fetchHomepageSection('/homepage/categories', { limit: 3 }),
+    ]);
+
+    return {
+      featured: Array.isArray(featured) ? featured.filter(isPublicActiveEvent) : [],
+      trending: Array.isArray(trending) ? trending.filter(isPublicActiveEvent) : [],
+      upcoming: Array.isArray(upcoming) ? upcoming.filter(isPublicActiveEvent) : [],
+      categories: Array.isArray(categories) ? categories : [],
+    };
   }
 
   function preloadImage(src) {
@@ -170,7 +189,7 @@
     const detailsHref = `event-details.html?slug=${encodeURIComponent(event.slug)}`;
     const status = window.EventSphereEvents.salesStatus(event);
     const ticketType = window.EventSphereEvents.availableTicketTypes(event)[0];
-    const buyDisabled = !status.canBuy || !ticketType;
+    const buyDisabled = !status.canBuy || (!ticketType && event.price_from === undefined && event.base_price === undefined);
     const statusLabel = status.key === 'sold_out' || status.key === 'live' ? status.label : '';
 
     return `<article class="hero-slide${index === 0 ? ' active' : ''}" data-hero-slide data-index="${index}" aria-hidden="${index === 0 ? 'false' : 'true'}">
@@ -321,12 +340,18 @@
     renderEventGrid('[data-home-week-section]', '[data-home-week]', weekEvents, 4);
   }
 
-  function renderCategorySections(events) {
+  function renderCategorySections(categories) {
     const wrap = document.querySelector('[data-home-category-sections]');
     if (!wrap) return;
-    const categories = groupedCategories(events);
+    const categoryGroups = categories?.length
+      ? categories.map((category) => ({
+        key: category.slug || category.key || categoryInfo(category.name).key,
+        label: category.name || category.label || category.slug || 'Events',
+        events: Array.isArray(category.events) ? category.events.filter(isPublicActiveEvent) : [],
+      })).filter((category) => category.events.length)
+      : [];
 
-    wrap.innerHTML = categories.map((category) => {
+    wrap.innerHTML = categoryGroups.map((category) => {
       const cards = category.events.slice(0, 3).map((event, index) => window.EventSphereEvents.renderEventCard(event, index)).join('');
       return `<section class="section-sm" data-home-category-section="${window.EventSphereUtils.escapeHtml(category.key)}">
         <div class="container-xxl">
@@ -393,11 +418,11 @@
     hydrateNavCategories();
 
     try {
-      const events = await fetchHomepageEvents();
-      setupHeroSlider(events);
-      renderTrending(events);
-      renderUpcomingWeek(events);
-      renderCategorySections(events);
+      const data = await fetchHomepageData();
+      setupHeroSlider(uniqueEvents(data.featured, data.trending, data.upcoming));
+      renderTrending(data.trending);
+      renderUpcomingWeek(data.upcoming);
+      renderCategorySections(data.categories);
       window.EventSphereFavorites?.syncFavoriteButtons();
       startHeroCountdowns();
     } catch {

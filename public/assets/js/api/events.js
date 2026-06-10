@@ -57,6 +57,15 @@
       return { key: 'ended', label: 'Event Ended', priceLabel: 'Sales Closed', canBuy: false };
     }
 
+    if (!Array.isArray(event?.ticket_types) && (event?.price_from !== undefined || event?.base_price !== undefined)) {
+      const start = event?.starts_at ? new Date(event.starts_at) : null;
+      if (start && !Number.isNaN(start.getTime()) && Date.now() >= start.getTime()) {
+        return { key: 'live', label: 'Live', priceLabel: '', canBuy: true };
+      }
+
+      return { key: 'upcoming', label: 'Upcoming', priceLabel: '', canBuy: true };
+    }
+
     const inventory = inventorySummary(event);
     if (inventory.available <= 0) {
       return { key: 'sold_out', label: 'Sold Out', priceLabel: 'Sold Out', canBuy: false };
@@ -71,6 +80,10 @@
   }
 
   function lowestAvailablePrice(event) {
+    if (event?.price_from !== undefined && event?.price_from !== null) {
+      return { amount: event.price_from, currency: event.currency || 'USD' };
+    }
+
     const tier = availableTicketTypes(event)[0] || (event.ticket_types || []).sort((a, b) => Number(a.price || 0) - Number(b.price || 0))[0];
     return tier ? { amount: tier.price, currency: tier.currency || event.currency } : { amount: event.base_price ?? 0, currency: event.currency || 'USD' };
   }
