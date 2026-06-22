@@ -57,6 +57,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Event::class, 'organizer_id');
     }
 
+    public function ownedVenues(): HasMany
+    {
+        return $this->hasMany(Venue::class);
+    }
+
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
@@ -75,6 +80,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
+    }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
     }
 
     public function checkedInTickets(): HasMany
@@ -117,6 +127,11 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->isAdmin()
             || ($this->isOrganizer() && $event->organizer_id === $this->id);
+    }
+
+    public function canManageVenue(Venue $venue): bool
+    {
+        return $this->isOrganizer() && $venue->user_id === $this->id;
     }
 
     public function sendEmailVerificationNotification(): void

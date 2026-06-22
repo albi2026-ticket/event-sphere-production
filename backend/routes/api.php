@@ -19,10 +19,14 @@ use App\Http\Controllers\Api\EventImageController;
 use App\Http\Controllers\Api\HomepageController;
 use App\Http\Controllers\Api\NewsletterSubscriptionController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\Organizer\OrganizerDashboardController;
 use App\Http\Controllers\Api\Organizer\OrganizerEventController;
 use App\Http\Controllers\Api\Organizer\OrganizerPaymentController;
 use App\Http\Controllers\Api\Organizer\OrganizerTicketController;
+use App\Http\Controllers\Api\Owner\OwnerReservationController;
+use App\Http\Controllers\Api\Owner\OwnerVenueImageController;
+use App\Http\Controllers\Api\Owner\OwnerVenueController;
 use App\Http\Controllers\Api\Payments\CheckoutSessionController;
 use App\Http\Controllers\Api\Payments\MockPaymentController;
 use App\Http\Controllers\Api\Payments\WebhookController;
@@ -33,6 +37,8 @@ use App\Http\Controllers\Api\User\UserFavoriteController;
 use App\Http\Controllers\Api\User\UserOrderController;
 use App\Http\Controllers\Api\User\UserProfileController;
 use App\Http\Controllers\Api\User\UserTicketController;
+use App\Http\Controllers\Api\VenueController;
+use App\Http\Controllers\Api\VenueLookupController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -46,6 +52,11 @@ Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->
 Route::post('/reset-password', [NewPasswordController::class, 'store'])->middleware('guest');
 
 Route::get('/events', [EventController::class, 'index']);
+Route::get('/venues', [VenueController::class, 'index']);
+Route::get('/venues/{venue}', [VenueController::class, 'show']);
+Route::get('/venue-facilities', [VenueLookupController::class, 'facilities']);
+Route::get('/cuisine-types', [VenueLookupController::class, 'cuisineTypes']);
+Route::get('/payment-options', [VenueLookupController::class, 'paymentOptions']);
 Route::get('/homepage/featured-events', [HomepageController::class, 'featured']);
 Route::get('/homepage/trending-events', [HomepageController::class, 'trending']);
 Route::get('/homepage/upcoming-events', [HomepageController::class, 'upcoming']);
@@ -94,6 +105,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/checkout-reservations', [CheckoutReservationController::class, 'store']);
         Route::get('/checkout-reservations/{checkoutReservation}', [CheckoutReservationController::class, 'show']);
         Route::delete('/checkout-reservations/{checkoutReservation}', [CheckoutReservationController::class, 'cancel']);
+        Route::post('/reservations', [ReservationController::class, 'store']);
+        Route::get('/my-reservations', [ReservationController::class, 'mine']);
+        Route::get('/reservations/{reservation}', [ReservationController::class, 'show']);
+        Route::patch('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
         Route::post('/ticket-types/{ticketType}/reserve', [TicketTypeController::class, 'reserve']);
         Route::post('/orders', [OrderController::class, 'store']);
         Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
@@ -142,6 +157,21 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::patch('/ticket-types/{ticketType}', [TicketTypeController::class, 'update']);
         Route::delete('/ticket-types/{ticketType}', [TicketTypeController::class, 'destroy']);
         Route::patch('/ticket-types/{ticketType}/inventory', [TicketTypeController::class, 'adjustInventory']);
+    });
+
+    Route::middleware('role:organizer')->prefix('owner')->group(function (): void {
+        Route::get('/reservations', [OwnerReservationController::class, 'index']);
+        Route::get('/reservations/{reservation}', [OwnerReservationController::class, 'show']);
+        Route::patch('/reservations/{reservation}/confirm', [OwnerReservationController::class, 'confirm']);
+        Route::patch('/reservations/{reservation}/cancel', [OwnerReservationController::class, 'cancel']);
+        Route::patch('/reservations/{reservation}/complete', [OwnerReservationController::class, 'complete']);
+        Route::get('/venues', [OwnerVenueController::class, 'index']);
+        Route::post('/venues', [OwnerVenueController::class, 'store']);
+        Route::put('/venues/{venue}', [OwnerVenueController::class, 'update']);
+        Route::delete('/venues/{venue}', [OwnerVenueController::class, 'destroy']);
+        Route::post('/venues/{venue}/images', [OwnerVenueImageController::class, 'store']);
+        Route::put('/venues/{venue}/images/reorder', [OwnerVenueImageController::class, 'reorder']);
+        Route::delete('/venue-images/{venueImage}', [OwnerVenueImageController::class, 'destroy']);
     });
 
     Route::middleware('role:admin')->prefix('admin')->group(function (): void {

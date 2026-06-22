@@ -1,44 +1,67 @@
 /* =========================================================
-   Event Sphere — Reservations: venue data + grid renderer
+   Event Sphere - Reservations: public venue discovery
    ========================================================= */
 (function () {
-  const venues = [
-    { name: "Aurora Rooftop", cat: "Modern European", city: "London", rating: 4.9, desc: "Candle-lit skyline dining with a weekly tasting menu and 240-bottle cellar.", img: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80", today: true },
-    { name: "Maison Lumière", cat: "French Bistro", city: "Paris", rating: 4.8, desc: "Old-world bistro reborn — duck confit, natural wines, and live piano on weekends.", img: "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800&q=80", today: true },
-    { name: "Sakura Omakase", cat: "Japanese · Omakase", city: "Tokyo", rating: 5.0, desc: "12-seat counter helmed by Chef Tanaka. Reservations open 60 days ahead.", img: "https://images.unsplash.com/photo-1579027989536-b7b1f875659b?w=800&q=80", today: false },
-    { name: "Casa del Sol", cat: "Spanish Tapas", city: "Barcelona", rating: 4.7, desc: "Charcoal-fired tapas, sherry flights and a sun-drenched courtyard terrace.", img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80", today: true },
-    { name: "The Velvet Room", cat: "Cocktail Bar", city: "New York", rating: 4.8, desc: "Speakeasy hidden behind a brass door. Reservations recommended after 9PM.", img: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800&q=80", today: true },
-    { name: "Skyline 47", cat: "Rooftop Lounge", city: "Dubai", rating: 4.6, desc: "Open-air lounge with city panoramas, DJ sets and a smoke-paired cocktail list.", img: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=800&q=80", today: true },
-    { name: "Olive & Oak", cat: "Mediterranean", city: "Athens", rating: 4.7, desc: "Whole-fish grills, hand-pressed olive oils and a hilltop view of the Acropolis.", img: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80", today: true },
-    { name: "Noir Speakeasy", cat: "Whisky Bar", city: "Edinburgh", rating: 4.9, desc: "Hidden whisky vault — 600 bottles, leather booths, no phones policy.", img: "https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=800&q=80", today: false },
-    { name: "Brasa Steakhouse", cat: "Steakhouse", city: "São Paulo", rating: 4.8, desc: "Dry-aged cuts over an open flame. Sommelier-curated South American wines.", img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&q=80", today: true },
-    { name: "Lotus Garden", cat: "Vietnamese", city: "Berlin", rating: 4.5, desc: "Modern Vietnamese in a leafy courtyard — wood-fired pho and pandan desserts.", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80", today: true },
-    { name: "Indigo Jazz Club", cat: "Live Jazz", city: "New Orleans", rating: 4.9, desc: "Nightly quartets and Creole small plates in a 1920s ballroom.", img: "https://images.unsplash.com/photo-1485872299712-79d10c3e6e8c?w=800&q=80", today: true },
-    { name: "The Florist", cat: "Garden Bar", city: "Melbourne", rating: 4.6, desc: "Botanical cocktails served in a glasshouse filled with seasonal blooms.", img: "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=800&q=80", today: true }
-  ];
+  'use strict';
 
-  function card(v) {
+  const api = () => window.EventSphereApi;
+  const $ = (selector) => document.querySelector(selector);
+  const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
+  const fallbackImage = 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=900&q=80';
+
+  const state = {
+    venues: [],
+    loading: false,
+    lookupsLoaded: false,
+    filters: {
+      q: '',
+      city: '',
+      venue_type: '',
+      cuisine: '',
+      facility: '',
+      sort: 'featured',
+    },
+  };
+
+  function venueImage(venue) {
+    return venue.images?.[0]?.url || venue.images?.[0]?.image_path || venue.logo_image || fallbackImage;
+  }
+
+  function titleCase(value) {
+    return String(value || 'Venue').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }
+
+  function preview(items, fallback) {
+    const names = (items || []).map((item) => item.name).filter(Boolean).slice(0, 3);
+    return names.length ? names.join(', ') : fallback;
+  }
+
+  function card(venue) {
+    const facilities = preview(venue.facilities, 'Facilities coming soon');
+    const cuisines = preview(venue.cuisine_types, titleCase(venue.venue_type));
+    const detailsUrl = `venue.html?venue=${encodeURIComponent(venue.slug)}`;
     return `
     <div class="col-lg-3 col-md-6">
-      <a class="text-decoration-none" href="venue.html">
+      <a class="text-decoration-none" href="${detailsUrl}">
         <article class="venue-card">
           <div class="img-wrap">
-            <img src="${v.img}" alt="${v.name}" loading="lazy" />
+            <img src="${esc(venueImage(venue))}" alt="${esc(venue.name)}" loading="lazy" />
             <div class="badges">
-              ${v.today ? '<span class="chip-available">Available today</span>' : '<span class="chip-available" style="background:rgba(245,158,11,.14);color:#fcd34d;border-color:rgba(245,158,11,.35)">Booking fast</span>'}
+              ${venue.featured ? '<span class="chip-available"><i class="bi bi-stars"></i> Featured</span>' : '<span class="chip-available"><i class="bi bi-circle-fill" style="font-size:.4rem"></i> Reservations</span>'}
               <span class="fav"><i class="bi bi-heart"></i></span>
             </div>
           </div>
           <div class="body">
             <div class="d-flex justify-content-between gap-2">
-              <h3 class="title m-0">${v.name}</h3>
-              <span class="rating"><i class="bi bi-star-fill"></i> ${v.rating}</span>
+              <h3 class="title m-0">${esc(venue.name)}</h3>
+              <span class="rating"><i class="bi bi-cup-hot-fill"></i> ${esc(titleCase(venue.venue_type))}</span>
             </div>
-            <div class="meta"><span>${v.cat}</span><span class="dot"></span><span><i class="bi bi-geo-alt"></i> ${v.city}</span></div>
-            <p class="desc m-0">${v.desc}</p>
+            <div class="meta"><span>${esc(cuisines)}</span><span class="dot"></span><span><i class="bi bi-geo-alt"></i> ${esc(venue.city || '')}</span></div>
+            <p class="desc m-0">${esc(venue.description || facilities)}</p>
+            <div class="venue-preview-tags">${(venue.facilities || []).slice(0, 3).map((item) => `<span>${esc(item.name)}</span>`).join('')}</div>
             <div class="footer-row">
-              <span class="small text-muted-pro"><i class="bi bi-clock text-gold"></i> Tonight from 7:00 PM</span>
-              <span class="btn btn-gold btn-sm">Reserve</span>
+              <span class="small text-muted-pro"><i class="bi bi-egg-fried text-gold"></i> ${esc(facilities)}</span>
+              <span class="btn btn-gold btn-sm">View</span>
             </div>
           </div>
         </article>
@@ -46,18 +69,119 @@
     </div>`;
   }
 
-  function fill(id, arr) {
+  function fill(id, venues) {
     const el = document.getElementById(id);
-    if (el) el.innerHTML = arr.map(card).join("");
+    if (!el) return;
+    if (state.loading) {
+      el.innerHTML = Array.from({ length: 4 }).map(() => `
+        <div class="col-lg-3 col-md-6">
+          <article class="venue-card"><div class="img-wrap reservation-skeleton"></div><div class="body"><div class="reservation-skeleton-line"></div><div class="reservation-skeleton-line short"></div><div class="reservation-skeleton-line"></div></div></article>
+        </div>
+      `).join('');
+      return;
+    }
+    el.innerHTML = venues.map(card).join('');
   }
 
-  // Shuffle helper for variety
-  const shuf = (a) => [...a].sort(() => Math.random() - 0.5);
+  function render() {
+    const venues = state.venues;
+    const restaurants = venues.filter((venue) => venue.venue_type === 'restaurant');
+    const bars = venues.filter((venue) => ['bar', 'lounge'].includes(venue.venue_type));
+    const featured = venues.filter((venue) => venue.featured);
 
-  fill("featuredGrid",  shuf(venues).slice(0, 4));
-  fill("popularGrid",   shuf(venues).slice(0, 4));
-  fill("barsGrid",      venues.filter(v => /Bar|Lounge|Jazz|Whisky/i.test(v.cat)).slice(0, 4));
-  fill("trendingGrid",  shuf(venues).slice(0, 4));
-  fill("newGrid",       shuf(venues).slice(0, 4));
-  fill("nearbyGrid",    shuf(venues).slice(0, 4));
+    fill('featuredGrid', (featured.length ? featured : venues).slice(0, 8));
+    fill('popularGrid', (restaurants.length ? restaurants : venues).slice(0, 4));
+    fill('barsGrid', (bars.length ? bars : venues).slice(0, 4));
+    fill('trendingGrid', venues.slice(0, 4));
+    fill('newGrid', [...venues].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 4));
+    fill('nearbyGrid', venues.slice(0, 4));
+
+    $('[data-venue-count]')?.replaceChildren(document.createTextNode(state.loading ? 'Loading venues...' : `${venues.length} venues`));
+    $('[data-venue-empty]')?.toggleAttribute('hidden', state.loading || venues.length > 0);
+  }
+
+  function queryString() {
+    const params = new URLSearchParams({ per_page: '48' });
+    Object.entries(state.filters).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+    });
+    return params.toString();
+  }
+
+  async function loadVenues() {
+    state.loading = true;
+    render();
+    try {
+      const { data } = await api().fetch(`/venues?${queryString()}`, { skipAuthRedirect: true });
+      state.venues = Array.isArray(data) ? data : [];
+    } catch (err) {
+      state.venues = [];
+      window.tkToast?.(err?.message || 'Unable to load venues.', 'error');
+    } finally {
+      state.loading = false;
+      render();
+    }
+  }
+
+  function setOptions(selector, items, label) {
+    const select = $(selector);
+    if (!select) return;
+    select.innerHTML = `<option value="">${label}</option>${items.map((item) => `<option value="${esc(item.slug)}">${esc(item.name)}</option>`).join('')}`;
+  }
+
+  async function loadLookups() {
+    if (state.lookupsLoaded) return;
+    try {
+      const [cuisines, facilities] = await Promise.all([
+        api().fetch('/cuisine-types', { skipAuthRedirect: true }),
+        api().fetch('/venue-facilities', { skipAuthRedirect: true }),
+      ]);
+      setOptions('[data-venue-filter="cuisine"]', cuisines.data || [], 'All cuisines');
+      setOptions('[data-venue-filter="facility"]', facilities.data || [], 'All facilities');
+      state.lookupsLoaded = true;
+    } catch {
+      /* keep filters usable with base options */
+    }
+  }
+
+  function bindFilters() {
+    const form = $('[data-venue-search-form]');
+    form?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      state.filters.q = String(form.elements.q?.value || '').trim();
+      state.filters.city = String(form.elements.city?.value || '').trim();
+      loadVenues();
+    });
+
+    form?.addEventListener('input', (event) => {
+      if (!['q', 'city'].includes(event.target.name)) return;
+      clearTimeout(form._venueTimer);
+      form._venueTimer = setTimeout(() => {
+        state.filters[event.target.name] = String(event.target.value || '').trim();
+        loadVenues();
+      }, 250);
+    });
+
+    document.querySelectorAll('[data-venue-filter]').forEach((control) => {
+      control.addEventListener('change', () => {
+        state.filters[control.dataset.venueFilter] = control.value;
+        loadVenues();
+      });
+    });
+
+    $('[data-venue-clear]')?.addEventListener('click', () => {
+      state.filters = { q: '', city: '', venue_type: '', cuisine: '', facility: '', sort: 'featured' };
+      if (form) form.reset();
+      document.querySelectorAll('[data-venue-filter]').forEach((control) => {
+        control.value = control.dataset.venueFilter === 'sort' ? 'featured' : '';
+      });
+      loadVenues();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    bindFilters();
+    await loadLookups();
+    await loadVenues();
+  });
 })();

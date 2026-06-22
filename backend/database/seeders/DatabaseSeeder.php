@@ -24,6 +24,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call([
+            VenueFacilitySeeder::class,
+            CuisineTypeSeeder::class,
+            PaymentOptionSeeder::class,
+        ]);
+
         DB::transaction(function (): void {
             $password = Hash::make('Password123!');
 

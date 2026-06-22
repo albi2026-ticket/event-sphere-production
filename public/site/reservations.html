@@ -22,14 +22,14 @@
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#resNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
     <div class="collapse navbar-collapse" id="resNav">
       <ul class="navbar-nav mx-auto gap-1">
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="welcome.html">Welcome</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro active" href="reservations.html">Discover</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="venue.html">Venues</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="index.html"><i class="bi bi-ticket-perforated me-1"></i>Tickets</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="welcome.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="my-reservations.html" data-auth-user hidden>My Reservations</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="owner-venue.html" data-auth-role-nav="organizer" hidden>Venue Management</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="dashboard.html#profile" data-auth-user hidden>Profile</a></li>
       </ul>
       <div class="d-flex align-items-center gap-2">
-        <a class="btn btn-ghost d-none d-md-inline-flex" href="login.html">Sign in</a>
-        <a class="btn btn-gold" href="reservation-flow.html">Reserve</a>
+        <a class="btn btn-ghost" href="login.html" data-auth-guest>Login</a>
+        <a class="btn btn-gold" href="register.html" data-auth-guest>Register</a>
       </div>
     </div>
   </div>
@@ -47,8 +47,9 @@
     </div>
 
     <!-- SEARCH -->
-    <form class="res-search mx-auto" style="max-width:1080px" onsubmit="event.preventDefault();window.location='reservation-flow.html'">
-      <div class="field"><i class="bi bi-geo-alt"></i><input placeholder="Location — city, neighborhood" value="London, UK" /></div>
+    <form class="res-search mx-auto" style="max-width:1080px" data-venue-search-form>
+      <div class="field"><i class="bi bi-search"></i><input name="q" placeholder="Search venue, city, or cuisine" /></div>
+      <div class="field"><i class="bi bi-geo-alt"></i><input name="city" placeholder="City" /></div>
       <div class="field"><i class="bi bi-calendar3"></i><input type="date" /></div>
       <div class="field"><i class="bi bi-clock"></i>
         <select>
@@ -73,18 +74,66 @@
   </div>
 </section>
 
+<!-- FILTERS -->
+<section class="py-4" style="background:linear-gradient(180deg, rgba(212,167,90,0.04), transparent)">
+  <div class="container-xxl">
+    <div class="card-pro p-3 p-lg-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-6 col-xl-3">
+          <label class="form-label small text-muted-pro">Venue Type</label>
+          <select class="form-select" data-venue-filter="venue_type">
+            <option value="">All types</option>
+            <option value="restaurant">Restaurant</option>
+            <option value="bar">Bar</option>
+            <option value="lounge">Lounge</option>
+            <option value="cafe">Cafe</option>
+          </select>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <label class="form-label small text-muted-pro">Cuisine Type</label>
+          <select class="form-select" data-venue-filter="cuisine">
+            <option value="">All cuisines</option>
+          </select>
+        </div>
+        <div class="col-md-6 col-xl-3">
+          <label class="form-label small text-muted-pro">Facilities</label>
+          <select class="form-select" data-venue-filter="facility">
+            <option value="">All facilities</option>
+          </select>
+        </div>
+        <div class="col-md-6 col-xl-2">
+          <label class="form-label small text-muted-pro">Sort</label>
+          <select class="form-select" data-venue-filter="sort">
+            <option value="featured">Featured first</option>
+            <option value="az">A-Z</option>
+            <option value="newest">Newest</option>
+          </select>
+        </div>
+        <div class="col-xl-1 d-grid">
+          <button class="btn btn-gold-outline" type="button" data-venue-clear>Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- FEATURED -->
 <section class="py-5">
   <div class="container-xxl">
     <div class="section-head-res">
       <div>
-        <h2>Featured <span class="grad-res-text">Restaurants</span></h2>
-        <div class="sub">Hand-picked by our hospitality editors this week</div>
+        <h2>Featured <span class="grad-res-text">Venues</span></h2>
+        <div class="sub">Active venues ready for reservations</div>
       </div>
-      <a href="#" class="see-all">View all <i class="bi bi-arrow-right"></i></a>
+      <span class="see-all" data-venue-count>Loading venues...</span>
     </div>
 
     <div class="row g-4" id="featuredGrid"></div>
+    <div class="reservation-empty-state" data-venue-empty hidden>
+      <i class="bi bi-search"></i>
+      <h3>No venues found.</h3>
+      <p>Try another city, cuisine, venue type, or facility.</p>
+    </div>
   </div>
 </section>
 
@@ -157,7 +206,7 @@
         </div>
       </div>
       <div class="col-6 col-lg-2"><h6>Discover</h6><a href="reservations.html">Restaurants</a><a href="reservations.html">Bars</a><a href="reservations.html">Lounges</a><a href="reservations.html">Nightlife</a></div>
-      <div class="col-6 col-lg-2"><h6>For venues</h6><a href="#">List your venue</a><a href="#">Restaurant tools</a><a href="#">Resources</a></div>
+      <div class="col-6 col-lg-2"><h6>For venues</h6><a href="owner-venue.html">List your venue</a><a href="owner-venue.html">Restaurant tools</a><a href="#">Resources</a></div>
       <div class="col-6 col-lg-2"><h6>Company</h6><a href="welcome.html">Welcome</a><a href="#">About</a><a href="#">Press</a><a href="#">Careers</a></div>
       <div class="col-6 col-lg-2"><h6>Support</h6><a href="#">Help center</a><a href="#">Cancellation</a><a href="#">Terms</a><a href="#">Privacy</a></div>
     </div>
@@ -170,6 +219,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../assets/js/main.js"></script>
-<script src="../assets/js/reservations.js"></script>
+<script src="../assets/js/api/config.js"></script>
+<script src="../assets/js/api/api-client.js"></script>
+<script src="../assets/js/api/auth.js"></script>
+<script src="../assets/js/reservation.js"></script>
 </body>
 </html>

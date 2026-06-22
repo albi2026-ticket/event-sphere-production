@@ -19,7 +19,7 @@
   const headerHTML = `
 <nav class="navbar navbar-expand-lg nav-blur">
   <div class="container-xxl">
-    <a class="brand" href="index.html"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Event Sphere</a>
+    <a class="brand" href="welcome.html"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Event Sphere</a>
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
     <div class="collapse navbar-collapse" id="mainNav">
       <ul class="navbar-nav mx-auto gap-1">
@@ -64,7 +64,7 @@
   <div class="container-xxl">
     <div class="footer-top">
       <div class="footer-brand">
-        <a class="brand mb-3" href="index.html"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Event Sphere</a>
+        <a class="brand mb-3" href="welcome.html"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Event Sphere</a>
         <p>The premium marketplace to discover, buy, and manage tickets for live events with confidence.</p>
         <div class="footer-social" aria-label="Social links">
           <a href="https://www.facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook"><i class="bi bi-facebook"></i></a>

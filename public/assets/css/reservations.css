@@ -173,6 +173,35 @@
 .venue-card .rating { color: var(--res-gold); font-weight: 600; display:inline-flex; gap:4px; align-items:center; font-size:.85rem; }
 .venue-card .desc { color: var(--muted); font-size:.88rem; line-height: 1.5; }
 .venue-card .footer-row { margin-top: auto; display:flex; align-items:center; justify-content:space-between; gap:.5rem; padding-top:.4rem; }
+.venue-preview-tags { display:flex; flex-wrap:wrap; gap:6px; min-height:24px; }
+.venue-preview-tags span {
+  font-size:.72rem; padding:3px 8px; border-radius:999px;
+  background: rgba(255,255,255,.05); border:1px solid var(--border);
+  color: var(--muted);
+}
+.reservation-empty-state {
+  border: 1px dashed var(--border-strong);
+  border-radius: 22px;
+  padding: 2.5rem;
+  text-align: center;
+  color: var(--muted);
+  background: rgba(255,255,255,.03);
+}
+.reservation-empty-state i { color: var(--res-gold); font-size: 2rem; }
+.reservation-empty-state h3 {
+  color: var(--text);
+  font-family: var(--font-serif), var(--font-display);
+  margin: .75rem 0 .25rem;
+}
+.reservation-skeleton,
+.reservation-skeleton-line {
+  background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.1), rgba(255,255,255,.04));
+  background-size: 220% 100%;
+  animation: reservation-shimmer 1.2s infinite linear;
+}
+.reservation-skeleton-line { height: 14px; border-radius: 999px; }
+.reservation-skeleton-line.short { width: 62%; }
+@keyframes reservation-shimmer { to { background-position: -220% 0; } }
 
 /* ---- Section heading ---- */
 .section-head-res { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin-bottom: 1.4rem; }
@@ -293,9 +322,130 @@
 .gallery-grid img { width:100%; height:100%; object-fit:cover; cursor:pointer; transition: transform .4s ease; }
 .gallery-grid img:hover { transform: scale(1.05); }
 .gallery-grid .g-main { grid-row: 1 / 3; }
+.venue-detail-logo {
+  width: 76px; height: 76px; object-fit: cover; border-radius: 18px;
+  border: 1px solid rgba(212,167,90,.45); background: var(--card);
+}
 @media (max-width: 768px) {
   .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 220px 110px 110px; }
   .gallery-grid .g-main { grid-row: 1; grid-column: 1 / 3; }
+}
+
+/* ---- Owner venue management ---- */
+.owner-venue-summary {
+  display:grid;
+  grid-template-columns: minmax(260px, 420px) 1fr;
+}
+.owner-venue-summary .img-wrap { aspect-ratio: 16 / 9; }
+.owner-check-grid { display:grid; gap: 10px; }
+.owner-check {
+  display:flex; align-items:center; gap:10px;
+  padding: 10px 12px; border-radius: 14px;
+  background: rgba(255,255,255,.03); border: 1px solid var(--border);
+  color: var(--text); cursor:pointer;
+}
+.owner-check:hover { border-color: rgba(212,167,90,.45); }
+.owner-check .form-check-input { margin:0; }
+.owner-gallery-card img {
+  width:100%; aspect-ratio:16 / 9; object-fit:cover; border-radius:8px;
+}
+.reservation-stat {
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+}
+.reservation-stat span {
+  display:block;
+  color: var(--muted);
+  font-size:.82rem;
+  margin-bottom: 6px;
+}
+.reservation-stat strong {
+  color: var(--text);
+  font-size: 1.6rem;
+}
+.reservation-status {
+  display:inline-flex;
+  align-items:center;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  color:var(--muted);
+  font-size:.76rem;
+  font-weight:700;
+  text-transform:capitalize;
+}
+.reservation-status-pending { color:#fcd34d; background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.35); }
+.reservation-status-confirmed { color:#86efac; background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.35); }
+.reservation-status-completed { color:#93c5fd; background:rgba(59,130,246,.12); border-color:rgba(59,130,246,.35); }
+.reservation-status-cancelled { color:#fca5a5; background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.35); }
+.my-reservations-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(900px 500px at 12% -8%, rgba(124,92,255,.18), transparent 60%),
+    radial-gradient(760px 460px at 90% 4%, rgba(212,167,90,.14), transparent 62%);
+}
+.my-reservations-hero {
+  padding: 92px 0 34px;
+}
+.my-reservations-hero h1 {
+  font-family: var(--font-serif), var(--font-display);
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  font-weight: 600;
+  margin: 0 0 .35rem;
+}
+.reservation-section {
+  margin-top: 34px;
+}
+.my-reservation-card .img-wrap {
+  aspect-ratio: 16 / 10;
+}
+.my-reservation-actions {
+  align-items: stretch;
+}
+.my-reservation-actions .btn {
+  min-height: 38px;
+}
+.my-reservation-detail {
+  display: grid;
+  gap: 12px;
+}
+.my-reservation-detail img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+@media (max-width: 576px) {
+  .my-reservations-hero {
+    padding-top: 72px;
+  }
+  .my-reservation-actions {
+    flex-direction: column;
+  }
+  .my-reservation-actions .btn {
+    width: 100%;
+  }
+}
+.owner-hours-row {
+  display:grid;
+  grid-template-columns: 1.2fr .9fr .9fr auto;
+  align-items:center;
+}
+.owner-hours-day { display:flex; align-items:center; gap:8px; min-width:0; }
+.owner-hours-closed {
+  display:flex; align-items:center; gap:6px; margin:0; white-space:nowrap;
+}
+.owner-hours-closed .form-check-input { margin:0; }
+@media (max-width: 992px) {
+  .owner-venue-summary { grid-template-columns: 1fr; }
+}
+@media (max-width: 576px) {
+  .owner-hours-row { grid-template-columns: 1fr 1fr; }
+  .owner-hours-day,
+  .owner-hours-closed { grid-column: 1 / -1; }
 }
 
 /* ---- Confirmation ---- */
@@ -343,6 +493,11 @@
   box-shadow: var(--shadow-purple);
 }
 .map-placeholder .pin i { transform: rotate(45deg); color:#fff; }
+.map-placeholder .map-copy {
+  position:absolute; left:16px; bottom:14px; color:var(--muted);
+  font-size:.85rem; background:rgba(11,15,25,.68);
+  border:1px solid var(--border); border-radius:999px; padding:5px 10px;
+}
 
 /* ---- Loading shimmer line ---- */
 .divider-gold { height: 1px; background: linear-gradient(90deg, transparent, var(--res-gold), transparent); opacity:.4; margin: 2rem 0; }
