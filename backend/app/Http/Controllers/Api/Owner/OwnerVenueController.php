@@ -75,9 +75,8 @@ class OwnerVenueController extends Controller
         $payload['user_id'] = $ownerId;
 
         if (! $partial) {
-            $payload['status'] = $payload['status'] ?? Venue::STATUS_DRAFT;
+            $payload['status'] = $payload['status'] ?? Venue::STATUS_ACTIVE;
             $payload['featured'] = $payload['featured'] ?? false;
-            $payload['reservation_enabled'] = $payload['reservation_enabled'] ?? false;
             $payload['min_guests'] = $payload['min_guests'] ?? 1;
             $payload['max_guests'] = $payload['max_guests'] ?? 10;
             $payload['reservation_interval_minutes'] = $payload['reservation_interval_minutes'] ?? 30;

@@ -18,6 +18,23 @@ class StoreVenueRequest extends FormRequest
         return (bool) $this->user()?->isOrganizer();
     }
 
+    protected function prepareForValidation(): void
+    {
+        $payload = $this->all();
+        $payload['last_reservation_time'] = $this->normalizeTime($payload['last_reservation_time'] ?? null);
+
+        if (isset($payload['opening_hours']) && is_array($payload['opening_hours'])) {
+            $payload['opening_hours'] = collect($payload['opening_hours'])->map(function (array $hours): array {
+                $hours['opens_at'] = $this->normalizeTime($hours['opens_at'] ?? null);
+                $hours['closes_at'] = $this->normalizeTime($hours['closes_at'] ?? null);
+
+                return $hours;
+            })->all();
+        }
+
+        $this->replace($payload);
+    }
+
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
@@ -40,7 +57,6 @@ class StoreVenueRequest extends FormRequest
             'logo_image' => ['nullable', 'string', 'max:2048'],
             'status' => ['sometimes', Rule::in([Venue::STATUS_DRAFT, Venue::STATUS_ACTIVE, Venue::STATUS_INACTIVE])],
             'featured' => ['sometimes', 'boolean'],
-            'reservation_enabled' => ['sometimes', 'boolean'],
             'min_guests' => ['sometimes', 'integer', 'min:1', 'max:1000'],
             'max_guests' => ['sometimes', 'integer', 'min:1', 'max:1000', 'gte:min_guests'],
             'reservation_interval_minutes' => ['sometimes', 'integer', Rule::in([15, 30, 45, 60, 90, 120])],
@@ -63,5 +79,14 @@ class StoreVenueRequest extends FormRequest
             'opening_hours.*.closes_at' => ['nullable', 'date_format:H:i'],
             'opening_hours.*.is_closed' => ['sometimes', 'boolean'],
         ];
+    }
+
+    protected function normalizeTime(mixed $value): mixed
+    {
+        if (! is_string($value) || $value === '') {
+            return $value;
+        }
+
+        return preg_match('/^\d{2}:\d{2}:\d{2}$/', $value) ? substr($value, 0, 5) : $value;
     }
 }

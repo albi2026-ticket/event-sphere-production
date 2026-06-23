@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Venue — Event Sphere Reservations</title>
+<title>Restaurant & Bar — Event Sphere Reservations</title>
 <meta name="description" content="Reserve a table at Aurora Rooftop. Premium dining with panoramic skyline views." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,14 +21,14 @@
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#resNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
     <div class="collapse navbar-collapse" id="resNav">
       <ul class="navbar-nav mx-auto gap-1">
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="welcome.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="my-reservations.html" data-auth-user hidden>My Reservations</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="owner-venue.html" data-auth-role-nav="organizer" hidden>Venue Management</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="dashboard.html#profile" data-auth-user hidden>Profile</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="reservations.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="my-reservations.html" data-auth-role-nav="user" hidden>My Reservations</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="owner-venue.html" data-auth-role-nav="organizer" hidden>Restaurant & Bar Reservations</a></li>
       </ul>
       <div class="d-flex align-items-center gap-2">
         <a class="btn btn-ghost" href="login.html" data-auth-guest>Login</a>
         <a class="btn btn-gold" href="register.html" data-auth-guest>Register</a>
+        <a class="btn btn-gold" href="#" data-auth-user data-logout hidden>Logout</a>
       </div>
     </div>
   </div>
@@ -37,22 +37,22 @@
 <!-- Breadcrumb + title -->
 <div class="container-xxl pt-4">
   <div class="d-flex gap-2 small mb-3" style="color:var(--muted)">
-    <a href="reservations.html" class="text-gold">Reservations</a> <span>›</span> <span data-detail-city>City</span> <span>›</span> <span data-detail-name>Venue</span>
+    <a href="reservations.html" class="text-gold">Reservations</a> <span>›</span> <span data-detail-city>City</span> <span>›</span> <span data-detail-name>Restaurant / Bar</span>
   </div>
 
   <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
     <div>
       <div class="d-flex flex-wrap gap-2 mb-2">
-        <span class="chip-gold" data-detail-featured><i class="bi bi-award-fill"></i> Featured venue</span>
-        <span class="chip-available"><i class="bi bi-circle-fill" style="font-size:.4rem"></i> Reservations enabled</span>
+        <span class="chip-gold" data-detail-featured><i class="bi bi-award-fill"></i> Featured restaurant or bar</span>
+        <span class="chip-available"><i class="bi bi-circle-fill" style="font-size:.4rem"></i> Active restaurant or bar</span>
       </div>
       <div class="d-flex align-items-center gap-3 flex-wrap">
         <img data-detail-logo alt="" class="venue-detail-logo" hidden />
-        <h1 data-detail-title style="font-family:'Cormorant Garamond',serif;font-weight:600;margin:0">Venue</h1>
+        <h1 data-detail-title style="font-family:'Cormorant Garamond',serif;font-weight:600;margin:0">Restaurant / Bar</h1>
       </div>
       <div class="mt-2 d-flex flex-wrap align-items-center gap-3" style="color:var(--muted)">
-        <span class="rating text-gold"><i class="bi bi-cup-hot-fill"></i> <span data-detail-type>Venue</span></span>
-        <span data-detail-cuisines> Cuisine</span><span data-detail-location> City</span>
+        <span class="rating text-gold"><i class="bi bi-cup-hot-fill"></i> <span data-detail-type>Restaurant / Bar</span></span>
+        <span data-detail-cuisines hidden> Cuisine</span><span data-detail-location> City</span>
       </div>
     </div>
     <div class="d-flex gap-2">
@@ -80,32 +80,32 @@
       <!-- About -->
       <section class="mb-5">
         <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600">About</h3>
-        <p data-detail-description class="mb-0">Loading venue details...</p>
+        <p data-detail-description class="venue-detail-description mb-0">Loading restaurant or bar details...</p>
       </section>
 
-      <div class="divider-gold"></div>
+      <div class="divider-gold" data-detail-divider="facilities"></div>
 
       <!-- Facilities -->
-      <section class="mb-5">
+      <section class="mb-5" data-detail-section="facilities">
         <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600">Facilities</h3>
         <div class="row g-3 mt-2" data-detail-facilities></div>
       </section>
 
-      <div class="divider-gold"></div>
+      <div class="divider-gold" data-detail-divider="facilities"></div>
 
-      <section class="mb-5">
+      <section class="mb-5" data-detail-section="cuisines">
         <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600">Cuisines</h3>
         <div class="row g-3 mt-2" data-detail-cuisine-list></div>
       </section>
 
-      <div class="divider-gold"></div>
+      <div class="divider-gold" data-detail-divider="cuisines"></div>
 
-      <section class="mb-5">
+      <section class="mb-5" data-detail-section="payments">
         <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600">Payment Options</h3>
         <div class="row g-3 mt-2" data-detail-payments></div>
       </section>
 
-      <div class="divider-gold"></div>
+      <div class="divider-gold" data-detail-divider="payments"></div>
 
       <!-- Hours -->
       <section class="mb-5">
@@ -134,7 +134,7 @@
             <i class="bi bi-calendar-check text-gold fs-4"></i>
             <h5 class="m-0" style="font-family:'Cormorant Garamond',serif;font-weight:600">Reserve now</h5>
           </div>
-          <p class="text-muted-pro">Reservation booking is coming soon. You can review the venue details and contact the venue directly for now.</p>
+          <p class="text-muted-pro">Reserve your table in just a few clicks. Choose your preferred date, time, and party size to send a reservation request directly to the restaurant or bar. The owner will review your request and notify you once it has been confirmed.</p>
           <button class="btn btn-gold w-100 btn-lg" type="button" data-reserve-button>Reserve now <i class="bi bi-arrow-right ms-1"></i></button>
           <p class="text-center small mt-3 mb-0" style="color:var(--muted)">
             <i class="bi bi-shield-check text-gold"></i> No payment required for this reservation.
@@ -144,7 +144,7 @@
         <div class="card-pro p-3 mt-3" style="background:var(--card);border:1px solid var(--border);border-radius:18px">
           <div class="d-flex gap-3 align-items-center">
             <div style="width:42px;height:42px;border-radius:12px;background:var(--res-gold-soft);display:grid;place-items:center"><i class="bi bi-info-circle text-gold"></i></div>
-            <div><div class="fw-semibold" data-detail-side-title>Venue details</div><div class="small text-muted-pro" data-detail-side-copy>Loading profile...</div></div>
+            <div><div class="fw-semibold" data-detail-side-title>Restaurant & Bar details</div><div class="small text-muted-pro" data-detail-side-copy>Loading profile...</div></div>
           </div>
         </div>
       </div>
@@ -153,42 +153,90 @@
 </div>
 
 <div class="modal fade" id="reservationModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content dashboard-modal">
-      <div class="modal-header">
-        <h5 class="modal-title">Reserve a table</h5>
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content dashboard-modal reservation-booking-modal">
+      <div class="modal-header reservation-modal-head">
+        <div>
+          <span class="eyebrow-res">Event Sphere Reservations</span>
+          <h5 class="modal-title mt-2">Reserve a table</h5>
+          <p class="text-muted-pro mb-0" data-reservation-modal-venue>Choose your preferred party, date, and time.</p>
+        </div>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form data-reservation-form novalidate>
         <div class="modal-body">
           <div data-reservation-form-error></div>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label small text-muted-pro">Date</label>
-              <input class="form-control" name="reservation_date" type="date" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small text-muted-pro">Time</label>
-              <input class="form-control" name="reservation_time" type="time" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small text-muted-pro">Guests</label>
-              <input class="form-control" name="party_size" type="number" min="1" step="1" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small text-muted-pro">Phone</label>
-              <input class="form-control" name="phone" type="tel" placeholder="Optional">
-            </div>
-            <div class="col-12">
-              <label class="form-label small text-muted-pro">Notes</label>
-              <textarea class="form-control" name="notes" rows="3" placeholder="Optional requests"></textarea>
+          <div class="reservation-booking-flow">
+            <section class="booking-step">
+              <div class="booking-step-title">
+                <span>1</span>
+                <div>
+                  <h6>Guests</h6>
+                  <p>Choose your party size</p>
+                </div>
+              </div>
+              <input name="party_size" type="hidden" required>
+              <div class="reservation-picker" data-picker="guests">
+                <button class="reservation-picker-trigger" type="button" data-picker-trigger="guests" aria-expanded="false">
+                  <span data-picker-label="guests">Guests</span>
+                  <i class="bi bi-chevron-down"></i>
+                </button>
+                <div class="reservation-picker-panel" data-picker-panel="guests"></div>
+              </div>
+            </section>
+
+            <section class="booking-step">
+              <div class="booking-step-title">
+                <span>2</span>
+                <div>
+                  <h6>Date</h6>
+                  <p>Select a reservation date</p>
+                </div>
+              </div>
+              <input name="reservation_date" type="hidden" required>
+              <div class="reservation-picker" data-picker="date">
+                <button class="reservation-picker-trigger" type="button" data-picker-trigger="date" aria-expanded="false">
+                  <span data-picker-label="date">Date</span>
+                  <i class="bi bi-chevron-down"></i>
+                </button>
+                <div class="reservation-picker-panel reservation-picker-panel-wide" data-picker-panel="date"></div>
+              </div>
+            </section>
+
+            <section class="booking-step">
+              <div class="booking-step-title">
+                <span>3</span>
+                <div>
+                  <h6>Time</h6>
+                  <p>Pick an available request time</p>
+                </div>
+              </div>
+              <input name="reservation_time" type="hidden" required>
+              <div class="reservation-picker" data-picker="time">
+                <button class="reservation-picker-trigger" type="button" data-picker-trigger="time" aria-expanded="false">
+                  <span data-picker-label="time">Time</span>
+                  <i class="bi bi-chevron-down"></i>
+                </button>
+                <div class="reservation-picker-panel reservation-picker-panel-wide" data-picker-panel="time"></div>
+              </div>
+            </section>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small text-muted-pro">Phone</label>
+                <input class="form-control" name="phone" type="tel" placeholder="Optional">
+              </div>
+              <div class="col-12">
+                <label class="form-label small text-muted-pro">Notes</label>
+                <textarea class="form-control" name="notes" rows="3" placeholder="Optional requests"></textarea>
+              </div>
             </div>
           </div>
           <p class="small text-muted-pro mt-3 mb-0">We will use the email from your Event Sphere account.</p>
         </div>
         <div class="modal-footer border-pro">
           <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-gold" data-reservation-submit>Send request</button>
+          <button type="submit" class="btn btn-gold btn-lg" data-reservation-submit>Send Reservation Request</button>
         </div>
       </form>
     </div>

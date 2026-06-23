@@ -20,6 +20,8 @@ class ReservationResource extends JsonResource
             'reservation_time' => $this->reservation_time,
             'status' => $this->status,
             'notes' => $this->notes,
+            'cancellation_reason' => $this->cancellation_reason,
+            'cancelled_at' => $this->cancelled_at?->toIso8601String(),
             'venue' => $this->whenLoaded('venue', fn () => [
                 'id' => $this->venue->id,
                 'name' => $this->venue->name,

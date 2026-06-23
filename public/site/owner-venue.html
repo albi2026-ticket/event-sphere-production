@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Venue Profile — Event Sphere Reservations</title>
+<title>Restaurant & Bar Profile — Event Sphere Reservations</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
@@ -20,15 +20,14 @@
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#resNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
     <div class="collapse navbar-collapse" id="resNav">
       <ul class="navbar-nav mx-auto gap-1">
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="welcome.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="my-reservations.html" data-auth-user hidden>My Reservations</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro active" href="owner-venue.html" data-auth-role-nav="organizer" hidden>Venue Management</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="dashboard.html#profile" data-auth-user hidden>Profile</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="reservations.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="my-reservations.html" data-auth-role-nav="user" hidden>My Reservations</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro active" href="owner-venue.html" data-auth-role-nav="organizer" hidden>Restaurant & Bar Reservations</a></li>
       </ul>
       <div class="d-flex align-items-center gap-2">
-        <button class="icon-btn" data-theme-toggle><i class="bi bi-sun" data-theme-icon></i></button>
         <a class="btn btn-ghost" href="login.html" data-auth-guest>Login</a>
         <a class="btn btn-gold" href="register.html" data-auth-guest>Register</a>
+        <a class="btn btn-gold" href="#" data-auth-user data-logout hidden>Logout</a>
       </div>
     </div>
   </div>
@@ -37,27 +36,80 @@
 <main class="container-xxl py-5" data-owner-venue-page>
   <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
     <div>
-      <span class="eyebrow-res"><i class="bi bi-shop"></i> Owner venue profile</span>
-      <h1 class="mt-3 mb-2" style="font-family:'Cormorant Garamond',serif;font-weight:600">Manage your venue</h1>
+      <span class="eyebrow-res"><i class="bi bi-shop"></i> Restaurant / Bar owner profile</span>
+      <h1 class="mt-3 mb-2" style="font-family:'Cormorant Garamond',serif;font-weight:600">Manage your restaurant or bar</h1>
       <p class="text-muted-pro mb-0">Keep your reservation profile, gallery, amenities, payments, and hours current.</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
       <a class="btn btn-gold-outline" href="reservations.html"><i class="bi bi-search me-1"></i>Preview discovery</a>
-      <button class="btn btn-gold" type="button" data-owner-save><i class="bi bi-check2-circle me-1"></i>Save venue</button>
+      <button class="btn btn-gold" type="button" data-owner-save><i class="bi bi-check2-circle me-1"></i>Save profile</button>
     </div>
   </div>
 
   <div data-owner-alert></div>
 
+  <section class="owner-completion-card mb-4" data-owner-completion hidden>
+    <div class="owner-completion-main">
+      <div>
+        <span class="eyebrow-res"><i class="bi bi-clipboard2-check"></i> Profile readiness</span>
+        <h2>Profile Completion</h2>
+        <p class="text-muted-pro mb-0">Complete the essentials that help guests trust and book your restaurant or bar.</p>
+      </div>
+      <div class="owner-completion-score">
+        <strong data-owner-completion-percent>0%</strong>
+        <span>Complete</span>
+      </div>
+    </div>
+    <div class="owner-completion-progress" aria-hidden="true">
+      <span data-owner-completion-bar style="width:0%"></span>
+    </div>
+    <div class="owner-completion-missing" data-owner-completion-missing></div>
+  </section>
+
+  <section class="row g-3 mb-4 owner-dashboard-stats" data-owner-reservation-stats>
+    <div class="col-sm-6 col-xl-3">
+      <div class="reservation-stat reservation-stat-pending">
+        <div class="reservation-stat-icon"><i class="bi bi-hourglass-split"></i></div>
+        <span>Pending Reservations</span>
+        <strong>0</strong>
+        <small>Requests waiting for your review</small>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="reservation-stat reservation-stat-confirmed">
+        <div class="reservation-stat-icon"><i class="bi bi-patch-check"></i></div>
+        <span>Confirmed Reservations</span>
+        <strong>0</strong>
+        <small>Approved upcoming bookings</small>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="reservation-stat reservation-stat-cancelled">
+        <div class="reservation-stat-icon"><i class="bi bi-x-circle"></i></div>
+        <span>Cancelled Reservations</span>
+        <strong>0</strong>
+        <small>Requests that were cancelled</small>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="reservation-stat reservation-stat-today">
+        <div class="reservation-stat-icon"><i class="bi bi-calendar2-check"></i></div>
+        <span>Today's Reservations</span>
+        <strong>0</strong>
+        <small>Guest arrivals scheduled today</small>
+      </div>
+    </div>
+  </section>
+
   <section class="card-pro p-4 mb-4" data-owner-empty hidden style="background:var(--card);border:1px solid var(--border);border-radius:22px">
     <div class="row g-4 align-items-center">
       <div class="col-lg-8">
-        <span class="chip-gold mb-3"><i class="bi bi-stars"></i> Create Venue</span>
-        <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600">No venue profile yet</h3>
-        <p class="text-muted-pro mb-0">Create your restaurant, bar, lounge, or cafe profile so guests can discover it when reservations launch.</p>
+        <span class="chip-gold mb-3"><i class="bi bi-stars"></i> Add Restaurant or Bar</span>
+        <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600">No restaurant or bar profile yet</h3>
+        <p class="text-muted-pro mb-0">Add your restaurant, bar, lounge, or café profile so guests can discover it when reservations launch.</p>
       </div>
       <div class="col-lg-4 text-lg-end">
-        <button class="btn btn-gold btn-lg" type="button" data-owner-start-create><i class="bi bi-plus-lg me-1"></i>Create venue</button>
+        <button class="btn btn-gold btn-lg" type="button" data-owner-start-create><i class="bi bi-plus-lg me-1"></i>Add restaurant or bar</button>
       </div>
     </div>
   </section>
@@ -68,16 +120,23 @@
         <img data-owner-cover alt="" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1000&q=80" />
         <div class="badges">
           <span class="chip-available" data-owner-status>Draft</span>
-          <span class="fav"><i class="bi bi-building"></i></span>
+          <span class="owner-preview-badge"><i class="bi bi-building"></i></span>
         </div>
       </div>
       <div class="body">
+        <span class="eyebrow-res"><i class="bi bi-window"></i> Public page preview</span>
         <div class="d-flex justify-content-between gap-2">
-          <h3 class="title m-0" data-owner-title>Venue profile</h3>
-          <span class="rating"><i class="bi bi-cup-hot-fill"></i> <span data-owner-type>Venue</span></span>
+          <h3 class="title m-0" data-owner-title>Restaurant / Bar profile</h3>
+          <span class="rating"><i class="bi bi-cup-hot-fill"></i> <span data-owner-type>Restaurant / Bar</span></span>
         </div>
         <div class="meta"><span data-owner-location>City</span><span class="dot"></span><span data-owner-image-count>0 images</span></div>
         <p class="desc m-0" data-owner-description>Complete your profile details below.</p>
+        <div class="owner-preview-actions">
+          <a class="btn btn-gold" href="#" target="_blank" rel="noopener" data-owner-public-link>
+            <i class="bi bi-box-arrow-up-right me-1"></i>View Public Page
+          </a>
+          <span class="small text-muted-pro" data-owner-public-note>Opens the public restaurant or bar page.</span>
+        </div>
       </div>
     </div>
   </section>
@@ -86,16 +145,9 @@
     <div class="section-head-res">
       <div>
         <h2>Reservations</h2>
-        <div class="sub">Manage guest reservations for your venues</div>
+        <div class="sub">Manage guest reservations for your restaurants and bars</div>
       </div>
       <button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservations-refresh><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
-    </div>
-
-    <div class="row g-3 mb-4" data-owner-reservation-stats>
-      <div class="col-md-6 col-xl-3"><div class="reservation-stat"><span>Today's Reservations</span><strong>0</strong></div></div>
-      <div class="col-md-6 col-xl-3"><div class="reservation-stat"><span>Upcoming Reservations</span><strong>0</strong></div></div>
-      <div class="col-md-6 col-xl-3"><div class="reservation-stat"><span>Completed Reservations</span><strong>0</strong></div></div>
-      <div class="col-md-6 col-xl-3"><div class="reservation-stat"><span>Cancelled Reservations</span><strong>0</strong></div></div>
     </div>
 
     <div class="row g-3 align-items-end mb-3">
@@ -124,9 +176,9 @@
         <input class="form-control" type="date" data-owner-reservation-filter="date">
       </div>
       <div class="col-md-6 col-xl-2">
-        <label class="form-label small text-muted-pro">Venue</label>
+        <label class="form-label small text-muted-pro">Restaurant / Bar</label>
         <select class="form-select" data-owner-reservation-filter="venue_id">
-          <option value="">All venues</option>
+          <option value="">All restaurants & bars</option>
         </select>
       </div>
       <div class="col-xl-1 d-grid">
@@ -134,23 +186,21 @@
       </div>
     </div>
 
-    <div class="table-responsive">
-      <table class="table table-pro align-middle">
+    <div class="table-responsive owner-reservations-responsive">
+      <table class="table table-pro owner-reservations-table align-middle">
         <thead>
           <tr>
-            <th>ID</th>
             <th>Guest</th>
             <th>Phone</th>
-            <th>Party</th>
             <th>Date</th>
             <th>Time</th>
+            <th>Guests</th>
             <th>Status</th>
-            <th>Venue</th>
-            <th></th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody data-owner-reservations-table>
-          <tr><td colspan="9"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading reservations...</span></div></td></tr>
+          <tr><td colspan="7"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading reservations...</span></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -166,8 +216,8 @@
           </div>
           <div class="row g-3">
             <div class="col-md-8"><label class="form-label">Name</label><input class="form-control" name="name" required maxlength="255" /></div>
-            <div class="col-md-4"><label class="form-label">Venue Type</label><select class="form-select" name="venue_type" required><option value="">Select type</option><option value="restaurant">Restaurant</option><option value="bar">Bar</option><option value="lounge">Lounge</option><option value="cafe">Cafe</option></select></div>
-            <div class="col-md-4"><label class="form-label">Status</label><select class="form-select" name="status"><option value="draft">Draft</option><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+            <div class="col-md-4"><label class="form-label">Restaurant / Bar Type</label><select class="form-select" name="venue_type" required><option value="">Select type</option><option value="restaurant">Restaurant</option><option value="bar">Bar</option><option value="lounge">Lounge</option><option value="cafe">Cafe</option></select></div>
+            <div class="col-md-4"><label class="form-label">Status</label><select class="form-select" name="status"><option value="active">Active</option><option value="draft">Draft</option><option value="inactive">Inactive</option></select></div>
             <div class="col-md-4"><label class="form-label">Phone</label><input class="form-control" name="phone" maxlength="255" /></div>
             <div class="col-md-4"><label class="form-label">Email</label><input class="form-control" name="email" type="email" maxlength="255" /></div>
             <div class="col-12"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="4"></textarea></div>
@@ -182,7 +232,7 @@
 
         <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
           <div class="section-head-res mb-3">
-            <div><h2>Gallery</h2><div class="sub">Upload, delete, and reorder venue images</div></div>
+            <div><h2>Gallery</h2><div class="sub">Upload, delete, and reorder restaurant or bar images</div></div>
           </div>
           <div class="card-pro p-3 text-center mb-3" style="border-style:dashed">
             <i class="bi bi-cloud-arrow-up fs-3 text-muted-pro"></i>
@@ -203,16 +253,13 @@
 
       <div class="col-xl-4">
         <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Reservation Settings</h4>
-          <div class="form-check form-switch mt-3">
-            <input class="form-check-input" type="checkbox" role="switch" name="reservation_enabled" id="reservationEnabled">
-            <label class="form-check-label" for="reservationEnabled">Reservations enabled</label>
-          </div>
+          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Guest Settings</h4>
+          <p class="small text-muted-pro mb-0">Active restaurants and bars are available publicly for reservations.</p>
           <div class="row g-3 mt-1">
             <div class="col-6"><label class="form-label">Min guests</label><input class="form-control" name="min_guests" type="number" min="1" value="1" /></div>
             <div class="col-6"><label class="form-label">Max guests</label><input class="form-control" name="max_guests" type="number" min="1" value="10" /></div>
             <div class="col-12"><label class="form-label">Interval</label><select class="form-select" name="reservation_interval_minutes"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option><option value="90">90 minutes</option><option value="120">120 minutes</option></select></div>
-            <div class="col-12"><label class="form-label">Last reservation time</label><input class="form-control" name="last_reservation_time" type="time" /></div>
+            <div class="col-12"><label class="form-label">Last reservation time</label><select class="form-select owner-time-select" name="last_reservation_time" data-owner-time-select></select></div>
           </div>
         </section>
 
@@ -241,9 +288,9 @@
         </section>
 
         <section class="card-pro p-4 mb-4 border-danger-subtle" data-owner-delete-section hidden style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Delete Venue</h4>
-          <p class="small text-muted-pro">This removes the venue profile and gallery.</p>
-          <button class="btn btn-outline-danger w-100" type="button" data-owner-delete-open><i class="bi bi-trash me-1"></i>Delete venue</button>
+          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Delete Restaurant / Bar</h4>
+          <p class="small text-muted-pro">This removes the restaurant or bar profile and gallery.</p>
+          <button class="btn btn-outline-danger w-100" type="button" data-owner-delete-open><i class="bi bi-trash me-1"></i>Delete profile</button>
         </section>
       </div>
     </div>
@@ -254,15 +301,15 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content dashboard-modal">
       <div class="modal-header">
-        <h5 class="modal-title">Delete venue?</h5>
+        <h5 class="modal-title">Delete restaurant or bar?</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <p class="mb-0 text-muted-pro">This action removes your venue profile and gallery. It cannot be undone.</p>
+        <p class="mb-0 text-muted-pro">This action removes your restaurant or bar profile and gallery. It cannot be undone.</p>
       </div>
       <div class="modal-footer border-pro">
         <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-danger" data-owner-delete-confirm>Delete venue</button>
+        <button type="button" class="btn btn-danger" data-owner-delete-confirm>Delete profile</button>
       </div>
     </div>
   </div>

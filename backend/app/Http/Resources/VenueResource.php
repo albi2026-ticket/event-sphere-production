@@ -38,11 +38,10 @@ class VenueResource extends JsonResource
             'payment_options' => PaymentOptionResource::collection($this->whenLoaded('paymentOptions')),
             'opening_hours' => VenueOpeningHourResource::collection($this->whenLoaded('openingHours')),
             'reservation_settings' => [
-                'reservation_enabled' => $this->reservation_enabled,
                 'min_guests' => $this->min_guests,
                 'max_guests' => $this->max_guests,
                 'reservation_interval_minutes' => $this->reservation_interval_minutes,
-                'last_reservation_time' => $this->last_reservation_time,
+                'last_reservation_time' => $this->formatTime($this->last_reservation_time),
             ],
             'social_links' => [
                 'facebook_url' => $this->facebook_url,
@@ -52,5 +51,14 @@ class VenueResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
+    }
+
+    protected function formatTime(mixed $value): ?string
+    {
+        if (! $value) {
+            return null;
+        }
+
+        return substr((string) $value, 0, 5);
     }
 }

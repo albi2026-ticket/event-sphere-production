@@ -42,6 +42,8 @@ class PasswordResetTest extends TestCase
             $this->assertSame('/site/reset-password.html', $parts['path'] ?? null);
             $this->assertSame($notification->token, $query['token'] ?? null);
             $this->assertSame($user->email, $query['email'] ?? null);
+            $this->assertStringContainsString('token=', $resetUrl);
+            $this->assertStringContainsString('email='.rawurlencode($user->email), $resetUrl);
 
             return true;
         });

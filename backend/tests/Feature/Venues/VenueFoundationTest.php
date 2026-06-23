@@ -29,12 +29,10 @@ class VenueFoundationTest extends TestCase
             'description' => 'Late-night lounge with dinner service.',
             'city' => 'Pristina',
             'country' => 'Kosovo',
-            'status' => Venue::STATUS_ACTIVE,
-            'reservation_enabled' => true,
             'min_guests' => 2,
             'max_guests' => 8,
             'reservation_interval_minutes' => 30,
-            'last_reservation_time' => '22:30',
+            'last_reservation_time' => '22:30:00',
             'facility_ids' => [$facility->id],
             'cuisine_type_ids' => [$cuisine->id],
             'payment_option_ids' => [$paymentOption->id],
@@ -42,7 +40,7 @@ class VenueFoundationTest extends TestCase
                 ['image_path' => 'venues/luna/gallery-1.jpg', 'sort_order' => 1],
             ],
             'opening_hours' => [
-                ['day_of_week' => 1, 'opens_at' => '10:00', 'closes_at' => '23:00', 'is_closed' => false],
+                ['day_of_week' => 1, 'opens_at' => '10:00:00', 'closes_at' => '23:00:00', 'is_closed' => false],
             ],
         ]);
 
@@ -50,20 +48,42 @@ class VenueFoundationTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.name', 'Luna Lounge')
             ->assertJsonPath('data.slug', 'luna-lounge')
-            ->assertJsonPath('data.reservation_settings.reservation_enabled', true)
+            ->assertJsonPath('data.status', Venue::STATUS_ACTIVE)
+            ->assertJsonPath('data.reservation_settings.last_reservation_time', '22:30')
             ->assertJsonPath('data.facilities.0.slug', 'wifi')
             ->assertJsonPath('data.cuisine_types.0.slug', 'italian')
             ->assertJsonPath('data.payment_options.0.slug', 'cash')
             ->assertJsonPath('data.images.0.image_path', 'venues/luna/gallery-1.jpg')
-            ->assertJsonPath('data.opening_hours.0.day_of_week', 1);
+            ->assertJsonPath('data.opening_hours.0.day_of_week', 1)
+            ->assertJsonPath('data.opening_hours.0.opens_at', '10:00')
+            ->assertJsonPath('data.opening_hours.0.closes_at', '23:00');
 
         $this->assertDatabaseHas('venues', [
             'user_id' => $owner->id,
             'slug' => 'luna-lounge',
+            'status' => Venue::STATUS_ACTIVE,
         ]);
+
+        $this->actingAs($owner, 'sanctum')
+            ->putJson('/api/owner/venues/luna-lounge', [
+                'name' => 'Luna Lounge',
+                'venue_type' => Venue::TYPE_LOUNGE,
+                'city' => 'Pristina',
+                'last_reservation_time' => '22:30:00',
+                'opening_hours' => [
+                    ['day_of_week' => 1, 'opens_at' => '10:00:00', 'closes_at' => '23:00:00', 'is_closed' => false],
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.reservation_settings.last_reservation_time', '22:30')
+            ->assertJsonPath('data.opening_hours.0.opens_at', '10:00');
+
+        $this->getJson('/api/venues/luna-lounge')
+            ->assertOk()
+            ->assertJsonPath('data.slug', 'luna-lounge');
     }
 
-    public function test_public_venue_endpoint_only_exposes_active_venues(): void
+    public function test_public_venue_endpoint_exposes_active_venues_only(): void
     {
         $owner = $this->organizer();
         $active = Venue::query()->create([
@@ -73,7 +93,6 @@ class VenueFoundationTest extends TestCase
             'venue_type' => Venue::TYPE_CAFE,
             'city' => 'Pristina',
             'status' => Venue::STATUS_ACTIVE,
-            'reservation_enabled' => true,
         ]);
 
         Venue::query()->create([
@@ -83,17 +102,6 @@ class VenueFoundationTest extends TestCase
             'venue_type' => Venue::TYPE_CAFE,
             'city' => 'Pristina',
             'status' => Venue::STATUS_DRAFT,
-            'reservation_enabled' => true,
-        ]);
-
-        Venue::query()->create([
-            'user_id' => $owner->id,
-            'name' => 'Disabled Cafe',
-            'slug' => 'disabled-cafe',
-            'venue_type' => Venue::TYPE_CAFE,
-            'city' => 'Pristina',
-            'status' => Venue::STATUS_ACTIVE,
-            'reservation_enabled' => false,
         ]);
 
         $response = $this->getJson('/api/venues');
@@ -104,7 +112,6 @@ class VenueFoundationTest extends TestCase
         $this->assertCount(1, $ids);
 
         $this->getJson('/api/venues/draft-cafe')->assertNotFound();
-        $this->getJson('/api/venues/disabled-cafe')->assertNotFound();
     }
 
     public function test_public_venues_can_be_searched_filtered_and_sorted(): void
@@ -121,7 +128,6 @@ class VenueFoundationTest extends TestCase
             'venue_type' => Venue::TYPE_RESTAURANT,
             'city' => 'Pristina',
             'status' => Venue::STATUS_ACTIVE,
-            'reservation_enabled' => true,
             'featured' => false,
         ]);
         $bella = Venue::query()->create([
@@ -131,7 +137,6 @@ class VenueFoundationTest extends TestCase
             'venue_type' => Venue::TYPE_CAFE,
             'city' => 'Prizren',
             'status' => Venue::STATUS_ACTIVE,
-            'reservation_enabled' => true,
             'featured' => true,
         ]);
 
@@ -143,6 +148,21 @@ class VenueFoundationTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.slug', 'zen-table');
+
+        $this->getJson('/api/venues?q=ZEN')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.slug', 'zen-table');
+
+        $this->getJson('/api/venues?q=prizren')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.slug', 'bella-cafe');
+
+        $this->getJson('/api/venues?q=CAFE')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.slug', 'bella-cafe');
 
         $this->getJson('/api/venues?venue_type=cafe&city=Prizren')
             ->assertOk()

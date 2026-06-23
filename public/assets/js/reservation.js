@@ -13,9 +13,10 @@
     venues: [],
     loading: false,
     lookupsLoaded: false,
+    discoveryView: 'featured',
+    discoveryExpanded: false,
     filters: {
       q: '',
-      city: '',
       venue_type: '',
       cuisine: '',
       facility: '',
@@ -28,7 +29,7 @@
   }
 
   function titleCase(value) {
-    return String(value || 'Venue').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+    return String(value || 'Restaurant / Bar').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
   }
 
   function preview(items, fallback) {
@@ -48,7 +49,6 @@
             <img src="${esc(venueImage(venue))}" alt="${esc(venue.name)}" loading="lazy" />
             <div class="badges">
               ${venue.featured ? '<span class="chip-available"><i class="bi bi-stars"></i> Featured</span>' : '<span class="chip-available"><i class="bi bi-circle-fill" style="font-size:.4rem"></i> Reservations</span>'}
-              <span class="fav"><i class="bi bi-heart"></i></span>
             </div>
           </div>
           <div class="body">
@@ -57,7 +57,6 @@
               <span class="rating"><i class="bi bi-cup-hot-fill"></i> ${esc(titleCase(venue.venue_type))}</span>
             </div>
             <div class="meta"><span>${esc(cuisines)}</span><span class="dot"></span><span><i class="bi bi-geo-alt"></i> ${esc(venue.city || '')}</span></div>
-            <p class="desc m-0">${esc(venue.description || facilities)}</p>
             <div class="venue-preview-tags">${(venue.facilities || []).slice(0, 3).map((item) => `<span>${esc(item.name)}</span>`).join('')}</div>
             <div class="footer-row">
               <span class="small text-muted-pro"><i class="bi bi-egg-fried text-gold"></i> ${esc(facilities)}</span>
@@ -83,21 +82,80 @@
     el.innerHTML = venues.map(card).join('');
   }
 
+  function newestFirst(venues) {
+    return [...venues].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  }
+
+  function discoveryVenues(venues) {
+    if (state.discoveryView === 'new') {
+      return newestFirst(venues);
+    }
+
+    if (state.discoveryView === 'popular') {
+      return venues;
+    }
+
+    const featured = venues.filter((venue) => venue.featured);
+    return featured.length ? featured : venues;
+  }
+
+  function updateDiscoveryHeading(count) {
+    const title = $('[data-main-discovery-title]');
+    const subtitle = $('[data-main-discovery-subtitle]');
+    const emptyTitle = $('[data-venue-empty-title]');
+    const emptyCopy = $('[data-venue-empty-copy]');
+
+    const headings = {
+      featured: {
+        title: 'Featured <span class="grad-res-text">Restaurants & Bars</span>',
+        subtitle: 'Discover our hand-picked restaurants and bars.',
+      },
+      popular: {
+        title: 'Popular <span class="grad-res-text">This Week</span>',
+        subtitle: 'Explore places guests are discovering right now.',
+      },
+      new: {
+        title: 'New on <span class="grad-res-text">Event Sphere</span>',
+        subtitle: 'Freshly added restaurants, bars, lounges, and cafés.',
+      },
+    };
+
+    const current = headings[state.discoveryView] || headings.featured;
+    if (title) title.innerHTML = current.title;
+    if (subtitle) subtitle.textContent = current.subtitle;
+
+    if (emptyTitle) {
+      emptyTitle.textContent = state.filters.q
+        ? 'No matching places found for your search.'
+        : 'No Restaurants & Bars found.';
+    }
+    if (emptyCopy) {
+      emptyCopy.textContent = state.filters.q
+        ? 'Try searching another restaurant, bar, café, lounge, or city.'
+        : 'Check back soon for new restaurants and bars.';
+    }
+
+    $('[data-venue-count]')?.replaceChildren(document.createTextNode(
+      state.loading ? 'Loading restaurants & bars...' : `${count} restaurants & bars`
+    ));
+  }
+
   function render() {
     const venues = state.venues;
-    const restaurants = venues.filter((venue) => venue.venue_type === 'restaurant');
-    const bars = venues.filter((venue) => ['bar', 'lounge'].includes(venue.venue_type));
-    const featured = venues.filter((venue) => venue.featured);
+    const mainVenues = discoveryVenues(venues);
+    const visibleMainVenues = state.discoveryExpanded ? mainVenues : mainVenues.slice(0, 8);
 
-    fill('featuredGrid', (featured.length ? featured : venues).slice(0, 8));
-    fill('popularGrid', (restaurants.length ? restaurants : venues).slice(0, 4));
-    fill('barsGrid', (bars.length ? bars : venues).slice(0, 4));
-    fill('trendingGrid', venues.slice(0, 4));
-    fill('newGrid', [...venues].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 4));
-    fill('nearbyGrid', venues.slice(0, 4));
+    fill('featuredGrid', visibleMainVenues);
+    fill('popularGrid', venues.slice(0, 4));
+    fill('newGrid', newestFirst(venues).slice(0, 4));
 
-    $('[data-venue-count]')?.replaceChildren(document.createTextNode(state.loading ? 'Loading venues...' : `${venues.length} venues`));
-    $('[data-venue-empty]')?.toggleAttribute('hidden', state.loading || venues.length > 0);
+    updateDiscoveryHeading(mainVenues.length);
+    $('[data-venue-empty]')?.toggleAttribute('hidden', state.loading || mainVenues.length > 0);
+
+    document.querySelectorAll('[data-discovery-view]').forEach((button) => {
+      button.classList.toggle('active', button.dataset.discoveryView === state.discoveryView);
+      button.setAttribute('aria-pressed', button.dataset.discoveryView === state.discoveryView ? 'true' : 'false');
+    });
   }
 
   function queryString() {
@@ -116,7 +174,7 @@
       state.venues = Array.isArray(data) ? data : [];
     } catch (err) {
       state.venues = [];
-      window.tkToast?.(err?.message || 'Unable to load venues.', 'error');
+      window.tkToast?.(err?.message || 'Unable to load restaurants & bars.', 'error');
     } finally {
       state.loading = false;
       render();
@@ -149,15 +207,14 @@
     form?.addEventListener('submit', (event) => {
       event.preventDefault();
       state.filters.q = String(form.elements.q?.value || '').trim();
-      state.filters.city = String(form.elements.city?.value || '').trim();
       loadVenues();
     });
 
     form?.addEventListener('input', (event) => {
-      if (!['q', 'city'].includes(event.target.name)) return;
+      if (event.target.name !== 'q') return;
       clearTimeout(form._venueTimer);
       form._venueTimer = setTimeout(() => {
-        state.filters[event.target.name] = String(event.target.value || '').trim();
+        state.filters.q = String(event.target.value || '').trim();
         loadVenues();
       }, 250);
     });
@@ -170,12 +227,28 @@
     });
 
     $('[data-venue-clear]')?.addEventListener('click', () => {
-      state.filters = { q: '', city: '', venue_type: '', cuisine: '', facility: '', sort: 'featured' };
+      state.filters = { q: '', venue_type: '', cuisine: '', facility: '', sort: 'featured' };
+      state.discoveryView = 'featured';
+      state.discoveryExpanded = false;
       if (form) form.reset();
       document.querySelectorAll('[data-venue-filter]').forEach((control) => {
         control.value = control.dataset.venueFilter === 'sort' ? 'featured' : '';
       });
       loadVenues();
+    });
+
+    document.querySelectorAll('[data-discovery-view]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const view = button.dataset.discoveryView || 'featured';
+        state.discoveryView = view;
+        state.discoveryExpanded = true;
+        state.filters.sort = view === 'new' ? 'newest' : 'featured';
+        const sortControl = $('[data-venue-filter="sort"]');
+        if (sortControl) sortControl.value = state.filters.sort;
+        loadVenues().then(() => {
+          $('[data-main-discovery-title]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
     });
   }
 

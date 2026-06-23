@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>My Reservations — Event Sphere Reservations</title>
-<meta name="description" content="View and manage your Event Sphere venue reservations." />
+<meta name="description" content="View and manage your Event Sphere restaurant and bar reservations." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
@@ -21,15 +21,14 @@
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#resNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
     <div class="collapse navbar-collapse" id="resNav">
       <ul class="navbar-nav mx-auto gap-1">
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="welcome.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro active" href="my-reservations.html" data-auth-user hidden>My Reservations</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="owner-venue.html" data-auth-role-nav="organizer" hidden>Venue Management</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="dashboard.html#profile" data-auth-user hidden>Profile</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="reservations.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro active" href="my-reservations.html" data-auth-role-nav="user" hidden>My Reservations</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="owner-venue.html" data-auth-role-nav="organizer" hidden>Restaurant & Bar Reservations</a></li>
       </ul>
       <div class="d-flex align-items-center gap-2">
-        <button class="icon-btn" data-theme-toggle><i class="bi bi-sun" data-theme-icon></i></button>
         <a class="btn btn-ghost" href="login.html" data-auth-guest>Login</a>
         <a class="btn btn-gold" href="register.html" data-auth-guest>Register</a>
+        <a class="btn btn-gold" href="#" data-auth-user data-logout hidden>Logout</a>
       </div>
     </div>
   </div>
@@ -44,7 +43,7 @@
           <h1>My Reservations</h1>
           <p class="text-muted-pro mb-0">Track your table requests, confirmed visits, and reservation history.</p>
         </div>
-        <a class="btn btn-gold" href="reservations.html"><i class="bi bi-search me-1"></i>Discover venues</a>
+        <a class="btn btn-gold" href="reservations.html"><i class="bi bi-search me-1"></i>Discover restaurants & bars</a>
       </div>
     </div>
   </section>
@@ -55,14 +54,14 @@
 
     <div class="reservation-section" data-reservation-section="pending">
       <div class="section-head-res">
-        <div><h2>Pending Reservations</h2><div class="sub">Requests waiting for venue approval</div></div>
+        <div><h2>Pending Reservations</h2><div class="sub">Requests waiting for restaurant or bar approval</div></div>
       </div>
       <div class="row g-4" data-reservations-list="pending"></div>
     </div>
 
     <div class="reservation-section" data-reservation-section="confirmed">
       <div class="section-head-res">
-        <div><h2>Confirmed Reservations</h2><div class="sub">Reservations approved by the venue</div></div>
+        <div><h2>Confirmed Reservations</h2><div class="sub">Reservations approved by the restaurant or bar</div></div>
       </div>
       <div class="row g-4" data-reservations-list="confirmed"></div>
     </div>
@@ -76,7 +75,7 @@
 
     <div class="reservation-section" data-reservation-section="completed">
       <div class="section-head-res">
-        <div><h2>Completed Reservations</h2><div class="sub">Past venue visits</div></div>
+        <div><h2>Completed Reservations</h2><div class="sub">Past restaurant and bar visits</div></div>
       </div>
       <div class="row g-4" data-reservations-list="completed"></div>
     </div>
@@ -103,7 +102,10 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <p class="mb-0 text-muted-pro">This pending request will be cancelled and moved to your cancelled reservations.</p>
+        <p class="text-muted-pro">This reservation will be cancelled and the restaurant or bar will be notified.</p>
+        <label class="form-label small text-muted-pro" for="reservationCancellationReason">Cancellation Reason <span class="text-muted-pro">(optional)</span></label>
+        <textarea class="form-control" id="reservationCancellationReason" rows="4" maxlength="1000" data-reservation-cancel-reason placeholder="Tell the venue why you are cancelling (optional)"></textarea>
+        <div class="small text-muted-pro mt-2">Examples: Change of plans, unable to attend, booked another time.</div>
       </div>
       <div class="modal-footer border-pro">
         <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Keep reservation</button>

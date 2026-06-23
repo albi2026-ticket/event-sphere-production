@@ -22,14 +22,14 @@
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#resNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
     <div class="collapse navbar-collapse" id="resNav">
       <ul class="navbar-nav mx-auto gap-1">
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="welcome.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="my-reservations.html" data-auth-user hidden>My Reservations</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="owner-venue.html" data-auth-role-nav="organizer" hidden>Venue Management</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="dashboard.html#profile" data-auth-user hidden>Profile</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="reservations.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="my-reservations.html" data-auth-role-nav="user" hidden>My Reservations</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="owner-venue.html" data-auth-role-nav="organizer" hidden>Restaurant & Bar Reservations</a></li>
       </ul>
       <div class="d-flex align-items-center gap-2">
         <a class="btn btn-ghost" href="login.html" data-auth-guest>Login</a>
         <a class="btn btn-gold" href="register.html" data-auth-guest>Register</a>
+        <a class="btn btn-gold" href="#" data-auth-user data-logout hidden>Logout</a>
       </div>
     </div>
   </div>
@@ -47,28 +47,14 @@
     </div>
 
     <!-- SEARCH -->
-    <form class="res-search mx-auto" style="max-width:1080px" data-venue-search-form>
-      <div class="field"><i class="bi bi-search"></i><input name="q" placeholder="Search venue, city, or cuisine" /></div>
-      <div class="field"><i class="bi bi-geo-alt"></i><input name="city" placeholder="City" /></div>
-      <div class="field"><i class="bi bi-calendar3"></i><input type="date" /></div>
-      <div class="field"><i class="bi bi-clock"></i>
-        <select>
-          <option>7:00 PM</option><option>7:30 PM</option><option>8:00 PM</option>
-          <option>8:30 PM</option><option>9:00 PM</option><option>9:30 PM</option>
-        </select>
-      </div>
-      <div class="field"><i class="bi bi-people"></i>
-        <select>
-          <option>2 guests</option><option>3 guests</option><option>4 guests</option>
-          <option>5 guests</option><option>6 guests</option><option>7+ guests</option>
-        </select>
-      </div>
+    <form class="res-search res-search-simple mx-auto" style="max-width:820px" data-venue-search-form>
+      <div class="field"><i class="bi bi-search"></i><input name="q" placeholder="Search by restaurant, bar, café, lounge, or city" autocomplete="off" /></div>
       <button class="btn btn-gold btn-lg" type="submit"><i class="bi bi-search me-1"></i> Find a Table</button>
     </form>
 
     <div class="d-flex flex-wrap gap-2 justify-content-center mt-4">
       <span class="chip-gold"><i class="bi bi-lightning-fill"></i> Instant confirmation</span>
-      <span class="chip-gold"><i class="bi bi-shield-check"></i> Verified venues</span>
+      <span class="chip-gold"><i class="bi bi-shield-check"></i> Verified restaurants & bars</span>
       <span class="chip-gold"><i class="bi bi-stars"></i> Curated selection</span>
     </div>
   </div>
@@ -80,7 +66,7 @@
     <div class="card-pro p-3 p-lg-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
       <div class="row g-3 align-items-end">
         <div class="col-md-6 col-xl-3">
-          <label class="form-label small text-muted-pro">Venue Type</label>
+          <label class="form-label small text-muted-pro">Restaurant / Bar Type</label>
           <select class="form-select" data-venue-filter="venue_type">
             <option value="">All types</option>
             <option value="restaurant">Restaurant</option>
@@ -122,51 +108,30 @@
   <div class="container-xxl">
     <div class="section-head-res">
       <div>
-        <h2>Featured <span class="grad-res-text">Venues</span></h2>
-        <div class="sub">Active venues ready for reservations</div>
+        <h2 data-main-discovery-title>Featured <span class="grad-res-text">Restaurants & Bars</span></h2>
+        <div class="sub" data-main-discovery-subtitle>Discover our hand-picked restaurants and bars.</div>
       </div>
-      <span class="see-all" data-venue-count>Loading venues...</span>
+      <button class="btn btn-gold-outline btn-sm" type="button" data-discovery-view="featured">View All <i class="bi bi-arrow-right"></i></button>
     </div>
 
     <div class="row g-4" id="featuredGrid"></div>
     <div class="reservation-empty-state" data-venue-empty hidden>
       <i class="bi bi-search"></i>
-      <h3>No venues found.</h3>
-      <p>Try another city, cuisine, venue type, or facility.</p>
+      <h3 data-venue-empty-title>No Restaurants & Bars found.</h3>
+      <p data-venue-empty-copy>No matching places found for your search.</p>
     </div>
+    <div class="text-center mt-4"><span class="see-all" data-venue-count>Loading restaurants & bars...</span></div>
   </div>
 </section>
 
-<!-- POPULAR RESTAURANTS -->
+<!-- POPULAR THIS WEEK -->
 <section class="py-5" style="background:linear-gradient(180deg, transparent, rgba(212,167,90,0.04), transparent)">
   <div class="container-xxl">
     <div class="section-head-res">
-      <div><h2>Popular <span class="grad-res-text">Restaurants</span></h2><div class="sub">Most reserved this month</div></div>
-      <a href="#" class="see-all">View all <i class="bi bi-arrow-right"></i></a>
+      <div><h2>Popular <span class="grad-res-text">This Week</span></h2><div class="sub">Explore places guests are discovering right now.</div></div>
+      <button class="btn btn-gold-outline btn-sm" type="button" data-discovery-view="popular">View All <i class="bi bi-arrow-right"></i></button>
     </div>
     <div class="row g-4" id="popularGrid"></div>
-  </div>
-</section>
-
-<!-- POPULAR BARS -->
-<section class="py-5">
-  <div class="container-xxl">
-    <div class="section-head-res">
-      <div><h2>Popular <span class="grad-res-text">Bars</span></h2><div class="sub">Craft cocktails and intimate hideaways</div></div>
-      <a href="#" class="see-all">View all <i class="bi bi-arrow-right"></i></a>
-    </div>
-    <div class="row g-4" id="barsGrid"></div>
-  </div>
-</section>
-
-<!-- TRENDING -->
-<section class="py-5" style="background:linear-gradient(180deg, transparent, rgba(124,92,255,0.04), transparent)">
-  <div class="container-xxl">
-    <div class="section-head-res">
-      <div><h2>Trending <span class="grad-res-text">Venues</span></h2><div class="sub">Booking fast — reserve before they're gone</div></div>
-      <a href="#" class="see-all">View all <i class="bi bi-arrow-right"></i></a>
-    </div>
-    <div class="row g-4" id="trendingGrid"></div>
   </div>
 </section>
 
@@ -174,21 +139,88 @@
 <section class="py-5">
   <div class="container-xxl">
     <div class="section-head-res">
-      <div><h2>New on <span class="grad-res-text">Event Sphere</span></h2><div class="sub">Just opened, just added</div></div>
-      <a href="#" class="see-all">View all <i class="bi bi-arrow-right"></i></a>
+      <div><h2>New on <span class="grad-res-text">Event Sphere</span></h2><div class="sub">Freshly added restaurants, bars, lounges, and cafés.</div></div>
+      <button class="btn btn-gold-outline btn-sm" type="button" data-discovery-view="new">View All <i class="bi bi-arrow-right"></i></button>
     </div>
     <div class="row g-4" id="newGrid"></div>
   </div>
 </section>
 
-<!-- NEARBY -->
+<!-- HOW IT WORKS -->
+<section class="py-5" style="background:linear-gradient(180deg, rgba(212,167,90,0.04), rgba(124,92,255,0.035), transparent)">
+  <div class="container-xxl">
+    <div class="section-head-res text-center d-block mx-auto" style="max-width:720px">
+      <span class="eyebrow-res mb-3"><i class="bi bi-stars"></i> Seamless hospitality</span>
+      <h2>How <span class="grad-res-text">Reservations Work</span></h2>
+      <div class="sub">Reserve your favorite restaurant or bar in just a few simple steps.</div>
+    </div>
+
+    <div class="row g-4 mt-2">
+      <div class="col-md-6 col-xl-3">
+        <div class="card-pro h-100 p-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+          <div class="d-flex align-items-center justify-content-between mb-4">
+            <div style="width:52px;height:52px;border-radius:16px;background:var(--res-gold-soft);display:grid;place-items:center"><i class="bi bi-search-heart text-gold fs-4"></i></div>
+            <span class="chip-gold">Step 1</span>
+          </div>
+          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Discover Restaurants & Bars</h4>
+          <p class="text-muted-pro mb-0">Browse restaurants, bars, lounges, and cafés.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <div class="card-pro h-100 p-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+          <div class="d-flex align-items-center justify-content-between mb-4">
+            <div style="width:52px;height:52px;border-radius:16px;background:var(--res-gold-soft);display:grid;place-items:center"><i class="bi bi-calendar2-heart text-gold fs-4"></i></div>
+            <span class="chip-gold">Step 2</span>
+          </div>
+          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Choose Date & Time</h4>
+          <p class="text-muted-pro mb-0">Select your preferred date, time, and party size.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <div class="card-pro h-100 p-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+          <div class="d-flex align-items-center justify-content-between mb-4">
+            <div style="width:52px;height:52px;border-radius:16px;background:var(--res-gold-soft);display:grid;place-items:center"><i class="bi bi-send-check text-gold fs-4"></i></div>
+            <span class="chip-gold">Step 3</span>
+          </div>
+          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Send Reservation Request</h4>
+          <p class="text-muted-pro mb-0">Submit your reservation request instantly.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <div class="card-pro h-100 p-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+          <div class="d-flex align-items-center justify-content-between mb-4">
+            <div style="width:52px;height:52px;border-radius:16px;background:var(--res-gold-soft);display:grid;place-items:center"><i class="bi bi-patch-check text-gold fs-4"></i></div>
+            <span class="chip-gold">Step 4</span>
+          </div>
+          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Receive Confirmation</h4>
+          <p class="text-muted-pro mb-0">The restaurant or bar reviews your request and confirms your booking.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DISCOVER NEW VENUES -->
 <section class="py-5 pb-5">
   <div class="container-xxl">
-    <div class="section-head-res">
-      <div><h2>Nearby <span class="grad-res-text">Venues</span></h2><div class="sub">Within 2 km of you</div></div>
-      <a href="#" class="see-all">View all <i class="bi bi-arrow-right"></i></a>
+    <div class="card-pro p-4 p-lg-5 overflow-hidden" style="background:radial-gradient(700px 280px at 12% 0%, rgba(212,167,90,.18), transparent 60%), radial-gradient(700px 300px at 92% 0%, rgba(124,92,255,.18), transparent 62%), var(--card);border:1px solid var(--border);border-radius:28px">
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-7">
+          <span class="eyebrow-res mb-3"><i class="bi bi-bell"></i> Fresh openings</span>
+          <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600">Discover New <span class="grad-res-text">Restaurants & Bars First</span></h2>
+          <p class="text-muted-pro fs-5 mb-0" style="max-width:660px">Get updates about new restaurants, lounges, bars, and exclusive reservation experiences.</p>
+        </div>
+        <div class="col-lg-5">
+          <form class="d-grid gap-3" onsubmit="event.preventDefault(); window.tkToast?.('Subscription feature coming soon.', 'info');">
+            <label class="form-label small text-muted-pro mb-0">Email Address</label>
+            <div class="d-flex flex-column flex-sm-row gap-2">
+              <input class="form-control form-control-lg" type="email" placeholder="you@example.com" aria-label="Email Address" required>
+              <button class="btn btn-gold btn-lg px-4" type="submit">Subscribe</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-    <div class="row g-4" id="nearbyGrid"></div>
   </div>
 </section>
 
@@ -206,7 +238,7 @@
         </div>
       </div>
       <div class="col-6 col-lg-2"><h6>Discover</h6><a href="reservations.html">Restaurants</a><a href="reservations.html">Bars</a><a href="reservations.html">Lounges</a><a href="reservations.html">Nightlife</a></div>
-      <div class="col-6 col-lg-2"><h6>For venues</h6><a href="owner-venue.html">List your venue</a><a href="owner-venue.html">Restaurant tools</a><a href="#">Resources</a></div>
+      <div class="col-6 col-lg-2"><h6>For restaurants & bars</h6><a href="owner-venue.html">List your restaurant or bar</a><a href="owner-venue.html">Restaurant tools</a><a href="#">Resources</a></div>
       <div class="col-6 col-lg-2"><h6>Company</h6><a href="welcome.html">Welcome</a><a href="#">About</a><a href="#">Press</a><a href="#">Careers</a></div>
       <div class="col-6 col-lg-2"><h6>Support</h6><a href="#">Help center</a><a href="#">Cancellation</a><a href="#">Terms</a><a href="#">Privacy</a></div>
     </div>

@@ -54,7 +54,10 @@ class OwnerReservationController extends Controller
     {
         $this->authorizeOwner($request, $reservation);
 
-        $reservation->update(['status' => Reservation::STATUS_CANCELLED]);
+        $reservation->update([
+            'status' => Reservation::STATUS_CANCELLED,
+            'cancelled_at' => now(),
+        ]);
         $reservation = $reservation->fresh(['venue', 'user']);
 
         Mail::to($reservation->user->email, $reservation->guest_name)
@@ -135,6 +138,8 @@ class OwnerReservationController extends Controller
         $base = $this->ownedReservations($request);
 
         return [
+            'pending' => (clone $base)->where('status', Reservation::STATUS_PENDING)->count(),
+            'confirmed' => (clone $base)->where('status', Reservation::STATUS_CONFIRMED)->count(),
             'today' => (clone $base)->whereDate('reservation_date', today())->count(),
             'upcoming' => (clone $base)
                 ->whereIn('status', [Reservation::STATUS_PENDING, Reservation::STATUS_CONFIRMED])

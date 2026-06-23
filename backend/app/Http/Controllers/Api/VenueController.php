@@ -18,19 +18,22 @@ class VenueController extends Controller
             ->publicDiscovery();
 
         if ($request->filled('q')) {
-            $term = $request->string('q')->toString();
+            $term = mb_strtolower($request->string('q')->toString());
             $query->where(function (Builder $query) use ($term): void {
-                $query->where('name', 'like', "%{$term}%")
-                    ->orWhere('city', 'like', "%{$term}%")
+                $like = "%{$term}%";
+                $query->whereRaw('LOWER(name) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(city) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(venue_type) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(description) LIKE ?', [$like])
                     ->orWhereHas('cuisineTypes', fn (Builder $query) => $query
-                        ->where('name', 'like', "%{$term}%")
-                        ->orWhere('slug', 'like', "%{$term}%"));
+                        ->whereRaw('LOWER(name) LIKE ?', [$like])
+                        ->orWhereRaw('LOWER(slug) LIKE ?', [$like]));
             });
         }
 
         if ($request->filled('city')) {
-            $city = $request->string('city')->toString();
-            $query->where('city', 'like', "%{$city}%");
+            $city = '%'.mb_strtolower($request->string('city')->toString()).'%';
+            $query->whereRaw('LOWER(city) LIKE ?', [$city]);
         }
 
         if ($request->filled('venue_type')) {
@@ -39,16 +42,18 @@ class VenueController extends Controller
 
         if ($request->filled('cuisine')) {
             $cuisine = $request->string('cuisine')->toString();
+            $like = '%'.mb_strtolower($cuisine).'%';
             $query->whereHas('cuisineTypes', fn (Builder $query) => $query
                 ->where('slug', $cuisine)
-                ->orWhere('name', 'like', "%{$cuisine}%"));
+                ->orWhereRaw('LOWER(name) LIKE ?', [$like]));
         }
 
         if ($request->filled('facility')) {
             $facility = $request->string('facility')->toString();
+            $like = '%'.mb_strtolower($facility).'%';
             $query->whereHas('facilities', fn (Builder $query) => $query
                 ->where('slug', $facility)
-                ->orWhere('name', 'like', "%{$facility}%"));
+                ->orWhereRaw('LOWER(name) LIKE ?', [$like]));
         }
 
         if ($request->boolean('featured')) {
@@ -66,7 +71,7 @@ class VenueController extends Controller
 
     public function show(Venue $venue): VenueResource
     {
-        abort_unless($venue->status === Venue::STATUS_ACTIVE && $venue->reservation_enabled, 404);
+        abort_unless($venue->status === Venue::STATUS_ACTIVE, 404);
 
         return new VenueResource($venue->load(['owner', 'images', 'facilities', 'cuisineTypes', 'paymentOptions', 'openingHours']));
     }

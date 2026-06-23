@@ -4,6 +4,7 @@ namespace Tests\Feature\Venues;
 
 use App\Mail\NewReservationReceivedMail;
 use App\Mail\ReservationCancelledMail;
+use App\Mail\ReservationCancelledByGuestMail;
 use App\Mail\ReservationConfirmedMail;
 use App\Mail\ReservationRequestReceivedMail;
 use App\Models\Reservation;
@@ -100,7 +101,7 @@ class ReservationCreationTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_user_can_cancel_only_their_own_pending_reservation(): void
+    public function test_user_can_cancel_own_future_pending_or_confirmed_reservation_with_reason(): void
     {
         Mail::fake();
 
@@ -132,9 +133,19 @@ class ReservationCreationTest extends TestCase
             ->assertForbidden();
 
         $this->actingAs($user, 'sanctum')
-            ->patchJson("/api/reservations/{$confirmed->id}/cancel")
-            ->assertUnprocessable()
-            ->assertJsonPath('message', 'Only pending reservations can be cancelled.');
+            ->patchJson("/api/reservations/{$confirmed->id}/cancel", [
+                'cancellation_reason' => 'Change of plans',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.status', Reservation::STATUS_CANCELLED)
+            ->assertJsonPath('data.cancellation_reason', 'Change of plans');
+
+        $this->assertDatabaseHas('reservations', [
+            'id' => $confirmed->id,
+            'status' => Reservation::STATUS_CANCELLED,
+            'cancellation_reason' => 'Change of plans',
+        ]);
+        $this->assertNotNull($confirmed->fresh()->cancelled_at);
 
         $this->actingAs($user, 'sanctum')
             ->patchJson("/api/reservations/{$pending->id}/cancel")
@@ -146,6 +157,42 @@ class ReservationCreationTest extends TestCase
             'status' => Reservation::STATUS_CANCELLED,
         ]);
         Mail::assertSent(ReservationCancelledMail::class, fn ($mail) => $mail->hasTo($user->email));
+        Mail::assertSent(ReservationCancelledByGuestMail::class, fn ($mail) => $mail->hasTo($owner->email));
+    }
+
+    public function test_user_cannot_cancel_past_or_already_cancelled_reservation(): void
+    {
+        $owner = $this->organizer();
+        $user = User::factory()->create(['role' => User::ROLE_USER, 'status' => User::STATUS_ACTIVE]);
+        $venue = $this->venue($owner);
+        $past = Reservation::query()->create([
+            'venue_id' => $venue->id,
+            'user_id' => $user->id,
+            'guest_name' => $user->name,
+            'party_size' => 2,
+            'reservation_date' => now()->subDay()->format('Y-m-d'),
+            'reservation_time' => '18:00',
+            'status' => Reservation::STATUS_CONFIRMED,
+        ]);
+        $cancelled = Reservation::query()->create([
+            'venue_id' => $venue->id,
+            'user_id' => $user->id,
+            'guest_name' => $user->name,
+            'party_size' => 2,
+            'reservation_date' => now()->addDay()->format('Y-m-d'),
+            'reservation_time' => '19:00',
+            'status' => Reservation::STATUS_CANCELLED,
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->patchJson("/api/reservations/{$past->id}/cancel")
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.reservation.0', 'This reservation can no longer be cancelled.');
+
+        $this->actingAs($user, 'sanctum')
+            ->patchJson("/api/reservations/{$cancelled->id}/cancel")
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'This reservation has already been cancelled.');
     }
 
     public function test_reservation_validation_uses_clean_messages(): void
@@ -163,7 +210,18 @@ class ReservationCreationTest extends TestCase
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('party_size')
-            ->assertJsonPath('errors.party_size.0', 'Please select between 2 and 6 guests.');
+            ->assertJsonPath('errors.party_size.0', 'Minimum guests allowed is 2.');
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/reservations', [
+                'venue_id' => $venue->id,
+                'party_size' => 7,
+                'reservation_date' => now()->addDay()->format('Y-m-d'),
+                'reservation_time' => '19:30',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('party_size')
+            ->assertJsonPath('errors.party_size.0', 'Maximum guests allowed is 6.');
 
         $this->actingAs($user, 'sanctum')
             ->postJson('/api/reservations', [
@@ -177,11 +235,83 @@ class ReservationCreationTest extends TestCase
             ->assertJsonPath('errors.reservation_date.0', 'Please select a future date and time.');
     }
 
-    public function test_inactive_or_disabled_venue_cannot_be_reserved(): void
+    public function test_reservation_must_be_inside_opening_hours(): void
     {
         $owner = $this->organizer();
         $user = User::factory()->create(['role' => User::ROLE_USER, 'status' => User::STATUS_ACTIVE]);
-        $venue = $this->venue($owner, ['reservation_enabled' => false]);
+        $venue = $this->venue($owner);
+        $date = $this->futureDateForDay(0);
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/reservations', [
+                'venue_id' => $venue->id,
+                'party_size' => 2,
+                'reservation_date' => $date,
+                'reservation_time' => '12:00',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.status', Reservation::STATUS_PENDING);
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/reservations', [
+                'venue_id' => $venue->id,
+                'party_size' => 2,
+                'reservation_date' => $date,
+                'reservation_time' => '03:00',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('reservation_time')
+            ->assertJsonPath('errors.reservation_time.0', 'This venue is closed at the selected time.');
+    }
+
+    public function test_reservation_cannot_be_created_on_closed_day(): void
+    {
+        $owner = $this->organizer();
+        $user = User::factory()->create(['role' => User::ROLE_USER, 'status' => User::STATUS_ACTIVE]);
+        $venue = $this->venue($owner);
+        $sunday = $this->futureDateForDay(6);
+
+        $venue->openingHours()->where('day_of_week', 6)->update([
+            'is_closed' => true,
+            'opens_at' => null,
+            'closes_at' => null,
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/reservations', [
+                'venue_id' => $venue->id,
+                'party_size' => 2,
+                'reservation_date' => $sunday,
+                'reservation_time' => '12:00',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('reservation_date')
+            ->assertJsonPath('errors.reservation_date.0', 'This venue is closed on the selected day.');
+    }
+
+    public function test_reservation_time_must_match_valid_slot(): void
+    {
+        $owner = $this->organizer();
+        $user = User::factory()->create(['role' => User::ROLE_USER, 'status' => User::STATUS_ACTIVE]);
+        $venue = $this->venue($owner);
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/reservations', [
+                'venue_id' => $venue->id,
+                'party_size' => 2,
+                'reservation_date' => now()->addDay()->format('Y-m-d'),
+                'reservation_time' => '08:07',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('reservation_time')
+            ->assertJsonPath('errors.reservation_time.0', 'Please select a valid reservation time.');
+    }
+
+    public function test_inactive_venue_cannot_be_reserved(): void
+    {
+        $owner = $this->organizer();
+        $user = User::factory()->create(['role' => User::ROLE_USER, 'status' => User::STATUS_ACTIVE]);
+        $venue = $this->venue($owner, ['status' => Venue::STATUS_INACTIVE]);
 
         $this->actingAs($user, 'sanctum')
             ->postJson('/api/reservations', [
@@ -244,16 +374,37 @@ class ReservationCreationTest extends TestCase
 
     private function venue(User $owner, array $attributes = []): Venue
     {
-        return Venue::query()->create(array_merge([
+        $venue = Venue::query()->create(array_merge([
             'user_id' => $owner->id,
             'name' => 'Reservation Room',
             'slug' => 'reservation-room-'.uniqid(),
             'venue_type' => Venue::TYPE_RESTAURANT,
             'city' => 'Pristina',
             'status' => Venue::STATUS_ACTIVE,
-            'reservation_enabled' => true,
             'min_guests' => 1,
             'max_guests' => 8,
         ], $attributes));
+
+        foreach (range(0, 6) as $day) {
+            $venue->openingHours()->create([
+                'day_of_week' => $day,
+                'opens_at' => '08:00',
+                'closes_at' => '22:00',
+                'is_closed' => false,
+            ]);
+        }
+
+        return $venue;
+    }
+
+    private function futureDateForDay(int $dayOfWeek): string
+    {
+        $date = now()->addDay()->startOfDay();
+
+        while (($date->dayOfWeekIso - 1) !== $dayOfWeek) {
+            $date->addDay();
+        }
+
+        return $date->format('Y-m-d');
     }
 }

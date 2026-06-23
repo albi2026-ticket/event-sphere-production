@@ -111,13 +111,7 @@
       location.href = cfg().LOGIN_URL;
       return;
     }
-    const params = new URLSearchParams(location.search);
-    const next = params.get('next');
-    if (next && !next.includes('login')) {
-      location.href = decodeURIComponent(next);
-      return;
-    }
-    location.href = roleHome(u.role);
+    location.href = 'welcome.html';
   }
 
   function requireAuth(roles, options = {}) {

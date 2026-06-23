@@ -31,6 +31,26 @@
     return String(value || '').slice(0, 5) || 'Time not set';
   }
 
+  function reservationDateTime(reservation) {
+    const date = reservation.reservation_date;
+    const time = String(reservation.reservation_time || '').slice(0, 5);
+    const parsed = date && time ? new Date(`${date}T${time}:00`) : null;
+    return parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
+  }
+
+  function canCancelReservation(reservation) {
+    const status = reservation.status || 'pending';
+    const startsAt = reservationDateTime(reservation);
+    return ['pending', 'confirmed'].includes(status) && startsAt && startsAt > new Date();
+  }
+
+  function dateTimeLabel(value) {
+    if (!value) return 'Not set';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+
   function venueUrl(reservation) {
     const slug = reservation.venue?.slug;
     return slug ? `venue.html?venue=${encodeURIComponent(slug)}` : 'venue.html';
@@ -39,7 +59,7 @@
   function reservationCard(reservation) {
     const image = reservation.venue?.image_url || fallbackImage;
     const status = reservation.status || 'pending';
-    const canCancel = status === 'pending';
+    const canCancel = canCancelReservation(reservation);
     return `
       <div class="col-md-6 col-xl-4">
         <article class="venue-card my-reservation-card">
@@ -52,7 +72,7 @@
           </div>
           <div class="body">
             <div class="d-flex justify-content-between gap-2 align-items-start">
-              <h3 class="title m-0">${esc(reservation.venue?.name || 'Venue')}</h3>
+              <h3 class="title m-0">${esc(reservation.venue?.name || 'Restaurant / Bar')}</h3>
               <span class="rating"><i class="bi bi-people"></i> ${esc(reservation.party_size || '')}</span>
             </div>
             <div class="meta">
@@ -63,7 +83,7 @@
             <div class="meta">
               <span>${esc(reservation.venue?.city || 'City')}</span>
               <span class="dot"></span>
-              <span>${esc(reservation.venue?.venue_type || 'venue')}</span>
+              <span>${esc(reservation.venue?.venue_type || 'restaurant / bar')}</span>
             </div>
             <div class="footer-row my-reservation-actions">
               <button class="btn btn-gold-outline btn-sm" type="button" data-reservation-view="${reservation.id}">View Reservation</button>
@@ -136,13 +156,17 @@
     $('[data-reservation-detail-body]').innerHTML = `
       <div class="my-reservation-detail">
         <img src="${esc(reservation.venue?.image_url || fallbackImage)}" alt="">
-        <div class="facility justify-content-between"><span>Venue</span><strong>${esc(reservation.venue?.name || 'Venue')}</strong></div>
+        <div class="facility justify-content-between"><span>Restaurant / Bar</span><strong>${esc(reservation.venue?.name || 'Restaurant / Bar')}</strong></div>
         <div class="facility justify-content-between"><span>Status</span>${statusBadge(reservation.status)}</div>
         <div class="facility justify-content-between"><span>Date</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div>
         <div class="facility justify-content-between"><span>Time</span><strong>${esc(timeLabel(reservation.reservation_time))}</strong></div>
         <div class="facility justify-content-between"><span>Party size</span><strong>${esc(reservation.party_size || '')}</strong></div>
         <div class="facility justify-content-between"><span>Location</span><strong>${esc([reservation.venue?.city, reservation.venue?.country].filter(Boolean).join(', ') || 'Location not set')}</strong></div>
-        <div class="d-grid mt-3"><a class="btn btn-gold-outline" href="${esc(venueUrl(reservation))}">Open Venue</a></div>
+        ${reservation.status === 'cancelled' ? `
+          <div class="facility justify-content-between"><span>Cancelled At</span><strong>${esc(dateTimeLabel(reservation.cancelled_at))}</strong></div>
+          <div class="facility"><span><span class="text-muted-pro d-block mb-1">Cancellation Reason</span>${esc(reservation.cancellation_reason || 'No reason provided.')}</span></div>
+        ` : ''}
+        <div class="d-grid mt-3"><a class="btn btn-gold-outline" href="${esc(venueUrl(reservation))}">Open Restaurant / Bar</a></div>
       </div>
     `;
     bootstrap.Modal.getOrCreateInstance($('#reservationDetailModal')).show();
@@ -168,9 +192,15 @@
       button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Cancelling...';
     }
     try {
-      const { data } = await api().fetch(`/reservations/${cancelId}/cancel`, { method: 'PATCH' });
+      const reason = String($('[data-reservation-cancel-reason]')?.value || '').trim();
+      const { data } = await api().fetch(`/reservations/${cancelId}/cancel`, {
+        method: 'PATCH',
+        body: { cancellation_reason: reason || null },
+      });
       reservations = reservations.map((reservation) => Number(reservation.id) === Number(cancelId) ? data : reservation);
       bootstrap.Modal.getInstance($('#reservationCancelModal'))?.hide();
+      const reasonField = $('[data-reservation-cancel-reason]');
+      if (reasonField) reasonField.value = '';
       cancelId = null;
       render();
       window.tkToast?.('Reservation cancelled successfully.', 'success');
@@ -201,6 +231,8 @@
       const cancel = event.target.closest('[data-reservation-cancel]');
       if (cancel) {
         cancelId = cancel.dataset.reservationCancel;
+        const reasonField = $('[data-reservation-cancel-reason]');
+        if (reasonField) reasonField.value = '';
         bootstrap.Modal.getOrCreateInstance($('#reservationCancelModal')).show();
       }
     });

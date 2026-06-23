@@ -24,6 +24,7 @@ class OwnerReservationManagementTest extends TestCase
         $user = $this->user();
 
         $today = $this->reservation($venue, $user, ['reservation_date' => today()->format('Y-m-d')]);
+        $this->reservation($venue, $user, ['status' => Reservation::STATUS_PENDING]);
         $this->reservation($venue, $user, ['status' => Reservation::STATUS_COMPLETED]);
         $this->reservation($venue, $user, ['status' => Reservation::STATUS_CANCELLED]);
         $this->reservation($otherVenue, $user);
@@ -31,7 +32,9 @@ class OwnerReservationManagementTest extends TestCase
         $this->actingAs($owner, 'sanctum')
             ->getJson('/api/owner/reservations')
             ->assertOk()
-            ->assertJsonCount(3, 'data')
+            ->assertJsonCount(4, 'data')
+            ->assertJsonPath('meta.stats.pending', 1)
+            ->assertJsonPath('meta.stats.confirmed', 1)
             ->assertJsonPath('meta.stats.today', 1)
             ->assertJsonPath('meta.stats.completed', 1)
             ->assertJsonPath('meta.stats.cancelled', 1);
@@ -122,7 +125,6 @@ class OwnerReservationManagementTest extends TestCase
             'venue_type' => Venue::TYPE_RESTAURANT,
             'city' => 'Pristina',
             'status' => Venue::STATUS_ACTIVE,
-            'reservation_enabled' => true,
             'min_guests' => 1,
             'max_guests' => 8,
         ], $attributes));

@@ -27,7 +27,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'logo_image',
     'status',
     'featured',
-    'reservation_enabled',
     'min_guests',
     'max_guests',
     'reservation_interval_minutes',
@@ -57,8 +56,7 @@ class Venue extends Model
     public function scopePublicDiscovery(Builder $query): Builder
     {
         return $query
-            ->where('status', self::STATUS_ACTIVE)
-            ->where('reservation_enabled', true);
+            ->where('status', self::STATUS_ACTIVE);
     }
 
     public function owner(): BelongsTo
@@ -105,7 +103,6 @@ class Venue extends Model
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'featured' => 'boolean',
-            'reservation_enabled' => 'boolean',
             'min_guests' => 'integer',
             'max_guests' => 'integer',
             'reservation_interval_minutes' => 'integer',

@@ -17,7 +17,19 @@
 <nav class="navbar navbar-expand-lg nav-blur nav-res">
   <div class="container-xxl">
     <a class="brand" href="welcome.html"><span class="brand-logo" style="background:var(--grad-res)"><i class="bi bi-cup-hot-fill"></i></span>Event Sphere</a>
-    <a class="btn btn-ghost ms-auto" href="venue.html"><i class="bi bi-x-lg"></i> Cancel</a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#resNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
+    <div class="collapse navbar-collapse" id="resNav">
+      <ul class="navbar-nav mx-auto gap-1">
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="reservations.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="my-reservations.html" data-auth-role-nav="user" hidden>My Reservations</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="owner-venue.html" data-auth-role-nav="organizer" hidden>Venue Reservations</a></li>
+      </ul>
+      <div class="d-flex align-items-center gap-2">
+        <a class="btn btn-ghost" href="login.html" data-auth-guest>Login</a>
+        <a class="btn btn-gold" href="register.html" data-auth-guest>Register</a>
+        <a class="btn btn-gold" href="#" data-auth-user data-logout hidden>Logout</a>
+      </div>
+    </div>
   </div>
 </nav>
 
@@ -170,6 +182,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../assets/js/main.js"></script>
+<script src="../assets/js/api/config.js"></script>
+<script src="../assets/js/api/api-client.js"></script>
+<script src="../assets/js/api/auth.js"></script>
 <script>
   // Step navigation
   const steps = document.querySelectorAll('#stepper .step');

@@ -26,7 +26,11 @@ class StoreReservationRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:255'],
             'party_size' => ['required', 'integer', 'min:1', 'max:1000'],
             'reservation_date' => ['required', 'date_format:Y-m-d'],
-            'reservation_time' => ['required', 'date_format:H:i'],
+            'reservation_time' => ['required', 'date_format:H:i', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (! $this->isAlignedReservationTime((string) $value)) {
+                    $fail('Please select a valid reservation time.');
+                }
+            }],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
@@ -52,15 +56,19 @@ class StoreReservationRequest extends FormRequest
             function (Validator $validator): void {
                 $venue = Venue::query()->find($this->input('venue_id'));
 
-                if (! $venue || $venue->status !== Venue::STATUS_ACTIVE || ! $venue->reservation_enabled) {
+                if (! $venue || $venue->status !== Venue::STATUS_ACTIVE) {
                     $validator->errors()->add('venue_id', 'This venue is not available for reservations.');
 
                     return;
                 }
 
                 $partySize = (int) $this->input('party_size');
-                if ($partySize < $venue->min_guests || $partySize > $venue->max_guests) {
-                    $validator->errors()->add('party_size', "Please select between {$venue->min_guests} and {$venue->max_guests} guests.");
+                if ($partySize < $venue->min_guests) {
+                    $validator->errors()->add('party_size', "Minimum guests allowed is {$venue->min_guests}.");
+                }
+
+                if ($partySize > $venue->max_guests) {
+                    $validator->errors()->add('party_size', "Maximum guests allowed is {$venue->max_guests}.");
                 }
 
                 if (! $this->filled('reservation_date') || ! $this->filled('reservation_time')) {
@@ -81,8 +89,64 @@ class StoreReservationRequest extends FormRequest
 
                 if ($reservationAt->isPast()) {
                     $validator->errors()->add('reservation_date', 'Please select a future date and time.');
+
+                    return;
                 }
+
+                $this->validateOpeningHours($validator, $venue, $reservationAt);
             },
         ];
+    }
+
+    private function isAlignedReservationTime(string $value): bool
+    {
+        if (! preg_match('/^\d{2}:\d{2}$/', $value)) {
+            return false;
+        }
+
+        [$hour, $minute] = array_map('intval', explode(':', $value));
+
+        return $hour >= 0 && $hour <= 23 && in_array($minute, [0, 30], true);
+    }
+
+    private function validateOpeningHours(Validator $validator, Venue $venue, Carbon $reservationAt): void
+    {
+        $openingHour = $venue->openingHours()
+            ->where('day_of_week', $reservationAt->dayOfWeekIso - 1)
+            ->first();
+
+        if (! $openingHour) {
+            return;
+        }
+
+        if ($openingHour->is_closed) {
+            $validator->errors()->add('reservation_date', 'This venue is closed on the selected day.');
+
+            return;
+        }
+
+        if (! $openingHour->opens_at || ! $openingHour->closes_at) {
+            $validator->errors()->add('reservation_time', 'This venue is closed at the selected time.');
+
+            return;
+        }
+
+        $opensAt = $this->timeToMinutes((string) $openingHour->opens_at);
+        $closesAt = $this->timeToMinutes((string) $openingHour->closes_at);
+        $reservationMinutes = ($reservationAt->hour * 60) + $reservationAt->minute;
+
+        if ($opensAt === null || $closesAt === null || $reservationMinutes < $opensAt || $reservationMinutes >= $closesAt) {
+            $validator->errors()->add('reservation_time', 'This venue is closed at the selected time.');
+        }
+    }
+
+    private function timeToMinutes(string $value): ?int
+    {
+        $time = preg_match('/^\d{2}:\d{2}:\d{2}$/', $value) ? substr($value, 0, 5) : $value;
+        if (! preg_match('/^(\d{2}):(\d{2})$/', $time, $matches)) {
+            return null;
+        }
+
+        return ((int) $matches[1] * 60) + (int) $matches[2];
     }
 }

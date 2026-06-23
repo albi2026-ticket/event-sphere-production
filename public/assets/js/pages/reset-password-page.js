@@ -1,16 +1,28 @@
 (function () {
   'use strict';
 
+  function resetLinkData() {
+    const rawSearch = String(location.search || '').replace(/&amp;/g, '&');
+    const params = new URLSearchParams(rawSearch);
+    const pathParts = location.pathname.split('/').filter(Boolean);
+    const pathToken = pathParts[pathParts.length - 1] !== 'reset-password.html' ? pathParts[pathParts.length - 1] : '';
+
+    return {
+      token: params.get('token') || pathToken || '',
+      email: params.get('email') || params.get('amp;email') || '',
+    };
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('[data-reset-password-form]');
     const error = document.querySelector('[data-reset-error]');
     if (!form) return;
 
-    const params = new URLSearchParams(location.search);
-    form.querySelector('[name="token"]').value = params.get('token') || '';
-    form.querySelector('[name="email"]').value = params.get('email') || '';
+    const reset = resetLinkData();
+    form.querySelector('[name="token"]').value = reset.token;
+    form.querySelector('[name="email"]').value = reset.email;
 
-    if (!params.get('token') || !params.get('email')) {
+    if (!reset.token || !reset.email) {
       error.textContent = 'This reset link is missing required information. Please request a new password reset link.';
       error.classList.remove('d-none');
       form.querySelector('button[type="submit"]').disabled = true;

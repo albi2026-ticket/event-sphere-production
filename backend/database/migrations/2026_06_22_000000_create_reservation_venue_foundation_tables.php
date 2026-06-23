@@ -24,9 +24,8 @@ return new class extends Migration
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->text('logo_image')->nullable();
-            $table->string('status')->default('draft')->index();
+            $table->string('status')->default('active')->index();
             $table->boolean('featured')->default(false)->index();
-            $table->boolean('reservation_enabled')->default(false)->index();
             $table->unsignedSmallInteger('min_guests')->default(1);
             $table->unsignedSmallInteger('max_guests')->default(10);
             $table->unsignedSmallInteger('reservation_interval_minutes')->default(30);

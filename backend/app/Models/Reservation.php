@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'reservation_time',
     'status',
     'notes',
+    'cancellation_reason',
+    'cancelled_at',
 ])]
 class Reservation extends Model
 {
@@ -42,6 +44,7 @@ class Reservation extends Model
         return [
             'party_size' => 'integer',
             'reservation_date' => 'date:Y-m-d',
+            'cancelled_at' => 'datetime',
         ];
     }
 }
