@@ -11,6 +11,8 @@ use App\Mail\ReservationCancelledMail;
 use App\Mail\ReservationRequestReceivedMail;
 use App\Models\Reservation;
 use App\Models\Venue;
+use App\Models\Notification;
+use App\Services\Notifications\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -44,6 +46,25 @@ class ReservationController extends Controller
         if ($reservation->venue->owner?->email) {
             Mail::to($reservation->venue->owner->email, $reservation->venue->owner->name)
                 ->send(new NewReservationReceivedMail($reservation));
+        }
+
+        $notifications = app(NotificationService::class);
+        $notifications->create(
+            $user,
+            Notification::TYPE_RESERVATION_CREATED,
+            'Reservation Request Created',
+            "Your reservation request for {$venue->name} has been created.",
+            '/site/my-reservations.html',
+        );
+
+        if ($reservation->venue->owner) {
+            $notifications->create(
+                $reservation->venue->owner,
+                Notification::TYPE_RESERVATION_CREATED,
+                'New Reservation',
+                "{$reservation->guest_name} requested a reservation at {$venue->name}.",
+                '/site/owner-venue.html',
+            );
         }
 
         return new ReservationResource($reservation->load('venue.images'));
@@ -107,6 +128,27 @@ class ReservationController extends Controller
         if ($reservation->venue->owner?->email) {
             Mail::to($reservation->venue->owner->email, $reservation->venue->owner->name)
                 ->send(new ReservationCancelledByGuestMail($reservation));
+        }
+
+        $notifications = app(NotificationService::class);
+        if ($reservation->user) {
+            $notifications->create(
+                $reservation->user,
+                Notification::TYPE_RESERVATION_CANCELLED_BY_USER,
+                'Reservation Cancelled Successfully',
+                "Your reservation at {$reservation->venue->name} was cancelled successfully.",
+                '/site/my-reservations.html',
+            );
+        }
+
+        if ($reservation->venue->owner) {
+            $notifications->create(
+                $reservation->venue->owner,
+                Notification::TYPE_RESERVATION_CANCELLED_BY_USER,
+                'Reservation Cancelled By Guest',
+                "{$reservation->guest_name} cancelled their reservation at {$reservation->venue->name}.",
+                '/site/owner-venue.html',
+            );
         }
 
         return new ReservationResource($reservation);

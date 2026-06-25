@@ -28,6 +28,7 @@ class Reservation extends Model
     public const STATUS_CONFIRMED = 'confirmed';
     public const STATUS_COMPLETED = 'completed';
     public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_NO_SHOW = 'no_show';
 
     public function venue(): BelongsTo
     {

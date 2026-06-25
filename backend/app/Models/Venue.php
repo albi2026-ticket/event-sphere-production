@@ -30,6 +30,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'min_guests',
     'max_guests',
     'reservation_interval_minutes',
+    'max_reservations_per_slot',
     'last_reservation_time',
     'facebook_url',
     'instagram_url',
@@ -92,6 +93,16 @@ class Venue extends Model
         return $this->hasMany(VenueOpeningHour::class)->orderBy('day_of_week');
     }
 
+    public function blackoutDates(): HasMany
+    {
+        return $this->hasMany(VenueBlackoutDate::class)->orderBy('date');
+    }
+
+    public function specialHours(): HasMany
+    {
+        return $this->hasMany(VenueSpecialHour::class)->orderBy('date');
+    }
+
     public function reservations(): HasMany
     {
         return $this->hasMany(Reservation::class);
@@ -106,6 +117,7 @@ class Venue extends Model
             'min_guests' => 'integer',
             'max_guests' => 'integer',
             'reservation_interval_minutes' => 'integer',
+            'max_reservations_per_slot' => 'integer',
         ];
     }
 }

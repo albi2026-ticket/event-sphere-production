@@ -15,7 +15,10 @@ class VenueResource extends JsonResource
             'owner' => $this->whenLoaded('owner', fn () => [
                 'id' => $this->owner->id,
                 'name' => $this->owner->name,
+                'email' => $this->owner->email,
+                'status' => $this->owner->status,
                 'role' => $this->owner->role,
+                'organizer_status' => $this->owner->organizer_status,
             ]),
             'name' => $this->name,
             'slug' => $this->slug,
@@ -41,6 +44,7 @@ class VenueResource extends JsonResource
                 'min_guests' => $this->min_guests,
                 'max_guests' => $this->max_guests,
                 'reservation_interval_minutes' => $this->reservation_interval_minutes,
+                'max_reservations_per_slot' => $this->max_reservations_per_slot,
                 'last_reservation_time' => $this->formatTime($this->last_reservation_time),
             ],
             'social_links' => [
@@ -48,6 +52,7 @@ class VenueResource extends JsonResource
                 'instagram_url' => $this->instagram_url,
                 'tiktok_url' => $this->tiktok_url,
             ],
+            'reservations_count' => $this->whenCounted('reservations'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

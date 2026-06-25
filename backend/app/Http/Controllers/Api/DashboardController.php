@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\CheckoutReservation;
+use App\Models\Reservation;
+use App\Models\Venue;
 use App\Services\Dashboard\OrganizerDashboardService;
 use App\Services\Dashboard\UserDashboardService;
 use Illuminate\Http\JsonResponse;
@@ -36,7 +38,11 @@ class DashboardController extends Controller
 
     public function admin(): JsonResponse
     {
-        $reservationStats = CheckoutReservation::query()
+        $checkoutReservationStats = CheckoutReservation::query()
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+        $reservationStats = Reservation::query()
             ->selectRaw('status, count(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
@@ -45,10 +51,21 @@ class DashboardController extends Controller
             'data' => [
                 'scope' => 'platform',
                 'message' => 'Admin dashboard API access granted.',
+                'checkout_reservations' => [
+                    'active' => (int) ($checkoutReservationStats[CheckoutReservation::STATUS_ACTIVE] ?? 0),
+                    'expired' => (int) ($checkoutReservationStats[CheckoutReservation::STATUS_EXPIRED] ?? 0),
+                    'completed' => (int) ($checkoutReservationStats[CheckoutReservation::STATUS_COMPLETED] ?? 0),
+                ],
                 'reservations' => [
-                    'active' => (int) ($reservationStats[CheckoutReservation::STATUS_ACTIVE] ?? 0),
-                    'expired' => (int) ($reservationStats[CheckoutReservation::STATUS_EXPIRED] ?? 0),
-                    'completed' => (int) ($reservationStats[CheckoutReservation::STATUS_COMPLETED] ?? 0),
+                    'active' => (int) ($checkoutReservationStats[CheckoutReservation::STATUS_ACTIVE] ?? 0),
+                    'expired' => (int) ($checkoutReservationStats[CheckoutReservation::STATUS_EXPIRED] ?? 0),
+                    'completed' => (int) ($checkoutReservationStats[CheckoutReservation::STATUS_COMPLETED] ?? 0),
+                    'total_venues' => Venue::query()->count(),
+                    'active_venues' => Venue::query()->where('status', Venue::STATUS_ACTIVE)->count(),
+                    'total_reservations' => Reservation::query()->count(),
+                    'pending_reservations' => (int) ($reservationStats[Reservation::STATUS_PENDING] ?? 0),
+                    'confirmed_reservations' => (int) ($reservationStats[Reservation::STATUS_CONFIRMED] ?? 0),
+                    'cancelled_reservations' => (int) ($reservationStats[Reservation::STATUS_CANCELLED] ?? 0),
                 ],
             ],
         ]);

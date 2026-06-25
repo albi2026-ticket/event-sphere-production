@@ -21,7 +21,10 @@
     <!-- top brand -->
     <div class="d-flex justify-content-between align-items-center mb-5">
       <a class="brand" href="welcome.html"><span class="brand-logo" style="background:var(--grad-res)"><i class="bi bi-stars"></i></span>Event Sphere</a>
-      <a href="login.html" class="btn btn-ghost">Sign in</a>
+      <div class="d-flex align-items-center gap-2">
+        <a href="login.html" class="btn btn-ghost" data-auth-guest>Login</a>
+        <a href="register.html" class="btn btn-gold" data-auth-guest>Register</a>
+      </div>
     </div>
 
     <div class="text-center mb-5">
@@ -88,5 +91,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../assets/js/main.js"></script>
+<script src="../assets/js/api/config.js"></script>
+<script src="../assets/js/api/api-client.js"></script>
+<script src="../assets/js/api/auth.js"></script>
 </body>
 </html>

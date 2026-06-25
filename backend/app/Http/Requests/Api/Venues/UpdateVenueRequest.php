@@ -6,6 +6,7 @@ use App\Models\CuisineType;
 use App\Models\PaymentOption;
 use App\Models\Venue;
 use App\Models\VenueFacility;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -15,8 +16,17 @@ class UpdateVenueRequest extends FormRequest
     public function authorize(): bool
     {
         $venue = $this->route('venue');
+        $user = $this->user();
 
-        return $venue instanceof Venue && (bool) $this->user()?->canManageVenue($venue);
+        if (! $venue instanceof Venue || ! $user?->canManageVenue($venue)) {
+            return false;
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            throw new AuthorizationException('Please verify your email address before managing restaurant or bar reservations.');
+        }
+
+        return true;
     }
 
     protected function prepareForValidation(): void
@@ -62,6 +72,7 @@ class UpdateVenueRequest extends FormRequest
             'min_guests' => ['sometimes', 'integer', 'min:1', 'max:1000'],
             'max_guests' => ['sometimes', 'integer', 'min:1', 'max:1000', 'gte:min_guests'],
             'reservation_interval_minutes' => ['sometimes', 'integer', Rule::in([15, 30, 45, 60, 90, 120])],
+            'max_reservations_per_slot' => ['sometimes', 'integer', 'min:1', 'max:1000'],
             'last_reservation_time' => ['nullable', 'date_format:H:i'],
             'facebook_url' => ['nullable', 'url', 'max:2048'],
             'instagram_url' => ['nullable', 'url', 'max:2048'],

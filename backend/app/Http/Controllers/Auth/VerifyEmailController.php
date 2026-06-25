@@ -31,6 +31,6 @@ class VerifyEmailController extends Controller
 
     protected function frontendDashboardUrl(): string
     {
-        return AppUrls::frontend('/site/dashboard.html', ['verified' => 1]);
+        return AppUrls::frontend('/site/welcome.html', ['verified' => 1]);
     }
 }

@@ -6,7 +6,9 @@ use App\Models\CuisineType;
 use App\Models\PaymentOption;
 use App\Models\User;
 use App\Models\Venue;
+use App\Models\VenueBlackoutDate;
 use App\Models\VenueFacility;
+use App\Models\VenueSpecialHour;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -32,6 +34,7 @@ class VenueFoundationTest extends TestCase
             'min_guests' => 2,
             'max_guests' => 8,
             'reservation_interval_minutes' => 30,
+            'max_reservations_per_slot' => 12,
             'last_reservation_time' => '22:30:00',
             'facility_ids' => [$facility->id],
             'cuisine_type_ids' => [$cuisine->id],
@@ -49,6 +52,7 @@ class VenueFoundationTest extends TestCase
             ->assertJsonPath('data.name', 'Luna Lounge')
             ->assertJsonPath('data.slug', 'luna-lounge')
             ->assertJsonPath('data.status', Venue::STATUS_ACTIVE)
+            ->assertJsonPath('data.reservation_settings.max_reservations_per_slot', 12)
             ->assertJsonPath('data.reservation_settings.last_reservation_time', '22:30')
             ->assertJsonPath('data.facilities.0.slug', 'wifi')
             ->assertJsonPath('data.cuisine_types.0.slug', 'italian')
@@ -69,18 +73,43 @@ class VenueFoundationTest extends TestCase
                 'name' => 'Luna Lounge',
                 'venue_type' => Venue::TYPE_LOUNGE,
                 'city' => 'Pristina',
+                'max_reservations_per_slot' => 6,
                 'last_reservation_time' => '22:30:00',
                 'opening_hours' => [
                     ['day_of_week' => 1, 'opens_at' => '10:00:00', 'closes_at' => '23:00:00', 'is_closed' => false],
                 ],
             ])
             ->assertOk()
+            ->assertJsonPath('data.reservation_settings.max_reservations_per_slot', 6)
             ->assertJsonPath('data.reservation_settings.last_reservation_time', '22:30')
             ->assertJsonPath('data.opening_hours.0.opens_at', '10:00');
 
         $this->getJson('/api/venues/luna-lounge')
             ->assertOk()
             ->assertJsonPath('data.slug', 'luna-lounge');
+    }
+
+    public function test_unverified_owner_cannot_create_venue_profile(): void
+    {
+        $owner = User::factory()->unverified()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $this->actingAs($owner, 'sanctum')
+            ->postJson('/api/owner/venues', [
+                'name' => 'Unverified Lounge',
+                'venue_type' => Venue::TYPE_LOUNGE,
+                'city' => 'Pristina',
+            ])
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Please verify your email address before managing restaurant or bar reservations.');
+
+        $this->assertDatabaseMissing('venues', [
+            'user_id' => $owner->id,
+            'name' => 'Unverified Lounge',
+        ]);
     }
 
     public function test_public_venue_endpoint_exposes_active_venues_only(): void
@@ -193,6 +222,111 @@ class VenueFoundationTest extends TestCase
 
         $this->actingAs($otherOwner, 'sanctum')
             ->putJson("/api/owner/venues/{$venue->slug}", ['name' => 'Changed'])
+            ->assertForbidden();
+    }
+
+    public function test_owner_can_manage_venue_availability_exceptions(): void
+    {
+        $owner = $this->organizer();
+        $venue = Venue::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Exception Bar',
+            'slug' => 'exception-bar',
+            'venue_type' => Venue::TYPE_BAR,
+            'city' => 'Pristina',
+        ]);
+
+        $blackoutId = $this->actingAs($owner, 'sanctum')
+            ->postJson("/api/owner/venues/{$venue->slug}/blackout-dates", [
+                'date' => '2026-12-25',
+                'reason' => 'Christmas',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.date', '2026-12-25')
+            ->assertJsonPath('data.reason', 'Christmas')
+            ->json('data.id');
+
+        $this->actingAs($owner, 'sanctum')
+            ->getJson("/api/owner/venues/{$venue->slug}/blackout-dates")
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $blackoutId);
+
+        $specialId = $this->actingAs($owner, 'sanctum')
+            ->postJson("/api/owner/venues/{$venue->slug}/special-hours", [
+                'date' => '2026-12-31',
+                'opens_at' => '08:00',
+                'closes_at' => '02:00',
+                'is_closed' => false,
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.date', '2026-12-31')
+            ->assertJsonPath('data.opens_at', '08:00')
+            ->assertJsonPath('data.closes_at', '02:00')
+            ->json('data.id');
+
+        $this->actingAs($owner, 'sanctum')
+            ->putJson("/api/owner/venues/{$venue->slug}/special-hours/{$specialId}", [
+                'date' => '2026-12-31',
+                'is_closed' => true,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.is_closed', true)
+            ->assertJsonPath('data.opens_at', null)
+            ->assertJsonPath('data.closes_at', null);
+
+        $this->actingAs($owner, 'sanctum')
+            ->deleteJson("/api/owner/venues/{$venue->slug}/blackout-dates/{$blackoutId}")
+            ->assertOk();
+
+        $this->actingAs($owner, 'sanctum')
+            ->deleteJson("/api/owner/venues/{$venue->slug}/special-hours/{$specialId}")
+            ->assertOk();
+
+        $this->assertDatabaseMissing('venue_blackout_dates', ['id' => $blackoutId]);
+        $this->assertDatabaseMissing('venue_special_hours', ['id' => $specialId]);
+    }
+
+    public function test_owner_cannot_manage_another_owners_availability_exceptions(): void
+    {
+        $owner = $this->organizer();
+        $otherOwner = $this->organizer();
+        $venue = Venue::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Protected Bar',
+            'slug' => 'protected-bar',
+            'venue_type' => Venue::TYPE_BAR,
+            'city' => 'Pristina',
+        ]);
+        $blackout = VenueBlackoutDate::query()->create([
+            'venue_id' => $venue->id,
+            'date' => '2026-07-04',
+            'reason' => 'Private Event',
+        ]);
+        $specialHour = VenueSpecialHour::query()->create([
+            'venue_id' => $venue->id,
+            'date' => '2026-08-15',
+            'is_closed' => true,
+        ]);
+
+        $this->actingAs($otherOwner, 'sanctum')
+            ->getJson("/api/owner/venues/{$venue->slug}/blackout-dates")
+            ->assertForbidden();
+
+        $this->actingAs($otherOwner, 'sanctum')
+            ->postJson("/api/owner/venues/{$venue->slug}/special-hours", [
+                'date' => '2026-12-31',
+                'opens_at' => '08:00',
+                'closes_at' => '02:00',
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($otherOwner, 'sanctum')
+            ->deleteJson("/api/owner/venues/{$venue->slug}/blackout-dates/{$blackout->id}")
+            ->assertForbidden();
+
+        $this->actingAs($otherOwner, 'sanctum')
+            ->deleteJson("/api/owner/venues/{$venue->slug}/special-hours/{$specialHour->id}")
             ->assertForbidden();
     }
 

@@ -238,17 +238,25 @@
 
   async function syncAuthNav() {
     paintAuthNav();
+    const params = new URLSearchParams(location.search);
+    const shouldShowVerifiedMessage = params.get('verified') === '1';
+
+    if (shouldShowVerifiedMessage && !getToken()) {
+      window.tkToast?.('Your email has been verified successfully.', 'success');
+      return;
+    }
+
     if (!getToken()) return;
+
     try {
       const user = await refreshUser();
-      const params = new URLSearchParams(location.search);
-      if (params.get('verified') === '1' && hasVerifiedEmail(user)) {
+      if (shouldShowVerifiedMessage && hasVerifiedEmail(user)) {
         window.EventSphereNotifications?.add({
           type: 'system',
           title: 'Email Verified',
-          message: 'Your email address has been verified successfully.',
+          message: 'Your email has been verified successfully.',
         });
-        window.tkToast?.('Email verified successfully', 'success');
+        window.tkToast?.('Your email has been verified successfully.', 'success');
       }
     } catch {
       clearSession();

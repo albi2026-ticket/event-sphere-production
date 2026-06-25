@@ -912,6 +912,7 @@
 .reservation-status-confirmed { color:#86efac; background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.35); }
 .reservation-status-completed { color:#93c5fd; background:rgba(59,130,246,.12); border-color:rgba(59,130,246,.35); }
 .reservation-status-cancelled { color:#fca5a5; background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.35); }
+.reservation-status-no_show { color:#cbd5e1; background:rgba(148,163,184,.14); border-color:rgba(148,163,184,.35); }
 .my-reservations-page {
   min-height: 100vh;
   background:

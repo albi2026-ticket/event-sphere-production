@@ -3,7 +3,9 @@
 namespace App\Http\Requests\Api\Reservations;
 
 use App\Models\Venue;
+use App\Services\Reservations\ReservationAvailabilityService;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -13,7 +15,17 @@ class StoreReservationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) $this->user();
+        $user = $this->user();
+
+        if (! $user) {
+            return false;
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            throw new AuthorizationException('Please verify your email address before creating a reservation.');
+        }
+
+        return true;
     }
 
     /**
@@ -93,7 +105,8 @@ class StoreReservationRequest extends FormRequest
                     return;
                 }
 
-                $this->validateOpeningHours($validator, $venue, $reservationAt);
+                $this->validateAvailability($validator, $venue, $reservationAt);
+                $this->validateSlotCapacity($validator, $venue);
             },
         ];
     }
@@ -109,44 +122,26 @@ class StoreReservationRequest extends FormRequest
         return $hour >= 0 && $hour <= 23 && in_array($minute, [0, 30], true);
     }
 
-    private function validateOpeningHours(Validator $validator, Venue $venue, Carbon $reservationAt): void
+    private function validateAvailability(Validator $validator, Venue $venue, Carbon $reservationAt): void
     {
-        $openingHour = $venue->openingHours()
-            ->where('day_of_week', $reservationAt->dayOfWeekIso - 1)
-            ->first();
-
-        if (! $openingHour) {
-            return;
-        }
-
-        if ($openingHour->is_closed) {
-            $validator->errors()->add('reservation_date', 'This venue is closed on the selected day.');
-
-            return;
-        }
-
-        if (! $openingHour->opens_at || ! $openingHour->closes_at) {
-            $validator->errors()->add('reservation_time', 'This venue is closed at the selected time.');
-
-            return;
-        }
-
-        $opensAt = $this->timeToMinutes((string) $openingHour->opens_at);
-        $closesAt = $this->timeToMinutes((string) $openingHour->closes_at);
-        $reservationMinutes = ($reservationAt->hour * 60) + $reservationAt->minute;
-
-        if ($opensAt === null || $closesAt === null || $reservationMinutes < $opensAt || $reservationMinutes >= $closesAt) {
-            $validator->errors()->add('reservation_time', 'This venue is closed at the selected time.');
+        $error = app(ReservationAvailabilityService::class)->availabilityError($venue, $reservationAt);
+        if ($error) {
+            $validator->errors()->add($error['field'], $error['message']);
         }
     }
 
-    private function timeToMinutes(string $value): ?int
+    private function validateSlotCapacity(Validator $validator, Venue $venue): void
     {
-        $time = preg_match('/^\d{2}:\d{2}:\d{2}$/', $value) ? substr($value, 0, 5) : $value;
-        if (! preg_match('/^(\d{2}):(\d{2})$/', $time, $matches)) {
-            return null;
+        if ($validator->errors()->isNotEmpty()) {
+            return;
         }
 
-        return ((int) $matches[1] * 60) + (int) $matches[2];
+        $date = (string) $this->input('reservation_date');
+        $time = (string) $this->input('reservation_time');
+
+        if (app(ReservationAvailabilityService::class)->slotIsFull($venue, $date, $time)) {
+            $validator->errors()->add('reservation_time', 'This time slot is fully booked. Please choose another time.');
+        }
     }
+
 }

@@ -9,6 +9,8 @@
     orders: [],
     users: [],
     events: [],
+    venues: [],
+    reservations: [],
     tickets: [],
     categories: [],
     emailCenter: null,
@@ -20,6 +22,9 @@
     settings: null,
     userFilters: {},
     eventFilters: {},
+    venueFilters: {},
+    reservationFilters: {},
+    reservationMeta: null,
     paymentFilters: {},
     ticketFilters: {},
     auditFilters: {},
@@ -29,8 +34,8 @@
     sectionRequests: {},
     dataLoaded: {},
     dataRequests: {},
-    loading: { users: false, events: false, payments: false, tickets: false, categories: false, emailCenter: false, auditLogs: false, checkIns: false, settings: false },
-    errors: { users: null, events: null, payments: null, tickets: null, categories: null, emailCenter: null, auditLogs: null, checkIns: null, settings: null },
+    loading: { users: false, events: false, venues: false, reservations: false, payments: false, tickets: false, categories: false, emailCenter: false, auditLogs: false, checkIns: false, settings: false },
+    errors: { users: null, events: null, venues: null, reservations: null, payments: null, tickets: null, categories: null, emailCenter: null, auditLogs: null, checkIns: null, settings: null },
   };
 
   function rows(payload) {
@@ -70,6 +75,13 @@
     return `<span class="badge status-badge status-${u().escapeHtml(classKey)}">${safe}</span>`;
   }
 
+  function reservationBadge(value) {
+    const key = String(value || 'pending').toLowerCase();
+    const classKey = key.replace(/\s+/g, '_');
+    const safe = u().escapeHtml(key.replace(/_/g, ' '));
+    return `<span class="reservation-status reservation-status-${u().escapeHtml(classKey)}">${safe}</span>`;
+  }
+
   function verificationBadge(user) {
     const verified = Boolean(user.email_verified_at);
     return `<span class="badge status-badge status-${verified ? 'verified' : 'not_verified'}"><i class="bi ${verified ? 'bi-check-circle' : 'bi-x-circle'} me-1"></i>${verified ? 'Verified' : 'Not Verified'}</span>`;
@@ -87,6 +99,10 @@
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return '-';
     return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+
+  function titleize(value) {
+    return String(value || '-').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
   }
 
   function eventInventory(event) {
@@ -285,6 +301,45 @@
     }
   }
 
+  async function loadVenues() {
+    state.loading.venues = true;
+    state.errors.venues = null;
+    renderVenues();
+    try {
+      const query = qs({ per_page: 100, ...state.venueFilters });
+      const res = await api().fetch(`/admin/venues${query ? `?${query}` : ''}`);
+      state.venues = rows(res.data);
+      hydrateReservationFilters();
+    } catch (err) {
+      state.errors.venues = err.message || 'Failed to load venues';
+    } finally {
+      state.loading.venues = false;
+      renderKpis();
+      renderVenues();
+      renderActivity();
+    }
+  }
+
+  async function loadReservations() {
+    state.loading.reservations = true;
+    state.errors.reservations = null;
+    renderReservations();
+    try {
+      const query = qs({ per_page: 100, ...state.reservationFilters });
+      const res = await api().fetch(`/admin/reservations${query ? `?${query}` : ''}`);
+      state.reservations = rows(res.data);
+      state.reservationMeta = res.meta || null;
+    } catch (err) {
+      state.errors.reservations = err.message || 'Failed to load reservations';
+      state.reservationMeta = null;
+    } finally {
+      state.loading.reservations = false;
+      renderKpis();
+      renderReservations();
+      renderActivity();
+    }
+  }
+
   async function loadTickets() {
     state.loading.tickets = true;
     state.errors.tickets = null;
@@ -340,6 +395,25 @@
     select.value = current;
   }
 
+  function hydrateReservationFilters() {
+    const venueSelect = document.querySelector('[data-admin-reservation-venue]');
+    if (venueSelect) {
+      const current = venueSelect.value;
+      venueSelect.innerHTML = '<option value="">All venues</option>' + state.venues.map((venue) => `<option value="${venue.id}">${u().escapeHtml(venue.name)}</option>`).join('');
+      venueSelect.value = current;
+    }
+
+    const ownerSelect = document.querySelector('[data-admin-reservation-owner]');
+    if (ownerSelect) {
+      const current = ownerSelect.value;
+      const owners = Array.from(new Map(state.venues
+        .filter((venue) => venue.owner?.id)
+        .map((venue) => [String(venue.owner.id), venue.owner])).values());
+      ownerSelect.innerHTML = '<option value="">All owners</option>' + owners.map((owner) => `<option value="${owner.id}">${u().escapeHtml(owner.name || owner.email)}</option>`).join('');
+      ownerSelect.value = current;
+    }
+  }
+
   async function loadAdminDashboard() {
     try {
       const { data } = await api().fetch('/admin/dashboard');
@@ -386,6 +460,12 @@
         ['Active Reservations', Number(reservationStats.active || 0), 'Checkout holds'],
         ['Expired Reservations', Number(reservationStats.expired || 0), 'Audit retained'],
         ['Completed Reservations', Number(reservationStats.completed || 0), 'Converted to orders'],
+        ['Total Venues', Number(reservationStats.total_venues || state.venues.length || 0), 'Reservation module'],
+        ['Active Venues', Number(reservationStats.active_venues || state.venues.filter((venue) => venue.status === 'active').length || 0), 'Accepting reservations'],
+        ['Total Reservations', Number(reservationStats.total_reservations || state.reservations.length || 0), 'Guest bookings'],
+        ['Pending Reservations', Number(reservationStats.pending_reservations || state.reservations.filter((item) => item.status === 'pending').length || 0), 'Need attention'],
+        ['Confirmed Reservations', Number(reservationStats.confirmed_reservations || state.reservations.filter((item) => item.status === 'confirmed').length || 0), 'Approved bookings'],
+        ['Cancelled Reservations', Number(reservationStats.cancelled_reservations || state.reservations.filter((item) => item.status === 'cancelled').length || 0), 'Cancelled bookings'],
         ['Revenue Generated', money(totalGmv, 'USD'), `${paidOrders.length} paid orders`],
         ['Service Fees Collected', money(serviceFees, 'USD'), `${Number(state.settings?.default_service_fee_percentage ?? 10)}% default`],
         ['Check-Ins Completed', checkedIn, `${Number(state.checkInStats?.remaining || 0)} remaining`],
@@ -406,6 +486,8 @@
       ['Organizer Requests', pendingOrganizers, 'pending'],
       ['Active Reservations', Number(reservationStats.active || 0), 'active'],
       ['Expired Reservations', Number(reservationStats.expired || 0), 'expired'],
+      ['Active Venues', Number(reservationStats.active_venues || state.venues.filter((venue) => venue.status === 'active').length || 0), 'active'],
+      ['Pending Table Reservations', Number(reservationStats.pending_reservations || state.reservations.filter((item) => item.status === 'pending').length || 0), 'pending'],
       ['Refunds Tracked', refunds, refunds ? 'refunded' : 'valid'],
       ['Default Service Fee', `${Number(state.settings?.default_service_fee_percentage ?? 10)}%`, 'active'],
     ].map(([label, value, status]) => `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${label}</span><small>Platform status</small></span>${badge(status, String(value))}</div>`).join('');
@@ -643,6 +725,103 @@
         </tr>
       `;
     }).join('') || emptyRow(11, 'bi-calendar-event', 'No events match these filters');
+  }
+
+  function renderVenues() {
+    const body = document.querySelector('[data-admin-venues]');
+    if (!body) return;
+    if (state.loading.venues) {
+      body.innerHTML = loadingRow(8, 'Loading venues...');
+      return;
+    }
+    if (state.errors.venues) {
+      body.innerHTML = errorRow(8, state.errors.venues, 'data-retry-venues');
+      return;
+    }
+
+    body.innerHTML = state.venues.map((venue) => `
+      <tr>
+        <td data-label="Venue Name"><div class="fw-semibold">${u().escapeHtml(venue.name)}</div><small class="text-muted-pro">${u().escapeHtml(venue.slug || '')}</small></td>
+        <td data-label="Type">${titleize(venue.venue_type)}</td>
+        <td data-label="Owner"><div>${u().escapeHtml(venue.owner?.name || `#${venue.user_id}`)}</div><small class="text-muted-pro">${u().escapeHtml(venue.owner?.email || '')}</small></td>
+        <td data-label="City">${u().escapeHtml(venue.city || '-')}</td>
+        <td data-label="Status">${badge(venue.status)}</td>
+        <td data-label="Created Date">${dateLabel(venue.created_at)}</td>
+        <td data-label="Total Reservations">${venue.reservations_count ?? 0}</td>
+        <td data-label="Actions" class="text-end">
+          <div class="admin-actions">
+            ${buttonIcon('bi-eye', 'View venue', `data-view-venue="${venue.slug}"`)}
+            ${buttonIcon('bi-pencil', 'Edit venue', `data-edit-venue="${venue.slug}"`)}
+            ${venue.status === 'active'
+              ? buttonIcon('bi-pause-circle', 'Deactivate venue', `data-deactivate-venue="${venue.slug}"`)
+              : buttonIcon('bi-play-circle', 'Activate venue', `data-activate-venue="${venue.slug}"`)}
+            ${buttonIcon('bi-trash', 'Delete venue', `data-delete-venue="${venue.slug}"`)}
+          </div>
+        </td>
+      </tr>
+    `).join('') || emptyRow(8, 'bi-shop', 'No venues match these filters');
+  }
+
+  function renderReservations() {
+    const body = document.querySelector('[data-admin-reservations]');
+    if (!body) return;
+    renderReservationStats();
+    if (state.loading.reservations) {
+      body.innerHTML = loadingRow(11, 'Loading reservations...');
+      return;
+    }
+    if (state.errors.reservations) {
+      body.innerHTML = errorRow(11, state.errors.reservations, 'data-retry-reservations');
+      return;
+    }
+
+    body.innerHTML = state.reservations.map((reservation) => `
+      <tr>
+        <td data-label="Reservation ID">#${reservation.id}</td>
+        <td data-label="Venue Name"><div class="fw-semibold">${u().escapeHtml(reservation.venue?.name || `#${reservation.venue_id}`)}</div><small class="text-muted-pro">${u().escapeHtml(reservation.venue?.city || '')}</small></td>
+        <td data-label="Guest Name">${u().escapeHtml(reservation.guest_name || reservation.user?.name || '-')}</td>
+        <td data-label="Guest Email">${u().escapeHtml(reservation.user?.email || '-')}</td>
+        <td data-label="Phone">${u().escapeHtml(reservation.phone || '-')}</td>
+        <td data-label="Party Size">${reservation.party_size ?? '-'}</td>
+        <td data-label="Date">${dateLabel(reservation.reservation_date)}</td>
+        <td data-label="Time">${u().escapeHtml(String(reservation.reservation_time || '').slice(0, 5) || '-')}</td>
+        <td data-label="Status">${reservationBadge(reservation.status)}</td>
+        <td data-label="Created At">${dateTimeLabel(reservation.created_at)}</td>
+        <td data-label="Actions" class="text-end">
+          <div class="admin-actions">
+            ${buttonIcon('bi-eye', 'View reservation', `data-view-reservation="${reservation.id}"`)}
+            <button class="btn btn-glass btn-sm" type="button" data-confirm-reservation="${reservation.id}" ${reservation.status !== 'pending' ? 'disabled' : ''}>Confirm</button>
+            <button class="btn btn-glass btn-sm" type="button" data-cancel-reservation="${reservation.id}" ${!['pending', 'confirmed'].includes(reservation.status) ? 'disabled' : ''}>Cancel</button>
+            <button class="btn btn-glass btn-sm" type="button" data-complete-reservation="${reservation.id}" ${reservation.status !== 'confirmed' ? 'disabled' : ''}>Complete</button>
+            <button class="btn btn-glass btn-sm" type="button" data-no-show-reservation="${reservation.id}" ${reservation.status !== 'confirmed' ? 'disabled' : ''}>No Show</button>
+            ${buttonIcon('bi-trash', 'Delete reservation', `data-delete-reservation="${reservation.id}"`)}
+          </div>
+        </td>
+      </tr>
+    `).join('') || emptyRow(11, 'bi-calendar-check', 'No reservations match these filters');
+  }
+
+  function renderReservationStats() {
+    const statsRoot = document.querySelector('[data-admin-reservation-stats]');
+    const platformRoot = document.querySelector('[data-admin-reservation-platform]');
+    if (!statsRoot || !platformRoot) return;
+    const stats = state.reservationMeta?.stats || {};
+    statsRoot.innerHTML = [
+      ['Total Reservations', stats.total || 0],
+      ['Pending', stats.pending || 0],
+      ['Confirmed', stats.confirmed || 0],
+      ['Completed', stats.completed || 0],
+      ['Cancelled', stats.cancelled || 0],
+      ['No Show', stats.no_show || 0],
+    ].map(([label, value]) => `<div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">${label}</div><div class="value">${value}</div><div class="delta">Filtered results</div></div></div>`).join('');
+
+    const platform = state.reservationMeta?.platform || {};
+    platformRoot.innerHTML = `
+      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Reservations Today</span><small>Platform-wide</small></span>${badge('active', String(platform.today || 0))}</div></div>
+      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Reservations This Month</span><small>Platform-wide</small></span>${badge('active', String(platform.this_month || 0))}</div></div>
+      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Top Venues By Reservations</span><small>${(platform.top_venues || []).map((item) => `${u().escapeHtml(item.name)} (${item.total})`).join('<br>') || 'No data'}</small></span></div></div>
+      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Most Active Cities</span><small>${(platform.top_cities || []).map((item) => `${u().escapeHtml(item.city)} (${item.total})`).join('<br>') || 'No data'}</small></span></div></div>
+    `;
   }
 
   function paymentRow(order, actions) {
@@ -1007,6 +1186,8 @@
       ...state.events.slice(0, 8).map((evt) => ({ at: evt.created_at, icon: 'bi-calendar-plus', text: `Event created: ${evt.title}`, status: evt.status })),
       ...state.events.filter((evt) => evt.status === 'published').slice(0, 6).map((evt) => ({ at: evt.updated_at || evt.created_at, icon: 'bi-broadcast', text: `Event published: ${evt.title}`, status: 'published' })),
       ...state.events.filter((evt) => adminEventState(evt).key === 'sold_out').slice(0, 6).map((evt) => ({ at: evt.updated_at || evt.created_at, icon: 'bi-lightning-charge', text: `Event sold out: ${evt.title}`, status: 'sold_out' })),
+      ...state.venues.slice(0, 6).map((venue) => ({ at: venue.created_at, icon: 'bi-shop', text: `Venue created: ${venue.name}`, status: venue.status })),
+      ...state.reservations.slice(0, 8).map((reservation) => ({ at: reservation.created_at, icon: 'bi-calendar-check', text: `Reservation requested: ${reservation.guest_name}`, status: reservation.status })),
       ...state.orders.slice(0, 8).map((order) => ({ at: order.updated_at || order.created_at, icon: 'bi-ticket-perforated', text: `Ticket purchased: ${order.order_number}`, status: order.payment_status })),
       ...state.checkInLogs.slice(0, 8).map((log) => ({ at: log.scanned_at, icon: 'bi-qr-code-scan', text: `Attendee checked in: ${log.attendee?.name || log.ticket_code || 'Ticket'}`, status: log.result })),
     ].sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0)).slice(0, 8);
@@ -1027,6 +1208,8 @@
     renderUsers();
     renderOrganizers();
     renderEvents();
+    renderVenues();
+    renderReservations();
     renderTickets();
     renderPayments();
     renderCheckIns();
@@ -1078,6 +1261,11 @@
         loadData('payments', loadPayments, force),
       ]),
       users: () => loadData('users', loadUsers, force),
+      venues: () => loadData('venues', loadVenues, force),
+      reservations: () => Promise.all([
+        loadData('venues', loadVenues, force),
+        loadData('reservations', loadReservations, force),
+      ]),
       tickets: () => Promise.all([
         loadData('events', loadEvents, force),
         loadData('tickets', loadTickets, force),
@@ -1101,6 +1289,8 @@
       reports: () => Promise.all([
         loadData('users', loadUsers, force),
         loadData('events', loadEvents, force),
+        loadData('venues', loadVenues, force),
+        loadData('reservations', loadReservations, force),
         loadData('tickets', loadTickets, force),
         loadData('payments', loadPayments, force),
         loadData('categories', loadCategories, force),
@@ -1108,6 +1298,8 @@
       'system-activity': () => Promise.all([
         loadData('users', loadUsers, force),
         loadData('events', loadEvents, force),
+        loadData('venues', loadVenues, force),
+        loadData('reservations', loadReservations, force),
         loadData('payments', loadPayments, force),
         loadData('checkIns', loadCheckIns, force),
         loadData('auditLogs', loadAuditLogs, force),
@@ -1161,6 +1353,20 @@
     renderCharts();
     renderEvents();
     renderCheckIns();
+    renderActivity();
+  }
+
+  async function refreshVenues() {
+    await loadData('venues', loadVenues, true);
+    renderKpis();
+    renderVenues();
+    renderActivity();
+  }
+
+  async function refreshReservations() {
+    await loadData('reservations', loadReservations, true);
+    renderKpis();
+    renderReservations();
     renderActivity();
   }
 
@@ -1275,6 +1481,65 @@
     `);
   }
 
+  function listNames(items) {
+    return (items || []).map((item) => item.name).filter(Boolean).map((name) => u().escapeHtml(name)).join(', ') || '-';
+  }
+
+  async function showVenue(slug) {
+    setModal('Venue details', '<div class="py-4 text-muted-pro"><span class="spinner-border spinner-border-sm me-2"></span>Loading venue...</div>');
+    const { data: venue } = await api().fetch(`/admin/venues/${slug}`);
+    const hours = venue.opening_hours || [];
+    setModal(venue.name, `
+      ${detailList([
+        ['Type', titleize(venue.venue_type)],
+        ['Status', badge(venue.status)],
+        ['Owner', `${u().escapeHtml(venue.owner?.name || '-')}<br><small>${u().escapeHtml(venue.owner?.email || '')}</small>`],
+        ['City', u().escapeHtml(venue.city || '-')],
+        ['Address', u().escapeHtml(venue.address || '-')],
+        ['Contact', `${u().escapeHtml(venue.phone || '-')}<br><small>${u().escapeHtml(venue.email || '')}</small>`],
+        ['Website', venue.website ? `<a href="${u().escapeHtml(venue.website)}" target="_blank" rel="noopener">${u().escapeHtml(venue.website)}</a>` : '-'],
+        ['Facilities', listNames(venue.facilities)],
+        ['Cuisine Types', listNames(venue.cuisine_types)],
+        ['Payment Methods', listNames(venue.payment_options)],
+        ['Reservation Settings', `${venue.reservation_settings?.min_guests || 1}-${venue.reservation_settings?.max_guests || 10} guests · ${venue.reservation_settings?.reservation_interval_minutes || 30} min intervals · last ${venue.reservation_settings?.last_reservation_time || '-'}`],
+        ['Social Links', [venue.social_links?.facebook_url, venue.social_links?.instagram_url, venue.social_links?.tiktok_url].filter(Boolean).map((link) => u().escapeHtml(link)).join('<br>') || '-'],
+        ['Total Reservations', String(venue.reservations_count ?? 0)],
+        ['Created', dateLabel(venue.created_at)],
+      ])}
+      <h6 class="mt-4">Gallery</h6>
+      ${(venue.images || []).length ? `<div class="row g-2">${venue.images.map((image) => `<div class="col-4"><img src="${u().escapeHtml(image.url || image.image_path)}" alt="" class="w-100 rounded-pro" style="aspect-ratio:4/3;object-fit:cover"/></div>`).join('')}</div>` : '<p class="text-muted-pro mb-0">No gallery images.</p>'}
+      <h6 class="mt-4">Opening Hours</h6>
+      ${hours.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${hours.map((item) => `<tr><td>Day ${item.day_of_week}</td><td>${item.is_closed ? 'Closed' : `${u().escapeHtml(String(item.opens_at || '').slice(0, 5))} - ${u().escapeHtml(String(item.closes_at || '').slice(0, 5))}`}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No opening hours configured.</p>'}
+    `);
+  }
+
+  async function showReservation(reservationId) {
+    setModal('Reservation details', '<div class="py-4 text-muted-pro"><span class="spinner-border spinner-border-sm me-2"></span>Loading reservation...</div>');
+    const { data: reservation } = await api().fetch(`/admin/reservations/${reservationId}`);
+    const history = reservation.email_history || [];
+    const auditHistory = reservation.audit_history || [];
+    setModal(`Reservation #${reservation.id}`, `
+      ${detailList([
+        ['Reservation ID', `#${reservation.id}`],
+        ['Venue Information', `${u().escapeHtml(reservation.venue?.name || '-')}<br><small>${u().escapeHtml([reservation.venue?.address, reservation.venue?.city, reservation.venue?.country].filter(Boolean).join(', ') || '')}</small>`],
+        ['Owner Information', `${u().escapeHtml(reservation.venue?.owner?.name || '-')}<br><small>${u().escapeHtml(reservation.venue?.owner?.email || '')}</small>`],
+        ['Guest Information', `${u().escapeHtml(reservation.guest_name || reservation.user?.name || '-')}<br><small>${u().escapeHtml(reservation.user?.email || '')}</small><br><small>${u().escapeHtml(reservation.phone || '')}</small>`],
+        ['Party Size', String(reservation.party_size || '-')],
+        ['Date', dateLabel(reservation.reservation_date)],
+        ['Time', u().escapeHtml(String(reservation.reservation_time || '').slice(0, 5) || '-')],
+        ['Status', reservationBadge(reservation.status)],
+        ['Notes', u().escapeHtml(reservation.notes || '-')],
+        ['Cancellation Reason', u().escapeHtml(reservation.cancellation_reason || '-')],
+        ['Created', dateTimeLabel(reservation.created_at)],
+        ['Updated', dateTimeLabel(reservation.updated_at)],
+      ])}
+      <h6 class="mt-4">Audit History</h6>
+      ${auditHistory.length ? `<div class="dashboard-stack">${auditHistory.map((item) => `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${u().escapeHtml(item.label || item.action || 'Reservation activity')}</span><small>${u().escapeHtml(item.actor || 'System')}</small></span><small class="text-muted-pro">${dateTimeLabel(item.timestamp)}</small></div>`).join('')}</div>` : '<p class="text-muted-pro mb-0">No audit history is available.</p>'}
+      <h6 class="mt-4">Email History</h6>
+      ${history.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${history.map((item) => `<tr><td>${u().escapeHtml(item.label || item.type || 'Email')}</td><td>${badge(item.status || (item.sent_at ? 'sent' : 'not_sent'))}</td><td>${dateTimeLabel(item.sent_at)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No reservation email history is available.</p>'}
+    `);
+  }
+
   async function showTicket(ticketId) {
     setModal('Ticket details', '<div class="py-4 text-muted-pro"><span class="spinner-border spinner-border-sm me-2"></span>Loading ticket...</div>');
     const { data: ticket } = await api().fetch(`/admin/tickets/${ticketId}`);
@@ -1381,6 +1646,60 @@
     await refreshEvents();
   }
 
+  async function editVenue(slug) {
+    const venue = state.venues.find((item) => String(item.slug) === String(slug));
+    const name = prompt('Venue name', venue?.name || '');
+    if (name === null) return;
+    const city = prompt('City', venue?.city || '');
+    if (city === null) return;
+    const venueType = prompt('Venue type: restaurant, bar, lounge, cafe', venue?.venue_type || 'restaurant');
+    if (venueType === null) return;
+    const status = prompt('Status: draft, active, inactive', venue?.status || 'active');
+    if (status === null) return;
+
+    await api().fetch(`/admin/venues/${slug}`, {
+      method: 'PATCH',
+      body: {
+        name,
+        city,
+        venue_type: venueType,
+        status,
+      },
+    });
+    window.tkToast?.('Venue updated');
+    await refreshVenues();
+    if (state.sectionLoaded.reservations) await refreshReservations();
+  }
+
+  async function confirmReservation(reservationId) {
+    await api().fetch(`/admin/reservations/${reservationId}/confirm`, { method: 'PATCH', body: {} });
+    window.tkToast?.('Reservation confirmed');
+    await refreshReservations();
+  }
+
+  async function completeReservation(reservationId) {
+    await api().fetch(`/admin/reservations/${reservationId}/complete`, { method: 'PATCH', body: {} });
+    window.tkToast?.('Reservation completed');
+    await refreshReservations();
+  }
+
+  async function noShowReservation(reservationId) {
+    await api().fetch(`/admin/reservations/${reservationId}/no-show`, { method: 'PATCH', body: {} });
+    window.tkToast?.('Reservation marked no show');
+    await refreshReservations();
+  }
+
+  async function cancelReservation(reservationId) {
+    const cancellationReason = prompt('Cancellation reason', '');
+    if (cancellationReason === null) return;
+    await api().fetch(`/admin/reservations/${reservationId}/cancel`, {
+      method: 'PATCH',
+      body: { cancellation_reason: cancellationReason },
+    });
+    window.tkToast?.('Reservation cancelled');
+    await refreshReservations();
+  }
+
   function bindFilters() {
     const userForm = document.querySelector('[data-admin-user-filters]');
     userForm?.addEventListener('submit', async (event) => {
@@ -1415,6 +1734,48 @@
       eventForm?.reset();
       state.eventFilters = {};
       await refreshEvents();
+    });
+
+    const venueForm = document.querySelector('[data-admin-venue-filters]');
+    venueForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const fd = new FormData(venueForm);
+      state.venueFilters = {
+        q: fd.get('q'),
+        venue_type: fd.get('venue_type'),
+        status: fd.get('status'),
+        city: fd.get('city'),
+        owner: fd.get('owner'),
+      };
+      await refreshVenues();
+    });
+
+    document.querySelector('[data-reset-admin-venues]')?.addEventListener('click', async () => {
+      venueForm?.reset();
+      state.venueFilters = {};
+      await refreshVenues();
+    });
+
+    const reservationForm = document.querySelector('[data-admin-reservation-filters]');
+    reservationForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const fd = new FormData(reservationForm);
+      state.reservationFilters = {
+        q: fd.get('q'),
+        status: fd.get('status'),
+        venue_id: fd.get('venue_id'),
+        owner_id: fd.get('owner_id'),
+        city: fd.get('city'),
+        date_from: fd.get('date_from'),
+        date_to: fd.get('date_to'),
+      };
+      await refreshReservations();
+    });
+
+    document.querySelector('[data-reset-admin-reservations]')?.addEventListener('click', async () => {
+      reservationForm?.reset();
+      state.reservationFilters = {};
+      await refreshReservations();
     });
 
     const paymentForm = document.querySelector('[data-admin-payment-filters]');
@@ -1584,6 +1945,8 @@
       try {
         if (button.dataset.retryUsers !== undefined) await refreshUsers();
         if (button.dataset.retryEvents !== undefined) await refreshEvents();
+        if (button.dataset.retryVenues !== undefined) await refreshVenues();
+        if (button.dataset.retryReservations !== undefined) await refreshReservations();
         if (button.dataset.retryPayments !== undefined) await refreshPayments();
         if (button.dataset.retryCheckins !== undefined) await refreshCheckIns();
         if (button.dataset.retryCategories !== undefined) await refreshCategories();
@@ -1648,6 +2011,8 @@
 
         if (button.dataset.viewUser) await showUser(button.dataset.viewUser);
         if (button.dataset.viewEvent) showEvent(button.dataset.viewEvent);
+        if (button.dataset.viewVenue) await showVenue(button.dataset.viewVenue);
+        if (button.dataset.viewReservation) await showReservation(button.dataset.viewReservation);
         if (button.dataset.viewTicket) await showTicket(button.dataset.viewTicket);
         if (button.dataset.ticketQr) showTicketQr(button.dataset.ticketQr);
         if (button.dataset.ticketManualValidation) await manualValidateTicket(button.dataset.ticketManualValidation);
@@ -1682,6 +2047,65 @@
           await api().fetch(`/admin/users/${button.dataset.approveOrganizer}/approve-organizer`, { method: 'POST', body: {} });
           window.tkToast?.('Organizer approved');
           await refreshUsers();
+        }
+
+        if (button.dataset.editVenue) {
+          button.disabled = true;
+          await editVenue(button.dataset.editVenue);
+        }
+
+        if (button.dataset.activateVenue) {
+          button.disabled = true;
+          await api().fetch(`/admin/venues/${button.dataset.activateVenue}/activate`, { method: 'POST', body: {} });
+          window.tkToast?.('Venue activated');
+          await refreshVenues();
+          if (state.sectionLoaded.reservations) await refreshReservations();
+        }
+
+        if (button.dataset.deactivateVenue) {
+          if (!confirm('Deactivate this venue?')) return;
+          button.disabled = true;
+          await api().fetch(`/admin/venues/${button.dataset.deactivateVenue}/deactivate`, { method: 'POST', body: {} });
+          window.tkToast?.('Venue deactivated');
+          await refreshVenues();
+          if (state.sectionLoaded.reservations) await refreshReservations();
+        }
+
+        if (button.dataset.deleteVenue) {
+          if (!confirm('Delete this venue and its reservations?')) return;
+          button.disabled = true;
+          await api().fetch(`/admin/venues/${button.dataset.deleteVenue}`, { method: 'DELETE' });
+          window.tkToast?.('Venue deleted');
+          await refreshVenues();
+          if (state.sectionLoaded.reservations) await refreshReservations();
+        }
+
+        if (button.dataset.confirmReservation) {
+          button.disabled = true;
+          await confirmReservation(button.dataset.confirmReservation);
+        }
+
+        if (button.dataset.cancelReservation) {
+          button.disabled = true;
+          await cancelReservation(button.dataset.cancelReservation);
+        }
+
+        if (button.dataset.completeReservation) {
+          button.disabled = true;
+          await completeReservation(button.dataset.completeReservation);
+        }
+
+        if (button.dataset.noShowReservation) {
+          button.disabled = true;
+          await noShowReservation(button.dataset.noShowReservation);
+        }
+
+        if (button.dataset.deleteReservation) {
+          if (!confirm('Delete this reservation?')) return;
+          button.disabled = true;
+          await api().fetch(`/admin/reservations/${button.dataset.deleteReservation}`, { method: 'DELETE' });
+          window.tkToast?.('Reservation deleted');
+          await refreshReservations();
         }
 
         if (button.dataset.rejectOrganizer) {
@@ -1792,6 +2216,8 @@
             ['section', 'id', 'name', 'status'],
             ...state.users.map((usr) => ['user', usr.id, usr.email, usr.status]),
             ...state.events.map((evt) => ['event', evt.id, evt.title, evt.status]),
+            ...state.venues.map((venue) => ['venue', venue.id, venue.name, venue.status]),
+            ...state.reservations.map((reservation) => ['reservation', reservation.id, reservation.guest_name, reservation.status]),
             ...state.tickets.map((ticket) => ['ticket', ticket.id, ticket.ticket_code, ticket.status]),
             ...state.orders.map((order) => ['order', order.id, order.order_number, order.payment_status]),
           ].map((row) => row.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');

@@ -30,6 +30,11 @@ class ReservationResource extends JsonResource
                 'city' => $this->venue->city,
                 'country' => $this->venue->country,
                 'address' => $this->venue->address,
+                'owner' => $this->venue->relationLoaded('owner') && $this->venue->owner ? [
+                    'id' => $this->venue->owner->id,
+                    'name' => $this->venue->owner->name,
+                    'email' => $this->venue->owner->email,
+                ] : null,
                 'image_url' => $this->venue->relationLoaded('images')
                     ? $this->venue->images->sortBy('sort_order')->first()?->publicUrl()
                     : null,
@@ -39,6 +44,7 @@ class ReservationResource extends JsonResource
                 'name' => $this->user->name,
                 'email' => $this->user->email,
             ]),
+            'email_history' => [],
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

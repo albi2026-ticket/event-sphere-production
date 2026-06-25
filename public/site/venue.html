@@ -28,6 +28,21 @@
       <div class="d-flex align-items-center gap-2">
         <a class="btn btn-ghost" href="login.html" data-auth-guest>Login</a>
         <a class="btn btn-gold" href="register.html" data-auth-guest>Register</a>
+        <div class="notification-root" data-notification-root data-auth-user hidden>
+          <button class="icon-btn notification-toggle" type="button" data-notification-toggle aria-label="Notifications" aria-expanded="false">
+            <i class="bi bi-bell"></i>
+            <span class="notification-badge" data-notification-count hidden>0</span>
+          </button>
+          <div class="notification-panel" data-notification-panel hidden>
+            <div class="notification-head">
+              <div><strong>Notifications</strong><span>In-app updates</span></div>
+              <button type="button" data-notification-mark-all>Mark all read</button>
+            </div>
+            <div class="notification-list" data-notification-list></div>
+            <div class="notification-empty" data-notification-empty hidden>No notifications yet.</div>
+            <a class="notification-view-all" href="notifications.html">View all notifications</a>
+          </div>
+        </div>
         <a class="btn btn-gold" href="#" data-auth-user data-logout hidden>Logout</a>
       </div>
     </div>
@@ -239,6 +254,38 @@
           <button type="submit" class="btn btn-gold btn-lg" data-reservation-submit>Send Reservation Request</button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="reservationVerifyEmailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content dashboard-modal reservation-booking-modal">
+      <div class="modal-header reservation-modal-head">
+        <div>
+          <span class="eyebrow-res">Email Verification Required</span>
+          <h5 class="modal-title mt-2">Verify your email address first.</h5>
+          <p class="text-muted-pro mb-0">Please verify your email address before creating a reservation.</p>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex gap-3 align-items-start">
+          <div style="width:44px;height:44px;border-radius:14px;background:var(--res-gold-soft);display:grid;place-items:center;flex:0 0 auto">
+            <i class="bi bi-envelope-check text-gold fs-4"></i>
+          </div>
+          <div>
+            <p class="mb-2">This helps protect restaurants and bars from spam reservations and keeps your booking updates tied to a real inbox.</p>
+            <p class="small text-muted-pro mb-0">After verifying, come back here and continue your reservation request.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-pro">
+        <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-gold" data-reservation-resend-verification>
+          <i class="bi bi-send me-1"></i> Resend Verification Email
+        </button>
+      </div>
     </div>
   </div>
 </div>

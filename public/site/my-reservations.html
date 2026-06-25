@@ -28,6 +28,21 @@
       <div class="d-flex align-items-center gap-2">
         <a class="btn btn-ghost" href="login.html" data-auth-guest>Login</a>
         <a class="btn btn-gold" href="register.html" data-auth-guest>Register</a>
+        <div class="notification-root" data-notification-root data-auth-user hidden>
+          <button class="icon-btn notification-toggle" type="button" data-notification-toggle aria-label="Notifications" aria-expanded="false">
+            <i class="bi bi-bell"></i>
+            <span class="notification-badge" data-notification-count hidden>0</span>
+          </button>
+          <div class="notification-panel" data-notification-panel hidden>
+            <div class="notification-head">
+              <div><strong>Notifications</strong><span>In-app updates</span></div>
+              <button type="button" data-notification-mark-all>Mark all read</button>
+            </div>
+            <div class="notification-list" data-notification-list></div>
+            <div class="notification-empty" data-notification-empty hidden>No notifications yet.</div>
+            <a class="notification-view-all" href="notifications.html">View all notifications</a>
+          </div>
+        </div>
         <a class="btn btn-gold" href="#" data-auth-user data-logout hidden>Logout</a>
       </div>
     </div>
@@ -78,6 +93,13 @@
         <div><h2>Completed Reservations</h2><div class="sub">Past restaurant and bar visits</div></div>
       </div>
       <div class="row g-4" data-reservations-list="completed"></div>
+    </div>
+
+    <div class="reservation-section" data-reservation-section="no_show">
+      <div class="section-head-res">
+        <div><h2>No Show Reservations</h2><div class="sub">Reservations marked as missed by the restaurant or bar</div></div>
+      </div>
+      <div class="row g-4" data-reservations-list="no_show"></div>
     </div>
   </section>
 </main>

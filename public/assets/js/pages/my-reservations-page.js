@@ -6,7 +6,7 @@
   const auth = () => window.EventSphereAuth;
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
   const fallbackImage = 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1000&q=80';
-  const statuses = ['pending', 'confirmed', 'cancelled', 'completed'];
+  const statuses = ['pending', 'confirmed', 'cancelled', 'completed', 'no_show'];
   let reservations = [];
   let cancelId = null;
 
@@ -16,8 +16,10 @@
       confirmed: 'reservation-status-confirmed',
       completed: 'reservation-status-completed',
       cancelled: 'reservation-status-cancelled',
+      no_show: 'reservation-status-no_show',
     };
-    return `<span class="reservation-status ${map[status] || ''}">${esc(status || 'pending')}</span>`;
+    const label = String(status || 'pending').replace(/_/g, ' ');
+    return `<span class="reservation-status ${map[status] || ''}">${esc(label)}</span>`;
   }
 
   function dateLabel(value) {
@@ -101,6 +103,7 @@
       confirmed: 'No confirmed reservations.',
       cancelled: 'No cancelled reservations.',
       completed: 'No completed reservations.',
+      no_show: 'No no-show reservations.',
     };
     return `
       <div class="col-12">
@@ -121,9 +124,10 @@
       confirmed: 'Confirmed Reservations',
       cancelled: 'Cancelled Reservations',
       completed: 'Completed Reservations',
+      no_show: 'No Show Reservations',
     };
     root.innerHTML = statuses.map((status) => `
-      <div class="col-md-6 col-xl-3">
+      <div class="col-md-6 col-xl">
         <div class="reservation-stat">
           <span>${labels[status]}</span>
           <strong>${grouped[status]?.length || 0}</strong>

@@ -356,6 +356,15 @@
     return err?.message || 'Unable to create reservation. Please try again.';
   }
 
+  function userHasVerifiedEmail() {
+    const user = window.EventSphereAuth?.getUser?.();
+    return window.EventSphereAuth?.hasVerifiedEmail?.(user) === true;
+  }
+
+  function showVerifyEmailModal() {
+    bootstrap.Modal.getOrCreateInstance($('#reservationVerifyEmailModal')).show();
+  }
+
   function setReservationBusy(busy) {
     const button = $('[data-reservation-submit]');
     if (!button) return;
@@ -366,6 +375,11 @@
   async function submitReservation(event) {
     event.preventDefault();
     if (!currentVenue) return;
+
+    if (!userHasVerifiedEmail()) {
+      showVerifyEmailModal();
+      return;
+    }
 
     const form = event.currentTarget;
     const payload = {
@@ -418,8 +432,33 @@
           location.href = `login.html?next=${next}`;
           return;
         }
+        if (!userHasVerifiedEmail()) {
+          showVerifyEmailModal();
+          return;
+        }
         bootstrap.Modal.getOrCreateInstance($('#reservationModal')).show();
       });
+    });
+    $('[data-reservation-resend-verification]')?.addEventListener('click', async (event) => {
+      const button = event.currentTarget;
+      button.disabled = true;
+      const original = button.innerHTML;
+      button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
+      try {
+        const response = await window.EventSphereAuth?.resendVerificationEmail?.();
+        window.tkToast?.(response?.status === 'already-verified'
+          ? 'Email already verified'
+          : 'Verification email sent. Please check your inbox.', 'info');
+        await window.EventSphereAuth?.refreshUser?.();
+        if (userHasVerifiedEmail()) {
+          bootstrap.Modal.getOrCreateInstance($('#reservationVerifyEmailModal')).hide();
+        }
+      } catch (err) {
+        window.tkToast?.(err?.message || 'Verification email failed', 'error');
+      } finally {
+        button.disabled = false;
+        button.innerHTML = original;
+      }
     });
     document.addEventListener('click', (event) => {
       const trigger = event.target.closest('[data-picker-trigger]');

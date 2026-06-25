@@ -48,6 +48,7 @@ class OwnerVenueController extends Controller
     public function destroy(Request $request, Venue $venue): JsonResponse
     {
         abort_unless($request->user()->canManageVenue($venue), 403);
+        $this->ensureVerifiedOwner($request);
 
         $venue->delete();
 
@@ -80,6 +81,7 @@ class OwnerVenueController extends Controller
             $payload['min_guests'] = $payload['min_guests'] ?? 1;
             $payload['max_guests'] = $payload['max_guests'] ?? 10;
             $payload['reservation_interval_minutes'] = $payload['reservation_interval_minutes'] ?? 30;
+            $payload['max_reservations_per_slot'] = $payload['max_reservations_per_slot'] ?? 10;
         }
 
         return $payload;
@@ -136,5 +138,14 @@ class OwnerVenueController extends Controller
         }
 
         return $slug;
+    }
+
+    protected function ensureVerifiedOwner(Request $request): void
+    {
+        abort_unless(
+            $request->user()?->hasVerifiedEmail(),
+            403,
+            'Please verify your email address before managing restaurant or bar reservations.',
+        );
     }
 }

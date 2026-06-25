@@ -16,6 +16,7 @@ class OwnerVenueImageController extends Controller
     public function store(Request $request, Venue $venue): VenueResource
     {
         abort_unless($request->user()->canManageVenue($venue), 403);
+        $this->ensureVerifiedOwner($request);
 
         $payload = $request->validate([
             'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120'],
@@ -35,6 +36,7 @@ class OwnerVenueImageController extends Controller
     public function reorder(Request $request, Venue $venue): VenueResource
     {
         abort_unless($request->user()->canManageVenue($venue), 403);
+        $this->ensureVerifiedOwner($request);
 
         $payload = $request->validate([
             'images' => ['required', 'array'],
@@ -55,6 +57,7 @@ class OwnerVenueImageController extends Controller
     public function destroy(Request $request, VenueImage $venueImage): JsonResponse
     {
         abort_unless($request->user()->canManageVenue($venueImage->venue), 403);
+        $this->ensureVerifiedOwner($request);
 
         if (! str_starts_with($venueImage->image_path, 'http') && ! str_starts_with($venueImage->image_path, 'data:')) {
             Storage::disk('public')->delete($venueImage->image_path);
@@ -63,5 +66,14 @@ class OwnerVenueImageController extends Controller
         $venueImage->delete();
 
         return response()->json(['message' => 'Venue image deleted.']);
+    }
+
+    protected function ensureVerifiedOwner(Request $request): void
+    {
+        abort_unless(
+            $request->user()?->hasVerifiedEmail(),
+            403,
+            'Please verify your email address before managing restaurant or bar reservations.',
+        );
     }
 }

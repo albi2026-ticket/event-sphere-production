@@ -40,28 +40,40 @@
 
   /* ---------- In-app notifications ---------- */
   const NOTIFICATION_KEY = 'eventsphere-notifications';
-  const seedNotifications = [
-    {
-      id: 'welcome-notifications',
-      type: 'system',
-      title: 'Notifications ready',
-      message: 'Order updates, ticket activity, and account notices will appear here.',
-      created_at: new Date().toISOString(),
-      read: false,
-    },
-  ];
+  let serverNotifications = [];
+  let serverUnreadCount = 0;
+  let notificationRefreshInFlight = null;
   const notificationIcon = {
-    order: 'bi-receipt',
-    event: 'bi-calendar-event',
+    reservation_created: 'bi-calendar-plus',
+    reservation_confirmed: 'bi-patch-check',
+    reservation_cancelled: 'bi-calendar-x',
+    reservation_cancelled_by_user: 'bi-person-x',
+    ticket_purchased: 'bi-ticket-perforated',
+    ticket_refunded: 'bi-arrow-counterclockwise',
+    new_ticket_sale: 'bi-receipt',
+    venue_created: 'bi-shop',
+    venue_deactivated: 'bi-pause-circle',
+    event_approved: 'bi-calendar-check',
+    event_rejected: 'bi-calendar-x',
     system: 'bi-shield-check',
   };
+
+  function html(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;',
+    })[char]);
+  }
 
   function notificationUserKey() {
     const user = window.EventSphereAuth?.getUser?.();
     return user?.id ? `${NOTIFICATION_KEY}:${user.id}` : `${NOTIFICATION_KEY}:guest`;
   }
 
-  function readNotifications() {
+  function localNotifications() {
     const key = notificationUserKey();
     try {
       const stored = JSON.parse(localStorage.getItem(key) || 'null');
@@ -69,9 +81,26 @@
     } catch {
       /* reset invalid local notification cache */
     }
-    const initial = window.EventSphereAuth?.isLoggedIn?.() ? seedNotifications : [];
-    localStorage.setItem(key, JSON.stringify(initial));
-    return initial;
+    localStorage.setItem(key, JSON.stringify([]));
+    return [];
+  }
+
+  function normalizeNotification(item) {
+    return {
+      id: item.id,
+      type: item.type || 'system',
+      title: item.title || 'Notification',
+      message: item.message || '',
+      link: item.link || '',
+      created_at: item.created_at || new Date().toISOString(),
+      is_read: Boolean(item.is_read ?? item.read),
+    };
+  }
+
+  function readNotifications() {
+    return window.EventSphereAuth?.isLoggedIn?.()
+      ? serverNotifications
+      : localNotifications();
   }
 
   function writeNotifications(items) {
@@ -86,12 +115,43 @@
       type: item.type || 'system',
       title: item.title || 'Notification',
       message: item.message || '',
+      link: item.link || '',
       created_at: item.created_at || new Date().toISOString(),
-      read: Boolean(item.read),
+      is_read: Boolean(item.is_read ?? item.read),
       source: item.source || 'local',
     };
     writeNotifications([notification, ...notifications].slice(0, 30));
     return notification;
+  }
+
+  async function refreshNotifications(force = false) {
+    if (!window.EventSphereAuth?.isLoggedIn?.() || !window.EventSphereApi?.fetch) {
+      serverNotifications = [];
+      serverUnreadCount = 0;
+      renderNotifications();
+      return [];
+    }
+
+    if (notificationRefreshInFlight && !force) return notificationRefreshInFlight;
+
+    notificationRefreshInFlight = Promise.all([
+      window.EventSphereApi.fetch('/notifications?per_page=10', { skipAuthRedirect: true }),
+      window.EventSphereApi.fetch('/notifications/unread-count', { skipAuthRedirect: true }),
+    ]).then(([notifications, count]) => {
+      serverNotifications = (Array.isArray(notifications.data) ? notifications.data : []).map(normalizeNotification);
+      serverUnreadCount = Number(count.data?.count || 0);
+      renderNotifications();
+      return serverNotifications;
+    }).catch(() => {
+      serverNotifications = [];
+      serverUnreadCount = 0;
+      renderNotifications();
+      return [];
+    }).finally(() => {
+      notificationRefreshInFlight = null;
+    });
+
+    return notificationRefreshInFlight;
   }
 
   function relativeTime(value) {
@@ -114,33 +174,54 @@
     if (!panel || !list || !badge) return;
 
     const notifications = readNotifications();
-    const unread = notifications.filter((item) => !item.read).length;
+    const unread = window.EventSphereAuth?.isLoggedIn?.()
+      ? serverUnreadCount
+      : notifications.filter((item) => !item.is_read).length;
     badge.textContent = String(unread);
     badge.hidden = unread === 0;
     if (empty) empty.hidden = notifications.length > 0;
     list.innerHTML = notifications.map((item) => `
-      <button class="notification-item${item.read ? '' : ' unread'}" type="button" data-notification-id="${String(item.id).replace(/"/g, '&quot;')}">
+      <button class="notification-item${item.is_read ? '' : ' unread'}" type="button" data-notification-id="${html(item.id)}">
         <span class="notification-icon"><i class="bi ${notificationIcon[item.type] || notificationIcon.system}"></i></span>
         <span class="notification-copy">
-          <span class="notification-title">${String(item.title || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')}</span>
-          <span class="notification-message">${String(item.message || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')}</span>
+          <span class="notification-title">${html(item.title)}</span>
+          <span class="notification-message">${html(item.message)}</span>
           <span class="notification-time">${relativeTime(item.created_at)}</span>
         </span>
       </button>
     `).join('');
   }
 
-  function markNotificationRead(id) {
-    writeNotifications(readNotifications().map((item) => String(item.id) === String(id) ? { ...item, read: true } : item));
+  async function markNotificationRead(id) {
+    if (window.EventSphereAuth?.isLoggedIn?.() && window.EventSphereApi?.fetch) {
+      await window.EventSphereApi.fetch(`/notifications/${id}/read`, { method: 'PATCH', body: {}, skipAuthRedirect: true });
+      serverNotifications = serverNotifications.map((item) => String(item.id) === String(id) ? { ...item, is_read: true } : item);
+      serverUnreadCount = Math.max(0, serverUnreadCount - 1);
+      renderNotifications();
+      return;
+    }
+
+    writeNotifications(readNotifications().map((item) => String(item.id) === String(id) ? { ...item, is_read: true } : item));
   }
 
-  function markAllNotificationsRead() {
-    writeNotifications(readNotifications().map((item) => ({ ...item, read: true })));
+  async function markAllNotificationsRead() {
+    if (window.EventSphereAuth?.isLoggedIn?.() && window.EventSphereApi?.fetch) {
+      await window.EventSphereApi.fetch('/notifications/read-all', { method: 'PATCH', body: {}, skipAuthRedirect: true });
+      serverNotifications = serverNotifications.map((item) => ({ ...item, is_read: true }));
+      serverUnreadCount = 0;
+      renderNotifications();
+      return;
+    }
+
+    writeNotifications(readNotifications().map((item) => ({ ...item, is_read: true })));
   }
 
   let notificationsBound = false;
   function setupNotifications() {
     renderNotifications();
+    if (window.EventSphereAuth?.isLoggedIn?.()) {
+      refreshNotifications().catch(() => {});
+    }
     if (notificationsBound) return;
     notificationsBound = true;
     document.addEventListener('click', (event) => {
@@ -152,17 +233,23 @@
         const open = panel.hidden;
         panel.hidden = !open;
         toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-        renderNotifications();
+        if (open) refreshNotifications(true);
+        else renderNotifications();
         return;
       }
       const markAll = event.target.closest('[data-notification-mark-all]');
       if (markAll) {
-        markAllNotificationsRead();
+        markAllNotificationsRead().catch(() => window.tkToast?.('Notification update failed', 'error'));
         return;
       }
       const item = event.target.closest('[data-notification-id]');
       if (item) {
-        markNotificationRead(item.dataset.notificationId);
+        const notification = readNotifications().find((entry) => String(entry.id) === String(item.dataset.notificationId));
+        markNotificationRead(item.dataset.notificationId)
+          .then(() => {
+            if (notification?.link) location.href = notification.link;
+          })
+          .catch(() => window.tkToast?.('Notification update failed', 'error'));
         return;
       }
       if (!root && panel) {
@@ -177,15 +264,17 @@
     add: addNotification,
     markRead: markNotificationRead,
     markAllRead: markAllNotificationsRead,
+    refresh: refreshNotifications,
     render: renderNotifications,
     syncFromServer(items = []) {
       if (!Array.isArray(items)) return;
-      writeNotifications(items);
+      serverNotifications = items.map(normalizeNotification);
+      renderNotifications();
     },
   };
   document.addEventListener('DOMContentLoaded', setupNotifications);
   document.addEventListener('event-sphere:partials-loaded', setupNotifications);
-  document.addEventListener('event-sphere:auth-changed', () => renderNotifications());
+  document.addEventListener('event-sphere:auth-changed', () => refreshNotifications(true));
   document.addEventListener('event-sphere:notifications-changed', () => renderNotifications());
 
   /* ---------- Favorites ---------- */
