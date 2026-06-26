@@ -23,7 +23,10 @@
                   <td style="padding:16px 18px;border-bottom:1px solid #e5e7eb;font-size:14px;color:#6b7280"><strong style="display:block;color:#111827;font-size:15px">Time:</strong> {{ $reservation->reservation_time }}</td>
                 </tr>
                 <tr>
-                  <td style="padding:16px 18px;font-size:14px;color:#6b7280"><strong style="display:block;color:#111827;font-size:15px">Party size:</strong> {{ $reservation->party_size }}</td>
+                  <td style="padding:16px 18px;border-bottom:1px solid #e5e7eb;font-size:14px;color:#6b7280"><strong style="display:block;color:#111827;font-size:15px">Party size:</strong> {{ $reservation->party_size }}</td>
+                </tr>
+                <tr>
+                  <td style="padding:16px 18px;font-size:14px;color:#6b7280"><strong style="display:block;color:#111827;font-size:15px">Reason:</strong> {{ $reservation->owner_cancellation_reason ?: ($reservation->cancellation_reason ?: 'No reason provided.') }}</td>
                 </tr>
               </table>
               <p style="margin:0 0 24px;font-size:16px;color:#374151">Thank you for choosing Event Sphere.</p>

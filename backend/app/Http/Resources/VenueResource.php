@@ -40,11 +40,14 @@ class VenueResource extends JsonResource
             'cuisine_types' => CuisineTypeResource::collection($this->whenLoaded('cuisineTypes')),
             'payment_options' => PaymentOptionResource::collection($this->whenLoaded('paymentOptions')),
             'opening_hours' => VenueOpeningHourResource::collection($this->whenLoaded('openingHours')),
+            'special_hours' => VenueSpecialHourResource::collection($this->whenLoaded('specialHours')),
+            'blackout_dates' => VenueBlackoutDateResource::collection($this->whenLoaded('blackoutDates')),
             'reservation_settings' => [
                 'min_guests' => $this->min_guests,
                 'max_guests' => $this->max_guests,
                 'reservation_interval_minutes' => $this->reservation_interval_minutes,
                 'max_reservations_per_slot' => $this->max_reservations_per_slot,
+                'booking_horizon_days' => $this->booking_horizon_days,
                 'last_reservation_time' => $this->formatTime($this->last_reservation_time),
             ],
             'social_links' => [

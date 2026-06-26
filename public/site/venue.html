@@ -12,6 +12,81 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <link href="../assets/css/style.css" rel="stylesheet">
 <link href="../assets/css/reservations.css" rel="stylesheet">
+<style>
+  html { scroll-behavior: smooth; }
+  .venue-reservation-sticky {
+    position: sticky;
+    top: 96px;
+    z-index: 5;
+  }
+  .venue-reservation-card {
+    overflow: hidden;
+    border: 1px solid rgba(212,167,90,.22);
+    border-radius: 22px;
+    background:
+      radial-gradient(360px 160px at 100% 0%, rgba(212,167,90,.14), transparent 62%),
+      var(--card);
+    box-shadow: 0 24px 70px rgba(0,0,0,.25);
+  }
+  .venue-reservation-card .reservation-icon {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: 16px;
+    background: var(--res-gold-soft);
+    color: var(--res-gold);
+  }
+  .venue-reservation-card h5 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .venue-reservation-card .btn-gold {
+    min-height: 52px;
+    box-shadow: 0 14px 34px rgba(212,167,90,.22);
+  }
+  .venue-reservation-card .btn-gold:hover {
+    transform: translateY(-1px);
+  }
+  .venue-reservation-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    color: var(--muted);
+  }
+  .venue-mobile-reserve-bar {
+    display: none;
+  }
+  @media (max-width: 991.98px) {
+    body { padding-bottom: 92px; }
+    .venue-reservation-sticky {
+      position: static;
+    }
+    .venue-mobile-reserve-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1040;
+      display: block;
+      padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+      border-top: 1px solid rgba(255,255,255,.12);
+      background: rgba(11,15,25,.88);
+      box-shadow: 0 -18px 48px rgba(0,0,0,.34);
+      backdrop-filter: blur(16px);
+    }
+    .venue-mobile-reserve-bar .btn {
+      min-height: 52px;
+      border-radius: 16px;
+      font-weight: 900;
+      box-shadow: 0 14px 32px rgba(212,167,90,.24);
+    }
+  }
+</style>
 </head>
 <body>
 
@@ -68,6 +143,13 @@
       <div class="mt-2 d-flex flex-wrap align-items-center gap-3" style="color:var(--muted)">
         <span class="rating text-gold"><i class="bi bi-cup-hot-fill"></i> <span data-detail-type>Restaurant / Bar</span></span>
         <span data-detail-cuisines hidden> Cuisine</span><span data-detail-location> City</span>
+      </div>
+      <div class="venue-live-status mt-3" data-live-status hidden>
+        <span class="venue-live-status-dot" data-live-status-dot></span>
+        <div>
+          <strong data-live-status-label>Closed</strong>
+          <span data-live-status-detail>Opening hours unavailable</span>
+        </div>
       </div>
     </div>
     <div class="d-flex gap-2">
@@ -134,29 +216,49 @@
       <section class="mb-5">
         <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600">Location & Contact</h3>
         <div class="row g-3 mt-2" data-detail-contact></div>
-        <div class="map-placeholder mt-3">
-          <div class="pin"><i class="bi bi-geo-alt-fill"></i></div>
-          <div class="map-copy" data-detail-coordinates></div>
+        <div class="venue-google-map mt-3" data-detail-map-section hidden>
+          <div class="venue-google-map-head">
+            <div>
+              <span class="eyebrow-res"><i class="bi bi-geo-alt-fill"></i> Restaurant location</span>
+              <h4 class="mb-0" data-detail-map-title>Find us here</h4>
+            </div>
+          </div>
+          <div class="venue-google-map-canvas" data-detail-map-canvas hidden></div>
+          <iframe title="Restaurant or bar location on Google Maps" loading="lazy" referrerpolicy="no-referrer-when-downgrade" data-detail-map></iframe>
+          <div class="venue-google-map-actions">
+            <span data-detail-coordinates></span>
+            <div class="venue-google-map-buttons">
+              <a class="btn btn-gold-outline btn-sm" href="#" target="_blank" rel="noopener" data-detail-open-map>
+                <i class="bi bi-box-arrow-up-right me-1"></i>Open Google Maps
+              </a>
+              <a class="btn btn-gold btn-sm" href="#" target="_blank" rel="noopener" data-detail-directions>
+                <i class="bi bi-signpost-2 me-1"></i>Get Directions
+              </a>
+            </div>
+          </div>
         </div>
       </section>
     </div>
 
     <!-- RIGHT - Reserve CTA -->
-    <aside class="col-lg-4">
-      <div style="position:sticky;top:90px">
-        <div class="card-pro p-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-          <div class="d-flex align-items-center gap-2 mb-3">
-            <i class="bi bi-calendar-check text-gold fs-4"></i>
-            <h5 class="m-0" style="font-family:'Cormorant Garamond',serif;font-weight:600">Reserve now</h5>
+    <aside class="col-lg-4" id="reservationSection" style="align-self:flex-start;scroll-margin-top:110px">
+      <div class="venue-reservation-sticky">
+        <div class="venue-reservation-card p-4">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <span class="reservation-icon"><i class="bi bi-calendar-check fs-4"></i></span>
+            <div>
+              <span class="eyebrow-res">Table booking</span>
+              <h5 class="m-0 mt-1">Reserve now</h5>
+            </div>
           </div>
-          <p class="text-muted-pro">Reserve your table in just a few clicks. Choose your preferred date, time, and party size to send a reservation request directly to the restaurant or bar. The owner will review your request and notify you once it has been confirmed.</p>
+          <p class="text-muted-pro mb-4">Choose your party, date, and time to send a reservation request directly to the restaurant or bar.</p>
           <button class="btn btn-gold w-100 btn-lg" type="button" data-reserve-button>Reserve now <i class="bi bi-arrow-right ms-1"></i></button>
-          <p class="text-center small mt-3 mb-0" style="color:var(--muted)">
-            <i class="bi bi-shield-check text-gold"></i> No payment required for this reservation.
+          <p class="venue-reservation-note small mt-3 mb-0">
+            <i class="bi bi-shield-check text-gold"></i><span>No payment required for this reservation.</span>
           </p>
         </div>
 
-        <div class="card-pro p-3 mt-3" style="background:var(--card);border:1px solid var(--border);border-radius:18px">
+        <div class="card-pro p-3 mt-3" style="background:rgba(255,255,255,.035);border:1px solid var(--border);border-radius:18px;box-shadow:0 16px 42px rgba(0,0,0,.16)">
           <div class="d-flex gap-3 align-items-center">
             <div style="width:42px;height:42px;border-radius:12px;background:var(--res-gold-soft);display:grid;place-items:center"><i class="bi bi-info-circle text-gold"></i></div>
             <div><div class="fw-semibold" data-detail-side-title>Restaurant & Bar details</div><div class="small text-muted-pro" data-detail-side-copy>Loading profile...</div></div>
@@ -165,6 +267,12 @@
       </div>
     </aside>
   </div>
+</div>
+
+<div class="venue-mobile-reserve-bar">
+  <a class="btn btn-gold w-100" href="#reservationSection">
+    <i class="bi bi-calendar-check me-1"></i> Reserve Now
+  </a>
 </div>
 
 <div class="modal fade" id="reservationModal" tabindex="-1" aria-hidden="true">
@@ -179,8 +287,16 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form data-reservation-form novalidate>
+        <input name="reservation_hold_id" type="hidden">
         <div class="modal-body">
           <div data-reservation-form-error></div>
+          <div class="reservation-hold-timer mb-3" data-reservation-hold-timer hidden>
+            <div>
+              <strong data-reservation-hold-message>We're holding this table for you.</strong>
+              <span data-reservation-hold-detail>Complete your reservation before the timer ends.</span>
+            </div>
+            <span data-reservation-hold-countdown>05:00</span>
+          </div>
           <div class="reservation-booking-flow">
             <section class="booking-step">
               <div class="booking-step-title">
@@ -236,14 +352,32 @@
               </div>
             </section>
 
+            <section class="booking-step">
+              <div class="booking-step-title">
+                <span>4</span>
+                <div>
+                  <h6>Reservation Details</h6>
+                  <p>Share the occasion and any special requests</p>
+                </div>
+              </div>
+              <input name="occasion" type="hidden">
+              <div class="reservation-picker" data-picker="occasion">
+                <button class="reservation-picker-trigger" type="button" data-picker-trigger="occasion" aria-expanded="false">
+                  <span data-picker-label="occasion">Occasion</span>
+                  <i class="bi bi-chevron-down"></i>
+                </button>
+                <div class="reservation-picker-panel reservation-picker-panel-wide" data-picker-panel="occasion"></div>
+              </div>
+              <div class="mt-3">
+                <label class="form-label small text-muted-pro">Special Request</label>
+                <textarea class="form-control" name="notes" rows="3" placeholder="Allergies, seating preference, celebration details..."></textarea>
+              </div>
+            </section>
+
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label small text-muted-pro">Phone</label>
                 <input class="form-control" name="phone" type="tel" placeholder="Optional">
-              </div>
-              <div class="col-12">
-                <label class="form-label small text-muted-pro">Notes</label>
-                <textarea class="form-control" name="notes" rows="3" placeholder="Optional requests"></textarea>
               </div>
             </div>
           </div>
@@ -256,6 +390,19 @@
       </form>
     </div>
   </div>
+</div>
+
+<div class="venue-lightbox" data-gallery-lightbox hidden aria-modal="true" role="dialog" aria-label="Restaurant photo gallery">
+  <button class="venue-lightbox-close" type="button" data-gallery-close aria-label="Close gallery"><i class="bi bi-x-lg"></i></button>
+  <button class="venue-lightbox-nav venue-lightbox-prev" type="button" data-gallery-prev aria-label="Previous photo"><i class="bi bi-chevron-left"></i></button>
+  <figure class="venue-lightbox-frame">
+    <img src="" alt="" data-gallery-lightbox-image>
+    <figcaption>
+      <strong data-gallery-lightbox-title>Restaurant photo</strong>
+      <span data-gallery-lightbox-count>1 / 1</span>
+    </figcaption>
+  </figure>
+  <button class="venue-lightbox-nav venue-lightbox-next" type="button" data-gallery-next aria-label="Next photo"><i class="bi bi-chevron-right"></i></button>
 </div>
 
 <div class="modal fade" id="reservationVerifyEmailModal" tabindex="-1" aria-hidden="true">

@@ -82,6 +82,7 @@ class OwnerVenueController extends Controller
             $payload['max_guests'] = $payload['max_guests'] ?? 10;
             $payload['reservation_interval_minutes'] = $payload['reservation_interval_minutes'] ?? 30;
             $payload['max_reservations_per_slot'] = $payload['max_reservations_per_slot'] ?? 10;
+            $payload['booking_horizon_days'] = $payload['booking_horizon_days'] ?? Venue::DEFAULT_BOOKING_HORIZON_DAYS;
         }
 
         return $payload;

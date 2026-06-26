@@ -9,6 +9,9 @@ Party size: {{ $reservation->party_size }}
 @if ($reservation->phone)
 Phone: {{ $reservation->phone }}
 @endif
+@if ($reservation->occasion)
+Occasion: {{ $reservation->occasion }}
+@endif
 @if ($reservation->notes)
-Notes: {{ $reservation->notes }}
+Special Request: {{ $reservation->notes }}
 @endif

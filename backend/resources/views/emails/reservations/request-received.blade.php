@@ -26,6 +26,12 @@
                   <td style="padding:16px 18px;font-size:14px;color:#6b7280"><strong style="display:block;color:#111827;font-size:15px">Party size:</strong> {{ $reservation->party_size }}</td>
                 </tr>
               </table>
+              @if ($reservation->occasion)
+                <p style="margin:0 0 12px;font-size:16px;color:#374151"><strong style="color:#111827">Occasion:</strong> {{ $reservation->occasion }}</p>
+              @endif
+              @if ($reservation->notes)
+                <p style="margin:0 0 24px;font-size:16px;color:#374151"><strong style="color:#111827">Special Request:</strong> {{ $reservation->notes }}</p>
+              @endif
               <p style="margin:0 0 24px;font-size:16px;color:#374151">The venue will review your request and confirm availability.</p>
             </td>
           </tr>

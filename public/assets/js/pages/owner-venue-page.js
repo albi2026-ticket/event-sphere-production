@@ -9,6 +9,16 @@
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const shortDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const calendarStatuses = ['pending', 'confirmed', 'cancelled', 'completed', 'no_show'];
+  const ownerCancellationReasons = ['Fully booked', 'Private event', 'Kitchen closed', 'Staff shortage', 'Maintenance'];
+  const locationPickerZoom = 15;
+  const defaultLocation = { lat: 40.7128, lng: -74.0060 };
+  let ownerGoogleMap = null;
+  let ownerGoogleMarker = null;
+  let ownerGoogleGeocoder = null;
+  let ownerSearchBox = null;
+  let ownerMapsLoading = null;
+  let syncingOwnerMap = false;
+  let draggedOwnerImageId = null;
 
   const state = {
     venue: null,
@@ -134,6 +144,20 @@
     return String(value || 'pending').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
   }
 
+  function occasionLabel(value) {
+    const labels = {
+      Birthday: 'Birthday 🎂',
+      Anniversary: 'Anniversary 🥂',
+      'Date Night': 'Date Night',
+      'Business Meeting': 'Business Meeting',
+      'Family Gathering': 'Family Gathering',
+      Celebration: 'Celebration',
+      'Friends Night Out': 'Friends Night Out',
+      Other: 'Other',
+    };
+    return labels[value] || value || 'Not provided';
+  }
+
   function cssVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
@@ -152,6 +176,349 @@
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
     return date.toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+
+  function googleMapEmbedUrl(lat, lng, zoom = locationPickerZoom) {
+    return `https://maps.google.com/maps?q=${encodeURIComponent(`${lat},${lng}`)}&z=${zoom}&output=embed`;
+  }
+
+  function googleMapsUrl(lat, lng) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}`;
+  }
+
+  function validCoordinate(lat, lng) {
+    return Number.isFinite(lat)
+      && Number.isFinite(lng)
+      && lat >= -90
+      && lat <= 90
+      && lng >= -180
+      && lng <= 180;
+  }
+
+  function formCoordinates() {
+    const form = $('[data-owner-venue-form]');
+    const lat = Number(form?.elements.latitude?.value);
+    const lng = Number(form?.elements.longitude?.value);
+
+    return validCoordinate(lat, lng) ? { lat, lng } : null;
+  }
+
+  function formatCoordinate(value) {
+    return Number(value).toFixed(7).replace(/0+$/, '').replace(/\.$/, '');
+  }
+
+  function locationSearchText() {
+    const form = $('[data-owner-venue-form]');
+    if (!form) return '';
+
+    return [
+      form.elements.address?.value,
+      form.elements.city?.value,
+      form.elements.country?.value,
+    ].filter(Boolean).join(', ');
+  }
+
+  function googleMapsApiKey() {
+    return String(
+      window.EventSphereConfig?.GOOGLE_MAPS_API_KEY
+      || window.__EVENT_SPHERE_GOOGLE_MAPS_API_KEY__
+      || document.querySelector('meta[name="google-maps-api-key"]')?.content
+      || '',
+    ).trim();
+  }
+
+  function loadGoogleMaps() {
+    if (window.google?.maps) return Promise.resolve(true);
+    const key = googleMapsApiKey();
+    if (!key) return Promise.resolve(false);
+    if (ownerMapsLoading) return ownerMapsLoading;
+
+    ownerMapsLoading = new Promise((resolve) => {
+      const callback = `eventSphereOwnerMapsReady${Date.now()}`;
+      window[callback] = () => {
+        delete window[callback];
+        resolve(true);
+      };
+
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=places&callback=${callback}`;
+      script.async = true;
+      script.defer = true;
+      script.onerror = () => {
+        delete window[callback];
+        resolve(false);
+      };
+      document.head.appendChild(script);
+    });
+
+    return ownerMapsLoading;
+  }
+
+  function selectedAddressText() {
+    const form = $('[data-owner-venue-form]');
+    return locationSearchText() || form?.elements.address?.value || '';
+  }
+
+  function updateSelectedLocationDetails(coordinates) {
+    const address = $('[data-owner-location-selected-address]');
+    const latitude = $('[data-owner-location-selected-latitude]');
+    const longitude = $('[data-owner-location-selected-longitude]');
+
+    if (address) address.textContent = coordinates ? (selectedAddressText() || 'Selected pin') : 'Not selected';
+    if (latitude) latitude.textContent = coordinates ? formatCoordinate(coordinates.lat) : '-';
+    if (longitude) longitude.textContent = coordinates ? formatCoordinate(coordinates.lng) : '-';
+  }
+
+  function setLocationFields(lat, lng, address = null) {
+    if (!validCoordinate(lat, lng)) return;
+    const form = $('[data-owner-venue-form]');
+    if (!form) return;
+    form.elements.latitude.value = formatCoordinate(lat);
+    form.elements.longitude.value = formatCoordinate(lng);
+    if (address && form.elements.address) form.elements.address.value = address;
+    updateOwnerLocationMap();
+  }
+
+  function syncOwnerMarker(lat, lng, animate = false) {
+    if (!ownerGoogleMap || !ownerGoogleMarker || !validCoordinate(lat, lng)) return;
+    const position = { lat, lng };
+    ownerGoogleMarker.setPosition(position);
+    ownerGoogleMap.panTo(position);
+    if (animate && window.google?.maps?.Animation) {
+      ownerGoogleMarker.setAnimation(window.google.maps.Animation.DROP);
+      window.setTimeout(() => ownerGoogleMarker?.setAnimation(null), 700);
+    }
+  }
+
+  function reverseGeocodeOwnerLocation(lat, lng) {
+    if (!ownerGoogleGeocoder || !validCoordinate(lat, lng)) return;
+
+    ownerGoogleGeocoder.geocode({ location: { lat, lng } }, (results, status) => {
+      if (status !== 'OK' || !results?.[0]) return;
+      const form = $('[data-owner-venue-form]');
+      const address = results[0].formatted_address || '';
+      if (form?.elements.address && address) {
+        form.elements.address.value = address;
+        const search = $('[data-owner-location-search]');
+        if (search) search.value = address;
+      }
+      updateSelectedLocationDetails(formCoordinates());
+    });
+  }
+
+  function geocodeOwnerQuery(query) {
+    if (!ownerGoogleGeocoder) return Promise.resolve(null);
+
+    return new Promise((resolve) => {
+      ownerGoogleGeocoder.geocode({ address: query }, (results, status) => {
+        if (status !== 'OK' || !results?.[0]?.geometry?.location) {
+          resolve(null);
+          return;
+        }
+        const result = results[0];
+        resolve({
+          lat: result.geometry.location.lat(),
+          lng: result.geometry.location.lng(),
+          address: result.formatted_address || query,
+        });
+      });
+    });
+  }
+
+  function moveOwnerMarker(lat, lng, options = {}) {
+    if (!validCoordinate(lat, lng)) return;
+    setLocationFields(lat, lng, options.address || null);
+    syncOwnerMarker(lat, lng, options.animate !== false);
+    if (options.reverseGeocode !== false && !options.address) {
+      reverseGeocodeOwnerLocation(lat, lng);
+    }
+  }
+
+  function webMercatorPoint(lat, lng, zoom) {
+    const scale = 256 * (2 ** zoom);
+    const sinLat = Math.sin((lat * Math.PI) / 180);
+
+    return {
+      x: ((lng + 180) / 360) * scale,
+      y: (0.5 - Math.log((1 + sinLat) / (1 - sinLat)) / (4 * Math.PI)) * scale,
+    };
+  }
+
+  function webMercatorLatLng(x, y, zoom) {
+    const scale = 256 * (2 ** zoom);
+    const lng = (x / scale) * 360 - 180;
+    const n = Math.PI - (2 * Math.PI * y) / scale;
+    const lat = (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+
+    return { lat, lng };
+  }
+
+  function coordinatesFromPickerClick(event) {
+    const current = formCoordinates() || defaultLocation;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const center = webMercatorPoint(current.lat, current.lng, locationPickerZoom);
+
+    return webMercatorLatLng(
+      center.x + (event.clientX - rect.left) - (rect.width / 2),
+      center.y + (event.clientY - rect.top) - (rect.height / 2),
+      locationPickerZoom,
+    );
+  }
+
+  function updateOwnerLocationMap() {
+    const coordinates = formCoordinates();
+    const preview = coordinates || defaultLocation;
+    const mapRoot = $('[data-owner-location-map]');
+    const frame = $('[data-owner-location-frame]');
+    const status = $('[data-owner-location-status]');
+    const open = $('[data-owner-location-open]');
+    const search = $('[data-owner-location-search]');
+
+    if (frame) frame.src = googleMapEmbedUrl(preview.lat, preview.lng);
+    if (ownerGoogleMap && !syncingOwnerMap) {
+      syncingOwnerMap = true;
+      syncOwnerMarker(preview.lat, preview.lng, Boolean(coordinates));
+      syncingOwnerMap = false;
+    }
+    if (mapRoot) mapRoot.classList.toggle('has-location', Boolean(coordinates));
+    if (status) {
+      status.textContent = coordinates
+        ? 'Location pin is ready. Drag the marker or click the map to refine it.'
+        : 'Search an address, click the map, or drag the marker to set the exact pin.';
+    }
+    if (open) {
+      open.hidden = !coordinates;
+      if (coordinates) open.href = googleMapsUrl(coordinates.lat, coordinates.lng);
+    }
+    if (search && !search.value) search.value = locationSearchText();
+    updateSelectedLocationDetails(coordinates);
+  }
+
+  async function initOwnerGoogleMap() {
+    const canvas = $('[data-owner-location-canvas]');
+    const mapRoot = $('[data-owner-location-map]');
+    if (!canvas || ownerGoogleMap) return;
+
+    const loaded = await loadGoogleMaps();
+    if (!loaded || !window.google?.maps) {
+      updateOwnerLocationMap();
+      return;
+    }
+
+    const coordinates = formCoordinates();
+    const center = coordinates || defaultLocation;
+    canvas.hidden = false;
+    mapRoot?.classList.add('has-google-map');
+
+    ownerGoogleMap = new window.google.maps.Map(canvas, {
+      center,
+      zoom: coordinates ? 16 : 12,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: true,
+      clickableIcons: true,
+    });
+    ownerGoogleGeocoder = new window.google.maps.Geocoder();
+    ownerGoogleMarker = new window.google.maps.Marker({
+      position: center,
+      map: ownerGoogleMap,
+      draggable: true,
+      animation: window.google.maps.Animation.DROP,
+      title: 'Selected restaurant or bar location',
+    });
+
+    ownerGoogleMap.addListener('click', (event) => {
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+      moveOwnerMarker(lat, lng, { animate: true });
+    });
+    ownerGoogleMarker.addListener('dragend', (event) => {
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+      moveOwnerMarker(lat, lng, { animate: false });
+    });
+
+    const search = $('[data-owner-location-search]');
+    if (search && window.google.maps.places?.SearchBox) {
+      ownerSearchBox = new window.google.maps.places.SearchBox(search);
+      ownerGoogleMap.addListener('bounds_changed', () => {
+        ownerSearchBox.setBounds(ownerGoogleMap.getBounds());
+      });
+      ownerSearchBox.addListener('places_changed', () => {
+        const place = ownerSearchBox.getPlaces()?.[0];
+        const location = place?.geometry?.location;
+        if (!location) {
+          window.tkToast?.('No matching address found. Try a more specific search.', 'error');
+          return;
+        }
+        moveOwnerMarker(location.lat(), location.lng(), {
+          address: place.formatted_address || place.name || search.value,
+          animate: true,
+          reverseGeocode: false,
+        });
+        ownerGoogleMap.setZoom(16);
+        window.tkToast?.('Map location updated.', 'success');
+      });
+    }
+
+    updateOwnerLocationMap();
+  }
+
+  async function searchOwnerLocation() {
+    const button = $('[data-owner-location-search-button]');
+    const search = $('[data-owner-location-search]');
+    const query = String(search?.value || locationSearchText()).trim();
+
+    if (!query) {
+      window.tkToast?.('Enter an address to search.', 'error');
+      return;
+    }
+
+    if (button) {
+      button.dataset.originalLabel = button.dataset.originalLabel || button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Searching...';
+    }
+
+    try {
+      await initOwnerGoogleMap();
+      const googleResult = await geocodeOwnerQuery(query);
+      if (googleResult) {
+        moveOwnerMarker(googleResult.lat, googleResult.lng, {
+          address: googleResult.address,
+          animate: true,
+          reverseGeocode: false,
+        });
+        if (ownerGoogleMap) ownerGoogleMap.setZoom(16);
+        window.tkToast?.('Map location updated.', 'success');
+        return;
+      }
+
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`, {
+        headers: { Accept: 'application/json' },
+      });
+      const results = await response.json();
+      const result = Array.isArray(results) ? results[0] : null;
+
+      if (!result) {
+        window.tkToast?.('No matching address found. Try a more specific search.', 'error');
+        return;
+      }
+
+      moveOwnerMarker(Number(result.lat), Number(result.lon), {
+        address: result.display_name || query,
+        animate: true,
+        reverseGeocode: false,
+      });
+      window.tkToast?.('Map location updated.', 'success');
+    } catch (err) {
+      window.tkToast?.('Unable to search this address right now.', 'error');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.innerHTML = button.dataset.originalLabel || '<i class="bi bi-search me-1"></i>Search Address';
+      }
+    }
   }
 
   function localDate(value = new Date()) {
@@ -358,20 +725,28 @@
     if (!root) return;
     const images = [...(state.venue?.images || [])].sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
     root.innerHTML = images.length ? images.map((image, index) => `
-      <div class="col-md-6">
-        <div class="card-pro p-2 owner-gallery-card">
-          <img src="${esc(imageUrl(image))}" alt="" />
-          <div class="d-flex justify-content-between align-items-center mt-2 gap-2">
-            <small class="text-muted-pro">${index === 0 ? 'Cover image' : `Gallery ${index + 1}`}</small>
-            <div class="btn-group btn-group-sm">
-              <button class="btn btn-glass" type="button" data-owner-image-up="${image.id}" ${index === 0 ? 'disabled' : ''} aria-label="Move image up"><i class="bi bi-arrow-left"></i></button>
-              <button class="btn btn-glass" type="button" data-owner-image-down="${image.id}" ${index === images.length - 1 ? 'disabled' : ''} aria-label="Move image down"><i class="bi bi-arrow-right"></i></button>
-              <button class="btn btn-glass" type="button" data-owner-image-delete="${image.id}" aria-label="Delete image"><i class="bi bi-trash"></i></button>
+      <div class="col-md-6 col-xl-4">
+        <div class="owner-gallery-card ${index === 0 ? 'is-cover' : ''}" draggable="true" data-owner-gallery-card="${image.id}">
+          <div class="owner-gallery-image">
+            <img src="${esc(imageUrl(image))}" alt="${esc(state.venue?.name || 'Restaurant or bar')} gallery photo ${index + 1}" />
+            <span class="owner-gallery-cover-badge"><i class="bi bi-star-fill"></i> Cover</span>
+            <span class="owner-gallery-drag-hint"><i class="bi bi-grip-vertical"></i> Drag</span>
+          </div>
+          <div class="owner-gallery-card-body">
+            <div>
+              <strong>${index === 0 ? 'Cover Photo' : `Gallery Photo ${index + 1}`}</strong>
+              <small class="text-muted-pro">Drag to reorder</small>
+            </div>
+            <div class="owner-gallery-actions">
+              <button class="btn btn-glass btn-sm" type="button" data-owner-image-cover="${image.id}" ${index === 0 ? 'disabled' : ''} aria-label="Set as cover photo"><i class="bi bi-star"></i></button>
+              <button class="btn btn-glass btn-sm" type="button" data-owner-image-up="${image.id}" ${index === 0 ? 'disabled' : ''} aria-label="Move image left"><i class="bi bi-arrow-left"></i></button>
+              <button class="btn btn-glass btn-sm" type="button" data-owner-image-down="${image.id}" ${index === images.length - 1 ? 'disabled' : ''} aria-label="Move image right"><i class="bi bi-arrow-right"></i></button>
+              <button class="btn btn-glass btn-sm" type="button" data-owner-image-delete="${image.id}" aria-label="Delete image"><i class="bi bi-trash"></i></button>
             </div>
           </div>
         </div>
       </div>
-    `).join('') : '<div class="col-12 small text-muted-pro">No uploaded images yet.</div>';
+    `).join('') : '<div class="col-12"><div class="owner-gallery-empty">No uploaded images yet. Add a cover photo and a few ambience shots to make the public page feel alive.</div></div>';
   }
 
   function hasOpeningHours(venue) {
@@ -447,6 +822,7 @@
     form.elements.min_guests.value = venue?.reservation_settings?.min_guests || 1;
     form.elements.max_guests.value = venue?.reservation_settings?.max_guests || 10;
     form.elements.max_reservations_per_slot.value = venue?.reservation_settings?.max_reservations_per_slot || 10;
+    form.elements.booking_horizon_days.value = venue?.reservation_settings?.booking_horizon_days || 30;
     form.elements.reservation_interval_minutes.value = venue?.reservation_settings?.reservation_interval_minutes || 30;
     form.elements.last_reservation_time.value = normalizeTime(venue?.reservation_settings?.last_reservation_time || '');
     form.elements.facebook_url.value = venue?.social_links?.facebook_url || '';
@@ -459,6 +835,8 @@
     renderHours(venue?.opening_hours || []);
     renderGallery();
     renderAvailabilityExceptions();
+    updateOwnerLocationMap();
+    initOwnerGoogleMap();
   }
 
   function renderSummary() {
@@ -592,7 +970,15 @@
     const body = $('[data-owner-reservations-table]');
     if (!body) return;
     if (loading) {
-      body.innerHTML = '<tr><td colspan="7"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading reservations...</span></div></td></tr>';
+      body.innerHTML = `
+        <tr>
+          <td colspan="7">
+            <div class="reservation-table-skeleton" aria-label="Loading reservations">
+              ${Array.from({ length: 4 }, () => '<span></span>').join('')}
+            </div>
+          </td>
+        </tr>
+      `;
       renderReservationStats();
       return;
     }
@@ -628,7 +1014,10 @@
   function reservationsForDate(dateValue) {
     return state.calendar.reservations
       .filter((reservation) => reservation.reservation_date === dateValue)
-      .sort((a, b) => String(a.reservation_time).localeCompare(String(b.reservation_time)));
+      .sort((a, b) => {
+        const created = new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+        return created || Number(b.id || 0) - Number(a.id || 0);
+      });
   }
 
   function calendarReservationCard(reservation) {
@@ -672,7 +1061,19 @@
     });
 
     if (loading) {
-      root.innerHTML = '<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading calendar...</span></div>';
+      root.innerHTML = `
+        <div class="owner-calendar-grid owner-calendar-grid-week" aria-label="Loading calendar">
+          ${Array.from({ length: 7 }, () => `
+            <section class="owner-calendar-day owner-calendar-day-loading">
+              <div class="owner-calendar-day-head"><span></span><strong></strong></div>
+              <div class="owner-calendar-day-items">
+                <div class="reservation-skeleton-line"></div>
+                <div class="reservation-skeleton-line short"></div>
+              </div>
+            </section>
+          `).join('')}
+        </div>
+      `;
       return;
     }
 
@@ -718,7 +1119,14 @@
     $('[data-owner-analytics-apply]')?.toggleAttribute('hidden', !isCustom);
 
     if (loading) {
-      overviewRoot.innerHTML = '<div class="col-12"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading analytics...</span></div></div>';
+      overviewRoot.innerHTML = Array.from({ length: 6 }, () => `
+        <div class="col-md-6 col-xl-2">
+          <div class="reservation-stat reservation-stat-loading">
+            <div class="reservation-skeleton-line short"></div>
+            <div class="reservation-skeleton-line"></div>
+          </div>
+        </div>
+      `).join('');
       return;
     }
 
@@ -862,7 +1270,7 @@
     const body = $('[data-owner-reservation-detail]');
     if (!body) return;
     body.innerHTML = `
-      <div class="row g-3">
+      <div class="row g-3 owner-reservation-detail-grid">
         <div class="col-md-6"><div class="facility justify-content-between"><span>Guest</span><strong>${esc(reservation.guest_name)}</strong></div></div>
         <div class="col-md-6"><div class="facility justify-content-between"><span>Status</span>${statusBadge(reservation.status)}</div></div>
         <div class="col-md-6"><div class="facility justify-content-between"><span>Phone</span><strong>${esc(reservation.phone || 'Not provided')}</strong></div></div>
@@ -871,10 +1279,11 @@
         <div class="col-md-6"><div class="facility justify-content-between"><span>Time</span><strong>${esc(timeLabel(reservation.reservation_time))}</strong></div></div>
         <div class="col-md-6"><div class="facility justify-content-between"><span>Created At</span><strong>${esc(dateTimeLabel(reservation.created_at))}</strong></div></div>
         <div class="col-12"><div class="facility justify-content-between"><span>Restaurant / Bar</span><strong>${esc(reservation.venue?.name || '')}</strong></div></div>
-        <div class="col-12"><div class="facility"><span><span class="text-muted-pro d-block mb-1">Notes</span>${esc(reservation.notes || 'No notes provided.')}</span></div></div>
+        <div class="col-md-6"><div class="facility justify-content-between"><span>Occasion</span><strong>${esc(occasionLabel(reservation.occasion))}</strong></div></div>
+        <div class="col-12"><div class="facility"><span><span class="text-muted-pro d-block mb-1">Special Request</span>${esc(reservation.notes || 'No special request provided.')}</span></div></div>
         ${reservation.status === 'cancelled' ? `
           <div class="col-md-6"><div class="facility justify-content-between"><span>Cancelled At</span><strong>${esc(dateTimeLabel(reservation.cancelled_at))}</strong></div></div>
-          <div class="col-12"><div class="facility"><span><span class="text-muted-pro d-block mb-1">Cancellation Reason</span>${esc(reservation.cancellation_reason || 'No reason provided.')}</span></div></div>
+          <div class="col-12"><div class="facility"><span><span class="text-muted-pro d-block mb-1">Cancellation Reason</span>${esc(reservation.owner_cancellation_reason || reservation.cancellation_reason || 'No reason provided.')}</span></div></div>
         ` : ''}
       </div>
     `;
@@ -921,6 +1330,7 @@
       min_guests: Number(fd.get('min_guests') || 1),
       max_guests: Number(fd.get('max_guests') || 10),
       max_reservations_per_slot: Number(fd.get('max_reservations_per_slot') || 10),
+      booking_horizon_days: Number(fd.get('booking_horizon_days') || 30),
       reservation_interval_minutes: Number(fd.get('reservation_interval_minutes') || 30),
       last_reservation_time: nullable(normalizeTime(fd.get('last_reservation_time'))),
       facebook_url: nullable(fd.get('facebook_url')),
@@ -976,23 +1386,86 @@
 
     setBusy(true);
     try {
-      for (const file of valid) {
-        const fd = new FormData();
-        fd.append('image', file);
-        const { data } = await api().fetch(`/owner/venues/${state.venue.slug}/images`, { method: 'POST', body: fd });
+      renderUploadProgress(valid, 0, 'Preparing uploads...');
+      for (const [index, file] of valid.entries()) {
+        const data = await uploadVenueImage(file, (progress) => {
+          renderUploadProgress(valid, index, `Uploading ${file.name}`, progress);
+        });
         state.venue = data;
         state.venues = state.venues.map((venue) => String(venue.id) === String(data.id) ? data : venue);
       }
       renderSummary();
       fillForm();
-      window.tkToast?.('Image uploaded successfully.', 'success');
+      window.tkToast?.(valid.length === 1 ? 'Image uploaded successfully.' : 'Images uploaded successfully.', 'success');
     } catch (err) {
       window.tkToast?.(friendlyError(err), 'error');
     } finally {
       setBusy(false);
+      renderUploadProgress([], 0, '', 0);
       const input = $('[data-owner-image-input]');
       if (input) input.value = '';
     }
+  }
+
+  function renderUploadProgress(files, currentIndex, label, progress = 0) {
+    const root = $('[data-owner-upload-progress]');
+    if (!root) return;
+    if (!files.length) {
+      root.hidden = true;
+      root.innerHTML = '';
+      return;
+    }
+
+    const total = files.length;
+    const completed = currentIndex;
+    const currentProgress = Math.max(0, Math.min(100, Number(progress) || 0));
+    const overall = Math.round(((completed + (currentProgress / 100)) / total) * 100);
+
+    root.hidden = false;
+    root.innerHTML = `
+      <div class="owner-upload-progress-head">
+        <span>${esc(label || 'Uploading photos...')}</span>
+        <strong>${overall}%</strong>
+      </div>
+      <div class="owner-upload-progress-bar" aria-hidden="true"><span style="width:${overall}%"></span></div>
+      <small class="text-muted-pro">${completed + 1} of ${total} photos</small>
+    `;
+  }
+
+  function uploadVenueImage(file, onProgress) {
+    return new Promise((resolve, reject) => {
+      const cfg = window.EventSphereConfig;
+      const token = sessionStorage.getItem(cfg.TOKEN_KEY);
+      const xhr = new XMLHttpRequest();
+      const fd = new FormData();
+      fd.append('image', file);
+
+      xhr.open('POST', `${cfg.API_BASE_URL.replace(/\/$/, '')}/owner/venues/${encodeURIComponent(state.venue.slug)}/images`);
+      xhr.setRequestHeader('Accept', 'application/json');
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.upload.addEventListener('progress', (event) => {
+        if (!event.lengthComputable) return;
+        onProgress?.(Math.round((event.loaded / event.total) * 100));
+      });
+      xhr.addEventListener('load', () => {
+        let payload = null;
+        try {
+          payload = xhr.responseText ? JSON.parse(xhr.responseText) : null;
+        } catch {
+          payload = { message: xhr.responseText };
+        }
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(payload?.data || payload);
+          return;
+        }
+        const err = new Error(payload?.message || `Upload failed (${xhr.status})`);
+        err.status = xhr.status;
+        err.payload = payload;
+        reject(err);
+      });
+      xhr.addEventListener('error', () => reject(new Error('Unable to upload this image right now.')));
+      xhr.send(fd);
+    });
   }
 
   async function deleteImage(imageId) {
@@ -1012,26 +1485,50 @@
     }
   }
 
-  async function reorderImage(imageId, direction) {
-    const images = [...(state.venue?.images || [])].sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
-    const index = images.findIndex((image) => String(image.id) === String(imageId));
-    const next = index + direction;
-    if (index < 0 || next < 0 || next >= images.length) return;
-    [images[index], images[next]] = [images[next], images[index]];
+  async function persistGalleryOrder(images, message = 'Gallery order updated.') {
+    if (!state.venue?.slug || !images.length) return;
     const payload = images.map((image, order) => ({ id: image.id, sort_order: order }));
 
     setBusy(true);
     try {
       const { data } = await api().fetch(`/owner/venues/${state.venue.slug}/images/reorder`, { method: 'PUT', body: { images: payload } });
       state.venue = data;
+      state.venues = state.venues.map((venue) => String(venue.id) === String(data.id) ? data : venue);
       renderSummary();
       fillForm();
-      window.tkToast?.('Gallery order updated.', 'success');
+      window.tkToast?.(message, 'success');
     } catch (err) {
       window.tkToast?.(friendlyError(err), 'error');
     } finally {
       setBusy(false);
     }
+  }
+
+  async function reorderImage(imageId, direction) {
+    const images = [...(state.venue?.images || [])].sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+    const index = images.findIndex((image) => String(image.id) === String(imageId));
+    const next = index + direction;
+    if (index < 0 || next < 0 || next >= images.length) return;
+    [images[index], images[next]] = [images[next], images[index]];
+    await persistGalleryOrder(images);
+  }
+
+  async function setCoverImage(imageId) {
+    const images = [...(state.venue?.images || [])].sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+    const image = images.find((item) => String(item.id) === String(imageId));
+    if (!image) return;
+    await persistGalleryOrder([image, ...images.filter((item) => String(item.id) !== String(imageId))], 'Cover photo updated.');
+  }
+
+  async function moveImageBefore(sourceId, targetId) {
+    if (!sourceId || !targetId || String(sourceId) === String(targetId)) return;
+    const images = [...(state.venue?.images || [])].sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+    const source = images.find((image) => String(image.id) === String(sourceId));
+    const withoutSource = images.filter((image) => String(image.id) !== String(sourceId));
+    const targetIndex = withoutSource.findIndex((image) => String(image.id) === String(targetId));
+    if (!source || targetIndex < 0) return;
+    withoutSource.splice(targetIndex, 0, source);
+    await persistGalleryOrder(withoutSource);
   }
 
   async function deleteVenue() {
@@ -1283,9 +1780,9 @@
     }
   }
 
-  async function reservationAction(id, action) {
+  async function reservationAction(id, action, body = {}) {
     try {
-      const { data } = await api().fetch(`/owner/reservations/${id}/${action}`, { method: 'PATCH', body: {} });
+      const { data } = await api().fetch(`/owner/reservations/${id}/${action}`, { method: 'PATCH', body });
       state.reservations = state.reservations.map((reservation) => String(reservation.id) === String(id) ? data : reservation);
       state.calendar.reservations = state.calendar.reservations.map((reservation) => String(reservation.id) === String(id) ? data : reservation);
       renderReservations();
@@ -1338,15 +1835,40 @@
     $('[data-owner-action-title]').textContent = meta.title;
     $('[data-owner-action-body]').textContent = meta.body;
     $('[data-owner-action-confirm]').textContent = meta.confirm;
+    const reasonFields = $('[data-owner-cancel-reason-fields]');
+    const reasonSelect = $('[data-owner-cancel-reason-select]');
+    const reasonOther = $('[data-owner-cancel-reason-other]');
+    if (reasonFields) reasonFields.hidden = action !== 'cancel';
+    if (reasonSelect) reasonSelect.value = ownerCancellationReasons[0];
+    if (reasonOther) {
+      reasonOther.value = '';
+      reasonOther.hidden = true;
+    }
     bootstrap.Modal.getOrCreateInstance($('#ownerReservationActionModal')).show();
+  }
+
+  function ownerCancellationReason() {
+    const selected = String($('[data-owner-cancel-reason-select]')?.value || '').trim();
+    if (selected !== 'Other') return selected;
+
+    return String($('[data-owner-cancel-reason-other]')?.value || '').trim();
   }
 
   async function confirmReservationAction() {
     const pending = state.pendingReservationAction;
     if (!pending) return;
+    const body = {};
+    if (pending.action === 'cancel') {
+      const reason = ownerCancellationReason();
+      if (!reason) {
+        window.tkToast?.('Please add a cancellation reason.', 'error');
+        return;
+      }
+      body.owner_cancellation_reason = reason;
+    }
     bootstrap.Modal.getOrCreateInstance($('#ownerReservationActionModal')).hide();
     state.pendingReservationAction = null;
-    await reservationAction(pending.id, pending.action);
+    await reservationAction(pending.id, pending.action, body);
   }
 
   function bindEvents() {
@@ -1354,12 +1876,58 @@
     $('[data-owner-start-create]')?.addEventListener('click', () => $('[data-owner-venue-form]')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     $('[data-owner-image-browse]')?.addEventListener('click', () => $('[data-owner-image-input]')?.click());
     $('[data-owner-image-input]')?.addEventListener('change', (event) => uploadImages(event.target.files));
+    const galleryDropzone = $('[data-owner-gallery-dropzone]');
+    galleryDropzone?.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      galleryDropzone.classList.add('is-dragover');
+    });
+    galleryDropzone?.addEventListener('dragleave', (event) => {
+      if (!galleryDropzone.contains(event.relatedTarget)) galleryDropzone.classList.remove('is-dragover');
+    });
+    galleryDropzone?.addEventListener('drop', (event) => {
+      event.preventDefault();
+      galleryDropzone.classList.remove('is-dragover');
+      uploadImages(event.dataTransfer?.files);
+    });
     $('[data-owner-delete-open]')?.addEventListener('click', () => bootstrap.Modal.getOrCreateInstance($('#ownerDeleteModal')).show());
     $('[data-owner-delete-confirm]')?.addEventListener('click', deleteVenue);
     $('[data-owner-action-confirm]')?.addEventListener('click', confirmReservationAction);
+    $('[data-owner-cancel-reason-select]')?.addEventListener('change', (event) => {
+      const reasonOther = $('[data-owner-cancel-reason-other]');
+      if (!reasonOther) return;
+      reasonOther.hidden = event.currentTarget.value !== 'Other';
+      if (reasonOther.hidden) reasonOther.value = '';
+    });
     $('[data-blackout-add]')?.addEventListener('click', addBlackoutDate);
     $('[data-special-save]')?.addEventListener('click', saveSpecialHours);
     $('[data-special-closed]')?.addEventListener('change', syncSpecialClosedState);
+    $('[data-owner-location-search-button]')?.addEventListener('click', searchOwnerLocation);
+    $('[data-owner-location-search]')?.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        searchOwnerLocation();
+      }
+    });
+    $('[data-owner-location-click-layer]')?.addEventListener('click', (event) => {
+      const coordinates = coordinatesFromPickerClick(event);
+      setLocationFields(coordinates.lat, coordinates.lng);
+    });
+    $('[data-owner-location-clear]')?.addEventListener('click', () => {
+      const form = $('[data-owner-venue-form]');
+      if (!form) return;
+      form.elements.latitude.value = '';
+      form.elements.longitude.value = '';
+      updateOwnerLocationMap();
+    });
+    ['latitude', 'longitude'].forEach((name) => {
+      $('[data-owner-venue-form]')?.elements[name]?.addEventListener('input', updateOwnerLocationMap);
+    });
+    ['address', 'city', 'country'].forEach((name) => {
+      $('[data-owner-venue-form]')?.elements[name]?.addEventListener('input', () => {
+        const search = $('[data-owner-location-search]');
+        if (search) search.value = locationSearchText();
+      });
+    });
     $('[data-owner-reservations-refresh]')?.addEventListener('click', () => {
       if (state.reservationView === 'analytics') {
         loadAnalytics();
@@ -1470,6 +2038,11 @@
         deleteImage(deleteButton.dataset.ownerImageDelete);
         return;
       }
+      const coverButton = event.target.closest('[data-owner-image-cover]');
+      if (coverButton) {
+        setCoverImage(coverButton.dataset.ownerImageCover);
+        return;
+      }
       const up = event.target.closest('[data-owner-image-up]');
       if (up) {
         reorderImage(up.dataset.ownerImageUp, -1);
@@ -1511,6 +2084,39 @@
       if (specialDelete) {
         deleteSpecialHours(specialDelete.dataset.specialDelete);
       }
+    });
+
+    document.addEventListener('dragstart', (event) => {
+      const card = event.target.closest('[data-owner-gallery-card]');
+      if (!card) return;
+      draggedOwnerImageId = card.dataset.ownerGalleryCard;
+      card.classList.add('is-dragging');
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', draggedOwnerImageId);
+    });
+    document.addEventListener('dragover', (event) => {
+      const card = event.target.closest('[data-owner-gallery-card]');
+      if (!card || !draggedOwnerImageId) return;
+      event.preventDefault();
+      card.classList.add('is-drop-target');
+      event.dataTransfer.dropEffect = 'move';
+    });
+    document.addEventListener('dragleave', (event) => {
+      const card = event.target.closest('[data-owner-gallery-card]');
+      if (card) card.classList.remove('is-drop-target');
+    });
+    document.addEventListener('drop', (event) => {
+      const card = event.target.closest('[data-owner-gallery-card]');
+      if (!card || !draggedOwnerImageId) return;
+      event.preventDefault();
+      const targetId = card.dataset.ownerGalleryCard;
+      document.querySelectorAll('[data-owner-gallery-card]').forEach((item) => item.classList.remove('is-drop-target', 'is-dragging'));
+      moveImageBefore(draggedOwnerImageId, targetId);
+      draggedOwnerImageId = null;
+    });
+    document.addEventListener('dragend', () => {
+      draggedOwnerImageId = null;
+      document.querySelectorAll('[data-owner-gallery-card]').forEach((item) => item.classList.remove('is-drop-target', 'is-dragging'));
     });
   }
 

@@ -10,9 +10,9 @@ use App\Mail\ReservationCancelledByGuestMail;
 use App\Mail\ReservationCancelledMail;
 use App\Mail\ReservationRequestReceivedMail;
 use App\Models\Reservation;
-use App\Models\Venue;
 use App\Models\Notification;
 use App\Services\Notifications\NotificationService;
+use App\Services\Reservations\ReservationCreationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -24,21 +24,10 @@ class ReservationController extends Controller
     public function store(StoreReservationRequest $request): ReservationResource
     {
         $user = $request->user();
-        $venue = Venue::query()->with('owner')->findOrFail($request->validated('venue_id'));
-
-        $reservation = Reservation::query()->create([
-            'venue_id' => $venue->id,
-            'user_id' => $user->id,
-            'guest_name' => $user->name ?: trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: 'Event Sphere guest',
-            'phone' => $request->validated('phone') ?: $user->phone,
-            'party_size' => $request->validated('party_size'),
-            'reservation_date' => $request->validated('reservation_date'),
-            'reservation_time' => $request->validated('reservation_time'),
-            'status' => Reservation::STATUS_PENDING,
-            'notes' => $request->validated('notes'),
-        ]);
+        $reservation = app(ReservationCreationService::class)->create($user, $request->validated());
 
         $reservation = $reservation->fresh(['venue.owner', 'user']);
+        $venue = $reservation->venue;
 
         Mail::to($user->email, $reservation->guest_name)
             ->send(new ReservationRequestReceivedMail($reservation));

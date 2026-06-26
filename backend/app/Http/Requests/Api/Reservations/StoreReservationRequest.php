@@ -4,6 +4,8 @@ namespace App\Http\Requests\Api\Reservations;
 
 use App\Models\Venue;
 use App\Services\Reservations\ReservationAvailabilityService;
+use App\Services\Reservations\ReservationCreationService;
+use App\Services\Reservations\ReservationHoldService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -38,11 +40,18 @@ class StoreReservationRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:255'],
             'party_size' => ['required', 'integer', 'min:1', 'max:1000'],
             'reservation_date' => ['required', 'date_format:Y-m-d'],
-            'reservation_time' => ['required', 'date_format:H:i', function (string $attribute, mixed $value, \Closure $fail): void {
-                if (! $this->isAlignedReservationTime((string) $value)) {
-                    $fail('Please select a valid reservation time.');
-                }
-            }],
+            'reservation_time' => ['required', 'date_format:H:i'],
+            'reservation_hold_id' => ['required', 'integer', 'exists:reservation_holds,id'],
+            'occasion' => ['nullable', 'string', Rule::in([
+                'Birthday',
+                'Anniversary',
+                'Date Night',
+                'Business Meeting',
+                'Family Gathering',
+                'Celebration',
+                'Friends Night Out',
+                'Other',
+            ])],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
@@ -106,20 +115,10 @@ class StoreReservationRequest extends FormRequest
                 }
 
                 $this->validateAvailability($validator, $venue, $reservationAt);
+                $this->validateReservationHold($validator);
                 $this->validateSlotCapacity($validator, $venue);
             },
         ];
-    }
-
-    private function isAlignedReservationTime(string $value): bool
-    {
-        if (! preg_match('/^\d{2}:\d{2}$/', $value)) {
-            return false;
-        }
-
-        [$hour, $minute] = array_map('intval', explode(':', $value));
-
-        return $hour >= 0 && $hour <= 23 && in_array($minute, [0, 30], true);
     }
 
     private function validateAvailability(Validator $validator, Venue $venue, Carbon $reservationAt): void
@@ -138,9 +137,31 @@ class StoreReservationRequest extends FormRequest
 
         $date = (string) $this->input('reservation_date');
         $time = (string) $this->input('reservation_time');
+        $holdId = (int) $this->input('reservation_hold_id');
 
-        if (app(ReservationAvailabilityService::class)->slotIsFull($venue, $date, $time)) {
-            $validator->errors()->add('reservation_time', 'This time slot is fully booked. Please choose another time.');
+        if (app(ReservationAvailabilityService::class)->slotIsFull($venue, $date, $time, $holdId ?: null)) {
+            $validator->errors()->add('reservation_time', ReservationCreationService::SLOT_FULL_MESSAGE);
+        }
+    }
+
+    private function validateReservationHold(Validator $validator): void
+    {
+        if ($validator->errors()->isNotEmpty()) {
+            return;
+        }
+
+        try {
+            app(ReservationHoldService::class)->validateForReservation($this->user(), (int) $this->input('reservation_hold_id'), [
+                'venue_id' => $this->input('venue_id'),
+                'reservation_date' => $this->input('reservation_date'),
+                'reservation_time' => $this->input('reservation_time'),
+                'party_size' => $this->input('party_size'),
+            ]);
+        } catch (\Throwable $exception) {
+            $message = method_exists($exception, 'errors')
+                ? (collect($exception->errors())->flatten()->first() ?: 'Reservation hold is no longer available.')
+                : 'Reservation hold is no longer available.';
+            $validator->errors()->add('reservation_hold_id', (string) $message);
         }
     }
 

@@ -72,6 +72,7 @@ class StoreVenueRequest extends FormRequest
             'max_guests' => ['sometimes', 'integer', 'min:1', 'max:1000', 'gte:min_guests'],
             'reservation_interval_minutes' => ['sometimes', 'integer', Rule::in([15, 30, 45, 60, 90, 120])],
             'max_reservations_per_slot' => ['sometimes', 'integer', 'min:1', 'max:1000'],
+            'booking_horizon_days' => ['sometimes', 'integer', Rule::in(Venue::BOOKING_HORIZON_OPTIONS)],
             'last_reservation_time' => ['nullable', 'date_format:H:i'],
             'facebook_url' => ['nullable', 'url', 'max:2048'],
             'instagram_url' => ['nullable', 'url', 'max:2048'],

@@ -359,11 +359,58 @@
             <div class="col-md-4"><label class="form-label">Email</label><input class="form-control" name="email" type="email" maxlength="255" /></div>
             <div class="col-12"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="4"></textarea></div>
             <div class="col-md-6"><label class="form-label">Website</label><input class="form-control" name="website" type="url" placeholder="https://example.com" /></div>
-            <div class="col-md-6"><label class="form-label">Address</label><input class="form-control" name="address" /></div>
+            <div class="col-md-6"><label class="form-label">Address</label><input class="form-control" name="address" data-owner-address /></div>
             <div class="col-md-4"><label class="form-label">City</label><input class="form-control" name="city" required maxlength="255" /></div>
             <div class="col-md-4"><label class="form-label">Country</label><input class="form-control" name="country" maxlength="255" /></div>
             <div class="col-md-2"><label class="form-label">Latitude</label><input class="form-control" name="latitude" type="number" step="0.0000001" /></div>
             <div class="col-md-2"><label class="form-label">Longitude</label><input class="form-control" name="longitude" type="number" step="0.0000001" /></div>
+            <div class="col-12">
+              <div class="owner-location-picker">
+                <div class="owner-location-toolbar">
+                  <div>
+                    <h5 class="mb-1">Exact Map Location</h5>
+                    <p class="small text-muted-pro mb-0">Search, click the map, or drag the marker to set the exact pin.</p>
+                  </div>
+                  <a class="btn btn-gold-outline btn-sm" href="#" target="_blank" rel="noopener" data-owner-location-open hidden>
+                    <i class="bi bi-box-arrow-up-right me-1"></i>Open in Google Maps
+                  </a>
+                </div>
+                <div class="row g-2 mb-3">
+                  <div class="col-md-8">
+                    <input class="form-control" type="search" placeholder="Search address, city, or place" data-owner-location-search>
+                  </div>
+                  <div class="col-md-4 d-grid">
+                    <button class="btn btn-gold-outline" type="button" data-owner-location-search-button>
+                      <i class="bi bi-search me-1"></i>Search Address
+                    </button>
+                  </div>
+                </div>
+                <div class="owner-location-map" data-owner-location-map>
+                  <div class="owner-location-canvas" data-owner-location-canvas hidden></div>
+                  <iframe title="Restaurant or bar Google Map picker" loading="lazy" referrerpolicy="no-referrer-when-downgrade" data-owner-location-frame></iframe>
+                  <button class="owner-location-click-layer" type="button" data-owner-location-click-layer aria-label="Click to set location"></button>
+                  <div class="owner-location-pin" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></div>
+                </div>
+                <div class="owner-location-selected">
+                  <div>
+                    <span>Selected Address</span>
+                    <strong data-owner-location-selected-address>Not selected</strong>
+                  </div>
+                  <div>
+                    <span>Latitude</span>
+                    <strong data-owner-location-selected-latitude>-</strong>
+                  </div>
+                  <div>
+                    <span>Longitude</span>
+                    <strong data-owner-location-selected-longitude>-</strong>
+                  </div>
+                </div>
+                <div class="owner-location-meta">
+                  <span data-owner-location-status>Set latitude and longitude to preview the map pin.</span>
+                  <button class="btn btn-glass btn-sm" type="button" data-owner-location-clear>Clear coordinates</button>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -371,12 +418,18 @@
           <div class="section-head-res mb-3">
             <div><h2>Gallery</h2><div class="sub">Upload, delete, and reorder restaurant or bar images</div></div>
           </div>
-          <div class="card-pro p-3 text-center mb-3" style="border-style:dashed">
-            <i class="bi bi-cloud-arrow-up fs-3 text-muted-pro"></i>
-            <div class="mt-2"><button class="btn btn-gold-outline btn-sm" type="button" data-owner-image-browse>Choose images</button></div>
-            <small class="text-muted-pro">PNG, JPG, WebP or GIF up to 5MB</small>
+          <div class="owner-gallery-dropzone mb-3" data-owner-gallery-dropzone>
+            <i class="bi bi-images fs-3 text-gold"></i>
+            <div>
+              <h5 class="mb-1">Upload Restaurant & Bar Photos</h5>
+              <small class="text-muted-pro">Drag photos here or choose multiple PNG, JPG, WebP, or GIF files up to 5MB each.</small>
+            </div>
+            <button class="btn btn-gold-outline btn-sm" type="button" data-owner-image-browse>
+              <i class="bi bi-cloud-arrow-up me-1"></i>Choose images
+            </button>
             <input class="d-none" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple data-owner-image-input />
           </div>
+          <div class="owner-upload-progress mb-3" data-owner-upload-progress hidden></div>
           <div class="row g-3" data-owner-gallery></div>
         </section>
 
@@ -452,6 +505,18 @@
               <label class="form-label">Maximum Reservations Per Time Slot</label>
               <input class="form-control" name="max_reservations_per_slot" type="number" min="1" value="10" />
               <small class="text-muted-pro">Maximum number of reservations allowed for the same time slot.</small>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Booking Horizon</label>
+              <select class="form-select" name="booking_horizon_days">
+                <option value="7">7 Days</option>
+                <option value="14">14 Days</option>
+                <option value="30">30 Days</option>
+                <option value="60">60 Days</option>
+                <option value="90">90 Days</option>
+                <option value="180">180 Days</option>
+                <option value="365">365 Days</option>
+              </select>
             </div>
             <div class="col-12"><label class="form-label">Interval</label><select class="form-select" name="reservation_interval_minutes"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option><option value="90">90 minutes</option><option value="120">120 minutes</option></select></div>
             <div class="col-12"><label class="form-label">Last reservation time</label><select class="form-select owner-time-select" name="last_reservation_time" data-owner-time-select></select></div>
@@ -531,6 +596,18 @@
       </div>
       <div class="modal-body">
         <p class="mb-0 text-muted-pro" data-owner-action-body>This will update the reservation status.</p>
+        <div class="mt-3" data-owner-cancel-reason-fields hidden>
+          <label class="form-label">Cancellation Reason</label>
+          <select class="form-select" data-owner-cancel-reason-select>
+            <option value="Fully booked">Fully booked</option>
+            <option value="Private event">Private event</option>
+            <option value="Kitchen closed">Kitchen closed</option>
+            <option value="Staff shortage">Staff shortage</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Other">Other</option>
+          </select>
+          <textarea class="form-control mt-3" rows="4" maxlength="1000" data-owner-cancel-reason-other hidden placeholder="Add cancellation reason"></textarea>
+        </div>
       </div>
       <div class="modal-footer border-pro">
         <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancel</button>

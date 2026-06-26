@@ -148,7 +148,18 @@
       const root = document.querySelector(`[data-reservations-list="${status}"]`);
       if (!root) return;
       if (loading) {
-        root.innerHTML = '<div class="col-12"><div class="reservation-empty-state"><span class="spinner-border spinner-border-sm me-2"></span>Loading reservations...</div></div>';
+        root.innerHTML = Array.from({ length: 3 }, () => `
+          <div class="col-md-6 col-xl-4">
+            <div class="reservation-card-skeleton">
+              <div class="reservation-skeleton-media"></div>
+              <div class="reservation-skeleton-content">
+                <div class="reservation-skeleton-line short"></div>
+                <div class="reservation-skeleton-line"></div>
+                <div class="reservation-skeleton-line"></div>
+              </div>
+            </div>
+          </div>
+        `).join('');
         return;
       }
       root.innerHTML = grouped[status].length ? grouped[status].map(reservationCard).join('') : emptyState(status);
@@ -168,7 +179,8 @@
         <div class="facility justify-content-between"><span>Location</span><strong>${esc([reservation.venue?.city, reservation.venue?.country].filter(Boolean).join(', ') || 'Location not set')}</strong></div>
         ${reservation.status === 'cancelled' ? `
           <div class="facility justify-content-between"><span>Cancelled At</span><strong>${esc(dateTimeLabel(reservation.cancelled_at))}</strong></div>
-          <div class="facility"><span><span class="text-muted-pro d-block mb-1">Cancellation Reason</span>${esc(reservation.cancellation_reason || 'No reason provided.')}</span></div>
+          ${reservation.owner_cancellation_reason ? '<div class="facility justify-content-between"><span>Cancelled By</span><strong>Restaurant</strong></div>' : ''}
+          <div class="facility"><span><span class="text-muted-pro d-block mb-1">Reason</span>${esc(reservation.owner_cancellation_reason || reservation.cancellation_reason || 'No reason provided.')}</span></div>
         ` : ''}
         <div class="d-grid mt-3"><a class="btn btn-gold-outline" href="${esc(venueUrl(reservation))}">Open Restaurant / Bar</a></div>
       </div>

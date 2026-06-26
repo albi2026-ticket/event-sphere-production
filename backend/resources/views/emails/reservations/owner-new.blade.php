@@ -31,8 +31,11 @@
               @if ($reservation->phone)
                 <p style="margin:0 0 12px;font-size:16px;color:#374151"><strong style="color:#111827">Phone:</strong> {{ $reservation->phone }}</p>
               @endif
+              @if ($reservation->occasion)
+                <p style="margin:0 0 12px;font-size:16px;color:#374151"><strong style="color:#111827">Occasion:</strong> {{ $reservation->occasion }}</p>
+              @endif
               @if ($reservation->notes)
-                <p style="margin:0 0 24px;font-size:16px;color:#374151"><strong style="color:#111827">Notes:</strong> {{ $reservation->notes }}</p>
+                <p style="margin:0 0 24px;font-size:16px;color:#374151"><strong style="color:#111827">Special Request:</strong> {{ $reservation->notes }}</p>
               @endif
             </td>
           </tr>

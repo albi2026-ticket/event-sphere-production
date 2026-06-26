@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\NewsletterSubscriptionController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ReservationController;
+use App\Http\Controllers\Api\ReservationHoldController;
 use App\Http\Controllers\Api\Organizer\OrganizerDashboardController;
 use App\Http\Controllers\Api\Organizer\OrganizerEventController;
 use App\Http\Controllers\Api\Organizer\OrganizerPaymentController;
@@ -59,6 +60,7 @@ Route::post('/reset-password', [NewPasswordController::class, 'store'])->middlew
 
 Route::get('/events', [EventController::class, 'index']);
 Route::get('/venues', [VenueController::class, 'index']);
+Route::get('/venues/{venue}/availability', [VenueController::class, 'availability']);
 Route::get('/venues/{venue}', [VenueController::class, 'show']);
 Route::get('/venue-facilities', [VenueLookupController::class, 'facilities']);
 Route::get('/cuisine-types', [VenueLookupController::class, 'cuisineTypes']);
@@ -115,6 +117,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/checkout-reservations', [CheckoutReservationController::class, 'store']);
         Route::get('/checkout-reservations/{checkoutReservation}', [CheckoutReservationController::class, 'show']);
         Route::delete('/checkout-reservations/{checkoutReservation}', [CheckoutReservationController::class, 'cancel']);
+        Route::post('/reservation-holds', [ReservationHoldController::class, 'store']);
+        Route::get('/reservation-holds/{reservationHold}', [ReservationHoldController::class, 'show']);
+        Route::delete('/reservation-holds/{reservationHold}', [ReservationHoldController::class, 'cancel']);
         Route::post('/reservations', [ReservationController::class, 'store']);
         Route::get('/my-reservations', [ReservationController::class, 'mine']);
         Route::get('/reservations/{reservation}', [ReservationController::class, 'show']);

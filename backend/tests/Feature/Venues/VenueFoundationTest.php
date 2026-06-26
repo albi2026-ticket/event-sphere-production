@@ -35,6 +35,7 @@ class VenueFoundationTest extends TestCase
             'max_guests' => 8,
             'reservation_interval_minutes' => 30,
             'max_reservations_per_slot' => 12,
+            'booking_horizon_days' => 60,
             'last_reservation_time' => '22:30:00',
             'facility_ids' => [$facility->id],
             'cuisine_type_ids' => [$cuisine->id],
@@ -53,6 +54,7 @@ class VenueFoundationTest extends TestCase
             ->assertJsonPath('data.slug', 'luna-lounge')
             ->assertJsonPath('data.status', Venue::STATUS_ACTIVE)
             ->assertJsonPath('data.reservation_settings.max_reservations_per_slot', 12)
+            ->assertJsonPath('data.reservation_settings.booking_horizon_days', 60)
             ->assertJsonPath('data.reservation_settings.last_reservation_time', '22:30')
             ->assertJsonPath('data.facilities.0.slug', 'wifi')
             ->assertJsonPath('data.cuisine_types.0.slug', 'italian')
@@ -74,6 +76,7 @@ class VenueFoundationTest extends TestCase
                 'venue_type' => Venue::TYPE_LOUNGE,
                 'city' => 'Pristina',
                 'max_reservations_per_slot' => 6,
+                'booking_horizon_days' => 90,
                 'last_reservation_time' => '22:30:00',
                 'opening_hours' => [
                     ['day_of_week' => 1, 'opens_at' => '10:00:00', 'closes_at' => '23:00:00', 'is_closed' => false],
@@ -81,6 +84,7 @@ class VenueFoundationTest extends TestCase
             ])
             ->assertOk()
             ->assertJsonPath('data.reservation_settings.max_reservations_per_slot', 6)
+            ->assertJsonPath('data.reservation_settings.booking_horizon_days', 90)
             ->assertJsonPath('data.reservation_settings.last_reservation_time', '22:30')
             ->assertJsonPath('data.opening_hours.0.opens_at', '10:00');
 
@@ -208,6 +212,112 @@ class VenueFoundationTest extends TestCase
             ->assertJsonPath('data.0.slug', 'bella-cafe');
     }
 
+    public function test_public_availability_slots_start_at_opening_time(): void
+    {
+        $owner = $this->organizer();
+        $date = now()->addDays(14)->startOfDay();
+        $venue = Venue::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Anchored Slots Bar',
+            'slug' => 'anchored-slots-bar',
+            'venue_type' => Venue::TYPE_BAR,
+            'city' => 'Pristina',
+            'reservation_interval_minutes' => 45,
+        ]);
+        $venue->openingHours()->create([
+            'day_of_week' => $date->dayOfWeekIso - 1,
+            'opens_at' => '07:20:00',
+            'closes_at' => '10:00:00',
+            'is_closed' => false,
+        ]);
+
+        $slots = $this->getJson("/api/venues/{$venue->slug}/availability?date={$date->format('Y-m-d')}")
+            ->assertOk()
+            ->json('slots');
+
+        $this->assertSame(['07:20', '08:05', '08:50'], array_column($slots, 'time'));
+    }
+
+    public function test_public_availability_respects_last_reservation_time(): void
+    {
+        $owner = $this->organizer();
+        $date = now()->addDays(14)->startOfDay();
+        $venue = Venue::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Last Call Bar',
+            'slug' => 'last-call-bar',
+            'venue_type' => Venue::TYPE_BAR,
+            'city' => 'Pristina',
+            'reservation_interval_minutes' => 30,
+            'last_reservation_time' => '21:30:00',
+        ]);
+        $venue->openingHours()->create([
+            'day_of_week' => $date->dayOfWeekIso - 1,
+            'opens_at' => '07:00:00',
+            'closes_at' => '23:30:00',
+            'is_closed' => false,
+        ]);
+
+        $slots = $this->getJson("/api/venues/{$venue->slug}/availability?date={$date->format('Y-m-d')}")
+            ->assertOk()
+            ->json('slots');
+
+        $this->assertSame('07:00', $slots[0]['time']);
+        $this->assertSame('21:30', $slots[array_key_last($slots)]['time']);
+        $this->assertNotContains('22:00', array_column($slots, 'time'));
+    }
+
+    public function test_public_availability_supports_overnight_hours(): void
+    {
+        $owner = $this->organizer();
+        $date = now()->addDays(14)->startOfDay();
+        $venue = Venue::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Overnight Lounge',
+            'slug' => 'overnight-lounge',
+            'venue_type' => Venue::TYPE_LOUNGE,
+            'city' => 'Pristina',
+            'reservation_interval_minutes' => 120,
+        ]);
+        $venue->openingHours()->create([
+            'day_of_week' => $date->dayOfWeekIso - 1,
+            'opens_at' => '18:00:00',
+            'closes_at' => '02:00:00',
+            'is_closed' => false,
+        ]);
+
+        $slots = $this->getJson("/api/venues/{$venue->slug}/availability?date={$date->format('Y-m-d')}")
+            ->assertOk()
+            ->json('slots');
+
+        $this->assertSame(['18:00', '20:00', '22:00', '00:00'], array_column($slots, 'time'));
+    }
+
+    public function test_public_availability_rejects_dates_outside_booking_horizon(): void
+    {
+        $owner = $this->organizer();
+        $date = now()->addDays(8)->startOfDay();
+        $venue = Venue::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Short Horizon Bar',
+            'slug' => 'short-horizon-bar',
+            'venue_type' => Venue::TYPE_BAR,
+            'city' => 'Pristina',
+            'booking_horizon_days' => 7,
+        ]);
+        $venue->openingHours()->create([
+            'day_of_week' => $date->dayOfWeekIso - 1,
+            'opens_at' => '09:00:00',
+            'closes_at' => '17:00:00',
+            'is_closed' => false,
+        ]);
+
+        $this->getJson("/api/venues/{$venue->slug}/availability?date={$date->format('Y-m-d')}")
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('date')
+            ->assertJsonPath('errors.date.0', 'Reservations may only be made up to 7 days in advance.');
+    }
+
     public function test_organizer_cannot_manage_another_owners_venue(): void
     {
         $owner = $this->organizer();
@@ -223,6 +333,24 @@ class VenueFoundationTest extends TestCase
         $this->actingAs($otherOwner, 'sanctum')
             ->putJson("/api/owner/venues/{$venue->slug}", ['name' => 'Changed'])
             ->assertForbidden();
+    }
+
+    public function test_owner_can_manage_venue_when_owner_id_is_hydrated_as_string(): void
+    {
+        $owner = $this->organizer();
+        $venue = Venue::query()->create([
+            'user_id' => (string) $owner->id,
+            'name' => 'Typed Owner Bar',
+            'slug' => 'typed-owner-bar',
+            'venue_type' => Venue::TYPE_BAR,
+            'city' => 'Pristina',
+        ]);
+
+        $venue->setRawAttributes(array_merge($venue->getAttributes(), [
+            'user_id' => (string) $owner->id,
+        ]), true);
+
+        $this->assertTrue($owner->canManageVenue($venue));
     }
 
     public function test_owner_can_manage_venue_availability_exceptions(): void

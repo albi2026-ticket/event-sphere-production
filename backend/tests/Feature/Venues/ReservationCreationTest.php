@@ -7,13 +7,16 @@ use App\Mail\ReservationCancelledMail;
 use App\Mail\ReservationCancelledByGuestMail;
 use App\Mail\ReservationConfirmedMail;
 use App\Mail\ReservationRequestReceivedMail;
+use App\Models\Notification;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Models\Venue;
 use App\Models\VenueBlackoutDate;
 use App\Models\VenueSpecialHour;
+use App\Services\Reservations\ReservationCreationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class ReservationCreationTest extends TestCase
@@ -429,11 +432,74 @@ class ReservationCreationTest extends TestCase
             ->assertJsonPath('errors.reservation_time.0', 'Please select a valid reservation time.');
     }
 
+    public function test_reservation_validation_uses_opening_anchored_slots(): void
+    {
+        Mail::fake();
+
+        $owner = $this->organizer(['email' => 'owner-anchored@example.test']);
+        $user = User::factory()->create([
+            'name' => 'Anchored Guest',
+            'email' => 'anchored@example.test',
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+        $venue = $this->venue($owner, ['reservation_interval_minutes' => 45]);
+        $date = now()->addDay()->format('Y-m-d');
+
+        VenueSpecialHour::query()->create([
+            'venue_id' => $venue->id,
+            'date' => $date,
+            'opens_at' => '07:20:00',
+            'closes_at' => '10:00:00',
+            'is_closed' => false,
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/reservations', [
+                'venue_id' => $venue->id,
+                'party_size' => 2,
+                'reservation_date' => $date,
+                'reservation_time' => '08:05',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.reservation_time', '08:05');
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/reservations', [
+                'venue_id' => $venue->id,
+                'party_size' => 2,
+                'reservation_date' => $date,
+                'reservation_time' => '08:00',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('reservation_time')
+            ->assertJsonPath('errors.reservation_time.0', 'Please select a valid reservation time.');
+    }
+
+    public function test_reservation_date_must_be_inside_booking_horizon(): void
+    {
+        $owner = $this->organizer();
+        $user = User::factory()->create(['role' => User::ROLE_USER, 'status' => User::STATUS_ACTIVE]);
+        $venue = $this->venue($owner, ['booking_horizon_days' => 7]);
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/reservations', [
+                'venue_id' => $venue->id,
+                'party_size' => 2,
+                'reservation_date' => now()->addDays(8)->format('Y-m-d'),
+                'reservation_time' => '08:00',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('reservation_date')
+            ->assertJsonPath('errors.reservation_date.0', 'Reservations may only be made up to 7 days in advance.');
+    }
+
     public function test_reservation_slot_limit_rejects_full_time_slot(): void
     {
         Mail::fake();
 
         $owner = $this->organizer();
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'status' => User::STATUS_ACTIVE]);
         $firstUser = User::factory()->create(['role' => User::ROLE_USER, 'status' => User::STATUS_ACTIVE]);
         $secondUser = User::factory()->create(['role' => User::ROLE_USER, 'status' => User::STATUS_ACTIVE]);
         $venue = $this->venue($owner, ['max_reservations_per_slot' => 1]);
@@ -458,9 +524,118 @@ class ReservationCreationTest extends TestCase
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('reservation_time')
-            ->assertJsonPath('errors.reservation_time.0', 'This time slot is fully booked. Please choose another time.');
+            ->assertJsonPath('errors.reservation_time.0', ReservationCreationService::SLOT_FULL_MESSAGE);
 
         $this->assertSame(1, Reservation::query()
+            ->where('venue_id', $venue->id)
+            ->whereDate('reservation_date', $date)
+            ->where('reservation_time', '19:30')
+            ->count());
+        Mail::assertSent(ReservationRequestReceivedMail::class, 1);
+        Mail::assertSent(NewReservationReceivedMail::class, 1);
+        $this->assertSame(2, Notification::query()->count());
+
+        $this->actingAs($owner, 'sanctum')
+            ->getJson('/api/owner/analytics?start_date='.$date.'&end_date='.$date.'&venue_id='.$venue->id)
+            ->assertOk()
+            ->assertJsonPath('data.overview.total', 1);
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/reservations?venue_id='.$venue->id.'&date_from='.$date.'&date_to='.$date)
+            ->assertOk()
+            ->assertJsonPath('meta.stats.total', 1)
+            ->assertJsonCount(1, 'data');
+    }
+
+    public function test_final_available_slot_can_be_reserved_atomically(): void
+    {
+        Mail::fake();
+
+        $owner = $this->organizer();
+        $firstUser = User::factory()->create(['role' => User::ROLE_USER, 'status' => User::STATUS_ACTIVE]);
+        $secondUser = User::factory()->create(['role' => User::ROLE_USER, 'status' => User::STATUS_ACTIVE]);
+        $venue = $this->venue($owner, ['max_reservations_per_slot' => 2]);
+        $date = now()->addDay()->format('Y-m-d');
+
+        Reservation::query()->create([
+            'venue_id' => $venue->id,
+            'user_id' => $firstUser->id,
+            'guest_name' => $firstUser->name,
+            'party_size' => 2,
+            'reservation_date' => $date,
+            'reservation_time' => '19:30',
+            'status' => Reservation::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($secondUser, 'sanctum')
+            ->postJson('/api/reservations', [
+                'venue_id' => $venue->id,
+                'party_size' => 2,
+                'reservation_date' => $date,
+                'reservation_time' => '19:30',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.status', Reservation::STATUS_PENDING);
+
+        $this->assertSame(2, Reservation::query()
+            ->where('venue_id', $venue->id)
+            ->whereDate('reservation_date', $date)
+            ->where('reservation_time', '19:30')
+            ->count());
+        Mail::assertSent(ReservationRequestReceivedMail::class, 1);
+        Mail::assertSent(NewReservationReceivedMail::class, 1);
+    }
+
+    public function test_atomic_creation_rechecks_capacity_after_stale_precheck(): void
+    {
+        $owner = $this->organizer();
+        $firstUser = User::factory()->create(['role' => User::ROLE_USER, 'status' => User::STATUS_ACTIVE]);
+        $secondUser = User::factory()->create(['role' => User::ROLE_USER, 'status' => User::STATUS_ACTIVE]);
+        $thirdUser = User::factory()->create(['role' => User::ROLE_USER, 'status' => User::STATUS_ACTIVE]);
+        $venue = $this->venue($owner, ['max_reservations_per_slot' => 2]);
+        $date = now()->addDay()->format('Y-m-d');
+
+        Reservation::query()->create([
+            'venue_id' => $venue->id,
+            'user_id' => $firstUser->id,
+            'guest_name' => $firstUser->name,
+            'party_size' => 2,
+            'reservation_date' => $date,
+            'reservation_time' => '19:30',
+            'status' => Reservation::STATUS_PENDING,
+        ]);
+
+        $this->assertFalse(app(\App\Services\Reservations\ReservationAvailabilityService::class)->slotIsFull($venue, $date, '19:30'));
+
+        Reservation::query()->create([
+            'venue_id' => $venue->id,
+            'user_id' => $secondUser->id,
+            'guest_name' => $secondUser->name,
+            'party_size' => 2,
+            'reservation_date' => $date,
+            'reservation_time' => '19:30',
+            'status' => Reservation::STATUS_PENDING,
+        ]);
+
+        try {
+            app(ReservationCreationService::class)->create($thirdUser, [
+                'venue_id' => $venue->id,
+                'party_size' => 2,
+                'reservation_date' => $date,
+                'reservation_time' => '19:30',
+                'phone' => null,
+                'notes' => null,
+            ]);
+
+            $this->fail('The stale reservation request was not rejected.');
+        } catch (ValidationException $exception) {
+            $this->assertSame(
+                ReservationCreationService::SLOT_FULL_MESSAGE,
+                $exception->errors()['reservation_time'][0] ?? null,
+            );
+        }
+
+        $this->assertSame(2, Reservation::query()
             ->where('venue_id', $venue->id)
             ->whereDate('reservation_date', $date)
             ->where('reservation_time', '19:30')
@@ -541,19 +716,26 @@ class ReservationCreationTest extends TestCase
             ->assertForbidden();
 
         $this->actingAs($owner, 'sanctum')
-            ->patchJson("/api/owner/reservations/{$reservation->id}/cancel")
+            ->patchJson("/api/owner/reservations/{$reservation->id}/cancel", [
+                'owner_cancellation_reason' => 'Maintenance',
+            ])
             ->assertOk()
-            ->assertJsonPath('data.status', Reservation::STATUS_CANCELLED);
+            ->assertJsonPath('data.status', Reservation::STATUS_CANCELLED)
+            ->assertJsonPath('data.owner_cancellation_reason', 'Maintenance');
 
         Reservation::query()->whereKey($reservation->id)->update([
             'status' => Reservation::STATUS_CONFIRMED,
             'cancelled_at' => null,
+            'owner_cancellation_reason' => null,
         ]);
 
         $this->actingAs($admin, 'sanctum')
-            ->patchJson("/api/owner/reservations/{$reservation->id}/cancel")
+            ->patchJson("/api/owner/reservations/{$reservation->id}/cancel", [
+                'owner_cancellation_reason' => 'Staff shortage',
+            ])
             ->assertOk()
-            ->assertJsonPath('data.status', Reservation::STATUS_CANCELLED);
+            ->assertJsonPath('data.status', Reservation::STATUS_CANCELLED)
+            ->assertJsonPath('data.owner_cancellation_reason', 'Staff shortage');
     }
 
     private function organizer(array $attributes = []): User

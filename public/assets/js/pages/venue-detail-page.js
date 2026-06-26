@@ -6,7 +6,19 @@
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
   const fallbackImage = 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80';
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const occasionOptions = ['Birthday', 'Anniversary', 'Date Night', 'Business Meeting', 'Family Gathering', 'Celebration', 'Friends Night Out', 'Other'];
   let currentVenue = null;
+  let availabilityRequestId = 0;
+  let detailGoogleMap = null;
+  let detailGoogleMarker = null;
+  let detailMapsLoading = null;
+  let galleryImages = [];
+  let activeGalleryIndex = 0;
+  let galleryTouchStartX = null;
+  let liveStatusTimer = null;
+  let reservationHold = null;
+  let reservationHoldTimer = null;
+  let reservationHoldRequestId = 0;
 
   function slugFromLocation() {
     const params = new URLSearchParams(location.search);
@@ -42,17 +54,250 @@
     return match ? (Number(match[1]) * 60) + Number(match[2]) : null;
   }
 
-  function timeFromMinutes(minutes) {
-    const safe = Math.max(0, Math.min(1439, Number(minutes) || 0));
-    return `${String(Math.floor(safe / 60)).padStart(2, '0')}:${String(safe % 60).padStart(2, '0')}`;
-  }
-
   function timeLabel(value) {
     const minutes = minutesFromTime(value);
     if (minutes === null) return value || '';
     const date = new Date();
     date.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
     return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function formatCountdown(seconds) {
+    const safeSeconds = Math.max(0, Number(seconds) || 0);
+    const minutes = Math.floor(safeSeconds / 60);
+    const remainder = safeSeconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
+  }
+
+  function statusTimeLabel(value) {
+    return normalizeTime(value || '');
+  }
+
+  function dateWithDayOffset(base, offset) {
+    const date = new Date(base);
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + offset);
+    return date;
+  }
+
+  function dayIndexForDate(date) {
+    return (date.getDay() + 6) % 7;
+  }
+
+  function blackoutDates(venue) {
+    return new Set((venue.blackout_dates || []).map((item) => item.date).filter(Boolean));
+  }
+
+  function specialHourForDate(venue, dateValue) {
+    return (venue.special_hours || []).find((item) => item.date === dateValue) || null;
+  }
+
+  function openingHourForDate(venue, date) {
+    return (venue.opening_hours || []).find((item) => Number(item.day_of_week) === dayIndexForDate(date)) || null;
+  }
+
+  function scheduleForDate(venue, date) {
+    const dateValue = localDateValue(date);
+    if (blackoutDates(venue).has(dateValue)) {
+      return { is_closed: true, blackout: true };
+    }
+
+    const special = specialHourForDate(venue, dateValue);
+    if (special) return special;
+
+    return openingHourForDate(venue, date) || { is_closed: true };
+  }
+
+  function businessWindowForDate(venue, date) {
+    const schedule = scheduleForDate(venue, date);
+    const opens = minutesFromTime(schedule.opens_at);
+    const closes = minutesFromTime(schedule.closes_at);
+
+    if (schedule.is_closed || opens === null || closes === null) return null;
+
+    const start = dateWithDayOffset(date, 0);
+    start.setMinutes(opens);
+    const end = dateWithDayOffset(date, 0);
+    end.setMinutes(closes);
+    if (closes <= opens) end.setDate(end.getDate() + 1);
+
+    return {
+      start,
+      end,
+      opens_at: statusTimeLabel(schedule.opens_at),
+      closes_at: statusTimeLabel(schedule.closes_at),
+    };
+  }
+
+  function relationLabel(date, now) {
+    const today = localDateValue(now);
+    const tomorrow = localDateValue(dateWithDayOffset(now, 1));
+    const value = localDateValue(date);
+    if (value === today) return 'today';
+    if (value === tomorrow) return 'tomorrow';
+    return date.toLocaleDateString(undefined, { weekday: 'long' });
+  }
+
+  function liveStatusForVenue(venue, now = new Date()) {
+    const candidateDates = [dateWithDayOffset(now, -1), dateWithDayOffset(now, 0)];
+    const currentWindow = candidateDates
+      .map((date) => businessWindowForDate(venue, date))
+      .filter(Boolean)
+      .find((window) => now >= window.start && now < window.end);
+
+    if (currentWindow) {
+      return {
+        open: true,
+        label: 'Open Now',
+        detail: `Closes at ${currentWindow.closes_at}`,
+      };
+    }
+
+    for (let offset = 0; offset <= 7; offset += 1) {
+      const date = dateWithDayOffset(now, offset);
+      const window = businessWindowForDate(venue, date);
+      if (window && window.start > now) {
+        return {
+          open: false,
+          label: 'Closed',
+          detail: `Opens ${relationLabel(window.start, now)} at ${window.opens_at}`,
+        };
+      }
+    }
+
+    return {
+      open: false,
+      label: 'Closed',
+      detail: 'No upcoming opening hours listed',
+    };
+  }
+
+  function renderLiveStatus(venue) {
+    const root = $('[data-live-status]');
+    const label = $('[data-live-status-label]');
+    const detail = $('[data-live-status-detail]');
+    if (!root || !venue) return;
+
+    const status = liveStatusForVenue(venue);
+    root.hidden = false;
+    root.classList.toggle('is-open', status.open);
+    root.classList.toggle('is-closed', !status.open);
+    if (label) label.textContent = status.label;
+    if (detail) detail.textContent = status.detail;
+  }
+
+  function startLiveStatusUpdates() {
+    if (liveStatusTimer) window.clearInterval(liveStatusTimer);
+    if (!currentVenue) return;
+    renderLiveStatus(currentVenue);
+    liveStatusTimer = window.setInterval(() => {
+      if (currentVenue) renderLiveStatus(currentVenue);
+    }, 60000);
+  }
+
+  function validCoordinate(lat, lng) {
+    return Number.isFinite(lat)
+      && Number.isFinite(lng)
+      && lat >= -90
+      && lat <= 90
+      && lng >= -180
+      && lng <= 180;
+  }
+
+  function venueCoordinates(venue) {
+    const lat = Number(venue.latitude);
+    const lng = Number(venue.longitude);
+
+    return validCoordinate(lat, lng) ? { lat, lng } : null;
+  }
+
+  function googleMapEmbedUrl(lat, lng) {
+    return `https://maps.google.com/maps?q=${encodeURIComponent(`${lat},${lng}`)}&z=16&output=embed`;
+  }
+
+  function googleDirectionsUrl(lat, lng) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${lat},${lng}`)}`;
+  }
+
+  function googleMapsUrl(lat, lng) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}`;
+  }
+
+  function formatCoordinate(value) {
+    return Number(value).toFixed(7).replace(/0+$/, '').replace(/\.$/, '');
+  }
+
+  function googleMapsApiKey() {
+    return String(
+      window.EventSphereConfig?.GOOGLE_MAPS_API_KEY
+      || window.__EVENT_SPHERE_GOOGLE_MAPS_API_KEY__
+      || document.querySelector('meta[name="google-maps-api-key"]')?.content
+      || '',
+    ).trim();
+  }
+
+  function loadGoogleMaps() {
+    if (window.google?.maps) return Promise.resolve(true);
+    const key = googleMapsApiKey();
+    if (!key) return Promise.resolve(false);
+    if (detailMapsLoading) return detailMapsLoading;
+
+    detailMapsLoading = new Promise((resolve) => {
+      const callback = `eventSphereDetailMapsReady${Date.now()}`;
+      window[callback] = () => {
+        delete window[callback];
+        resolve(true);
+      };
+
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&callback=${callback}`;
+      script.async = true;
+      script.defer = true;
+      script.onerror = () => {
+        delete window[callback];
+        resolve(false);
+      };
+      document.head.appendChild(script);
+    });
+
+    return detailMapsLoading;
+  }
+
+  async function renderInteractiveMap(lat, lng, venue) {
+    const canvas = $('[data-detail-map-canvas]');
+    const frame = $('[data-detail-map]');
+    const section = $('[data-detail-map-section]');
+    if (!canvas) return;
+
+    const loaded = await loadGoogleMaps();
+    if (!loaded || !window.google?.maps) return;
+
+    const position = { lat, lng };
+    canvas.hidden = false;
+    if (frame) frame.hidden = true;
+    section?.classList.add('has-google-map');
+
+    if (!detailGoogleMap) {
+      detailGoogleMap = new window.google.maps.Map(canvas, {
+        center: position,
+        zoom: 16,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
+      });
+      detailGoogleMarker = new window.google.maps.Marker({
+        position,
+        map: detailGoogleMap,
+        animation: window.google.maps.Animation.DROP,
+        title: venue?.name || 'Restaurant location',
+      });
+      return;
+    }
+
+    detailGoogleMap.setCenter(position);
+    detailGoogleMap.setZoom(16);
+    detailGoogleMarker?.setPosition(position);
+    detailGoogleMarker?.setTitle(venue?.name || 'Restaurant location');
   }
 
   function localDateValue(date) {
@@ -63,49 +308,9 @@
     ].join('-');
   }
 
-  function dayIndexForDate(value) {
-    const date = new Date(`${value}T00:00:00`);
-    return Number.isNaN(date.getTime()) ? null : (date.getDay() + 6) % 7;
-  }
-
-  function isToday(value) {
-    return value === localDateValue(new Date());
-  }
-
-  function nextFutureSlotMinutes() {
-    const now = new Date();
-    const minutes = (now.getHours() * 60) + now.getMinutes();
-    return Math.ceil((minutes + 1) / 30) * 30;
-  }
-
-  function nextSlotMinutes(minutes) {
-    return Math.ceil((Number(minutes) || 0) / 30) * 30;
-  }
-
-  function openingHourForDate(venue, dateValue) {
-    const dayIndex = dayIndexForDate(dateValue);
-    if (dayIndex === null) return null;
-    return (venue.opening_hours || []).find((item) => Number(item.day_of_week) === dayIndex) || null;
-  }
-
-  function reservationTimeOptions(venue, dateValue) {
-    const openingHour = openingHourForDate(venue, dateValue);
-    if (openingHour?.is_closed) return [];
-
-    const defaultStart = 7 * 60;
-    const defaultEnd = 23 * 60;
-    const opensAt = openingHour?.opens_at ? minutesFromTime(openingHour.opens_at) : defaultStart;
-    const closesAt = openingHour?.closes_at ? minutesFromTime(openingHour.closes_at) : defaultEnd + 30;
-    const minFuture = isToday(dateValue) ? nextFutureSlotMinutes() : 0;
-    const start = nextSlotMinutes(Math.max(defaultStart, opensAt ?? defaultStart, minFuture));
-    const end = Math.min(defaultEnd, (closesAt ?? defaultEnd + 30) - 30);
-    const times = [];
-
-    for (let minutes = start; minutes <= end; minutes += 30) {
-      times.push(timeFromMinutes(minutes));
-    }
-
-    return times;
+  function bookingHorizonDays(venue) {
+    const days = Number(venue?.reservation_settings?.booking_horizon_days);
+    return Number.isFinite(days) && days >= 0 ? Math.floor(days) : 0;
   }
 
   function iconForFacility(item) {
@@ -133,10 +338,55 @@
   function renderGallery(venue) {
     const root = $('[data-detail-gallery]');
     if (!root) return;
-    const images = venue.images?.length ? venue.images : [{ url: venue.logo_image || fallbackImage }];
-    root.innerHTML = images.slice(0, 5).map((image, index) => `
-      <img class="${index === 0 ? 'g-main' : ''}" src="${esc(imageUrl(image))}" alt="${esc(venue.name)} restaurant or bar image ${index + 1}" />
+    galleryImages = (venue.images?.length ? venue.images : [{ url: venue.logo_image || fallbackImage }])
+      .map((image, index) => ({
+        src: imageUrl(image),
+        alt: `${venue.name || 'Restaurant or bar'} photo ${index + 1}`,
+      }));
+    root.innerHTML = galleryImages.map((image, index) => `
+      <button class="gallery-photo ${index === 0 ? 'g-main' : ''}" type="button" data-gallery-open="${index}" aria-label="Open photo ${index + 1}">
+        <img src="${esc(image.src)}" alt="${esc(image.alt)}" />
+        ${index === 0 ? '<span class="gallery-cover-label"><i class="bi bi-star-fill"></i> Cover Photo</span>' : ''}
+      </button>
     `).join('');
+  }
+
+  function updateLightbox() {
+    const lightbox = $('[data-gallery-lightbox]');
+    const image = $('[data-gallery-lightbox-image]');
+    const title = $('[data-gallery-lightbox-title]');
+    const count = $('[data-gallery-lightbox-count]');
+    const item = galleryImages[activeGalleryIndex];
+    if (!lightbox || !image || !item) return;
+
+    image.src = item.src;
+    image.alt = item.alt;
+    if (title) title.textContent = item.alt;
+    if (count) count.textContent = `${activeGalleryIndex + 1} / ${galleryImages.length}`;
+  }
+
+  function openLightbox(index) {
+    if (!galleryImages.length) return;
+    activeGalleryIndex = Math.max(0, Math.min(galleryImages.length - 1, Number(index) || 0));
+    updateLightbox();
+    const lightbox = $('[data-gallery-lightbox]');
+    if (lightbox) {
+      lightbox.hidden = false;
+      document.body.classList.add('venue-lightbox-open');
+      $('[data-gallery-close]')?.focus();
+    }
+  }
+
+  function closeLightbox() {
+    const lightbox = $('[data-gallery-lightbox]');
+    if (lightbox) lightbox.hidden = true;
+    document.body.classList.remove('venue-lightbox-open');
+  }
+
+  function moveLightbox(direction) {
+    if (!galleryImages.length) return;
+    activeGalleryIndex = (activeGalleryIndex + direction + galleryImages.length) % galleryImages.length;
+    updateLightbox();
   }
 
   function setOptionalSection(key, visible) {
@@ -196,8 +446,41 @@
     ].filter(Boolean);
     root.innerHTML = rows.join('') || '<div class="col-12 text-muted-pro">Contact details are not available yet.</div>';
 
-    const coordinates = [venue.latitude, venue.longitude].filter((value) => value !== null && value !== undefined && value !== '').join(', ');
-    setText('[data-detail-coordinates]', coordinates ? `Coordinates: ${coordinates}` : '');
+    renderMap(venue);
+  }
+
+  function renderMap(venue) {
+    const section = $('[data-detail-map-section]');
+    const frame = $('[data-detail-map]');
+    const canvas = $('[data-detail-map-canvas]');
+    const directions = $('[data-detail-directions]');
+    const openMap = $('[data-detail-open-map]');
+    const mapTitle = $('[data-detail-map-title]');
+    const coordinatesLabel = $('[data-detail-coordinates]');
+    const coordinates = venueCoordinates(venue);
+
+    if (!section) return;
+    section.hidden = !coordinates;
+    if (!coordinates) {
+      if (frame) {
+        frame.removeAttribute('src');
+        frame.hidden = false;
+      }
+      if (canvas) canvas.hidden = true;
+      section.classList.remove('has-google-map');
+      return;
+    }
+
+    const { lat, lng } = coordinates;
+    if (frame) {
+      frame.src = googleMapEmbedUrl(lat, lng);
+      frame.hidden = false;
+    }
+    if (directions) directions.href = googleDirectionsUrl(lat, lng);
+    if (openMap) openMap.href = googleMapsUrl(lat, lng);
+    if (mapTitle) mapTitle.textContent = venue.name || 'Find us here';
+    if (coordinatesLabel) coordinatesLabel.textContent = `${formatCoordinate(lat)}, ${formatCoordinate(lng)}`;
+    renderInteractiveMap(lat, lng, venue);
   }
 
   function renderVenue(venue) {
@@ -233,6 +516,7 @@
     renderPills('[data-detail-payments]', venue.payment_options, () => 'bi-credit-card', 'payments');
     renderHours(venue.opening_hours || []);
     renderContact(venue);
+    startLiveStatusUpdates();
     hydrateReservationForm(venue);
   }
 
@@ -254,12 +538,12 @@
     selectPickerValue('guests', defaultValue, `Guests: ${defaultValue > 8 ? `${defaultValue}+` : defaultValue}`);
   }
 
-  function renderDateSelector(form) {
+  function renderDateSelector(form, venue) {
     const panel = $('[data-picker-panel="date"]');
     if (!panel) return;
     const today = new Date();
     const selected = localDateValue(today);
-    const dates = Array.from({ length: 8 }, (_, index) => {
+    const dates = Array.from({ length: bookingHorizonDays(venue) + 1 }, (_, index) => {
       const date = new Date(today);
       date.setDate(date.getDate() + index);
       const value = localDateValue(date);
@@ -280,27 +564,79 @@
     selectPickerValue('date', selectedItem.value, `Date: ${selectedItem.day} — ${selectedItem.date}`);
   }
 
-  function renderTimeSelector(form, venue) {
+  function renderTimeOptions(times) {
     const panel = $('[data-picker-panel="time"]');
     if (!panel) return;
-    const times = reservationTimeOptions(venue, form.elements.reservation_date.value);
     const selected = times.includes('19:00') ? '19:00' : times[0];
 
     panel.innerHTML = times.length ? `<div class="reservation-time-grid">${times.map((time) => `
       <button class="reservation-choice reservation-choice-time" type="button" data-picker-option="time" data-value="${time}" data-label="${esc(timeLabel(time))}">
         ${esc(timeLabel(time))}
       </button>
-    `).join('')}</div>` : '<div class="reservation-picker-empty">No available times for this date.</div>';
+    `).join('')}</div>` : '<div class="reservation-picker-empty">No reservation times are available for this date.</div>';
     selectPickerValue('time', selected || '', selected ? `Time: ${timeLabel(selected)}` : 'Time');
   }
 
-  function hydrateReservationForm(venue) {
+  function renderOccasionSelector() {
+    const panel = $('[data-picker-panel="occasion"]');
+    if (!panel) return;
+
+    panel.innerHTML = `
+      <div class="reservation-time-grid reservation-occasion-grid">
+        <button class="reservation-choice reservation-choice-time" type="button" data-picker-option="occasion" data-value="" data-label="Occasion">
+          No occasion
+        </button>
+        ${occasionOptions.map((occasion) => `
+          <button class="reservation-choice reservation-choice-time" type="button" data-picker-option="occasion" data-value="${esc(occasion)}" data-label="${esc(occasion)}">
+            ${esc(occasion)}
+          </button>
+        `).join('')}
+      </div>
+    `;
+    selectPickerValue('occasion', '', 'Occasion');
+  }
+
+  async function renderTimeSelector(form, venue) {
+    const panel = $('[data-picker-panel="time"]');
+    const date = form?.elements.reservation_date.value;
+    if (!panel || !venue?.slug || !date) return;
+
+    const requestId = ++availabilityRequestId;
+    panel.innerHTML = `
+      <div class="reservation-time-grid" aria-hidden="true">
+        ${Array.from({ length: 6 }, () => '<div class="reservation-time-skeleton"></div>').join('')}
+      </div>
+      <div class="reservation-picker-loading"><span class="spinner-border spinner-border-sm"></span>Loading available times...</div>
+    `;
+    selectPickerValue('time', '', 'Time');
+
+    try {
+      const { data } = await api().fetch(`/venues/${encodeURIComponent(venue.slug)}/availability?date=${encodeURIComponent(date)}`, {
+        skipAuthRedirect: true,
+      });
+      if (requestId !== availabilityRequestId) return;
+
+      const times = Array.isArray(data?.slots)
+        ? data.slots.map((slot) => normalizeTime(slot?.time)).filter(Boolean)
+        : [];
+      renderTimeOptions(times);
+    } catch (err) {
+      if (requestId !== availabilityRequestId) return;
+
+      panel.innerHTML = '<div class="reservation-picker-empty">No reservation times are available for this date.</div>';
+      selectPickerValue('time', '', 'Time');
+      window.tkToast?.(err?.message || 'Unable to load reservation times.', 'error');
+    }
+  }
+
+  async function hydrateReservationForm(venue) {
     const form = $('[data-reservation-form]');
     if (!form) return;
     setText('[data-reservation-modal-venue]', `${venue.name || 'This restaurant or bar'} will receive your reservation request.`);
     renderGuestSelector(form, venue);
-    renderDateSelector(form);
-    renderTimeSelector(form, venue);
+    renderDateSelector(form, venue);
+    renderOccasionSelector();
+    await renderTimeSelector(form, venue);
   }
 
   function pickerInputName(type) {
@@ -308,6 +644,7 @@
       guests: 'party_size',
       date: 'reservation_date',
       time: 'reservation_time',
+      occasion: 'occasion',
     }[type];
   }
 
@@ -365,6 +702,116 @@
     bootstrap.Modal.getOrCreateInstance($('#reservationVerifyEmailModal')).show();
   }
 
+  function holdSecondsRemaining() {
+    if (!reservationHold?.expires_at) return 0;
+    return Math.max(0, Math.floor((new Date(reservationHold.expires_at).getTime() - Date.now()) / 1000));
+  }
+
+  function setHoldTimerVisible(visible) {
+    const timer = $('[data-reservation-hold-timer]');
+    if (timer) timer.hidden = !visible;
+  }
+
+  function resetReservationHoldState(options = {}) {
+    if (reservationHoldTimer) window.clearInterval(reservationHoldTimer);
+    reservationHoldTimer = null;
+    reservationHold = null;
+    const form = $('[data-reservation-form]');
+    if (form?.elements.reservation_hold_id) form.elements.reservation_hold_id.value = '';
+    if (options.hideTimer !== false) setHoldTimerVisible(false);
+  }
+
+  async function releaseReservationHold(status = 'cancelled') {
+    const hold = reservationHold;
+    resetReservationHoldState();
+    if (!hold?.id) return;
+
+    try {
+      await api().fetch(`/reservation-holds/${hold.id}`, {
+        method: 'DELETE',
+        body: { status },
+      });
+    } catch {
+      // Expired holds are ignored here because the backend capacity check only counts active unexpired holds.
+    }
+  }
+
+  function markReservationHoldExpired() {
+    const countdown = $('[data-reservation-hold-countdown]');
+    const message = $('[data-reservation-hold-message]');
+    const detail = $('[data-reservation-hold-detail]');
+    if (countdown) countdown.textContent = '00:00';
+    if (message) message.textContent = 'This reservation has expired.';
+    if (detail) detail.textContent = 'Please choose a reservation time again.';
+
+    const hold = reservationHold;
+    resetReservationHoldState({ hideTimer: false });
+    if (hold?.id) {
+      api().fetch(`/reservation-holds/${hold.id}`, {
+        method: 'DELETE',
+        body: { status: 'expired' },
+      }).catch(() => {});
+    }
+
+    const form = $('[data-reservation-form]');
+    if (form?.elements.reservation_time) form.elements.reservation_time.value = '';
+    selectPickerValue('time', '', 'Time');
+    bootstrap.Modal.getOrCreateInstance($('#reservationModal')).hide();
+    window.tkToast?.('This reservation has expired.', 'error');
+  }
+
+  function startReservationHoldCountdown() {
+    const tick = () => {
+      const seconds = holdSecondsRemaining();
+      const countdown = $('[data-reservation-hold-countdown]');
+      const message = $('[data-reservation-hold-message]');
+      const detail = $('[data-reservation-hold-detail]');
+      if (countdown) countdown.textContent = formatCountdown(seconds);
+      if (message) message.textContent = `We're holding this table for you for ${formatCountdown(seconds)} minutes.`;
+      if (detail) detail.textContent = 'Complete your reservation before the timer ends.';
+      setHoldTimerVisible(Boolean(reservationHold));
+      if (seconds <= 0) markReservationHoldExpired();
+    };
+
+    if (reservationHoldTimer) window.clearInterval(reservationHoldTimer);
+    tick();
+    reservationHoldTimer = window.setInterval(tick, 1000);
+  }
+
+  async function createReservationHold() {
+    const form = $('[data-reservation-form]');
+    if (!currentVenue || !form) return;
+    const payload = {
+      venue_id: currentVenue.id,
+      reservation_date: form.elements.reservation_date.value,
+      reservation_time: form.elements.reservation_time.value,
+      party_size: Number(form.elements.party_size.value || 0),
+    };
+
+    if (!payload.reservation_date || !payload.reservation_time || !payload.party_size) return;
+
+    if (!userHasVerifiedEmail()) {
+      showVerifyEmailModal();
+      return;
+    }
+
+    const requestId = ++reservationHoldRequestId;
+    try {
+      const { data } = await api().fetch('/reservation-holds', { method: 'POST', body: payload });
+      if (requestId !== reservationHoldRequestId) return;
+      reservationHold = data;
+      if (form.elements.reservation_hold_id) form.elements.reservation_hold_id.value = data.id;
+      startReservationHoldCountdown();
+    } catch (err) {
+      if (requestId !== reservationHoldRequestId) return;
+      resetReservationHoldState();
+      form.elements.reservation_time.value = '';
+      selectPickerValue('time', '', 'Time');
+      window.tkToast?.(reservationError(err), 'error');
+      renderTimeSelector(form, currentVenue);
+    }
+  }
+
   function setReservationBusy(busy) {
     const button = $('[data-reservation-submit]');
     if (!button) return;
@@ -382,21 +829,31 @@
     }
 
     const form = event.currentTarget;
+    if (!form.elements.reservation_hold_id.value) {
+      await createReservationHold();
+      if (!form.elements.reservation_hold_id.value) return;
+    }
+
     const payload = {
       venue_id: currentVenue.id,
       reservation_date: form.elements.reservation_date.value,
       reservation_time: form.elements.reservation_time.value,
+      reservation_hold_id: Number(form.elements.reservation_hold_id.value || 0),
       party_size: Number(form.elements.party_size.value || 0),
       phone: form.elements.phone.value.trim() || null,
+      occasion: form.elements.occasion.value || null,
       notes: form.elements.notes.value.trim() || null,
     };
 
     setReservationBusy(true);
     try {
       await api().fetch('/reservations', { method: 'POST', body: payload });
+      resetReservationHoldState();
       bootstrap.Modal.getOrCreateInstance($('#reservationModal')).hide();
       form.reset();
       hydrateReservationForm(currentVenue);
+      document.body.classList.add('reservation-success-burst');
+      window.setTimeout(() => document.body.classList.remove('reservation-success-burst'), 900);
       window.tkToast?.('Your reservation request has been sent successfully', 'success');
     } catch (err) {
       window.tkToast?.(reservationError(err), 'error');
@@ -460,7 +917,13 @@
         button.innerHTML = original;
       }
     });
-    document.addEventListener('click', (event) => {
+    document.addEventListener('click', async (event) => {
+      const galleryOpen = event.target.closest('[data-gallery-open]');
+      if (galleryOpen) {
+        openLightbox(galleryOpen.dataset.galleryOpen);
+        return;
+      }
+
       const trigger = event.target.closest('[data-picker-trigger]');
       if (trigger) {
         togglePicker(trigger.dataset.pickerTrigger);
@@ -473,9 +936,15 @@
         const value = option.dataset.value;
         const label = option.dataset.label || option.textContent.trim();
         const prefix = { guests: 'Guests', date: 'Date', time: 'Time' }[type] || '';
+        if (['guests', 'date', 'time'].includes(type)) {
+          await releaseReservationHold();
+        }
         selectPickerValue(type, value, `${prefix}: ${label}`);
         if (type === 'date' && currentVenue) {
           renderTimeSelector($('[data-reservation-form]'), currentVenue);
+        }
+        if (type === 'time' || type === 'guests' && $('[data-reservation-form]')?.elements.reservation_time.value) {
+          await createReservationHold();
         }
         closePickers();
         return;
@@ -484,9 +953,34 @@
       if (!event.target.closest('[data-picker]')) closePickers();
     });
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') closePickers();
+      const lightboxOpen = !$('[data-gallery-lightbox]')?.hidden;
+      if (event.key === 'Escape') {
+        if (lightboxOpen) closeLightbox();
+        closePickers();
+      }
+      if (lightboxOpen && event.key === 'ArrowLeft') moveLightbox(-1);
+      if (lightboxOpen && event.key === 'ArrowRight') moveLightbox(1);
     });
-    $('#reservationModal')?.addEventListener('hidden.bs.modal', closePickers);
+    $('[data-gallery-close]')?.addEventListener('click', closeLightbox);
+    $('[data-gallery-prev]')?.addEventListener('click', () => moveLightbox(-1));
+    $('[data-gallery-next]')?.addEventListener('click', () => moveLightbox(1));
+    $('[data-gallery-lightbox]')?.addEventListener('click', (event) => {
+      if (event.target.matches('[data-gallery-lightbox]')) closeLightbox();
+    });
+    $('[data-gallery-lightbox]')?.addEventListener('touchstart', (event) => {
+      galleryTouchStartX = event.touches?.[0]?.clientX ?? null;
+    }, { passive: true });
+    $('[data-gallery-lightbox]')?.addEventListener('touchend', (event) => {
+      if (galleryTouchStartX === null) return;
+      const endX = event.changedTouches?.[0]?.clientX ?? galleryTouchStartX;
+      const delta = endX - galleryTouchStartX;
+      if (Math.abs(delta) > 45) moveLightbox(delta > 0 ? -1 : 1);
+      galleryTouchStartX = null;
+    }, { passive: true });
+    $('#reservationModal')?.addEventListener('hidden.bs.modal', () => {
+      closePickers();
+      releaseReservationHold();
+    });
     $('[data-reservation-form]')?.addEventListener('submit', submitReservation);
   });
 })();

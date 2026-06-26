@@ -238,6 +238,49 @@
 .reservation-skeleton-line.short { width: 62%; }
 @keyframes reservation-shimmer { to { background-position: -220% 0; } }
 
+.reservation-card-skeleton {
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: rgba(255,255,255,.035);
+  box-shadow: 0 18px 44px rgba(0,0,0,.16);
+}
+.reservation-skeleton-media {
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.1), rgba(255,255,255,.04));
+  background-size: 220% 100%;
+  animation: reservation-shimmer 1.2s infinite linear;
+}
+.reservation-skeleton-content {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+.reservation-table-skeleton {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+.reservation-table-skeleton span,
+.reservation-time-skeleton {
+  min-height: 42px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.1), rgba(255,255,255,.04));
+  background-size: 220% 100%;
+  animation: reservation-shimmer 1.2s infinite linear;
+}
+.reservation-picker-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 700;
+}
+
 /* ---- Section heading ---- */
 .section-head-res { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin-bottom: 1.4rem; }
 .section-head-res h2 { font-family: var(--font-serif), var(--font-display); font-weight: 600; margin:0; }
@@ -357,6 +400,39 @@
 .reservation-booking-modal input {
   min-width: 0;
 }
+.reservation-hold-timer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 15px;
+  border: 1px solid rgba(212,167,90,.3);
+  border-radius: 16px;
+  background:
+    radial-gradient(220px 100px at 100% 0%, rgba(212,167,90,.16), transparent 62%),
+    rgba(212,167,90,.08);
+}
+.reservation-hold-timer strong,
+.reservation-hold-timer span {
+  display: block;
+}
+.reservation-hold-timer strong {
+  color: var(--text);
+  font-size: .95rem;
+  font-weight: 900;
+}
+.reservation-hold-timer div > span {
+  color: var(--muted);
+  font-size: .82rem;
+}
+.reservation-hold-timer [data-reservation-hold-countdown] {
+  min-width: 66px;
+  color: var(--res-gold-2);
+  font-size: 1.15rem;
+  font-weight: 900;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
 .reservation-modal-head {
   align-items: flex-start;
   padding: 24px 26px 18px;
@@ -377,6 +453,11 @@
   padding: 16px;
   background: rgba(255,255,255,.035);
   min-width: 0;
+  transition: border-color .18s ease, background .18s ease, transform .18s ease;
+}
+.booking-step:hover {
+  border-color: rgba(212,167,90,.22);
+  background: rgba(255,255,255,.048);
 }
 .booking-step-title {
   display: flex;
@@ -496,11 +577,28 @@
   border-color: rgba(212,167,90,.55);
   background: rgba(212,167,90,.08);
 }
+.reservation-choice:focus-visible,
+.owner-reservation-tab:focus-visible,
+.owner-calendar-item:focus-visible,
+.owner-reservation-actions .btn:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 .2rem rgba(212,167,90,.18);
+  border-color: rgba(212,167,90,.7);
+}
 .reservation-choice.active {
   border-color: transparent;
   background: linear-gradient(135deg, #D4A75A, #E8C07A);
   color: #1A1208;
   box-shadow: 0 10px 26px rgba(212,167,90,.25);
+}
+.reservation-choice:disabled,
+.reservation-picker-trigger:disabled,
+.owner-reservation-actions .btn:disabled,
+.reservation-booking-modal .btn:disabled {
+  cursor: not-allowed;
+  opacity: .52;
+  transform: none;
+  box-shadow: none;
 }
 .reservation-choice-guest {
   min-height: 48px;
@@ -538,6 +636,7 @@
   color: var(--muted);
   padding: 14px;
   text-align: center;
+  background: rgba(255,255,255,.025);
 }
 @media (max-width: 576px) {
   #reservationModal .modal-dialog {
@@ -626,20 +725,184 @@
   display:grid;
   grid-template-columns: 2fr 1fr 1fr;
   grid-template-rows: 200px 200px;
+  grid-auto-rows: 180px;
   gap: 10px;
   border-radius: var(--radius-lg);
   overflow:hidden;
 }
-.gallery-grid img { width:100%; height:100%; object-fit:cover; cursor:pointer; transition: transform .4s ease; }
-.gallery-grid img:hover { transform: scale(1.05); }
+.gallery-photo {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(255,255,255,.04);
+  color: #fff;
+  cursor: zoom-in;
+}
+.gallery-photo img { width:100%; height:100%; object-fit:cover; transition: transform .45s ease, filter .45s ease; }
+.gallery-grid > img { width:100%; height:100%; object-fit:cover; }
+.gallery-photo:hover img,
+.gallery-photo:focus-visible img { transform: scale(1.05); filter: saturate(1.05); }
+.gallery-photo:focus-visible { outline: 3px solid rgba(212,167,90,.6); outline-offset: -3px; }
 .gallery-grid .g-main { grid-row: 1 / 3; }
+.gallery-cover-label {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px;
+  background: rgba(11,15,25,.72);
+  color: #fff;
+  padding: 7px 11px;
+  font-size: .78rem;
+  font-weight: 800;
+  backdrop-filter: blur(10px);
+}
+.venue-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 72px;
+  align-items: center;
+  gap: 12px;
+  padding: 28px;
+  background: rgba(3,7,18,.92);
+  backdrop-filter: blur(18px);
+}
+.venue-lightbox[hidden] { display: none; }
+.venue-lightbox-open { overflow: hidden; }
+.venue-lightbox-frame {
+  margin: 0;
+  min-width: 0;
+}
+.venue-lightbox-frame img {
+  display: block;
+  width: 100%;
+  max-height: calc(100vh - 150px);
+  object-fit: contain;
+  border-radius: 18px;
+  background: rgba(255,255,255,.035);
+  box-shadow: 0 30px 90px rgba(0,0,0,.46);
+}
+.venue-lightbox-frame figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  color: #fff;
+}
+.venue-lightbox-frame figcaption span {
+  color: rgba(255,255,255,.68);
+}
+.venue-lightbox-close,
+.venue-lightbox-nav {
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  transition: transform .18s ease, background .18s ease, border-color .18s ease;
+}
+.venue-lightbox-close {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+}
+.venue-lightbox-close:hover,
+.venue-lightbox-nav:hover {
+  transform: translateY(-1px);
+  border-color: rgba(212,167,90,.48);
+  background: rgba(212,167,90,.18);
+}
 .venue-detail-logo {
   width: 76px; height: 76px; object-fit: cover; border-radius: 18px;
   border: 1px solid rgba(212,167,90,.45); background: var(--card);
 }
+.venue-live-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+  padding: 10px 13px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+}
+.venue-live-status-dot {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #ef4444;
+  box-shadow: 0 0 0 5px rgba(239,68,68,.12), 0 0 18px rgba(239,68,68,.38);
+}
+.venue-live-status.is-open {
+  border-color: rgba(34,197,94,.34);
+  background: rgba(34,197,94,.075);
+}
+.venue-live-status.is-open .venue-live-status-dot {
+  background: #22c55e;
+  box-shadow: 0 0 0 5px rgba(34,197,94,.13), 0 0 18px rgba(34,197,94,.42);
+}
+.venue-live-status.is-closed {
+  border-color: rgba(239,68,68,.28);
+}
+.venue-live-status strong,
+.venue-live-status span {
+  display: block;
+}
+.venue-live-status strong {
+  font-size: .9rem;
+  font-weight: 900;
+}
+.venue-live-status div > span {
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 600;
+}
 @media (max-width: 768px) {
-  .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 220px 110px 110px; }
-  .gallery-grid .g-main { grid-row: 1; grid-column: 1 / 3; }
+  .gallery-grid {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    border-radius: 0;
+    margin-inline: -12px;
+    padding-inline: 12px;
+    padding-bottom: 8px;
+  }
+  .gallery-photo {
+    flex: 0 0 82%;
+    height: 280px;
+    border-radius: 18px;
+    scroll-snap-align: start;
+  }
+  .gallery-grid .g-main { grid-row: auto; }
+  .venue-lightbox {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+  .venue-lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .venue-lightbox-prev { left: 14px; }
+  .venue-lightbox-next { right: 14px; }
+  .venue-lightbox-frame img {
+    max-height: calc(100vh - 130px);
+    border-radius: 14px;
+  }
 }
 
 /* ---- Owner venue management ---- */
@@ -777,8 +1040,130 @@
 }
 .owner-check:hover { border-color: rgba(212,167,90,.45); }
 .owner-check .form-check-input { margin:0; }
-.owner-gallery-card img {
-  width:100%; aspect-ratio:16 / 9; object-fit:cover; border-radius:8px;
+.owner-gallery-dropzone {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border: 1px dashed rgba(212,167,90,.42);
+  border-radius: 18px;
+  background:
+    radial-gradient(280px 140px at 100% 0%, rgba(212,167,90,.14), transparent 64%),
+    rgba(255,255,255,.035);
+  transition: border-color .18s ease, background .18s ease, transform .18s ease;
+}
+.owner-gallery-dropzone.is-dragover {
+  transform: translateY(-1px);
+  border-color: rgba(212,167,90,.82);
+  background: rgba(212,167,90,.1);
+}
+.owner-gallery-dropzone > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.owner-upload-progress {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255,255,255,.035);
+}
+.owner-upload-progress-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: var(--text);
+  font-weight: 800;
+}
+.owner-upload-progress-bar {
+  overflow: hidden;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+}
+.owner-upload-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--grad-res);
+  transition: width .18s ease;
+}
+.owner-gallery-card {
+  overflow: hidden;
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(255,255,255,.035);
+  transition: transform .18s ease, border-color .18s ease, opacity .18s ease;
+}
+.owner-gallery-card.is-cover {
+  border-color: rgba(212,167,90,.58);
+  box-shadow: 0 16px 38px rgba(212,167,90,.12);
+}
+.owner-gallery-card.is-dragging {
+  opacity: .52;
+}
+.owner-gallery-card.is-drop-target {
+  border-color: rgba(212,167,90,.86);
+  transform: translateY(-2px);
+}
+.owner-gallery-image {
+  position: relative;
+  overflow: hidden;
+}
+.owner-gallery-image img {
+  width:100%; aspect-ratio:16 / 10; object-fit:cover; display:block;
+}
+.owner-gallery-cover-badge,
+.owner-gallery-drag-hint {
+  position: absolute;
+  top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: rgba(11,15,25,.68);
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 800;
+  backdrop-filter: blur(8px);
+}
+.owner-gallery-cover-badge {
+  left: 10px;
+  opacity: 0;
+}
+.owner-gallery-card.is-cover .owner-gallery-cover-badge {
+  opacity: 1;
+}
+.owner-gallery-drag-hint {
+  right: 10px;
+  color: var(--res-gold-2);
+}
+.owner-gallery-card-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+}
+.owner-gallery-card-body strong,
+.owner-gallery-card-body small {
+  display: block;
+}
+.owner-gallery-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.owner-gallery-empty {
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  color: var(--muted);
+  background: rgba(255,255,255,.025);
 }
 .owner-dashboard-stats { align-items: stretch; }
 .reservation-stat {
@@ -793,6 +1178,19 @@
   border-radius: 22px;
   padding: 18px;
   box-shadow: 0 18px 44px rgba(0,0,0,.18);
+  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+.reservation-stat:hover {
+  transform: translateY(-2px);
+  border-color: rgba(212,167,90,.28);
+  background:
+    radial-gradient(260px 140px at 88% 0%, rgba(212,167,90,.2), transparent 62%),
+    rgba(255,255,255,.045);
+}
+.reservation-stat-loading {
+  display: grid;
+  align-content: center;
+  gap: 14px;
 }
 .reservation-stat::before {
   content: "";
@@ -886,6 +1284,10 @@
   min-height: 34px;
   border-radius: 999px;
   font-weight: 800;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease;
+}
+.owner-reservation-actions .btn:not(:disabled):hover {
+  transform: translateY(-1px);
 }
 .owner-reservation-empty {
   padding: 32px 16px;
@@ -907,6 +1309,14 @@
   font-weight:800;
   letter-spacing:.02em;
   text-transform:capitalize;
+}
+.reservation-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 14px currentColor;
 }
 .reservation-status-pending { color:#fcd34d; background:rgba(245,158,11,.12); border-color:rgba(245,158,11,.35); }
 .reservation-status-confirmed { color:#86efac; background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.35); }
@@ -934,6 +1344,21 @@
 .my-reservation-card .img-wrap {
   aspect-ratio: 16 / 10;
 }
+.my-reservation-card {
+  animation: reservation-card-in .28s ease both;
+}
+.my-reservation-card .fav {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  margin-left: auto;
+  border-radius: 12px;
+  background: rgba(11,15,25,.68);
+  border: 1px solid var(--border-strong);
+  color: var(--res-gold-2);
+  backdrop-filter: blur(8px);
+}
 .my-reservation-actions {
   align-items: stretch;
 }
@@ -950,6 +1375,32 @@
   object-fit: cover;
   border-radius: 14px;
   border: 1px solid var(--border);
+}
+.owner-reservation-detail-grid .facility,
+.my-reservation-detail .facility {
+  min-height: 56px;
+  border-color: rgba(255,255,255,.1);
+  background: rgba(255,255,255,.035);
+}
+@keyframes reservation-card-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+body.reservation-success-burst::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(212,167,90,.18), transparent 26%),
+    radial-gradient(circle at 50% 45%, rgba(34,197,94,.12), transparent 18%);
+  animation: reservation-success-burst .85s ease both;
+}
+@keyframes reservation-success-burst {
+  0% { opacity: 0; transform: scale(.94); }
+  28% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.08); }
 }
 @media (max-width: 576px) {
   .my-reservations-hero {
@@ -1029,6 +1480,7 @@
     background:
       radial-gradient(300px 120px at 100% 0%, rgba(212,167,90,.08), transparent 60%),
       rgba(255,255,255,.035);
+    box-shadow: 0 16px 36px rgba(0,0,0,.16);
   }
   .owner-reservations-table tbody td {
     display: flex;
@@ -1083,6 +1535,44 @@
   }
 }
 
+@media (max-width: 768px) {
+  .section-head-res {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  .reservation-stat {
+    min-height: 142px;
+  }
+  .reservation-stat strong {
+    font-size: 2rem;
+  }
+  .owner-calendar-summary {
+    gap: 10px;
+  }
+  .owner-calendar-summary > div {
+    border-radius: 16px;
+  }
+  .owner-analytics-panel,
+  .owner-analytics-rate {
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .reservation-guest-grid,
+  .reservation-date-grid,
+  .reservation-time-grid {
+    grid-template-columns: 1fr;
+  }
+  .reservation-choice-time {
+    min-height: 46px;
+  }
+  .my-reservations-hero h1 {
+    font-size: 2.15rem;
+  }
+}
+
 /* ---- Confirmation ---- */
 .confirm-card {
   background: var(--card);
@@ -1112,26 +1602,194 @@
 .nav-res .nav-link-pro.active { color: var(--res-gold); }
 .nav-res .brand-logo { background: var(--grad-res) !important; box-shadow: var(--shadow-purple); }
 
-/* ---- Map placeholder ---- */
-.map-placeholder {
-  height: 280px; border-radius: 18px; overflow:hidden;
-  background:
-    linear-gradient(135deg, rgba(124,92,255,.15), rgba(212,167,90,.15)),
-    repeating-linear-gradient(45deg, rgba(255,255,255,.02) 0 8px, transparent 8px 16px),
-    var(--card);
+/* ---- Google Maps ---- */
+.venue-google-map,
+.owner-location-picker {
+  overflow: hidden;
   border: 1px solid var(--border);
-  display:grid; place-items:center; color: var(--muted); position:relative;
+  border-radius: 22px;
+  background:
+    radial-gradient(520px 220px at 92% 0%, rgba(212,167,90,.12), transparent 62%),
+    rgba(255,255,255,.035);
+  box-shadow: 0 18px 46px rgba(0,0,0,.18);
 }
-.map-placeholder .pin {
-  width:46px; height:46px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
-  background: var(--grad-res); display:grid; place-items:center;
-  box-shadow: var(--shadow-purple);
+.venue-google-map iframe,
+.owner-location-map iframe,
+.venue-google-map-canvas,
+.owner-location-canvas {
+  display: block;
+  width: 100%;
+  height: 420px;
+  border: 0;
+  filter: saturate(.96) contrast(.98);
 }
-.map-placeholder .pin i { transform: rotate(45deg); color:#fff; }
-.map-placeholder .map-copy {
-  position:absolute; left:16px; bottom:14px; color:var(--muted);
-  font-size:.85rem; background:rgba(11,15,25,.68);
-  border:1px solid var(--border); border-radius:999px; padding:5px 10px;
+.venue-google-map-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 16px 0;
+}
+.venue-google-map-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: .86rem;
+}
+.venue-google-map-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.owner-location-picker {
+  padding: 16px;
+}
+.owner-location-toolbar,
+.owner-location-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.owner-location-toolbar {
+  margin-bottom: 14px;
+}
+.owner-location-map {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(255,255,255,.025);
+}
+.owner-location-map iframe,
+.owner-location-canvas {
+  height: 380px;
+}
+.owner-location-canvas {
+  min-height: 380px;
+}
+.owner-location-click-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 0;
+  background: transparent;
+  cursor: crosshair;
+}
+.owner-location-click-layer:focus-visible {
+  outline: 0;
+  box-shadow: inset 0 0 0 .22rem rgba(212,167,90,.28);
+}
+.owner-location-pin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  transform: translate(-50%, -100%);
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  border-radius: 999px 999px 999px 0;
+  background: var(--grad-res);
+  box-shadow: 0 16px 36px rgba(0,0,0,.34), var(--shadow-purple);
+  pointer-events: none;
+  animation: owner-location-pin-pop .34s ease;
+}
+.owner-location-pin i {
+  transform: rotate(45deg);
+}
+.owner-location-pin {
+  transform: translate(-50%, -100%) rotate(-45deg);
+}
+.owner-location-map.has-google-map iframe,
+.owner-location-map.has-google-map .owner-location-click-layer,
+.owner-location-map.has-google-map .owner-location-pin,
+.venue-google-map.has-google-map iframe {
+  display: none;
+}
+.owner-location-map.has-google-map .owner-location-canvas,
+.venue-google-map.has-google-map .venue-google-map-canvas {
+  display: block;
+}
+.owner-location-selected {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(120px, .75fr) minmax(120px, .75fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+.owner-location-selected > div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255,255,255,.035);
+}
+.owner-location-selected span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+.owner-location-selected strong {
+  display: block;
+  color: var(--text);
+  font-size: .92rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.owner-location-meta {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: .86rem;
+}
+@keyframes owner-location-pin-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -82%) rotate(-45deg) scale(.85);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -100%) rotate(-45deg) scale(1);
+  }
+}
+@media (max-width: 576px) {
+  .venue-google-map iframe,
+  .owner-location-map iframe,
+  .venue-google-map-canvas,
+  .owner-location-canvas {
+    height: 260px;
+    min-height: 260px;
+  }
+  .venue-google-map-actions,
+  .owner-location-toolbar,
+  .owner-location-meta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .venue-google-map-actions .btn,
+  .owner-location-toolbar .btn,
+  .owner-location-meta .btn {
+    width: 100%;
+  }
+  .owner-location-selected {
+    grid-template-columns: 1fr;
+  }
+  .venue-google-map-buttons {
+    width: 100%;
+  }
+  .venue-google-map-buttons .btn {
+    flex: 1 1 100%;
+  }
 }
 
 /* ---- Loading shimmer line ---- */

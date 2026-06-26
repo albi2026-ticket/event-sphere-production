@@ -767,7 +767,15 @@
     if (!body) return;
     renderReservationStats();
     if (state.loading.reservations) {
-      body.innerHTML = loadingRow(11, 'Loading reservations...');
+      body.innerHTML = `
+        <tr>
+          <td colspan="11">
+            <div class="admin-reservation-skeleton" aria-label="Loading reservations">
+              ${Array.from({ length: 5 }, () => '<span></span>').join('')}
+            </div>
+          </td>
+        </tr>
+      `;
       return;
     }
     if (state.errors.reservations) {
@@ -1519,24 +1527,35 @@
     const history = reservation.email_history || [];
     const auditHistory = reservation.audit_history || [];
     setModal(`Reservation #${reservation.id}`, `
-      ${detailList([
-        ['Reservation ID', `#${reservation.id}`],
-        ['Venue Information', `${u().escapeHtml(reservation.venue?.name || '-')}<br><small>${u().escapeHtml([reservation.venue?.address, reservation.venue?.city, reservation.venue?.country].filter(Boolean).join(', ') || '')}</small>`],
-        ['Owner Information', `${u().escapeHtml(reservation.venue?.owner?.name || '-')}<br><small>${u().escapeHtml(reservation.venue?.owner?.email || '')}</small>`],
-        ['Guest Information', `${u().escapeHtml(reservation.guest_name || reservation.user?.name || '-')}<br><small>${u().escapeHtml(reservation.user?.email || '')}</small><br><small>${u().escapeHtml(reservation.phone || '')}</small>`],
-        ['Party Size', String(reservation.party_size || '-')],
-        ['Date', dateLabel(reservation.reservation_date)],
-        ['Time', u().escapeHtml(String(reservation.reservation_time || '').slice(0, 5) || '-')],
-        ['Status', reservationBadge(reservation.status)],
-        ['Notes', u().escapeHtml(reservation.notes || '-')],
-        ['Cancellation Reason', u().escapeHtml(reservation.cancellation_reason || '-')],
-        ['Created', dateTimeLabel(reservation.created_at)],
-        ['Updated', dateTimeLabel(reservation.updated_at)],
-      ])}
-      <h6 class="mt-4">Audit History</h6>
-      ${auditHistory.length ? `<div class="dashboard-stack">${auditHistory.map((item) => `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${u().escapeHtml(item.label || item.action || 'Reservation activity')}</span><small>${u().escapeHtml(item.actor || 'System')}</small></span><small class="text-muted-pro">${dateTimeLabel(item.timestamp)}</small></div>`).join('')}</div>` : '<p class="text-muted-pro mb-0">No audit history is available.</p>'}
-      <h6 class="mt-4">Email History</h6>
-      ${history.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${history.map((item) => `<tr><td>${u().escapeHtml(item.label || item.type || 'Email')}</td><td>${badge(item.status || (item.sent_at ? 'sent' : 'not_sent'))}</td><td>${dateTimeLabel(item.sent_at)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No reservation email history is available.</p>'}
+      <div class="admin-reservation-detail">
+        <div class="admin-reservation-detail-hero">
+          <div>
+            <span class="reservation-status-pill">${reservationBadge(reservation.status)}</span>
+            <h4>${u().escapeHtml(reservation.venue?.name || 'Restaurant / Bar')}</h4>
+            <p>${u().escapeHtml(reservation.guest_name || reservation.user?.name || 'Guest')} · ${String(reservation.party_size || '-')} guests · ${dateLabel(reservation.reservation_date)} at ${u().escapeHtml(String(reservation.reservation_time || '').slice(0, 5) || '-')}</p>
+          </div>
+        </div>
+        ${detailList([
+          ['Reservation ID', `#${reservation.id}`],
+          ['Venue Information', `${u().escapeHtml(reservation.venue?.name || '-')}<br><small>${u().escapeHtml([reservation.venue?.address, reservation.venue?.city, reservation.venue?.country].filter(Boolean).join(', ') || '')}</small>`],
+          ['Owner Information', `${u().escapeHtml(reservation.venue?.owner?.name || '-')}<br><small>${u().escapeHtml(reservation.venue?.owner?.email || '')}</small>`],
+          ['Guest Information', `${u().escapeHtml(reservation.guest_name || reservation.user?.name || '-')}<br><small>${u().escapeHtml(reservation.user?.email || '')}</small><br><small>${u().escapeHtml(reservation.phone || '')}</small>`],
+          ['Party Size', String(reservation.party_size || '-')],
+          ['Date', dateLabel(reservation.reservation_date)],
+          ['Time', u().escapeHtml(String(reservation.reservation_time || '').slice(0, 5) || '-')],
+          ['Status', reservationBadge(reservation.status)],
+          ['Occasion', u().escapeHtml(reservation.occasion || '-')],
+          ['Special Request', u().escapeHtml(reservation.notes || '-')],
+          ['Cancellation Reason', u().escapeHtml(reservation.cancellation_reason || '-')],
+          ['Owner Cancellation Reason', u().escapeHtml(reservation.owner_cancellation_reason || '-')],
+          ['Created', dateTimeLabel(reservation.created_at)],
+          ['Updated', dateTimeLabel(reservation.updated_at)],
+        ])}
+        <h6 class="mt-4">Audit History</h6>
+        ${auditHistory.length ? `<div class="dashboard-stack">${auditHistory.map((item) => `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${u().escapeHtml(item.label || item.action || 'Reservation activity')}</span><small>${u().escapeHtml(item.actor || 'System')}</small></span><small class="text-muted-pro">${dateTimeLabel(item.timestamp)}</small></div>`).join('')}</div>` : '<p class="text-muted-pro mb-0">No audit history is available.</p>'}
+        <h6 class="mt-4">Email History</h6>
+        ${history.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${history.map((item) => `<tr><td>${u().escapeHtml(item.label || item.type || 'Email')}</td><td>${badge(item.status || (item.sent_at ? 'sent' : 'not_sent'))}</td><td>${dateTimeLabel(item.sent_at)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No reservation email history is available.</p>'}
+      </div>
     `);
   }
 

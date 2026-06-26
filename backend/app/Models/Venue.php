@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'max_guests',
     'reservation_interval_minutes',
     'max_reservations_per_slot',
+    'booking_horizon_days',
     'last_reservation_time',
     'facebook_url',
     'instagram_url',
@@ -48,6 +49,9 @@ class Venue extends Model
     public const TYPE_BAR = 'bar';
     public const TYPE_LOUNGE = 'lounge';
     public const TYPE_CAFE = 'cafe';
+
+    public const DEFAULT_BOOKING_HORIZON_DAYS = 30;
+    public const BOOKING_HORIZON_OPTIONS = [7, 14, 30, 60, 90, 180, 365];
 
     public function getRouteKeyName(): string
     {
@@ -111,6 +115,7 @@ class Venue extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'featured' => 'boolean',
@@ -118,6 +123,7 @@ class Venue extends Model
             'max_guests' => 'integer',
             'reservation_interval_minutes' => 'integer',
             'max_reservations_per_slot' => 'integer',
+            'booking_horizon_days' => 'integer',
         ];
     }
 }

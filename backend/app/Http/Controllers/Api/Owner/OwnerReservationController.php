@@ -39,8 +39,8 @@ class OwnerReservationController extends Controller
         $this->applyFilters($query, $request);
 
         return ReservationResource::collection(
-            $query->orderBy('reservation_date')
-                ->orderBy('reservation_time')
+            $query->orderByDesc('created_at')
+                ->orderByDesc('id')
                 ->paginate($request->integer('per_page', 15)),
         )->additional(['meta' => ['stats' => $this->stats($request)]]);
     }
@@ -77,8 +77,8 @@ class OwnerReservationController extends Controller
         }
 
         return ReservationResource::collection(
-            $query->orderBy('reservation_date')
-                ->orderBy('reservation_time')
+            $query->orderByDesc('created_at')
+                ->orderByDesc('id')
                 ->get(),
         )->additional(['meta' => [
             'period' => [
@@ -127,9 +127,13 @@ class OwnerReservationController extends Controller
         $this->ensureVerifiedOwner($request);
         $this->authorizeOwner($request, $reservation);
         $this->ensureTransition($reservation, [Reservation::STATUS_PENDING, Reservation::STATUS_CONFIRMED], 'Only pending or confirmed reservations can be cancelled.');
+        $payload = $request->validate([
+            'owner_cancellation_reason' => ['required', 'string', 'max:1000'],
+        ]);
 
         $reservation->update([
             'status' => Reservation::STATUS_CANCELLED,
+            'owner_cancellation_reason' => $payload['owner_cancellation_reason'],
             'cancelled_at' => now(),
         ]);
         $reservation = $reservation->fresh(['venue', 'user']);
@@ -142,7 +146,7 @@ class OwnerReservationController extends Controller
                 $reservation->user,
                 Notification::TYPE_RESERVATION_CANCELLED,
                 'Reservation Cancelled',
-                "Your reservation at {$reservation->venue->name} was cancelled.",
+                "Your reservation at {$reservation->venue->name} was cancelled. Reason: {$reservation->owner_cancellation_reason}",
                 '/site/my-reservations.html',
             );
         }

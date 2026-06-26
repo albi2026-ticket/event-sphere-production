@@ -10,27 +10,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'venue_id',
     'user_id',
-    'guest_name',
-    'phone',
     'party_size',
     'reservation_date',
     'reservation_time',
+    'reserved_at',
+    'expires_at',
     'status',
-    'notes',
-    'occasion',
-    'cancellation_reason',
-    'owner_cancellation_reason',
-    'cancelled_at',
 ])]
-class Reservation extends Model
+class ReservationHold extends Model
 {
     use HasFactory;
 
-    public const STATUS_PENDING = 'pending';
-    public const STATUS_CONFIRMED = 'confirmed';
+    public const STATUS_ACTIVE = 'active';
     public const STATUS_COMPLETED = 'completed';
+    public const STATUS_EXPIRED = 'expired';
     public const STATUS_CANCELLED = 'cancelled';
-    public const STATUS_NO_SHOW = 'no_show';
 
     public function venue(): BelongsTo
     {
@@ -42,12 +36,18 @@ class Reservation extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE && $this->expires_at?->isFuture();
+    }
+
     protected function casts(): array
     {
         return [
             'party_size' => 'integer',
             'reservation_date' => 'date:Y-m-d',
-            'cancelled_at' => 'datetime',
+            'reserved_at' => 'datetime',
+            'expires_at' => 'datetime',
         ];
     }
 }

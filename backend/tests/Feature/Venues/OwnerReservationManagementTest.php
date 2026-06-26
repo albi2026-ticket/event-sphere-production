@@ -49,6 +49,38 @@ class OwnerReservationManagementTest extends TestCase
             ->assertJsonPath('data.0.id', $today->id);
     }
 
+    public function test_owner_reservation_list_orders_newest_requests_first(): void
+    {
+        $owner = $this->organizer();
+        $venue = $this->venue($owner);
+        $user = $this->user();
+
+        $oldest = $this->reservation($venue, $user, [
+            'status' => Reservation::STATUS_PENDING,
+        ]);
+        $newest = $this->reservation($venue, $user, [
+            'status' => Reservation::STATUS_COMPLETED,
+        ]);
+        $middle = $this->reservation($venue, $user, [
+            'status' => Reservation::STATUS_CANCELLED,
+        ]);
+        $oldest->forceFill(['created_at' => now()->subHours(3)])->save();
+        $newest->forceFill(['created_at' => now()->subMinute()])->save();
+        $middle->forceFill(['created_at' => now()->subHour()])->save();
+
+        $this->actingAs($owner, 'sanctum')
+            ->getJson('/api/owner/reservations')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $newest->id)
+            ->assertJsonPath('data.1.id', $middle->id)
+            ->assertJsonPath('data.2.id', $oldest->id);
+
+        $this->actingAs($owner, 'sanctum')
+            ->getJson('/api/owner/reservations?status=pending')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $oldest->id);
+    }
+
     public function test_owner_reservation_access_is_scoped_to_owned_venues_and_admin_can_access_all(): void
     {
         $owner = $this->organizer();
@@ -102,6 +134,31 @@ class OwnerReservationManagementTest extends TestCase
             ->assertJsonPath('data.0.status', Reservation::STATUS_PENDING)
             ->assertJsonPath('meta.period.start_date', $start)
             ->assertJsonPath('meta.period.end_date', $end);
+    }
+
+    public function test_owner_calendar_orders_newest_requests_first(): void
+    {
+        $owner = $this->organizer();
+        $venue = $this->venue($owner);
+        $user = $this->user();
+        $date = now()->addDays(3)->format('Y-m-d');
+
+        $oldest = $this->reservation($venue, $user, [
+            'reservation_date' => $date,
+            'reservation_time' => '20:00',
+        ]);
+        $newest = $this->reservation($venue, $user, [
+            'reservation_date' => $date,
+            'reservation_time' => '18:00',
+        ]);
+        $oldest->forceFill(['created_at' => now()->subHours(2)])->save();
+        $newest->forceFill(['created_at' => now()->subMinute()])->save();
+
+        $this->actingAs($owner, 'sanctum')
+            ->getJson("/api/owner/reservations/calendar?start_date={$date}&end_date={$date}")
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $newest->id)
+            ->assertJsonPath('data.1.id', $oldest->id);
     }
 
     public function test_owner_calendar_filters_status_and_venue_and_returns_today_summary(): void
@@ -222,11 +279,19 @@ class OwnerReservationManagementTest extends TestCase
         Mail::assertSent(ReservationConfirmedMail::class, fn ($mail) => $mail->hasTo('guest@example.test'));
 
         $this->actingAs($owner, 'sanctum')
-            ->patchJson("/api/owner/reservations/{$confirmed->id}/cancel")
+            ->patchJson("/api/owner/reservations/{$confirmed->id}/cancel", [
+                'owner_cancellation_reason' => 'Private event',
+            ])
             ->assertOk()
-            ->assertJsonPath('data.status', Reservation::STATUS_CANCELLED);
+            ->assertJsonPath('data.status', Reservation::STATUS_CANCELLED)
+            ->assertJsonPath('data.owner_cancellation_reason', 'Private event');
 
         Mail::assertSent(ReservationCancelledMail::class, fn ($mail) => $mail->hasTo('guest@example.test'));
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $user->id,
+            'type' => Notification::TYPE_RESERVATION_CANCELLED,
+            'message' => "Your reservation at {$venue->name} was cancelled. Reason: Private event",
+        ]);
 
         $this->actingAs($owner, 'sanctum')
             ->patchJson("/api/owner/reservations/{$toComplete->id}/complete")

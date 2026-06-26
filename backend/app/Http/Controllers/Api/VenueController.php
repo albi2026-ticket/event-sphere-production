@@ -5,9 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\VenueResource;
 use App\Models\Venue;
+use App\Services\Reservations\ReservationAvailabilityService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\ValidationException;
 
 class VenueController extends Controller
 {
@@ -73,6 +77,29 @@ class VenueController extends Controller
     {
         abort_unless($venue->status === Venue::STATUS_ACTIVE, 404);
 
-        return new VenueResource($venue->load(['owner', 'images', 'facilities', 'cuisineTypes', 'paymentOptions', 'openingHours']));
+        return new VenueResource($venue->load(['owner', 'images', 'facilities', 'cuisineTypes', 'paymentOptions', 'openingHours', 'specialHours', 'blackoutDates']));
+    }
+
+    public function availability(Request $request, Venue $venue, ReservationAvailabilityService $availability): JsonResponse
+    {
+        abort_unless($venue->status === Venue::STATUS_ACTIVE, 404);
+
+        $payload = $request->validate([
+            'date' => ['required', 'date_format:Y-m-d'],
+        ]);
+
+        $date = Carbon::createFromFormat('Y-m-d', $payload['date'], config('app.timezone'))->startOfDay();
+        $bookingHorizonError = $availability->bookingHorizonError($venue, $date);
+
+        if ($bookingHorizonError) {
+            throw ValidationException::withMessages([
+                $bookingHorizonError['field'] => [$bookingHorizonError['message']],
+            ]);
+        }
+
+        return response()->json([
+            'date' => $date->format('Y-m-d'),
+            'slots' => $availability->availableSlots($venue, $date),
+        ]);
     }
 }
