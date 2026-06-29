@@ -23,6 +23,8 @@ class Notification extends Model
     public const TYPE_VENUE_DEACTIVATED = 'venue_deactivated';
     public const TYPE_EVENT_APPROVED = 'event_approved';
     public const TYPE_EVENT_REJECTED = 'event_rejected';
+    public const TYPE_EVENT_UPDATED = 'event_updated';
+    public const TYPE_EVENT_CANCELLED = 'event_cancelled';
 
     public function user(): BelongsTo
     {

@@ -1554,7 +1554,7 @@
   }
 
   async function loadData() {
-    auth().requireAuth(['organizer']);
+    auth().requireAuth(['owner']);
     try {
       const [venues, facilities, cuisines, payments] = await Promise.all([
         api().fetch('/owner/venues?per_page=100'),

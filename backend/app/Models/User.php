@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -41,6 +42,8 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public const ROLE_USER = 'user';
     public const ROLE_ORGANIZER = 'organizer';
+    public const ROLE_OWNER = 'owner';
+    public const ROLE_SCANNER = 'scanner';
     public const ROLE_ADMIN = 'admin';
 
     public const ORGANIZER_STATUS_NONE = 'none';
@@ -97,6 +100,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Ticket::class, 'checked_in_by');
     }
 
+    public function scannableEvents(): BelongsToMany
+    {
+        return $this->belongsToMany(Event::class, 'scanner_event', 'scanner_id', 'event_id')
+            ->withTimestamps();
+    }
+
     public function receivedTransferredTickets(): HasMany
     {
         return $this->hasMany(Ticket::class, 'transferred_to_user_id');
@@ -123,6 +132,16 @@ class User extends Authenticatable implements MustVerifyEmail
             && $this->organizer_status === self::ORGANIZER_STATUS_APPROVED;
     }
 
+    public function isOwner(): bool
+    {
+        return $this->role === self::ROLE_OWNER;
+    }
+
+    public function isScanner(): bool
+    {
+        return $this->role === self::ROLE_SCANNER;
+    }
+
     public function isUser(): bool
     {
         return $this->role === self::ROLE_USER;
@@ -134,9 +153,15 @@ class User extends Authenticatable implements MustVerifyEmail
             || ($this->isOrganizer() && $event->organizer_id === $this->id);
     }
 
+    public function canScanEvent(Event $event): bool
+    {
+        return $this->canManageEvent($event)
+            || ($this->isScanner() && $this->scannableEvents()->whereKey($event->id)->exists());
+    }
+
     public function canManageVenue(Venue $venue): bool
     {
-        return $this->isOrganizer() && $venue->user_id === $this->id;
+        return $this->isOwner() && $venue->user_id === $this->id;
     }
 
     public function sendEmailVerificationNotification(): void

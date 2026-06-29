@@ -50,13 +50,20 @@
   }
 
   async function loadEvents() {
-    const endpoint = state.roleBase === '/admin' ? '/admin/events?per_page=100&sort=newest' : '/organizer/events?per_page=100&sort=newest';
+    const endpoint = state.roleBase === '/admin'
+      ? '/admin/events?per_page=100&sort=newest'
+      : state.roleBase === '/scanner'
+        ? '/scanner/events'
+        : '/organizer/events?per_page=100&sort=newest';
     const res = await api().fetch(endpoint);
     state.events = rows(res.data);
     const select = $('[data-scanner-event]');
     if (select) {
       select.innerHTML = '<option value="">Select event</option>' + state.events.map((event) => `<option value="${event.id}">${esc(event.title)}</option>`).join('');
-      if (state.events[0]) select.value = String(state.events[0].id);
+      const requestedEventId = new URLSearchParams(location.search).get('event_id');
+      const hasRequestedEvent = state.events.some((event) => String(event.id) === String(requestedEventId));
+      if (hasRequestedEvent) select.value = String(requestedEventId);
+      else if (state.events[0]) select.value = String(state.events[0].id);
     }
   }
 
@@ -65,6 +72,8 @@
     let endpoint;
     if (state.roleBase === '/admin') {
       endpoint = `/admin/tickets/check-in-stats${eventId ? `?event_id=${encodeURIComponent(eventId)}` : ''}`;
+    } else if (state.roleBase === '/scanner' && eventId) {
+      endpoint = `/scanner/events/${eventId}/check-in-stats`;
     } else if (eventId) {
       endpoint = `/organizer/events/${eventId}/check-in-stats`;
     } else {
@@ -125,20 +134,37 @@
         ${badge(result)}
       </div>
       <div class="dashboard-detail-grid mt-3">
-        <div><dt>Event</dt><dd>${esc(ticket?.event?.title || '-')}</dd></div>
+        <div><dt>Guest Name</dt><dd>${esc(ticket?.attendee?.name || '-')}</dd></div>
         <div><dt>Ticket type</dt><dd>${esc(ticket?.ticket_type?.name || '-')}</dd></div>
-        <div><dt>Order</dt><dd>${esc(ticket?.order?.order_number || '-')}</dd></div>
-        <div><dt>Checked in</dt><dd>${ticket?.checked_in_at ? dateTime(ticket.checked_in_at) : '-'}</dd></div>
+        <div><dt>Seat</dt><dd>${esc(ticket?.seat_label || '-')}</dd></div>
+        <div><dt>Check-In Time</dt><dd>${ticket?.checked_in_at ? dateTime(ticket.checked_in_at) : '-'}</dd></div>
       </div>
       ${validation.can_check_in ? '<button class="btn btn-primary-grad mt-3" type="button" data-scanner-checkin><i class="bi bi-check2-circle me-1"></i>Check In</button>' : ''}`;
   }
 
   async function validateTicket(payload, method = 'qr') {
     const body = { ...payload, event_id: selectedEventId(), method };
-    const { data } = await api().fetch(`${state.roleBase}/tickets/validate`, { method: 'POST', body });
-    state.result = { ...data, payload: body };
-    renderResult(state.result);
-    await Promise.all([loadStats(), loadLogs()]);
+    try {
+      const { data } = await api().fetch(`${state.roleBase}/tickets/validate`, { method: 'POST', body });
+      state.result = { ...data, payload: body };
+      renderResult(state.result);
+      await Promise.all([loadStats(), loadLogs()]);
+    } catch (err) {
+      const message = err.originalMessage || err.message || 'Scan failed';
+      state.result = {
+        payload: body,
+        validation: {
+          result: 'invalid',
+          title: 'Invalid Ticket',
+          can_check_in: false,
+          reason: message,
+        },
+        ticket: null,
+      };
+      renderResult(state.result);
+      window.tkToast?.(message, 'error');
+      await loadLogs().catch(() => {});
+    }
   }
 
   async function checkIn() {
@@ -155,6 +181,18 @@
       window.tkToast?.('Ticket checked in');
     } catch (err) {
       if (err.payload?.data?.validation) renderResult(err.payload.data);
+      else {
+        const message = err.originalMessage || err.message || 'Check-in failed';
+        renderResult({
+          validation: {
+            result: 'invalid',
+            title: 'Invalid Ticket',
+            can_check_in: false,
+            reason: message,
+          },
+          ticket: null,
+        });
+      }
       window.tkToast?.(err.message || 'Check-in failed', 'error');
     }
     await Promise.all([loadStats(), loadLogs()]);
@@ -234,11 +272,12 @@
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
-    state.user = auth().requireAuth(['organizer', 'admin'], { requireApprovedOrganizer: false });
+    state.user = auth().requireAuth(['organizer', 'scanner', 'admin'], { requireApprovedOrganizer: false });
     if (!state.user) return;
-    state.roleBase = state.user.role === 'admin' ? '/admin' : '/organizer';
+    state.roleBase = state.user.role === 'admin' ? '/admin' : state.user.role === 'scanner' ? '/scanner' : '/organizer';
     $('[data-admin-back]')?.toggleAttribute('hidden', state.user.role !== 'admin');
-    $('[data-organizer-back]')?.toggleAttribute('hidden', state.user.role === 'admin');
+    $('[data-organizer-back]')?.toggleAttribute('hidden', state.user.role !== 'organizer');
+    $('[data-scanner-back]')?.toggleAttribute('hidden', state.user.role !== 'scanner');
     bind();
     await loadEvents();
     await Promise.all([loadStats(), loadLogs()]);

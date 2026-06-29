@@ -96,9 +96,9 @@ class VenueFoundationTest extends TestCase
     public function test_unverified_owner_cannot_create_venue_profile(): void
     {
         $owner = User::factory()->unverified()->create([
-            'role' => User::ROLE_ORGANIZER,
+            'role' => User::ROLE_OWNER,
             'status' => User::STATUS_ACTIVE,
-            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+            'organizer_status' => User::ORGANIZER_STATUS_NONE,
         ]);
 
         $this->actingAs($owner, 'sanctum')
@@ -524,9 +524,9 @@ class VenueFoundationTest extends TestCase
     private function organizer(): User
     {
         return User::factory()->create([
-            'role' => User::ROLE_ORGANIZER,
+            'role' => User::ROLE_OWNER,
             'status' => User::STATUS_ACTIVE,
-            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+            'organizer_status' => User::ORGANIZER_STATUS_NONE,
         ]);
     }
 }

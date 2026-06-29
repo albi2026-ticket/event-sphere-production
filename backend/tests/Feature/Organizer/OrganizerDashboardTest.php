@@ -451,6 +451,27 @@ class OrganizerDashboardTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_owner_role_cannot_access_organizer_event_management_routes(): void
+    {
+        $owner = User::factory()->create([
+            'role' => User::ROLE_OWNER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_NONE,
+        ]);
+
+        $this->actingAs($owner, 'sanctum')
+            ->getJson('/api/organizer/dashboard')
+            ->assertForbidden();
+
+        $this->actingAs($owner, 'sanctum')
+            ->getJson('/api/organizer/events')
+            ->assertForbidden();
+
+        $this->actingAs($owner, 'sanctum')
+            ->getJson('/api/me/tickets')
+            ->assertForbidden();
+    }
+
     private function createOrganizerEventWithInventory(User $organizer, string $title, string $slug, string $status, mixed $startsAt, mixed $endsAt, int $total, int $sold): Event
     {
         $event = Event::query()->create([

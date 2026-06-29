@@ -46,6 +46,8 @@
       venue_deactivated: 'bi-pause-circle',
       event_approved: 'bi-calendar-check',
       event_rejected: 'bi-calendar-x',
+      event_updated: 'bi-calendar-event',
+      event_cancelled: 'bi-calendar-x',
     };
     return map[type] || 'bi-bell';
   }
@@ -172,7 +174,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
-    if (!auth().requireAuth(['user', 'organizer', 'admin'], { requireApprovedOrganizer: false })) return;
+    if (!auth().requireAuth(['user', 'organizer', 'owner', 'admin'], { requireApprovedOrganizer: false })) return;
     bindActions();
     await load(1);
   });

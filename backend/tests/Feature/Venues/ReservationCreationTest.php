@@ -741,9 +741,9 @@ class ReservationCreationTest extends TestCase
     private function organizer(array $attributes = []): User
     {
         return User::factory()->create(array_merge([
-            'role' => User::ROLE_ORGANIZER,
+            'role' => User::ROLE_OWNER,
             'status' => User::STATUS_ACTIVE,
-            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+            'organizer_status' => User::ORGANIZER_STATUS_NONE,
         ], $attributes));
     }
 

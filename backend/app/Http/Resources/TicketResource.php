@@ -21,11 +21,13 @@ class TicketResource extends JsonResource
             'qr_code_url' => AppUrls::api("/tickets/{$this->id}/qr-code"),
             'download_url' => AppUrls::api("/tickets/{$this->id}/download"),
             'issued_at' => $this->issued_at,
+            'scanner_id' => $this->checked_in_by,
             'checked_in_at' => $this->checked_in_at,
             'checked_in_by' => $this->whenLoaded('checkedInBy', fn () => [
                 'id' => $this->checkedInBy->id,
                 'name' => $this->checkedInBy->name,
             ]),
+            'device' => $this->checked_in_method,
             'checked_in_method' => $this->checked_in_method,
             'downloaded_at' => $this->downloaded_at,
             'download_count' => $this->download_count,

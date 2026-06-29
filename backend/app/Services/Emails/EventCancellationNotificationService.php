@@ -9,6 +9,7 @@ use App\Models\AuditLog;
 use App\Models\Event;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\Notifications\NotificationService;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -17,6 +18,8 @@ use Throwable;
 class EventCancellationNotificationService
 {
     private const EVENT_DISPLAY_TIMEZONE = 'Europe/Pristina';
+
+    public function __construct(private readonly NotificationService $notifications) {}
 
     /**
      * @return array{sent: bool, user_notifications: int, admin_notifications: int, organizer_notified: bool, tickets_sold: int, revenue_generated: float}
@@ -59,6 +62,7 @@ class EventCancellationNotificationService
                 $this->logFailure('Event cancellation user email failed.', $event, $exception, ['order_id' => $order->id]);
             }
         }
+        $this->notifications->eventCancelled($event);
 
         $adminNotifications = 0;
         $adminData = $this->adminData($event, $ticketsSold, $revenue, $cancelledAt);

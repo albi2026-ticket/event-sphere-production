@@ -12,6 +12,8 @@ use App\Http\Resources\EventResource;
 use App\Models\AuditLog;
 use App\Models\Event;
 use App\Models\PlatformSetting;
+use App\Models\User;
+use App\Services\Notifications\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -20,6 +22,8 @@ use Illuminate\Support\Str;
 class AdminEventController extends Controller
 {
     use FiltersEvents;
+
+    public function __construct(private readonly NotificationService $notifications) {}
 
     public function index(EventIndexRequest $request): AnonymousResourceCollection
     {
@@ -99,6 +103,39 @@ class AdminEventController extends Controller
         return new EventResource($event->fresh()->load(['organizer', 'images', 'ticketTypes']));
     }
 
+    public function scanners(Event $event): JsonResponse
+    {
+        $event->load(['scanners' => fn ($query) => $query
+            ->select('users.id', 'users.name', 'users.email', 'users.role')
+            ->orderBy('users.name')
+            ->orderBy('users.email')]);
+
+        return response()->json([
+            'data' => $event->scanners->values(),
+        ]);
+    }
+
+    public function assignScanner(Request $request, Event $event): JsonResponse
+    {
+        $validated = $request->validate([
+            'scanner_id' => ['required', 'integer'],
+        ]);
+
+        $scanner = User::query()
+            ->whereKey($validated['scanner_id'])
+            ->where('role', User::ROLE_SCANNER)
+            ->where('status', User::STATUS_ACTIVE)
+            ->firstOrFail();
+
+        $event->scanners()->syncWithoutDetaching([$scanner->id]);
+        AuditLog::record($request->user(), 'event.scanner_assigned', $event, [
+            'scanner_id' => $scanner->id,
+            'scanner_email' => $scanner->email,
+        ], $request->ip());
+
+        return $this->scanners($event);
+    }
+
     public function destroy(Request $request, Event $event): JsonResponse
     {
         AuditLog::record($request->user(), 'event.deleted', $event, ['title' => $event->title], $request->ip());
@@ -111,6 +148,7 @@ class AdminEventController extends Controller
     {
         $event->update(['status' => 'published']);
         AuditLog::record($request->user(), 'event.published', $event, ['title' => $event->title], $request->ip());
+        $this->notifications->eventApproved($event->fresh(['organizer']));
 
         return new EventResource($event->fresh());
     }
@@ -124,6 +162,7 @@ class AdminEventController extends Controller
             'moderation_notes' => $request->input('reason', $event->moderation_notes),
         ]);
         AuditLog::record($request->user(), 'event.rejected', $event, ['reason' => $request->input('reason')], $request->ip());
+        $this->notifications->eventRejected($event->fresh(['organizer']), $request->input('reason'));
 
         return new EventResource($event->fresh());
     }

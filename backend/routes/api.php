@@ -23,7 +23,6 @@ use App\Http\Controllers\Api\NewsletterSubscriptionController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ReservationController;
-use App\Http\Controllers\Api\ReservationHoldController;
 use App\Http\Controllers\Api\Organizer\OrganizerDashboardController;
 use App\Http\Controllers\Api\Organizer\OrganizerEventController;
 use App\Http\Controllers\Api\Organizer\OrganizerPaymentController;
@@ -37,6 +36,7 @@ use App\Http\Controllers\Api\Owner\OwnerVenueSpecialHourController;
 use App\Http\Controllers\Api\Payments\CheckoutSessionController;
 use App\Http\Controllers\Api\Payments\MockPaymentController;
 use App\Http\Controllers\Api\Payments\WebhookController;
+use App\Http\Controllers\Api\Scanner\ScannerDashboardController;
 use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\Api\TicketTypeController;
 use App\Http\Controllers\Api\User\UserDashboardController;
@@ -117,9 +117,6 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/checkout-reservations', [CheckoutReservationController::class, 'store']);
         Route::get('/checkout-reservations/{checkoutReservation}', [CheckoutReservationController::class, 'show']);
         Route::delete('/checkout-reservations/{checkoutReservation}', [CheckoutReservationController::class, 'cancel']);
-        Route::post('/reservation-holds', [ReservationHoldController::class, 'store']);
-        Route::get('/reservation-holds/{reservationHold}', [ReservationHoldController::class, 'show']);
-        Route::delete('/reservation-holds/{reservationHold}', [ReservationHoldController::class, 'cancel']);
         Route::post('/reservations', [ReservationController::class, 'store']);
         Route::get('/my-reservations', [ReservationController::class, 'mine']);
         Route::get('/reservations/{reservation}', [ReservationController::class, 'show']);
@@ -136,7 +133,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/tickets/{ticket}/download', [TicketController::class, 'download']);
     });
 
-    Route::middleware('role:organizer,admin')->group(function (): void {
+    Route::middleware('role:organizer,scanner,admin')->group(function (): void {
         Route::post('/tickets/validate', [OrganizerTicketController::class, 'validateTicket']);
         Route::post('/tickets/check-in', [OrganizerTicketController::class, 'checkIn']);
     });
@@ -174,7 +171,17 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::patch('/ticket-types/{ticketType}/inventory', [TicketTypeController::class, 'adjustInventory']);
     });
 
-    Route::middleware('role:organizer')->prefix('owner')->group(function (): void {
+    Route::middleware('role:scanner')->prefix('scanner')->group(function (): void {
+        Route::get('/dashboard', [ScannerDashboardController::class, 'show']);
+        Route::get('/events', [ScannerDashboardController::class, 'events']);
+        Route::get('/events/{event}/check-in-stats', [ScannerDashboardController::class, 'checkInStats']);
+        Route::get('/validation-logs', [OrganizerTicketController::class, 'validationLogs']);
+        Route::post('/tickets/validate', [OrganizerTicketController::class, 'validateTicket']);
+        Route::post('/tickets/check-in', [OrganizerTicketController::class, 'checkIn']);
+        Route::get('/tickets/lookup', [OrganizerTicketController::class, 'lookup']);
+    });
+
+    Route::middleware('role:owner')->prefix('owner')->group(function (): void {
         Route::get('/analytics', [OwnerAnalyticsController::class, 'index']);
         Route::get('/reservations', [OwnerReservationController::class, 'index']);
         Route::get('/reservations/calendar', [OwnerReservationController::class, 'calendar']);
@@ -241,6 +248,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/events/{event}', [AdminEventController::class, 'show']);
         Route::patch('/events/{event}', [AdminEventController::class, 'update']);
         Route::patch('/events/{event}/service-fee', [AdminEventController::class, 'updateServiceFee']);
+        Route::get('/events/{event}/scanners', [AdminEventController::class, 'scanners']);
+        Route::post('/events/{event}/scanners', [AdminEventController::class, 'assignScanner']);
         Route::delete('/events/{event}', [AdminEventController::class, 'destroy']);
         Route::post('/events/{event}/publish', [AdminEventController::class, 'publish']);
         Route::post('/events/{event}/reject', [AdminEventController::class, 'reject']);

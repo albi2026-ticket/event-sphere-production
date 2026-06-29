@@ -18,7 +18,7 @@ class StoreVenueRequest extends FormRequest
     {
         $user = $this->user();
 
-        if (! $user?->isOrganizer()) {
+        if (! $user?->isOwner()) {
             return false;
         }
 

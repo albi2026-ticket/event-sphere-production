@@ -3,7 +3,6 @@
 namespace App\Services\Reservations;
 
 use App\Models\Reservation;
-use App\Models\ReservationHold;
 use App\Models\Venue;
 use Carbon\Carbon;
 
@@ -134,23 +133,11 @@ class ReservationAvailabilityService
             ->count();
     }
 
-    public function activeHoldCount(Venue $venue, string $date, string $time, ?int $excludeHoldId = null): int
-    {
-        return ReservationHold::query()
-            ->where('venue_id', $venue->id)
-            ->whereDate('reservation_date', $date)
-            ->whereIn('reservation_time', $this->timeVariants($time))
-            ->where('status', ReservationHold::STATUS_ACTIVE)
-            ->where('expires_at', '>', now())
-            ->when($excludeHoldId, fn ($query) => $query->whereKeyNot($excludeHoldId))
-            ->count();
-    }
-
-    public function slotIsFull(Venue $venue, string $date, string $time, ?int $excludeHoldId = null): bool
+    public function slotIsFull(Venue $venue, string $date, string $time): bool
     {
         $limit = max(1, (int) ($venue->max_reservations_per_slot ?: 10));
 
-        return ($this->slotReservationCount($venue, $date, $time) + $this->activeHoldCount($venue, $date, $time, $excludeHoldId)) >= $limit;
+        return $this->slotReservationCount($venue, $date, $time) >= $limit;
     }
 
     public function bookingHorizonError(Venue $venue, Carbon $date, string $field = 'date'): ?array

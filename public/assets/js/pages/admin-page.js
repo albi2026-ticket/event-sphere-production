@@ -624,7 +624,7 @@
         <td data-label="Orders">${usr.orders_count ?? 0}</td>
         <td data-label="Role">
           <select class="form-select form-select-sm admin-select" data-user-role="${usr.id}">
-            ${['user', 'organizer', 'admin'].map((role) => `<option value="${role}" ${usr.role === role ? 'selected' : ''}>${role}</option>`).join('')}
+            ${['user', 'organizer', 'owner', 'scanner', 'admin'].map((role) => `<option value="${role}" ${usr.role === role ? 'selected' : ''}>${role}</option>`).join('')}
           </select>
         </td>
         <td data-label="Organizer">${badge(usr.organizer_status)}</td>
@@ -715,6 +715,7 @@
             <div class="admin-actions">
               ${buttonIcon('bi-eye', 'View event', `data-view-event="${event.id}"`)}
               ${buttonIcon('bi-pencil', 'Edit event', `data-edit-event="${event.id}"`)}
+              <button class="btn btn-glass btn-sm" type="button" data-assign-scanner="${event.id}"><i class="bi bi-qr-code-scan me-1"></i>Assign Scanner</button>
               <button class="btn btn-glass btn-sm" type="button" data-publish-event="${event.id}" ${event.status === 'published' ? 'disabled' : ''}>Publish</button>
               <button class="btn btn-glass btn-sm" type="button" data-unpublish-event="${event.id}" ${event.status !== 'published' ? 'disabled' : ''}>Unpublish</button>
               <button class="btn btn-glass btn-sm" type="button" data-feature-event="${event.id}">${event.is_featured ? 'Unfeature' : 'Feature'}</button>
@@ -1489,6 +1490,46 @@
     `);
   }
 
+  async function showScannerAssignment(eventId) {
+    const eventRecord = state.events.find((item) => String(item.id) === String(eventId));
+    setModal('Assign Scanner', '<div class="py-4 text-muted-pro"><span class="spinner-border spinner-border-sm me-2"></span>Loading scanners...</div>');
+
+    const [scannerUsers, assignedScanners] = await Promise.all([
+      api().fetch('/admin/users?role=scanner&status=active&per_page=100'),
+      api().fetch(`/admin/events/${eventId}/scanners`),
+    ]);
+
+    const scanners = rows(scannerUsers.data);
+    const assigned = rows(assignedScanners.data);
+
+    setModal('Assign Scanner', `
+      <form data-admin-scanner-assignment-form="${eventId}">
+        <div class="mb-3">
+          <div class="eyebrow mb-2">Event</div>
+          <h5 class="mb-1">${u().escapeHtml(eventRecord?.title || `Event #${eventId}`)}</h5>
+          <p class="text-muted-pro mb-0">${u().escapeHtml(eventRecord?.venue_name || eventRecord?.city || '')}</p>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Select Scanner</label>
+          <select class="form-select admin-select" name="scanner_id" required>
+            <option value="">Choose scanner</option>
+            ${scanners.map((scanner) => `<option value="${scanner.id}">${u().escapeHtml(scanner.name || scanner.email)} · ${u().escapeHtml(scanner.email || '')}</option>`).join('')}
+          </select>
+        </div>
+        <div class="mb-3">
+          <h6>Assigned scanners</h6>
+          <div class="dashboard-stack">
+            ${assigned.map((scanner) => `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${u().escapeHtml(scanner.name || scanner.email)}</span><small>${u().escapeHtml(scanner.email || '')}</small></span>${badge(scanner.role)}</div>`).join('') || '<div class="dashboard-empty"><i class="bi bi-person-x"></i><span>No scanners assigned yet.</span></div>'}
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button class="btn btn-glass" type="button" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary-grad" type="submit" ${scanners.length ? '' : 'disabled'}>Save</button>
+        </div>
+      </form>
+    `);
+  }
+
   function listNames(items) {
     return (items || []).map((item) => item.name).filter(Boolean).map((name) => u().escapeHtml(name)).join(', ') || '-';
   }
@@ -1957,6 +1998,28 @@
       });
     });
 
+    document.addEventListener('submit', async (event) => {
+      const form = event.target.closest('[data-admin-scanner-assignment-form]');
+      if (!form) return;
+      event.preventDefault();
+
+      const eventId = form.dataset.adminScannerAssignmentForm;
+      const button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+
+      try {
+        await api().fetch(`/admin/events/${eventId}/scanners`, {
+          method: 'POST',
+          body: { scanner_id: new FormData(form).get('scanner_id') },
+        });
+        window.tkToast?.('Scanner assigned');
+        await showScannerAssignment(eventId);
+      } catch (err) {
+        button.disabled = false;
+        window.tkToast?.(err.message || 'Failed to assign scanner', 'error');
+      }
+    });
+
     document.addEventListener('click', async (event) => {
       const button = event.target.closest('button');
       if (!button) return;
@@ -2165,6 +2228,10 @@
             window.tkToast?.('Event updated');
             await refreshEvents();
           }
+        }
+
+        if (button.dataset.assignScanner) {
+          await showScannerAssignment(button.dataset.assignScanner);
         }
 
         if (button.dataset.featureEvent) {

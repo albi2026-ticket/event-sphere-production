@@ -384,6 +384,17 @@ class AdminDashboardTest extends TestCase
             ->assertJsonPath('data.role', User::ROLE_ORGANIZER);
 
         $this->actingAs($admin, 'sanctum')
+            ->patchJson("/api/admin/users/{$user->id}/role", ['role' => User::ROLE_OWNER])
+            ->assertOk()
+            ->assertJsonPath('data.role', User::ROLE_OWNER)
+            ->assertJsonPath('data.organizer_status', User::ORGANIZER_STATUS_NONE);
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/users?role=owner')
+            ->assertOk()
+            ->assertJsonPath('data.0.email', 'pending-organizer@example.test');
+
+        $this->actingAs($admin, 'sanctum')
             ->postJson("/api/admin/users/{$user->id}/approve-organizer")
             ->assertOk()
             ->assertJsonPath('data.organizer_status', User::ORGANIZER_STATUS_APPROVED);

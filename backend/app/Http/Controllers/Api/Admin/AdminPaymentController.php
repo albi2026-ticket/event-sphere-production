@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Payments\RefundPaymentRequest;
 use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\Ticket;
+use App\Services\Notifications\NotificationService;
 use App\Services\Payments\StripePaymentService;
 use App\Services\Tickets\TicketService;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +19,7 @@ class AdminPaymentController extends Controller
     public function __construct(
         private readonly StripePaymentService $stripe,
         private readonly TicketService $tickets,
+        private readonly NotificationService $notifications,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -57,6 +59,7 @@ class AdminPaymentController extends Controller
 
             $this->tickets->markOrderTickets($order, Ticket::STATUS_REFUNDED);
             AuditLog::record($request->user(), 'payment.refunded', $order, ['reason' => $request->input('reason')], $request->ip());
+            $this->notifications->ticketRefunded($order->fresh(['tickets.user', 'tickets.event']));
 
             return response()->json([
                 'data' => [
@@ -73,6 +76,7 @@ class AdminPaymentController extends Controller
             $request->input('reason')
         );
         AuditLog::record($request->user(), 'payment.refunded', $order, ['reason' => $request->input('reason'), 'refund_id' => $refund->id], $request->ip());
+        $this->notifications->ticketRefunded($order->fresh(['tickets.user', 'tickets.event']));
 
         return response()->json([
             'data' => [

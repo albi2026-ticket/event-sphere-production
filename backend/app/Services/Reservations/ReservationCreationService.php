@@ -22,17 +22,11 @@ class ReservationCreationService
                 ->whereKey($payload['venue_id'])
                 ->lockForUpdate()
                 ->firstOrFail();
-            $hold = app(ReservationHoldService::class)->validateForReservation(
-                $user,
-                (int) $payload['reservation_hold_id'],
-                $payload,
-            );
 
             if (app(ReservationAvailabilityService::class)->slotIsFull(
                 $venue,
                 (string) $payload['reservation_date'],
                 (string) $payload['reservation_time'],
-                $hold->id,
             )) {
                 throw ValidationException::withMessages([
                     'reservation_time' => [self::SLOT_FULL_MESSAGE],
@@ -51,8 +45,6 @@ class ReservationCreationService
                 'notes' => $payload['notes'] ?? null,
                 'occasion' => $payload['occasion'] ?? null,
             ]);
-
-            app(ReservationHoldService::class)->complete($hold);
 
             return $reservation;
         });

@@ -49,6 +49,40 @@ class OwnerReservationManagementTest extends TestCase
             ->assertJsonPath('data.0.id', $today->id);
     }
 
+    public function test_owner_role_can_manage_own_venue_reservations(): void
+    {
+        Mail::fake();
+
+        $owner = $this->owner();
+        $venue = $this->venue($owner);
+        $reservation = $this->reservation($venue, $this->user(), [
+            'status' => Reservation::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($owner, 'sanctum')
+            ->getJson('/api/owner/reservations')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $reservation->id);
+
+        $this->actingAs($owner, 'sanctum')
+            ->patchJson("/api/owner/reservations/{$reservation->id}/confirm")
+            ->assertOk()
+            ->assertJsonPath('data.status', Reservation::STATUS_CONFIRMED);
+    }
+
+    public function test_organizer_role_cannot_access_restaurant_management_routes(): void
+    {
+        $organizer = $this->actualOrganizer();
+
+        $this->actingAs($organizer, 'sanctum')
+            ->getJson('/api/owner/reservations')
+            ->assertForbidden();
+
+        $this->actingAs($organizer, 'sanctum')
+            ->getJson('/api/owner/venues')
+            ->assertForbidden();
+    }
+
     public function test_owner_reservation_list_orders_newest_requests_first(): void
     {
         $owner = $this->organizer();
@@ -385,9 +419,27 @@ class OwnerReservationManagementTest extends TestCase
     private function organizer(array $attributes = []): User
     {
         return User::factory()->create(array_merge([
+            'role' => User::ROLE_OWNER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_NONE,
+        ], $attributes));
+    }
+
+    private function actualOrganizer(array $attributes = []): User
+    {
+        return User::factory()->create(array_merge([
             'role' => User::ROLE_ORGANIZER,
             'status' => User::STATUS_ACTIVE,
             'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ], $attributes));
+    }
+
+    private function owner(array $attributes = []): User
+    {
+        return User::factory()->create(array_merge([
+            'role' => User::ROLE_OWNER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_NONE,
         ], $attributes));
     }
 

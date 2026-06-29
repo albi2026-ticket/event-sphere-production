@@ -24,8 +24,8 @@
     <div class="collapse navbar-collapse" id="mainNav">
       <ul class="navbar-nav mx-auto gap-1">
         <li class="nav-item"><a class="nav-link nav-link-pro" href="index.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="events.html">Events</a></li>
-        <li class="nav-item dropdown">
+        <li class="nav-item" data-auth-hide-role="owner"><a class="nav-link nav-link-pro" href="events.html">Events</a></li>
+        <li class="nav-item dropdown" data-auth-hide-role="owner">
           <a class="nav-link nav-link-pro dropdown-toggle" data-bs-toggle="dropdown" href="#">Categories</a>
           <ul class="dropdown-menu mt-2" data-nav-categories style="background:var(--card);border:1px solid var(--border);border-radius:14px">
             <li><a class="dropdown-item text-white-50" href="${CategoryRoutes.href('Concerts')}"><i class="bi bi-music-note-beamed me-2"></i>Concerts</a></li>

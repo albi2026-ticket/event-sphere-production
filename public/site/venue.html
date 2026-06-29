@@ -98,7 +98,7 @@
       <ul class="navbar-nav mx-auto gap-1">
         <li class="nav-item"><a class="nav-link nav-link-pro" href="reservations.html">Home</a></li>
         <li class="nav-item"><a class="nav-link nav-link-pro" href="my-reservations.html" data-auth-role-nav="user" hidden>My Reservations</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="owner-venue.html" data-auth-role-nav="organizer" hidden>Restaurant & Bar Reservations</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="owner-venue.html" data-auth-role-nav="owner" hidden>Restaurant & Bar Reservations</a></li>
       </ul>
       <div class="d-flex align-items-center gap-2">
         <a class="btn btn-ghost" href="login.html" data-auth-guest>Login</a>
@@ -287,16 +287,8 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form data-reservation-form novalidate>
-        <input name="reservation_hold_id" type="hidden">
         <div class="modal-body">
           <div data-reservation-form-error></div>
-          <div class="reservation-hold-timer mb-3" data-reservation-hold-timer hidden>
-            <div>
-              <strong data-reservation-hold-message>We're holding this table for you.</strong>
-              <span data-reservation-hold-detail>Complete your reservation before the timer ends.</span>
-            </div>
-            <span data-reservation-hold-countdown>05:00</span>
-          </div>
           <div class="reservation-booking-flow">
             <section class="booking-step">
               <div class="booking-step-title">
@@ -385,7 +377,7 @@
         </div>
         <div class="modal-footer border-pro">
           <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-gold btn-lg" data-reservation-submit>Send Reservation Request</button>
+          <button type="submit" class="btn btn-gold btn-lg" data-reservation-submit>Save Reservation Request</button>
         </div>
       </form>
     </div>

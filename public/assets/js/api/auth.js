@@ -102,6 +102,8 @@
   function roleHome(role) {
     if (role === 'admin') return 'admin.html';
     if (role === 'organizer') return 'organizer.html';
+    if (role === 'owner') return 'owner-venue.html';
+    if (role === 'scanner') return 'scanner-dashboard.html';
     return 'dashboard.html';
   }
 
@@ -111,7 +113,7 @@
       location.href = cfg().LOGIN_URL;
       return;
     }
-    location.href = 'welcome.html';
+    location.href = u.role === 'scanner' ? roleHome(u.role) : 'welcome.html';
   }
 
   function requireAuth(roles, options = {}) {
@@ -148,6 +150,8 @@
     const roleConfig = {
       admin: { label: 'Dashboard', href: 'admin.html' },
       organizer: { label: 'Manage Events', href: 'organizer.html' },
+      owner: { label: 'Manage Venues', href: 'owner-venue.html' },
+      scanner: { label: 'Scanner', href: 'scanner-dashboard.html' },
       user: { label: 'My Tickets', href: 'dashboard.html' },
     };
     const current = roleConfig[role] || roleConfig.user;
@@ -159,7 +163,12 @@
       setVisible(el, !!user);
     });
     document.querySelectorAll('[data-auth-role-nav]').forEach((el) => {
-      setVisible(el, !!user && el.dataset.authRoleNav === role);
+      const roles = String(el.dataset.authRoleNav || '').split(',').map((item) => item.trim()).filter(Boolean);
+      setVisible(el, !!user && roles.includes(role));
+    });
+    document.querySelectorAll('[data-auth-hide-role]').forEach((el) => {
+      const roles = String(el.dataset.authHideRole || '').split(',').map((item) => item.trim()).filter(Boolean);
+      setVisible(el, !user || !roles.includes(role));
     });
     document.querySelectorAll('[data-auth-dashboard-link]').forEach((el) => {
       if (!user) return;

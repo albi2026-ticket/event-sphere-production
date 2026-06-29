@@ -114,9 +114,9 @@ class TicketService
         return [
             'result' => $result,
             'title' => match ($result) {
-                TicketValidationLog::RESULT_VALID => 'VALID TICKET',
-                TicketValidationLog::RESULT_ALREADY_USED => 'TICKET ALREADY USED',
-                default => 'INVALID TICKET',
+                TicketValidationLog::RESULT_VALID => 'Ticket Valid',
+                TicketValidationLog::RESULT_ALREADY_USED => 'Already Checked In',
+                default => 'Invalid Ticket',
             },
             'is_valid' => $ticket->status === Ticket::STATUS_VALID,
             'can_check_in' => $ticket->status === Ticket::STATUS_VALID,

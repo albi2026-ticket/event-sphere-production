@@ -20,6 +20,26 @@
     return Number.isInteger(limit) && limit > 0 ? limit : null;
   }
 
+  function renderDescription(root, description) {
+    const text = String(description || '').trim();
+    root.replaceChildren();
+
+    if (!text) {
+      root.classList.add('text-muted-pro');
+      const empty = document.createElement('p');
+      empty.textContent = 'No event description has been added yet.';
+      root.appendChild(empty);
+      return;
+    }
+
+    root.classList.remove('text-muted-pro');
+    text.split(/\n{2,}/).forEach((paragraph) => {
+      const item = document.createElement('p');
+      item.textContent = paragraph.trim();
+      root.appendChild(item);
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(location.search);
     const slug = params.get('slug');
@@ -57,8 +77,7 @@
       if (venueEl) venueEl.innerHTML = `<i class="bi bi-geo-alt me-1"></i> ${u().escapeHtml(event.venue_name || '')}${event.city ? `, ${u().escapeHtml(event.city)}` : ''}`;
       const desc = $('[data-event-description]');
       if (desc) {
-        desc.classList.toggle('text-muted-pro', !event.description);
-        desc.textContent = event.description || 'No event description has been added yet.';
+        renderDescription(desc, event.description);
       }
       const organizerName = $('[data-event-organizer-name]');
       if (organizerName) organizerName.textContent = event.organizer?.name || 'Event organizer';

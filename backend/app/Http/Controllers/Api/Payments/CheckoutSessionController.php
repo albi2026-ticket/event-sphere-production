@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\CheckoutReservation;
 use App\Services\Checkout\CheckoutReservationService;
 use App\Services\Emails\OrderEmailService;
+use App\Services\Notifications\NotificationService;
 use App\Services\Orders\OrderService;
 use App\Services\Payments\StripePaymentService;
 use App\Services\Tickets\TicketInventoryService;
@@ -26,6 +27,7 @@ class CheckoutSessionController extends Controller
         private readonly OrderService $orders,
         private readonly OrderEmailService $emails,
         private readonly CheckoutReservationService $checkoutReservations,
+        private readonly NotificationService $notifications,
     ) {}
 
     public function show(CreateCheckoutSessionRequest $request, Order $order): JsonResponse
@@ -141,6 +143,7 @@ class CheckoutSessionController extends Controller
 
         $this->checkoutReservations->completeForOrder($order);
         $this->emails->sendOrderConfirmation($order);
+        $this->notifications->ticketPurchased($order);
 
         $checkoutUrl = str_replace(
             ['{CHECKOUT_SESSION_ID}', '{ORDER_ID}', '{ORDER_NUMBER}'],

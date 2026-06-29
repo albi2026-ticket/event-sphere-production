@@ -17,7 +17,7 @@ class OwnerVenueController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        abort_unless($request->user()->isOrganizer(), 403);
+        abort_unless($request->user()->isOwner(), 403);
 
         $query = Venue::query()
             ->where('user_id', $request->user()->id)

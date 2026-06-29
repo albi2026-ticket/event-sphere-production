@@ -25,7 +25,9 @@ class EnsureUserHasRole
             abort(403, 'Your account role is not allowed to access this resource.');
         }
 
-        if ($roles === [User::ROLE_ORGANIZER] && $user->role === User::ROLE_ORGANIZER && ! $user->isOrganizer()) {
+        if (in_array(User::ROLE_ORGANIZER, $roles, true)
+            && $user->role === User::ROLE_ORGANIZER
+            && ! $user->isOrganizer()) {
             abort(403, 'Organizer access requires admin approval.');
         }
 

@@ -400,39 +400,6 @@
 .reservation-booking-modal input {
   min-width: 0;
 }
-.reservation-hold-timer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 13px 15px;
-  border: 1px solid rgba(212,167,90,.3);
-  border-radius: 16px;
-  background:
-    radial-gradient(220px 100px at 100% 0%, rgba(212,167,90,.16), transparent 62%),
-    rgba(212,167,90,.08);
-}
-.reservation-hold-timer strong,
-.reservation-hold-timer span {
-  display: block;
-}
-.reservation-hold-timer strong {
-  color: var(--text);
-  font-size: .95rem;
-  font-weight: 900;
-}
-.reservation-hold-timer div > span {
-  color: var(--muted);
-  font-size: .82rem;
-}
-.reservation-hold-timer [data-reservation-hold-countdown] {
-  min-width: 66px;
-  color: var(--res-gold-2);
-  font-size: 1.15rem;
-  font-weight: 900;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
 .reservation-modal-head {
   align-items: flex-start;
   padding: 24px 26px 18px;

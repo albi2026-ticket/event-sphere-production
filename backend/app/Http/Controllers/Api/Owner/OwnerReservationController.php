@@ -217,7 +217,7 @@ class OwnerReservationController extends Controller
 
         abort_unless(
             $request->user()->isAdmin()
-                || ($request->user()->isOrganizer() && $reservation->venue->user_id === $request->user()->id),
+                || $request->user()->canManageVenue($reservation->venue),
             403,
         );
     }

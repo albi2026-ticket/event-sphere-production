@@ -16,9 +16,6 @@
   let activeGalleryIndex = 0;
   let galleryTouchStartX = null;
   let liveStatusTimer = null;
-  let reservationHold = null;
-  let reservationHoldTimer = null;
-  let reservationHoldRequestId = 0;
 
   function slugFromLocation() {
     const params = new URLSearchParams(location.search);
@@ -60,13 +57,6 @@
     const date = new Date();
     date.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
     return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-  }
-
-  function formatCountdown(seconds) {
-    const safeSeconds = Math.max(0, Number(seconds) || 0);
-    const minutes = Math.floor(safeSeconds / 60);
-    const remainder = safeSeconds % 60;
-    return `${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
   }
 
   function statusTimeLabel(value) {
@@ -702,121 +692,11 @@
     bootstrap.Modal.getOrCreateInstance($('#reservationVerifyEmailModal')).show();
   }
 
-  function holdSecondsRemaining() {
-    if (!reservationHold?.expires_at) return 0;
-    return Math.max(0, Math.floor((new Date(reservationHold.expires_at).getTime() - Date.now()) / 1000));
-  }
-
-  function setHoldTimerVisible(visible) {
-    const timer = $('[data-reservation-hold-timer]');
-    if (timer) timer.hidden = !visible;
-  }
-
-  function resetReservationHoldState(options = {}) {
-    if (reservationHoldTimer) window.clearInterval(reservationHoldTimer);
-    reservationHoldTimer = null;
-    reservationHold = null;
-    const form = $('[data-reservation-form]');
-    if (form?.elements.reservation_hold_id) form.elements.reservation_hold_id.value = '';
-    if (options.hideTimer !== false) setHoldTimerVisible(false);
-  }
-
-  async function releaseReservationHold(status = 'cancelled') {
-    const hold = reservationHold;
-    resetReservationHoldState();
-    if (!hold?.id) return;
-
-    try {
-      await api().fetch(`/reservation-holds/${hold.id}`, {
-        method: 'DELETE',
-        body: { status },
-      });
-    } catch {
-      // Expired holds are ignored here because the backend capacity check only counts active unexpired holds.
-    }
-  }
-
-  function markReservationHoldExpired() {
-    const countdown = $('[data-reservation-hold-countdown]');
-    const message = $('[data-reservation-hold-message]');
-    const detail = $('[data-reservation-hold-detail]');
-    if (countdown) countdown.textContent = '00:00';
-    if (message) message.textContent = 'This reservation has expired.';
-    if (detail) detail.textContent = 'Please choose a reservation time again.';
-
-    const hold = reservationHold;
-    resetReservationHoldState({ hideTimer: false });
-    if (hold?.id) {
-      api().fetch(`/reservation-holds/${hold.id}`, {
-        method: 'DELETE',
-        body: { status: 'expired' },
-      }).catch(() => {});
-    }
-
-    const form = $('[data-reservation-form]');
-    if (form?.elements.reservation_time) form.elements.reservation_time.value = '';
-    selectPickerValue('time', '', 'Time');
-    bootstrap.Modal.getOrCreateInstance($('#reservationModal')).hide();
-    window.tkToast?.('This reservation has expired.', 'error');
-  }
-
-  function startReservationHoldCountdown() {
-    const tick = () => {
-      const seconds = holdSecondsRemaining();
-      const countdown = $('[data-reservation-hold-countdown]');
-      const message = $('[data-reservation-hold-message]');
-      const detail = $('[data-reservation-hold-detail]');
-      if (countdown) countdown.textContent = formatCountdown(seconds);
-      if (message) message.textContent = `We're holding this table for you for ${formatCountdown(seconds)} minutes.`;
-      if (detail) detail.textContent = 'Complete your reservation before the timer ends.';
-      setHoldTimerVisible(Boolean(reservationHold));
-      if (seconds <= 0) markReservationHoldExpired();
-    };
-
-    if (reservationHoldTimer) window.clearInterval(reservationHoldTimer);
-    tick();
-    reservationHoldTimer = window.setInterval(tick, 1000);
-  }
-
-  async function createReservationHold() {
-    const form = $('[data-reservation-form]');
-    if (!currentVenue || !form) return;
-    const payload = {
-      venue_id: currentVenue.id,
-      reservation_date: form.elements.reservation_date.value,
-      reservation_time: form.elements.reservation_time.value,
-      party_size: Number(form.elements.party_size.value || 0),
-    };
-
-    if (!payload.reservation_date || !payload.reservation_time || !payload.party_size) return;
-
-    if (!userHasVerifiedEmail()) {
-      showVerifyEmailModal();
-      return;
-    }
-
-    const requestId = ++reservationHoldRequestId;
-    try {
-      const { data } = await api().fetch('/reservation-holds', { method: 'POST', body: payload });
-      if (requestId !== reservationHoldRequestId) return;
-      reservationHold = data;
-      if (form.elements.reservation_hold_id) form.elements.reservation_hold_id.value = data.id;
-      startReservationHoldCountdown();
-    } catch (err) {
-      if (requestId !== reservationHoldRequestId) return;
-      resetReservationHoldState();
-      form.elements.reservation_time.value = '';
-      selectPickerValue('time', '', 'Time');
-      window.tkToast?.(reservationError(err), 'error');
-      renderTimeSelector(form, currentVenue);
-    }
-  }
-
   function setReservationBusy(busy) {
     const button = $('[data-reservation-submit]');
     if (!button) return;
     button.disabled = busy;
-    button.innerHTML = busy ? '<span class="spinner-border spinner-border-sm me-1"></span>Sending...' : 'Send Reservation Request';
+    button.innerHTML = busy ? '<span class="spinner-border spinner-border-sm me-1"></span>Saving...' : 'Save Reservation Request';
   }
 
   async function submitReservation(event) {
@@ -829,16 +709,10 @@
     }
 
     const form = event.currentTarget;
-    if (!form.elements.reservation_hold_id.value) {
-      await createReservationHold();
-      if (!form.elements.reservation_hold_id.value) return;
-    }
-
     const payload = {
       venue_id: currentVenue.id,
       reservation_date: form.elements.reservation_date.value,
       reservation_time: form.elements.reservation_time.value,
-      reservation_hold_id: Number(form.elements.reservation_hold_id.value || 0),
       party_size: Number(form.elements.party_size.value || 0),
       phone: form.elements.phone.value.trim() || null,
       occasion: form.elements.occasion.value || null,
@@ -848,7 +722,6 @@
     setReservationBusy(true);
     try {
       await api().fetch('/reservations', { method: 'POST', body: payload });
-      resetReservationHoldState();
       bootstrap.Modal.getOrCreateInstance($('#reservationModal')).hide();
       form.reset();
       hydrateReservationForm(currentVenue);
@@ -936,15 +809,9 @@
         const value = option.dataset.value;
         const label = option.dataset.label || option.textContent.trim();
         const prefix = { guests: 'Guests', date: 'Date', time: 'Time' }[type] || '';
-        if (['guests', 'date', 'time'].includes(type)) {
-          await releaseReservationHold();
-        }
         selectPickerValue(type, value, `${prefix}: ${label}`);
         if (type === 'date' && currentVenue) {
           renderTimeSelector($('[data-reservation-form]'), currentVenue);
-        }
-        if (type === 'time' || type === 'guests' && $('[data-reservation-form]')?.elements.reservation_time.value) {
-          await createReservationHold();
         }
         closePickers();
         return;
@@ -979,7 +846,6 @@
     }, { passive: true });
     $('#reservationModal')?.addEventListener('hidden.bs.modal', () => {
       closePickers();
-      releaseReservationHold();
     });
     $('[data-reservation-form]')?.addEventListener('submit', submitReservation);
   });

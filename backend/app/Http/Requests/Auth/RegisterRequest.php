@@ -26,7 +26,7 @@ class RegisterRequest extends FormRequest
             'name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['sometimes', Rule::in([User::ROLE_USER, User::ROLE_ORGANIZER])],
+            'role' => ['sometimes', Rule::in([User::ROLE_USER, User::ROLE_ORGANIZER, User::ROLE_OWNER])],
             'phone' => ['nullable', 'string', 'max:255'],
             'default_city' => ['nullable', 'string', 'max:255'],
         ];

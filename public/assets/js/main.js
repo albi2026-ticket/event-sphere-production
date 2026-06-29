@@ -55,6 +55,8 @@
     venue_deactivated: 'bi-pause-circle',
     event_approved: 'bi-calendar-check',
     event_rejected: 'bi-calendar-x',
+    event_updated: 'bi-calendar-event',
+    event_cancelled: 'bi-calendar-x',
     system: 'bi-shield-check',
   };
 

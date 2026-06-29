@@ -2070,6 +2070,30 @@ a:hover { color: var(--secondary); }
 .countdown .unit b { font-family: var(--font-display); font-size: 1.6rem; display: block; }
 .countdown .unit span { color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; }
 
+/* Event details */
+.event-description-heading {
+  margin: 0 0 1rem;
+}
+.event-description {
+  max-width: 72ch;
+  min-width: 0;
+  color: var(--text);
+  font-size: 1.02rem;
+  line-height: 1.78;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.event-description p {
+  max-width: 100%;
+  margin: 0 0 1.1rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.event-description p:last-child {
+  margin-bottom: 0;
+}
+
 /* Stepper */
 .stepper { display: flex; gap: .5rem; align-items: center; margin-bottom: 2rem; }
 .stepper .step {
@@ -2081,6 +2105,16 @@ a:hover { color: var(--secondary); }
 .stepper .step.active .num { background: var(--grad-primary); color: #fff; }
 .stepper .step.done .num { background: var(--success); color: #fff; }
 @media (max-width: 768px) { .stepper .step span { display: none; } }
+@media (max-width: 768px) {
+  .event-description {
+    max-width: 100%;
+    font-size: .98rem;
+    line-height: 1.72;
+  }
+  .event-description-heading {
+    margin-bottom: .85rem;
+  }
+}
 
 /* Sticky checkout */
 .sticky-checkout { position: sticky; top: 90px; }
