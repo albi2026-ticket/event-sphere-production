@@ -10,10 +10,13 @@ use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 class OwnerAnalyticsController extends Controller
 {
+    private const SUMMARY_TTL_SECONDS = 45;
+
     public function index(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -36,28 +39,38 @@ class OwnerAnalyticsController extends Controller
             abort_unless((int) $venue->user_id === (int) $request->user()->id, 403);
         }
 
-        $periodQuery = $this->ownedReservations($request)
-            ->whereBetween('reservation_date', [$startDate->toDateString(), $endDate->toDateString()]);
+        $cacheKey = sprintf(
+            'dashboard:owner:analytics:%d:%s',
+            $request->user()->id,
+            md5(json_encode([
+                'start_date' => $startDate->toDateString(),
+                'end_date' => $endDate->toDateString(),
+                'venue_id' => $validated['venue_id'] ?? null,
+            ]) ?: ''),
+        );
 
-        if (isset($validated['venue_id'])) {
-            $periodQuery->where('venue_id', $validated['venue_id']);
-        }
+        $data = Cache::remember($cacheKey, now()->addSeconds(self::SUMMARY_TTL_SECONDS), function () use ($request, $validated, $startDate, $endDate): array {
+            $periodQuery = $this->ownedReservations($request)
+                ->whereBetween('reservation_date', [$startDate->toDateString(), $endDate->toDateString()]);
 
-        $todayQuery = $this->ownedReservations($request)->whereDate('reservation_date', today());
-        $monthQuery = $this->ownedReservations($request)
-            ->whereBetween('reservation_date', [today()->startOfMonth()->toDateString(), today()->endOfMonth()->toDateString()]);
+            if (isset($validated['venue_id'])) {
+                $periodQuery->where('venue_id', $validated['venue_id']);
+            }
 
-        if (isset($validated['venue_id'])) {
-            $todayQuery->where('venue_id', $validated['venue_id']);
-            $monthQuery->where('venue_id', $validated['venue_id']);
-        }
+            $todayQuery = $this->ownedReservations($request)->whereDate('reservation_date', today());
+            $monthQuery = $this->ownedReservations($request)
+                ->whereBetween('reservation_date', [today()->startOfMonth()->toDateString(), today()->endOfMonth()->toDateString()]);
 
-        $overview = $this->countsByStatus(clone $periodQuery);
-        $today = $this->performanceCounts(clone $todayQuery);
-        $month = $this->performanceCounts(clone $monthQuery);
+            if (isset($validated['venue_id'])) {
+                $todayQuery->where('venue_id', $validated['venue_id']);
+                $monthQuery->where('venue_id', $validated['venue_id']);
+            }
 
-        return response()->json([
-            'data' => [
+            $overview = $this->countsByStatus(clone $periodQuery);
+            $today = $this->performanceCounts(clone $todayQuery);
+            $month = $this->performanceCounts(clone $monthQuery);
+
+            return [
                 'period' => [
                     'start_date' => $startDate->toDateString(),
                     'end_date' => $endDate->toDateString(),
@@ -70,7 +83,11 @@ class OwnerAnalyticsController extends Controller
                 'status_breakdown' => $this->statusBreakdown($overview),
                 'top_days' => $this->topDays(clone $periodQuery),
                 'top_time_slots' => $this->topTimeSlots(clone $periodQuery),
-            ],
+            ];
+        });
+
+        return response()->json([
+            'data' => $data,
         ]);
     }
 
@@ -85,13 +102,18 @@ class OwnerAnalyticsController extends Controller
      */
     protected function countsByStatus(Builder $query): array
     {
+        $counts = (clone $query)
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
         return [
-            'total' => (clone $query)->count(),
-            'pending' => (clone $query)->where('status', Reservation::STATUS_PENDING)->count(),
-            'confirmed' => (clone $query)->where('status', Reservation::STATUS_CONFIRMED)->count(),
-            'completed' => (clone $query)->where('status', Reservation::STATUS_COMPLETED)->count(),
-            'cancelled' => (clone $query)->where('status', Reservation::STATUS_CANCELLED)->count(),
-            'no_show' => (clone $query)->where('status', Reservation::STATUS_NO_SHOW)->count(),
+            'total' => (int) $counts->sum(),
+            'pending' => (int) ($counts[Reservation::STATUS_PENDING] ?? 0),
+            'confirmed' => (int) ($counts[Reservation::STATUS_CONFIRMED] ?? 0),
+            'completed' => (int) ($counts[Reservation::STATUS_COMPLETED] ?? 0),
+            'cancelled' => (int) ($counts[Reservation::STATUS_CANCELLED] ?? 0),
+            'no_show' => (int) ($counts[Reservation::STATUS_NO_SHOW] ?? 0),
         ];
     }
 
@@ -100,11 +122,16 @@ class OwnerAnalyticsController extends Controller
      */
     protected function performanceCounts(Builder $query): array
     {
+        $counts = (clone $query)
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
         return [
-            'reservations' => (clone $query)->count(),
-            'completed' => (clone $query)->where('status', Reservation::STATUS_COMPLETED)->count(),
-            'cancelled' => (clone $query)->where('status', Reservation::STATUS_CANCELLED)->count(),
-            'no_show' => (clone $query)->where('status', Reservation::STATUS_NO_SHOW)->count(),
+            'reservations' => (int) $counts->sum(),
+            'completed' => (int) ($counts[Reservation::STATUS_COMPLETED] ?? 0),
+            'cancelled' => (int) ($counts[Reservation::STATUS_CANCELLED] ?? 0),
+            'no_show' => (int) ($counts[Reservation::STATUS_NO_SHOW] ?? 0),
         ];
     }
 
@@ -173,9 +200,11 @@ class OwnerAnalyticsController extends Controller
         $labels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
         return (clone $query)
-            ->get(['reservation_date'])
-            ->groupBy(fn (Reservation $reservation): string => $labels[(int) $reservation->reservation_date->dayOfWeek])
-            ->map(fn ($items, string $day): array => ['day' => $day, 'total' => $items->count()])
+            ->selectRaw('reservation_date, count(*) as total')
+            ->groupBy('reservation_date')
+            ->get()
+            ->groupBy(fn (Reservation $reservation): string => $labels[(int) Carbon::parse($reservation->reservation_date)->dayOfWeek])
+            ->map(fn ($items, string $day): array => ['day' => $day, 'total' => (int) $items->sum('total')])
             ->sortByDesc('total')
             ->take(5)
             ->values()

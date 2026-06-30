@@ -65,6 +65,7 @@ Route::get('/venues/{venue}', [VenueController::class, 'show']);
 Route::get('/venue-facilities', [VenueLookupController::class, 'facilities']);
 Route::get('/cuisine-types', [VenueLookupController::class, 'cuisineTypes']);
 Route::get('/payment-options', [VenueLookupController::class, 'paymentOptions']);
+Route::get('/homepage', [HomepageController::class, 'index']);
 Route::get('/homepage/featured-events', [HomepageController::class, 'featured']);
 Route::get('/homepage/trending-events', [HomepageController::class, 'trending']);
 Route::get('/homepage/upcoming-events', [HomepageController::class, 'upcoming']);

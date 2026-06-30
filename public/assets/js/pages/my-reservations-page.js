@@ -7,8 +7,34 @@
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
   const fallbackImage = 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1000&q=80';
   const statuses = ['pending', 'confirmed', 'cancelled', 'completed', 'no_show'];
+  const reservationsPerPage = 25;
   let reservations = [];
   let cancelId = null;
+  let reservationsRequest = null;
+  let reservationsLoaded = false;
+  let loadGeneration = 0;
+  let lastRenderSignature = '';
+  let lastStatsSignature = '';
+  const listRoots = new Map();
+  const sectionRenderSignatures = new Map();
+  const reservationsById = new Map();
+
+  function rootForStatus(status) {
+    if (!listRoots.has(status)) {
+      listRoots.set(status, document.querySelector(`[data-reservations-list="${status}"]`));
+    }
+
+    return listRoots.get(status);
+  }
+
+  function onIdle(callback) {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(callback, { timeout: 800 });
+      return;
+    }
+
+    window.setTimeout(callback, 0);
+  }
 
   function statusBadge(status) {
     const map = {
@@ -40,6 +66,23 @@
     return parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
   }
 
+  function reservationSortValue(reservation) {
+    const date = reservation.reservation_date || '';
+    const time = String(reservation.reservation_time || '').slice(0, 5);
+    return `${date}T${time || '00:00'}:00`;
+  }
+
+  function sortReservations(items) {
+    return items.sort((a, b) => reservationSortValue(b).localeCompare(reservationSortValue(a)));
+  }
+
+  function mergeReservations(items = []) {
+    items.forEach((reservation) => {
+      if (reservation?.id) reservationsById.set(Number(reservation.id), reservation);
+    });
+    reservations = sortReservations(Array.from(reservationsById.values()));
+  }
+
   function canCancelReservation(reservation) {
     const status = reservation.status || 'pending';
     const startsAt = reservationDateTime(reservation);
@@ -66,7 +109,7 @@
       <div class="col-md-6 col-xl-4">
         <article class="venue-card my-reservation-card">
           <div class="img-wrap">
-            <img src="${esc(image)}" alt="">
+            <img loading="lazy" decoding="async" src="${esc(image)}" alt="">
             <div class="badges">
               ${statusBadge(status)}
               <span class="fav"><i class="bi bi-calendar-heart"></i></span>
@@ -119,6 +162,10 @@
   function renderStats(grouped) {
     const root = $('[data-my-reservations-stats]');
     if (!root) return;
+    const signature = statuses.map((status) => `${status}:${grouped[status]?.length || 0}`).join('|');
+    if (signature === lastStatsSignature) return;
+    lastStatsSignature = signature;
+
     const labels = {
       pending: 'Pending Reservations',
       confirmed: 'Confirmed Reservations',
@@ -137,6 +184,12 @@
   }
 
   function render(loading = false) {
+    const signature = loading
+      ? 'loading'
+      : reservations.map((reservation) => `${reservation.id}:${reservation.status}:${reservation.updated_at || reservation.cancelled_at || ''}`).join('|');
+    if (signature === lastRenderSignature) return;
+    lastRenderSignature = signature;
+
     const grouped = Object.fromEntries(statuses.map((status) => [status, []]));
     reservations.forEach((reservation) => {
       const status = statuses.includes(reservation.status) ? reservation.status : 'pending';
@@ -145,9 +198,11 @@
     renderStats(grouped);
 
     statuses.forEach((status) => {
-      const root = document.querySelector(`[data-reservations-list="${status}"]`);
+      const root = rootForStatus(status);
       if (!root) return;
       if (loading) {
+        if (sectionRenderSignatures.get(status) === 'loading') return;
+        sectionRenderSignatures.set(status, 'loading');
         root.innerHTML = Array.from({ length: 3 }, () => `
           <div class="col-md-6 col-xl-4">
             <div class="reservation-card-skeleton">
@@ -162,6 +217,11 @@
         `).join('');
         return;
       }
+      const sectionSignature = grouped[status]
+        .map((reservation) => `${reservation.id}:${reservation.status}:${reservation.updated_at || reservation.cancelled_at || ''}`)
+        .join('|') || 'empty';
+      if (sectionRenderSignatures.get(status) === sectionSignature) return;
+      sectionRenderSignatures.set(status, sectionSignature);
       root.innerHTML = grouped[status].length ? grouped[status].map(reservationCard).join('') : emptyState(status);
     });
   }
@@ -170,7 +230,7 @@
     $('[data-reservation-detail-title]').textContent = `Reservation #${reservation.id}`;
     $('[data-reservation-detail-body]').innerHTML = `
       <div class="my-reservation-detail">
-        <img src="${esc(reservation.venue?.image_url || fallbackImage)}" alt="">
+        <img loading="lazy" decoding="async" src="${esc(reservation.venue?.image_url || fallbackImage)}" alt="">
         <div class="facility justify-content-between"><span>Restaurant / Bar</span><strong>${esc(reservation.venue?.name || 'Restaurant / Bar')}</strong></div>
         <div class="facility justify-content-between"><span>Status</span>${statusBadge(reservation.status)}</div>
         <div class="facility justify-content-between"><span>Date</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div>
@@ -189,14 +249,52 @@
   }
 
   async function loadReservations() {
+    if (reservationsRequest) return reservationsRequest;
+    if (reservationsLoaded) return Promise.resolve();
     render(true);
-    try {
-      const { data } = await api().fetch('/my-reservations?per_page=100');
-      reservations = Array.isArray(data) ? data : [];
+
+    reservationsRequest = (async () => {
+      const generation = ++loadGeneration;
+      const firstPage = await api().fetch(`/my-reservations?per_page=${reservationsPerPage}&page=1`);
+      if (generation !== loadGeneration) return;
+
+      mergeReservations(Array.isArray(firstPage.data) ? firstPage.data : []);
       render();
+
+      const lastPage = Number(firstPage.meta?.last_page || 1);
+      if (lastPage <= 1) {
+        reservationsLoaded = true;
+        return;
+      }
+
+      await new Promise((resolve, reject) => onIdle(async () => {
+        for (let page = 2; page <= lastPage; page += 1) {
+          try {
+            const response = await api().fetch(`/my-reservations?per_page=${reservationsPerPage}&page=${page}`);
+            if (generation !== loadGeneration) {
+              resolve();
+              return;
+            }
+
+            mergeReservations(Array.isArray(response.data) ? response.data : []);
+            render();
+          } catch (err) {
+            reject(err);
+            return;
+          }
+        }
+        reservationsLoaded = true;
+        resolve();
+      }));
+    })();
+
+    try {
+      await reservationsRequest;
     } catch (err) {
       window.tkToast?.(err?.message || 'Unable to load reservations.', 'error');
       render();
+    } finally {
+      reservationsRequest = null;
     }
   }
 
@@ -213,7 +311,9 @@
         method: 'PATCH',
         body: { cancellation_reason: reason || null },
       });
-      reservations = reservations.map((reservation) => Number(reservation.id) === Number(cancelId) ? data : reservation);
+      reservationsById.set(Number(cancelId), data);
+      reservations = sortReservations(Array.from(reservationsById.values()));
+      lastRenderSignature = '';
       bootstrap.Modal.getInstance($('#reservationCancelModal'))?.hide();
       const reasonField = $('[data-reservation-cancel-reason]');
       if (reasonField) reasonField.value = '';

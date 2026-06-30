@@ -33,27 +33,67 @@
   let state = { page: 1, sort: 'trending', q: '', category: '', city: '', max_price: '', date_from: '', date_to: '', view: 'grid', loadRequestId: 0 };
   const eventCache = new Map();
   const eventRequests = new Map();
+  let categoryRequest = null;
+  let lastRenderedKey = '';
+  let lastRenderedEvents = [];
+  let lastRenderedMeta = null;
+  let searchTimer = null;
 
-  function bindCategoryChips() {
-    document.querySelectorAll('[data-filter-category-chip]').forEach((chip) => {
-      if (chip.dataset.boundCategoryChip === 'true') return;
-      chip.dataset.boundCategoryChip = 'true';
-      chip.addEventListener('click', (event) => {
-        event.preventDefault();
-        const category = normalizeCategory(chip.dataset.filterCategoryChip || '');
-        readFilterControls(category);
-        state.page = 1;
-        syncCategoryChips();
-        syncUrl('push');
-        load();
-      });
+  function debounce(callback, delay = 300) {
+    return (...args) => {
+      if (searchTimer) window.clearTimeout(searchTimer);
+      searchTimer = window.setTimeout(() => callback(...args), delay);
+    };
+  }
+
+  function onIdle(callback) {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(callback, { timeout: 800 });
+      return;
+    }
+
+    window.setTimeout(callback, 0);
+  }
+
+  function elements() {
+    return {
+      applyBtn: document.querySelector('[data-events-apply-filters]'),
+      categoryChips: document.querySelector('[data-events-category-chips]'),
+      cityInput: document.querySelector('[data-filter-city]'),
+      clearFilters: document.querySelector('[data-events-clear-filters]'),
+      dateFilter: document.querySelector('[data-filter-date]'),
+      grid: document.getElementById('grid'),
+      pagination: document.getElementById('events-pagination'),
+      priceInput: document.querySelector('[data-filter-max-price]'),
+      search: document.querySelector('[data-events-search]'),
+      searchBtn: document.querySelector('[data-events-search-btn]'),
+      sortChips: document.querySelectorAll('[data-events-sort]'),
+      viewButtons: document.querySelectorAll('[data-events-view]'),
+    };
+  }
+
+  function bindCategoryChips(root) {
+    if (!root || root.dataset.boundCategoryChips === 'true') return;
+    root.dataset.boundCategoryChips = 'true';
+    root.addEventListener('click', (event) => {
+      const chip = event.target.closest('[data-filter-category-chip]');
+      if (!chip || !root.contains(chip)) return;
+      event.preventDefault();
+      const category = normalizeCategory(chip.dataset.filterCategoryChip || '');
+      readFilterControls(category);
+      state.page = 1;
+      syncCategoryChips();
+      syncUrl('push');
+      load();
     });
   }
 
   async function loadCategories() {
     const wrap = document.querySelector('[data-events-category-chips]');
     if (!wrap) return;
-    try {
+    if (categoryRequest) return categoryRequest;
+
+    categoryRequest = (async () => {
       const base = window.EventSphereConfig?.API_BASE_URL || document.querySelector('meta[name="api-base"]')?.content;
       const response = await fetch(`${base.replace(/\/$/, '')}/categories`, { headers: { Accept: 'application/json' } });
       const payload = await response.json();
@@ -62,10 +102,16 @@
       wrap.innerHTML = '<span class="chip active" data-filter-category-chip="">All</span>' + categories
         .map((category) => `<span class="chip" data-filter-category-chip="${u().escapeHtml(normalizeCategory(category.slug || category.name))}">${u().escapeHtml(category.name)}</span>`)
         .join('');
-      bindCategoryChips();
+      bindCategoryChips(wrap);
       syncCategoryChips();
+    })();
+
+    try {
+      await categoryRequest;
     } catch {
       /* keep static fallback */
+    } finally {
+      categoryRequest = null;
     }
   }
 
@@ -169,7 +215,7 @@
         return `
           <div class="col-12">
             <article class="card-pro p-3 d-flex gap-3 align-items-center flex-wrap">
-              <img src="${u().escapeHtml(u().eventImage(event))}" alt="" style="width:120px;height:86px;object-fit:cover;border-radius:10px"/>
+              <img loading="lazy" decoding="async" src="${u().escapeHtml(u().eventImage(event))}" alt="" style="width:120px;height:86px;object-fit:cover;border-radius:10px"/>
               <div class="flex-grow-1">
                 <div class="meta"><i class="bi bi-calendar3"></i> ${u().escapeHtml(date)}</div>
                 <h3 class="title mb-1"><a href="event-details.html?slug=${encodeURIComponent(event.slug)}" style="color:inherit">${u().escapeHtml(event.title)}</a></h3>
@@ -237,34 +283,31 @@
 
     if (pagination) {
       pagination.innerHTML = meta ? u().paginateLinks(meta) : '';
-      pagination.querySelectorAll('[data-page]').forEach((a) => {
-        a.addEventListener('click', (ev) => {
-          ev.preventDefault();
-          const p = Number(a.dataset.page);
-          if (p >= 1 && (!meta || p <= meta.last_page)) {
-            state.page = p;
-            load();
-          }
-        });
-      });
     }
 
-    window.EventSphereFavorites?.syncFavoriteButtons();
+    onIdle(() => window.EventSphereFavorites?.syncFavoriteButtons());
     syncUrl();
   }
 
   async function load() {
-    const grid = document.getElementById('grid');
-    const pagination = document.getElementById('events-pagination');
+    const { grid, pagination } = elements();
     if (!grid) return;
 
     const params = eventRequestParams();
     const key = requestKey(params);
+    if (key === lastRenderedKey && lastRenderedEvents.length) {
+      renderPage(lastRenderedEvents, lastRenderedMeta, grid, pagination);
+      return;
+    }
+
     const requestId = state.loadRequestId + 1;
     state.loadRequestId = requestId;
 
     if (eventCache.has(key)) {
       const { events, meta } = eventCache.get(key);
+      lastRenderedKey = key;
+      lastRenderedEvents = events;
+      lastRenderedMeta = meta;
       renderPage(events, meta, grid, pagination);
       return;
     }
@@ -274,6 +317,9 @@
     try {
       const { events, meta } = await fetchEvents(params);
       if (requestId !== state.loadRequestId) return;
+      lastRenderedKey = key;
+      lastRenderedEvents = events;
+      lastRenderedMeta = meta;
       renderPage(events, meta, grid, pagination);
     } catch (err) {
       if (requestId !== state.loadRequestId) return;
@@ -284,9 +330,10 @@
   document.addEventListener('DOMContentLoaded', () => {
     syncStateFromUrl();
 
-    const search = document.querySelector('[data-events-search]');
-    const cityInput = document.querySelector('[data-filter-city]');
-    const priceInput = document.querySelector('[data-filter-max-price]');
+    const els = elements();
+    const search = els.search;
+    const cityInput = els.cityInput;
+    const priceInput = els.priceInput;
     syncControlsFromState();
 
     const runSearch = () => {
@@ -294,19 +341,29 @@
       state.page = 1;
       load();
     };
+    const debouncedSearch = debounce(runSearch, 350);
     if (search) {
+      search.addEventListener('input', () => {
+        if ((search.value.trim() || '') === state.q) return;
+        debouncedSearch();
+      });
       search.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); runSearch(); }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (searchTimer) window.clearTimeout(searchTimer);
+          runSearch();
+        }
       });
     }
-    document.querySelector('[data-events-search-btn]')?.addEventListener('click', (e) => {
+    els.searchBtn?.addEventListener('click', (e) => {
       e.preventDefault();
+      if (searchTimer) window.clearTimeout(searchTimer);
       runSearch();
     });
 
-    document.querySelectorAll('[data-events-sort]').forEach((chip) => {
+    els.sortChips.forEach((chip) => {
       chip.addEventListener('click', () => {
-        document.querySelectorAll('[data-events-sort]').forEach((c) => c.classList.remove('active'));
+        els.sortChips.forEach((c) => c.classList.remove('active'));
         chip.classList.add('active');
         const map = { Trending: 'trending', Newest: 'newest', Soonest: 'soonest', 'Lowest price': 'lowest_price' };
         state.sort = map[chip.textContent.trim()] || 'trending';
@@ -315,9 +372,9 @@
       });
     });
 
-    bindCategoryChips();
+    bindCategoryChips(els.categoryChips);
 
-    const applyBtn = document.querySelector('[data-events-apply-filters]');
+    const applyBtn = els.applyBtn;
     if (applyBtn) {
       applyBtn.addEventListener('click', () => {
         const activeCategory = document.querySelector('[data-filter-category-chip].active')?.dataset.filterCategoryChip || '';
@@ -327,7 +384,7 @@
       });
     }
 
-    document.querySelector('[data-events-clear-filters]')?.addEventListener('click', (event) => {
+    els.clearFilters?.addEventListener('click', (event) => {
       event.preventDefault();
       state = { page: 1, sort: 'trending', q: '', category: '', city: '', max_price: '', date_from: '', date_to: '', view: state.view };
       syncSortChips();
@@ -335,7 +392,7 @@
       if (search) search.value = '';
       if (cityInput) cityInput.value = '';
       if (priceInput) priceInput.value = '500';
-      const dateFilter = document.querySelector('[data-filter-date]');
+      const dateFilter = els.dateFilter;
       if (dateFilter) dateFilter.value = '';
       load();
     });
@@ -351,11 +408,27 @@
       if (label) label.textContent = `$0 – $${priceInput.value}`;
     });
 
-    document.querySelectorAll('[data-events-view]').forEach((btn) => {
+    els.pagination?.addEventListener('click', (ev) => {
+      const link = ev.target.closest('[data-page]');
+      if (!link || !els.pagination.contains(link)) return;
+      ev.preventDefault();
+      const p = Number(link.dataset.page);
+      const meta = lastRenderedMeta;
+      if (p >= 1 && (!meta || p <= meta.last_page)) {
+        state.page = p;
+        load();
+      }
+    });
+
+    els.viewButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('[data-events-view]').forEach((item) => item.classList.remove('active'));
+        els.viewButtons.forEach((item) => item.classList.remove('active'));
         btn.classList.add('active');
         state.view = btn.dataset.eventsView || 'grid';
+        if (lastRenderedEvents.length) {
+          renderPage(lastRenderedEvents, lastRenderedMeta, els.grid, els.pagination);
+          return;
+        }
         load();
       });
     });

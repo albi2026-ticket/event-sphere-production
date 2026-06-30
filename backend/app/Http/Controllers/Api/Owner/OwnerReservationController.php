@@ -17,10 +17,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 class OwnerReservationController extends Controller
 {
+    private const SUMMARY_TTL_SECONDS = 45;
+
     private const CALENDAR_STATUSES = [
         Reservation::STATUS_PENDING,
         Reservation::STATUS_CONFIRMED,
@@ -274,20 +277,26 @@ class OwnerReservationController extends Controller
      */
     protected function stats(Request $request): array
     {
-        $base = $this->ownedReservations($request);
+        return Cache::remember($this->summaryCacheKey($request, 'stats'), now()->addSeconds(self::SUMMARY_TTL_SECONDS), function () use ($request): array {
+            $base = $this->ownedReservations($request);
+            $counts = (clone $base)
+                ->selectRaw('status, count(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status');
 
-        return [
-            'pending' => (clone $base)->where('status', Reservation::STATUS_PENDING)->count(),
-            'confirmed' => (clone $base)->where('status', Reservation::STATUS_CONFIRMED)->count(),
-            'today' => (clone $base)->whereDate('reservation_date', today())->count(),
-            'upcoming' => (clone $base)
-                ->whereIn('status', [Reservation::STATUS_PENDING, Reservation::STATUS_CONFIRMED])
-                ->whereDate('reservation_date', '>=', today())
-                ->count(),
-            'completed' => (clone $base)->where('status', Reservation::STATUS_COMPLETED)->count(),
-            'cancelled' => (clone $base)->where('status', Reservation::STATUS_CANCELLED)->count(),
-            'no_show' => (clone $base)->where('status', Reservation::STATUS_NO_SHOW)->count(),
-        ];
+            return [
+                'pending' => (int) ($counts[Reservation::STATUS_PENDING] ?? 0),
+                'confirmed' => (int) ($counts[Reservation::STATUS_CONFIRMED] ?? 0),
+                'today' => (clone $base)->whereDate('reservation_date', today())->count(),
+                'upcoming' => (clone $base)
+                    ->whereIn('status', [Reservation::STATUS_PENDING, Reservation::STATUS_CONFIRMED])
+                    ->whereDate('reservation_date', '>=', today())
+                    ->count(),
+                'completed' => (int) ($counts[Reservation::STATUS_COMPLETED] ?? 0),
+                'cancelled' => (int) ($counts[Reservation::STATUS_CANCELLED] ?? 0),
+                'no_show' => (int) ($counts[Reservation::STATUS_NO_SHOW] ?? 0),
+            ];
+        });
     }
 
     /**
@@ -303,18 +312,38 @@ class OwnerReservationController extends Controller
      */
     protected function todaySummary(Request $request): array
     {
-        $base = $this->ownedReservations($request)
-            ->whereDate('reservation_date', today());
+        return Cache::remember($this->summaryCacheKey($request, 'today-summary'), now()->addSeconds(self::SUMMARY_TTL_SECONDS), function () use ($request): array {
+            $base = $this->ownedReservations($request)
+                ->whereDate('reservation_date', today());
 
-        if ($request->filled('venue_id')) {
-            $base->where('venue_id', $request->integer('venue_id'));
-        }
+            if ($request->filled('venue_id')) {
+                $base->where('venue_id', $request->integer('venue_id'));
+            }
 
-        return [
-            'total' => (clone $base)->count(),
-            'pending' => (clone $base)->where('status', Reservation::STATUS_PENDING)->count(),
-            'confirmed' => (clone $base)->where('status', Reservation::STATUS_CONFIRMED)->count(),
-            'cancelled' => (clone $base)->where('status', Reservation::STATUS_CANCELLED)->count(),
-        ];
+            $counts = (clone $base)
+                ->selectRaw('status, count(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status');
+
+            return [
+                'total' => (int) $counts->sum(),
+                'pending' => (int) ($counts[Reservation::STATUS_PENDING] ?? 0),
+                'confirmed' => (int) ($counts[Reservation::STATUS_CONFIRMED] ?? 0),
+                'cancelled' => (int) ($counts[Reservation::STATUS_CANCELLED] ?? 0),
+            ];
+        });
+    }
+
+    protected function summaryCacheKey(Request $request, string $scope): string
+    {
+        return sprintf(
+            'dashboard:owner:%s:%d:%s',
+            $scope,
+            $request->user()->id,
+            md5(json_encode([
+                'venue_id' => $request->input('venue_id'),
+                'date' => today()->toDateString(),
+            ]) ?: ''),
+        );
     }
 }

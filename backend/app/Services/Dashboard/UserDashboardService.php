@@ -5,18 +5,17 @@ namespace App\Services\Dashboard;
 use App\Models\Order;
 use App\Models\Ticket;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 
 class UserDashboardService
 {
+    private const SUMMARY_TTL_SECONDS = 45;
+
     /**
      * @return array<string, mixed>
      */
     public function summary(User $user): array
     {
-        $tickets = $user->tickets();
-        $orders = $user->orders();
-        $paidOrders = (clone $orders)->where('payment_status', Order::PAYMENT_STATUS_PAID);
-
         return [
             'profile' => [
                 'id' => $user->id,
@@ -28,21 +27,7 @@ class UserDashboardService
                 'default_city' => $user->default_city,
                 'avatar_url' => $user->avatar_url,
             ],
-            'stats' => [
-                'orders_count' => (clone $orders)->count(),
-                'paid_orders_count' => (clone $orders)->where('payment_status', Order::PAYMENT_STATUS_PAID)->count(),
-                'pending_orders_count' => (clone $orders)->where('payment_status', Order::PAYMENT_STATUS_PENDING)->count(),
-                'tickets_count' => (clone $tickets)->count(),
-                'active_tickets_count' => (clone $tickets)->where('status', Ticket::STATUS_ACTIVE)->count(),
-                'used_tickets_count' => (clone $tickets)->where('status', Ticket::STATUS_USED)->count(),
-                'cancelled_tickets_count' => (clone $tickets)->whereIn('status', [Ticket::STATUS_CANCELLED, Ticket::STATUS_REFUNDED])->count(),
-                'favorites_count' => $user->favorites()->count(),
-                'upcoming_events_count' => (clone $tickets)
-                    ->whereHas('event', fn ($query) => $query->where('starts_at', '>=', now()))
-                    ->distinct('event_id')
-                    ->count('event_id'),
-                'total_spent' => (string) $paidOrders->sum('total'),
-            ],
+            'stats' => $this->stats($user),
             'recent' => [
                 'orders' => $user->orders()
                     ->latest()
@@ -56,5 +41,66 @@ class UserDashboardService
                     ->get(),
             ],
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function stats(User $user): array
+    {
+        return Cache::remember(
+            "dashboard:user:summary-cards:{$user->id}",
+            now()->addSeconds(self::SUMMARY_TTL_SECONDS),
+            function () use ($user): array {
+                $orderAgg = $user->orders()
+                    ->selectRaw(
+                        'COUNT(*) as orders_count,
+                        SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as paid_orders_count,
+                        SUM(CASE WHEN payment_status = ? THEN 1 ELSE 0 END) as pending_orders_count,
+                        COALESCE(SUM(CASE WHEN payment_status = ? THEN total ELSE 0 END), 0) as total_spent',
+                        [
+                            Order::PAYMENT_STATUS_PAID,
+                            Order::PAYMENT_STATUS_PENDING,
+                            Order::PAYMENT_STATUS_PAID,
+                        ],
+                    )
+                    ->first();
+
+                $ticketAgg = $user->tickets()
+                    ->selectRaw(
+                        'COUNT(*) as tickets_count,
+                        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_tickets_count,
+                        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as used_tickets_count,
+                        SUM(CASE WHEN status IN (?, ?) THEN 1 ELSE 0 END) as cancelled_tickets_count',
+                        [
+                            Ticket::STATUS_ACTIVE,
+                            Ticket::STATUS_USED,
+                            Ticket::STATUS_CANCELLED,
+                            Ticket::STATUS_REFUNDED,
+                        ],
+                    )
+                    ->first();
+
+                $upcomingEvents = $user->tickets()
+                    ->join('events', 'events.id', '=', 'tickets.event_id')
+                    ->where('events.starts_at', '>=', now())
+                    ->whereNotIn('tickets.status', [Ticket::STATUS_CANCELLED, Ticket::STATUS_REFUNDED])
+                    ->distinct('tickets.event_id')
+                    ->count('tickets.event_id');
+
+                return [
+                    'orders_count' => (int) ($orderAgg->orders_count ?? 0),
+                    'paid_orders_count' => (int) ($orderAgg->paid_orders_count ?? 0),
+                    'pending_orders_count' => (int) ($orderAgg->pending_orders_count ?? 0),
+                    'tickets_count' => (int) ($ticketAgg->tickets_count ?? 0),
+                    'active_tickets_count' => (int) ($ticketAgg->active_tickets_count ?? 0),
+                    'used_tickets_count' => (int) ($ticketAgg->used_tickets_count ?? 0),
+                    'cancelled_tickets_count' => (int) ($ticketAgg->cancelled_tickets_count ?? 0),
+                    'favorites_count' => $user->favorites()->count(),
+                    'upcoming_events_count' => (int) $upcomingEvents,
+                    'total_spent' => (string) ($orderAgg->total_spent ?? 0),
+                ];
+            },
+        );
     }
 }

@@ -6,15 +6,26 @@
   const orders = () => window.EventSphereOrders;
   const u = () => window.EventSphereUtils;
 
+  function defer(callback) {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(callback, { timeout: 800 });
+      return;
+    }
+
+    window.setTimeout(callback, 0);
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     auth().requireAuth(['user', 'organizer', 'admin']);
 
     const c = cart().getCart();
-    const summary = document.querySelector('[data-checkout-summary]');
-    const form = document.querySelector('[data-checkout-form]');
-    const payBtn = document.querySelector('[data-checkout-pay]');
-    const attendeeFields = document.querySelector('[data-attendee-fields]');
-    const backLink = document.querySelector('[data-checkout-back]');
+    const els = {
+      attendeeFields: document.querySelector('[data-attendee-fields]'),
+      backLink: document.querySelector('[data-checkout-back]'),
+      form: document.querySelector('[data-checkout-form]'),
+      payBtn: document.querySelector('[data-checkout-pay]'),
+      summary: document.querySelector('[data-checkout-summary]'),
+    };
 
     if (!c || !c.items?.length) {
       window.tkToast?.('Your cart is empty', 'info');
@@ -23,8 +34,8 @@
     }
 
     const item = c.items[0];
-    if (backLink) {
-      backLink.href = c.source_url || (c.event_slug ? `event-details.html?slug=${encodeURIComponent(c.event_slug)}` : 'events.html');
+    if (els.backLink) {
+      els.backLink.href = c.source_url || (c.event_slug ? `event-details.html?slug=${encodeURIComponent(c.event_slug)}` : 'events.html');
     }
     const feePercentage = Number(c.service_fee_percentage ?? 10);
     const subtotal = Number(item.unit_price) * Number(item.quantity);
@@ -33,6 +44,11 @@
     let checkoutReservation = null;
     let reservationExpired = false;
     let countdownInterval = null;
+    let checkoutInFlight = false;
+    let reservationCountdown = null;
+    let reservationMessage = null;
+    const quantity = Math.max(1, Number(item.quantity || 1));
+    const formattedTotal = u().formatMoney(total, c.currency);
 
     function reservationSecondsRemaining() {
       if (!checkoutReservation?.expires_at) return 0;
@@ -49,19 +65,18 @@
     function markReservationExpired() {
       reservationExpired = true;
       if (countdownInterval) clearInterval(countdownInterval);
-      document.querySelector('[data-reservation-countdown]')?.replaceChildren(document.createTextNode('00:00'));
-      document.querySelector('[data-reservation-message]')?.replaceChildren(document.createTextNode('Your reservation has expired.'));
-      if (payBtn) {
-        payBtn.disabled = true;
-        payBtn.textContent = 'Reservation expired';
+      reservationCountdown?.replaceChildren(document.createTextNode('00:00'));
+      reservationMessage?.replaceChildren(document.createTextNode('Your reservation has expired.'));
+      if (els.payBtn) {
+        els.payBtn.disabled = true;
+        els.payBtn.textContent = 'Reservation expired';
       }
     }
 
     function startCountdown() {
       const tick = () => {
         const seconds = reservationSecondsRemaining();
-        const countdown = document.querySelector('[data-reservation-countdown]');
-        if (countdown) countdown.textContent = formatCountdown(seconds);
+        if (reservationCountdown) reservationCountdown.textContent = formatCountdown(seconds);
         if (seconds <= 0) markReservationExpired();
       };
 
@@ -70,10 +85,12 @@
       countdownInterval = setInterval(tick, 1000);
     }
 
-    if (summary) {
+    function renderSummary() {
+      if (!els.summary) return;
+
       const inner = `
         <div class="d-flex gap-3 mb-3 pb-3 border-bottom" style="border-color:var(--border) !important">
-          <img src="${u().escapeHtml(c.event_image)}" style="width:70px;height:70px;object-fit:cover;border-radius:10px"/>
+          <img src="${u().escapeHtml(c.event_image)}" loading="eager" decoding="async" style="width:70px;height:70px;object-fit:cover;border-radius:10px"/>
           <div><div class="fw-semibold">${u().escapeHtml(c.event_title)}</div>
           <small class="text-muted-pro">${u().escapeHtml(c.venue_name || '')}</small><br>
           <small class="text-muted-pro">${item.quantity}× ${u().escapeHtml(item.ticket_type_name)}</small>
@@ -83,14 +100,48 @@
         <div class="d-flex justify-content-between small mb-1"><span class="text-muted-pro">Service fee (${feePercentage}%)</span><span>${u().formatMoney(serviceFee, c.currency)}</span></div>
         <hr class="divider"/>
         <div class="d-flex align-items-center justify-content-between gap-3 mb-3 rounded-3 p-3" style="background:rgba(49,130,206,.08);border:1px solid rgba(49,130,206,.18)">
-          <small class="text-muted-pro" data-reservation-message>Your tickets are reserved for 5 minutes.</small>
-          <span class="fw-bold" data-reservation-countdown>05:00</span>
+          <small class="text-muted-pro" data-reservation-message>Preparing ticket reservation...</small>
+          <span class="fw-bold" data-reservation-countdown>--:--</span>
         </div>
-        <div class="d-flex justify-content-between fw-bold fs-5"><span>Total</span><span>${u().formatMoney(total, c.currency)}</span></div>`;
-      summary.innerHTML = `<h6 class="mb-3">Order summary</h6>${inner}`;
+        <div class="d-flex justify-content-between fw-bold fs-5"><span>Total</span><span>${formattedTotal}</span></div>`;
+      els.summary.innerHTML = `<h6 class="mb-3">Order summary</h6>${inner}`;
+      reservationCountdown = els.summary.querySelector('[data-reservation-countdown]');
+      reservationMessage = els.summary.querySelector('[data-reservation-message]');
     }
 
-    if (payBtn) payBtn.textContent = `Pay ${u().formatMoney(total, c.currency)}`;
+    function setPayReady(ready) {
+      if (!els.payBtn) return;
+      els.payBtn.disabled = !ready;
+      els.payBtn.textContent = ready ? `Pay ${formattedTotal}` : 'Preparing checkout...';
+    }
+
+    function renderAttendeeFields() {
+      if (!els.attendeeFields) return Promise.resolve();
+
+      const attendeeHtml = Array.from({ length: quantity }, (_, index) => `
+        <div class="${index > 0 ? 'pt-3 mt-3 border-top' : ''}" style="${index > 0 ? 'border-color:var(--border) !important' : ''}">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="fw-semibold">Ticket ${index + 1}</div>
+            <small class="text-muted-pro">${u().escapeHtml(item.ticket_type_name || 'Ticket')}</small>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Full name</label><input class="form-control" name="attendees[${index}][name]" required placeholder="Attendee name"/></div>
+            <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="attendees[${index}][email]" required placeholder="attendee@email.com"/></div>
+            <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="attendees[${index}][phone]" placeholder="+1 (555) 000-0000"/></div>
+          </div>
+        </div>`).join('');
+
+      return new Promise((resolve) => {
+        defer(() => {
+          els.attendeeFields.innerHTML = attendeeHtml;
+          resolve();
+        });
+      });
+    }
+
+    renderSummary();
+    setPayReady(false);
+    const attendeeRenderPromise = renderAttendeeFields();
 
     try {
       checkoutReservation = await orders().createCheckoutReservation(item.ticket_type_id, item.quantity);
@@ -98,15 +149,18 @@
         checkout_reservation_id: checkoutReservation.id,
         checkout_reservation_expires_at: checkoutReservation.expires_at,
       }));
+      if (reservationMessage) reservationMessage.textContent = 'Your tickets are reserved for 5 minutes.';
+      await attendeeRenderPromise;
+      setPayReady(true);
       startCountdown();
     } catch (err) {
       window.tkToast?.(err.message || 'Unable to reserve these tickets.', 'error');
-      if (payBtn) {
-        payBtn.disabled = true;
-        payBtn.textContent = 'Tickets unavailable';
+      if (els.payBtn) {
+        els.payBtn.disabled = true;
+        els.payBtn.textContent = 'Tickets unavailable';
       }
-      document.querySelector('[data-reservation-message]')?.replaceChildren(document.createTextNode('Unable to reserve these tickets.'));
-      document.querySelector('[data-reservation-countdown]')?.replaceChildren(document.createTextNode('--:--'));
+      reservationMessage?.replaceChildren(document.createTextNode('Unable to reserve these tickets.'));
+      reservationCountdown?.replaceChildren(document.createTextNode('--:--'));
       return;
     }
 
@@ -115,48 +169,32 @@
     const nameParts = purchaserName.split(/\s+/).filter(Boolean);
     const purchaserFirstName = user?.first_name || nameParts.shift() || purchaserName || 'Guest';
     const purchaserLastName = user?.last_name || nameParts.join(' ') || 'Customer';
-    if (form && user) {
-      const email = form.querySelector('[name="billing_email"]');
+    if (els.form && user) {
+      const email = els.form.querySelector('[name="billing_email"]');
       if (email) email.value = user.email || '';
-      const fn = form.querySelector('[name="billing_first_name"]');
+      const fn = els.form.querySelector('[name="billing_first_name"]');
       if (fn) fn.value = purchaserFirstName;
-      const ln = form.querySelector('[name="billing_last_name"]');
+      const ln = els.form.querySelector('[name="billing_last_name"]');
       if (ln) ln.value = purchaserLastName;
-      const phone = form.querySelector('[name="billing_phone"]');
+      const phone = els.form.querySelector('[name="billing_phone"]');
       if (phone) phone.value = user.phone || '';
     }
 
-    if (attendeeFields) {
-      const quantity = Math.max(1, Number(item.quantity || 1));
-      attendeeFields.innerHTML = Array.from({ length: quantity }, (_, index) => {
-        return `
-          <div class="${index > 0 ? 'pt-3 mt-3 border-top' : ''}" style="${index > 0 ? 'border-color:var(--border) !important' : ''}">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div class="fw-semibold">Ticket ${index + 1}</div>
-              <small class="text-muted-pro">${u().escapeHtml(item.ticket_type_name || 'Ticket')}</small>
-            </div>
-            <div class="row g-3">
-              <div class="col-md-6"><label class="form-label">Full name</label><input class="form-control" name="attendees[${index}][name]" required placeholder="Attendee name"/></div>
-              <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="attendees[${index}][email]" required placeholder="attendee@email.com"/></div>
-              <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="attendees[${index}][phone]" placeholder="+1 (555) 000-0000"/></div>
-            </div>
-          </div>`;
-      }).join('');
-    }
-
-    payBtn?.addEventListener('click', async (e) => {
+    els.payBtn?.addEventListener('click', async (e) => {
       e.preventDefault();
-      if (!form?.reportValidity()) return;
+      if (checkoutInFlight) return;
+      if (!els.form?.reportValidity()) return;
       if (!checkoutReservation || reservationExpired || reservationSecondsRemaining() <= 0) {
         markReservationExpired();
         window.tkToast?.('Your reservation has expired.', 'error');
         return;
       }
-      payBtn.disabled = true;
-      payBtn.textContent = 'Processing…';
+      checkoutInFlight = true;
+      els.payBtn.disabled = true;
+      els.payBtn.textContent = 'Processing…';
       let createdOrder = null;
       try {
-        const fd = new FormData(form);
+        const fd = new FormData(els.form);
         const attendees = Array.from({ length: Math.max(1, Number(item.quantity || 1)) }, (_, index) => ({
           name: String(fd.get(`attendees[${index}][name]`) || '').trim(),
           email: String(fd.get(`attendees[${index}][email]`) || '').trim(),
@@ -191,10 +229,15 @@
           }
         }
         window.tkToast?.(err.message || 'Checkout failed', 'error');
-        payBtn.disabled = false;
-        payBtn.textContent = `Pay ${u().formatMoney(total, c.currency)}`;
+        checkoutInFlight = false;
+        els.payBtn.disabled = false;
+        els.payBtn.textContent = `Pay ${formattedTotal}`;
       }
     });
+
+    window.addEventListener('pagehide', () => {
+      if (countdownInterval) clearInterval(countdownInterval);
+    }, { once: true });
 
     document.querySelectorAll('[data-alt-pay]').forEach((btn) => {
       btn.addEventListener('click', () => {

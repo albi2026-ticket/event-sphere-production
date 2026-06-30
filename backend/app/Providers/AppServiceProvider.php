@@ -6,7 +6,10 @@ use App\Events\EventCancelled as EventCancelledEvent;
 use App\Listeners\LogOutgoingEmail;
 use App\Listeners\SendEventCancellationNotifications;
 use App\Models\Event;
+use App\Models\EventCategory;
 use App\Models\Ticket;
+use App\Models\Venue;
+use App\Observers\HomepageCacheObserver;
 use App\Policies\EventPolicy;
 use App\Policies\TicketPolicy;
 use App\Support\AppUrls;
@@ -39,6 +42,9 @@ class AppServiceProvider extends ServiceProvider
         EventFacade::listen(EventCancelledEvent::class, SendEventCancellationNotifications::class);
         EventFacade::listen(MessageSending::class, [LogOutgoingEmail::class, 'handleSending']);
         EventFacade::listen(MessageSent::class, [LogOutgoingEmail::class, 'handleSent']);
+        Event::observe(HomepageCacheObserver::class);
+        EventCategory::observe(HomepageCacheObserver::class);
+        Venue::observe(HomepageCacheObserver::class);
 
         URL::forceRootUrl(AppUrls::backend());
 

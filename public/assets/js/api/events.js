@@ -3,6 +3,14 @@
 
   const api = () => window.EventSphereApi;
   const u = () => window.EventSphereUtils;
+  const inFlight = new Map();
+
+  function once(key, loader) {
+    if (inFlight.has(key)) return inFlight.get(key);
+    const request = loader().finally(() => inFlight.delete(key));
+    inFlight.set(key, request);
+    return request;
+  }
 
   async function listEvents(params = {}) {
     const qs = new URLSearchParams();
@@ -15,8 +23,24 @@
   }
 
   async function getEvent(slug) {
-    const { data } = await api().fetch(`/events/${encodeURIComponent(slug)}`);
-    return data;
+    return once(`event:${slug}`, async () => {
+      const { data } = await api().fetch(`/events/${encodeURIComponent(slug)}`);
+      return data;
+    });
+  }
+
+  async function getRelatedEvents(slug) {
+    return once(`event-related:${slug}`, async () => {
+      const result = await api().fetch(`/events/${encodeURIComponent(slug)}/related`);
+      return Array.isArray(result.data) ? result.data : [];
+    });
+  }
+
+  async function getTicketTypes(slug) {
+    return once(`event-ticket-types:${slug}`, async () => {
+      const result = await api().fetch(`/events/${encodeURIComponent(slug)}/ticket-types`);
+      return Array.isArray(result.data) ? result.data : [];
+    });
   }
 
   function availableTicketTypes(event) {
@@ -154,6 +178,8 @@
   window.EventSphereEvents = {
     listEvents,
     getEvent,
+    getRelatedEvents,
+    getTicketTypes,
     availableTicketTypes,
     inventorySummary,
     salesStatus,

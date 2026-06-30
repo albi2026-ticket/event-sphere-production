@@ -15,6 +15,43 @@
     return u().formatMoney(amount, currency || 'USD');
   }
 
+  function onIdle(callback) {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(callback, { timeout: 1200 });
+      return;
+    }
+
+    window.setTimeout(callback, 0);
+  }
+
+  function setBannerImage(banner, placeholder, src, title) {
+    if (!banner) return;
+    if (!src) {
+      if (placeholder) placeholder.classList.add('event-banner-empty');
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      banner.alt = title || '';
+      banner.src = src;
+      banner.hidden = false;
+      if (placeholder) placeholder.hidden = true;
+    });
+  }
+
+  function setupCountdown(countdown, event) {
+    if (!countdown || !event.starts_at) return;
+    if (countdown.dataset.countdown === event.starts_at && countdown._countdownTimer) return;
+
+    countdown.setAttribute('data-countdown', event.starts_at);
+    if (event.ends_at) countdown.setAttribute('data-countdown-end', event.ends_at);
+    window.EventSphereStartCountdown?.(countdown);
+
+    window.addEventListener('pagehide', () => {
+      if (countdown._countdownTimer) window.clearInterval(countdown._countdownTimer);
+    }, { once: true });
+  }
+
   function eventLimit(event) {
     const limit = Number(event.max_tickets_per_user || 0);
     return Number.isInteger(limit) && limit > 0 ? limit : null;
@@ -40,6 +77,29 @@
     });
   }
 
+  function loadRelatedEventsWhenVisible(slug) {
+    const root = document.querySelector('[data-related-events]');
+    if (!root || !eventsApi().getRelatedEvents) return;
+
+    const load = () => {
+      if (root.dataset.relatedLoaded === 'true') return;
+      root.dataset.relatedLoaded = 'true';
+      eventsApi().getRelatedEvents(slug).catch(() => []);
+    };
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        load();
+      }, { rootMargin: '240px' });
+      observer.observe(root);
+      return;
+    }
+
+    onIdle(load);
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(location.search);
     const slug = params.get('slug');
@@ -49,81 +109,80 @@
     }
 
     const $ = (sel) => document.querySelector(sel);
+    const els = {
+      alert: $('[data-event-alert]'),
+      availability: $('[data-event-availability]'),
+      banner: $('[data-event-banner]'),
+      bannerPlaceholder: $('[data-event-banner-placeholder]'),
+      breadcrumb: $('[data-event-breadcrumb]'),
+      category: $('[data-event-category]'),
+      countdown: $('[data-countdown]'),
+      description: $('[data-event-description]'),
+      date: $('[data-event-meta-date]'),
+      favorite: $('[data-event-fav]'),
+      mobileSelect: $('[data-ticket-type-mobile]'),
+      mobileSelectButton: $('[data-ticket-type-mobile-button]'),
+      mobileSelectMenu: $('[data-ticket-type-mobile-menu]'),
+      organizerFollow: $('[data-organizer-follow]'),
+      organizerMeta: $('[data-event-organizer-meta]'),
+      organizerName: $('[data-event-organizer-name]'),
+      price: $('[data-event-price]'),
+      purchaseLimit: $('[data-event-purchase-limit]'),
+      qtyWrap: $('[data-qty]'),
+      select: $('[data-ticket-type-select]'),
+      title: $('[data-event-title]'),
+      venue: $('[data-event-meta-venue]'),
+    };
 
     try {
       const event = await eventsApi().getEvent(slug);
       document.title = `${event.title} · TicketHub`;
 
       const img = eventApiImage(event);
-      const banner = $('[data-event-banner]');
-      const bannerPlaceholder = $('[data-event-banner-placeholder]');
-      if (banner && img) {
-        banner.setAttribute('src', img);
-        banner.hidden = false;
-      }
-      if (bannerPlaceholder && img) bannerPlaceholder.hidden = true;
-      if (bannerPlaceholder && !img) bannerPlaceholder.classList.add('event-banner-empty');
-
-      const titleEl = $('[data-event-title]');
-      if (titleEl) titleEl.textContent = event.title;
-      const crumb = $('[data-event-breadcrumb]');
-      if (crumb) crumb.textContent = event.title;
-      const category = $('[data-event-category]');
       const salesStatus = eventsApi().salesStatus(event);
-      if (category) category.textContent = salesStatus.key === 'available' ? (event.category || 'Event').toUpperCase() : salesStatus.label.toUpperCase();
-      const dateEl = $('[data-event-meta-date]');
-      if (dateEl) dateEl.innerHTML = `<i class="bi bi-calendar3 me-1"></i> ${u().escapeHtml(u().formatEventDate(event.starts_at, event.timezone))}`;
-      const venueEl = $('[data-event-meta-venue]');
-      if (venueEl) venueEl.innerHTML = `<i class="bi bi-geo-alt me-1"></i> ${u().escapeHtml(event.venue_name || '')}${event.city ? `, ${u().escapeHtml(event.city)}` : ''}`;
-      const desc = $('[data-event-description]');
-      if (desc) {
-        renderDescription(desc, event.description);
-      }
-      const organizerName = $('[data-event-organizer-name]');
-      if (organizerName) organizerName.textContent = event.organizer?.name || 'Event organizer';
-      const organizerMeta = $('[data-event-organizer-meta]');
-      if (organizerMeta) organizerMeta.textContent = event.is_verified ? 'Verified organizer' : 'Organizer';
+      if (els.title) els.title.textContent = event.title;
+      if (els.breadcrumb) els.breadcrumb.textContent = event.title;
+      if (els.category) els.category.textContent = salesStatus.key === 'available' ? (event.category || 'Event').toUpperCase() : salesStatus.label.toUpperCase();
+      if (els.date) els.date.innerHTML = `<i class="bi bi-calendar3 me-1"></i> ${u().escapeHtml(u().formatEventDate(event.starts_at, event.timezone))}`;
+      if (els.venue) els.venue.innerHTML = `<i class="bi bi-geo-alt me-1"></i> ${u().escapeHtml(event.venue_name || '')}${event.city ? `, ${u().escapeHtml(event.city)}` : ''}`;
+      if (els.description) renderDescription(els.description, event.description);
+      if (els.organizerName) els.organizerName.textContent = event.organizer?.name || 'Event organizer';
+      if (els.organizerMeta) els.organizerMeta.textContent = event.is_verified ? 'Verified organizer' : 'Organizer';
 
-      const priceEl = $('[data-event-price]');
+      setBannerImage(els.banner, els.bannerPlaceholder, img, event.title);
+
       const lowestPrice = eventsApi().lowestAvailablePrice(event);
-      if (priceEl) {
-        priceEl.textContent = salesStatus.canBuy ? money(lowestPrice.amount, lowestPrice.currency) : salesStatus.priceLabel;
+      if (els.price) {
+        els.price.textContent = salesStatus.canBuy ? money(lowestPrice.amount, lowestPrice.currency) : salesStatus.priceLabel;
       }
       const purchaseLimit = eventLimit(event);
       const salesClosed = salesStatus.key === 'ended';
       const purchasingDisabled = !salesStatus.canBuy;
-      const purchaseLimitEl = $('[data-event-purchase-limit]');
-      if (purchaseLimitEl) {
-        purchaseLimitEl.hidden = !purchaseLimit;
-        purchaseLimitEl.textContent = purchaseLimit ? `Limit ${purchaseLimit} ticket${purchaseLimit === 1 ? '' : 's'} per user for this event.` : '';
+      if (els.purchaseLimit) {
+        els.purchaseLimit.hidden = !purchaseLimit;
+        els.purchaseLimit.textContent = purchaseLimit ? `Limit ${purchaseLimit} ticket${purchaseLimit === 1 ? '' : 's'} per user for this event.` : '';
       }
 
-      const countdown = $('[data-countdown]');
-      if (countdown && event.starts_at) {
-        countdown.setAttribute('data-countdown', event.starts_at);
-        if (event.ends_at) countdown.setAttribute('data-countdown-end', event.ends_at);
-        window.EventSphereStartCountdown?.(countdown);
-      }
+      setupCountdown(els.countdown, event);
+      loadRelatedEventsWhenVisible(slug);
 
-      const select = $('[data-ticket-type-select]');
-      const mobileSelect = $('[data-ticket-type-mobile]');
-      const mobileSelectButton = $('[data-ticket-type-mobile-button]');
-      const mobileSelectMenu = $('[data-ticket-type-mobile-menu]');
-      const types = purchasingDisabled ? [] : (event.ticket_types || []);
-      if (select) {
-        select.innerHTML = purchasingDisabled
+      let types = purchasingDisabled ? [] : (event.ticket_types || []);
+      let selectedType = null;
+      const renderTicketControls = () => {
+        if (els.select) {
+          els.select.innerHTML = purchasingDisabled
           ? `<option disabled>${salesStatus.priceLabel}</option>`
           : types.map((t) =>
             `<option value="${t.id}" data-price="${t.price}" data-currency="${t.currency || event.currency || 'USD'}" data-min="${t.min_per_order || 1}" data-available="${Number(t.quantity_available ?? t.available_quantity ?? 0)}" ${Number(t.quantity_available ?? t.available_quantity ?? 0) <= 0 || t.status === 'sold_out' || t.status === 'inactive' ? 'disabled' : ''}>${u().escapeHtml(t.name)} · ${money(t.price, t.currency || event.currency)} · ${Number(t.quantity_available ?? t.available_quantity ?? 0)} left${t.status === 'sold_out' ? ' · Sold out' : ''}</option>`,
           ).join('') || '<option disabled>No ticket tiers available</option>';
-        select.disabled = !types.length;
-      }
-      const syncMobileOptions = () => {
-        if (!mobileSelect || !mobileSelectButton || !mobileSelectMenu) return;
-        mobileSelect.hidden = false;
-        mobileSelectButton.disabled = !types.length;
-        mobileSelectButton.textContent = purchasingDisabled ? salesStatus.priceLabel : 'Select ticket type';
-        mobileSelectMenu.innerHTML = purchasingDisabled
+          els.select.disabled = !types.length;
+          if (selectedType) els.select.value = String(selectedType.id);
+        }
+        if (!els.mobileSelect || !els.mobileSelectButton || !els.mobileSelectMenu) return;
+        els.mobileSelect.hidden = false;
+        els.mobileSelectButton.disabled = !types.length;
+        els.mobileSelectButton.textContent = purchasingDisabled ? salesStatus.priceLabel : 'Select ticket type';
+        els.mobileSelectMenu.innerHTML = purchasingDisabled
           ? `<span class="dropdown-item-text text-muted-pro">${salesStatus.priceLabel}</span>`
           : types.map((t) => {
             const available = Number(t.quantity_available ?? t.available_quantity ?? 0);
@@ -134,57 +193,80 @@
             </button>`;
           }).join('') || '<span class="dropdown-item-text text-muted-pro">No ticket tiers available</span>';
       };
-      syncMobileOptions();
 
-      const qtyWrap = $('[data-qty]');
-      let selectedType = purchasingDisabled ? null : (eventsApi().availableTicketTypes(event)[0] || null);
-      if (select && selectedType) select.value = String(selectedType.id);
+      selectedType = purchasingDisabled ? null : (eventsApi().availableTicketTypes(event)[0] || null);
+      renderTicketControls();
 
       const syncSelectedType = () => {
-        if (qtyWrap && selectedType) {
-          qtyWrap.dataset.price = selectedType.price;
-          qtyWrap.dataset.currency = selectedType.currency || event.currency || 'USD';
-          const input = qtyWrap.querySelector('input');
+        if (els.qtyWrap && selectedType) {
+          els.qtyWrap.dataset.price = selectedType.price;
+          els.qtyWrap.dataset.currency = selectedType.currency || event.currency || 'USD';
+          const input = els.qtyWrap.querySelector('input');
           if (input) {
             input.min = selectedType.min_per_order || 1;
             const available = Number(selectedType.quantity_available ?? selectedType.available_quantity ?? selectedType.remaining ?? 0);
             input.max = purchaseLimit ? Math.min(available, purchaseLimit) : available;
             input.value = Math.max(Number(input.min || 1), Math.min(Number(input.value || 1), Number(input.max || available || 1)));
           }
-          const out = qtyWrap.querySelector('[data-qty-total]');
+          const out = els.qtyWrap.querySelector('[data-qty-total]');
           if (out) {
             const subtotal = Number(input?.value || 1) * Number(selectedType.price || 0);
             out.textContent = money(subtotal, selectedType.currency || event.currency);
           }
         }
-        if (mobileSelectButton && selectedType) {
+        if (els.mobileSelectButton && selectedType) {
           const available = Number(selectedType.quantity_available ?? selectedType.available_quantity ?? 0);
-          mobileSelectButton.textContent = `${selectedType.name} · ${money(selectedType.price, selectedType.currency || event.currency)} · ${available} left`;
+          els.mobileSelectButton.textContent = `${selectedType.name} · ${money(selectedType.price, selectedType.currency || event.currency)} · ${available} left`;
         }
       };
 
-      select?.addEventListener('change', () => {
-        selectedType = types.find((t) => String(t.id) === select.value);
-        const input = qtyWrap?.querySelector('input');
+      let ticketRefreshPromise = null;
+      const refreshTicketAvailability = async () => {
+        if (purchasingDisabled || !eventsApi().getTicketTypes) return;
+        if (ticketRefreshPromise) return ticketRefreshPromise;
+
+        ticketRefreshPromise = eventsApi().getTicketTypes(event.slug)
+          .then((freshTypes) => {
+            if (!Array.isArray(freshTypes) || !freshTypes.length) return;
+            const selectedId = String(selectedType?.id || els.select?.value || '');
+            event.ticket_types = freshTypes;
+            types = freshTypes;
+            selectedType = types.find((t) => String(t.id) === selectedId)
+              || eventsApi().availableTicketTypes(event)[0]
+              || null;
+            renderTicketControls();
+            syncSelectedType();
+          })
+          .catch(() => {})
+          .finally(() => {
+            ticketRefreshPromise = null;
+          });
+
+        return ticketRefreshPromise;
+      };
+
+      els.select?.addEventListener('change', () => {
+        selectedType = types.find((t) => String(t.id) === els.select.value);
+        const input = els.qtyWrap?.querySelector('input');
         if (input) input.value = selectedType?.min_per_order || 1;
         syncSelectedType();
       });
-      mobileSelectMenu?.addEventListener('click', (event) => {
+      els.mobileSelectMenu?.addEventListener('click', (event) => {
         const option = event.target.closest('[data-mobile-ticket-type]');
         if (!option || option.disabled) return;
         selectedType = types.find((t) => String(t.id) === option.dataset.mobileTicketType);
-        if (select && selectedType) select.value = String(selectedType.id);
-        const input = qtyWrap?.querySelector('input');
+        if (els.select && selectedType) els.select.value = String(selectedType.id);
+        const input = els.qtyWrap?.querySelector('input');
         if (input) input.value = selectedType?.min_per_order || 1;
         syncSelectedType();
       });
 
-      const qtyInput = qtyWrap?.querySelector('input');
+      const qtyInput = els.qtyWrap?.querySelector('input');
       if (qtyInput) qtyInput.value = selectedType?.min_per_order || 1;
       syncSelectedType();
       const qtyDisabled = purchasingDisabled || !types.length || !selectedType;
-      if (qtyWrap) {
-        qtyWrap.querySelectorAll('button, input').forEach((control) => {
+      if (els.qtyWrap) {
+        els.qtyWrap.querySelectorAll('button, input').forEach((control) => {
           control.disabled = qtyDisabled;
         });
       }
@@ -194,10 +276,9 @@
           btn.setAttribute('aria-disabled', 'true');
           btn.textContent = salesStatus.priceLabel || 'Buy tickets';
         });
-        const availability = $('[data-event-availability]');
-        if (availability) {
-          availability.textContent = salesStatus.label;
-          availability.className = `badge status-badge ${salesClosed ? 'status-cancelled' : 'status-sold_out'}`;
+        if (els.availability) {
+          els.availability.textContent = salesStatus.label;
+          els.availability.className = `badge status-badge ${salesClosed ? 'status-cancelled' : 'status-sold_out'}`;
         }
       } else {
         document.querySelectorAll('[data-event-buy]').forEach((btn) => {
@@ -205,12 +286,11 @@
           btn.removeAttribute('aria-disabled');
           btn.textContent = 'Buy tickets';
         });
-        const availability = $('[data-event-availability]');
-        if (availability) availability.textContent = 'Available';
+        if (els.availability) els.availability.textContent = 'Available';
       }
 
       document.querySelectorAll('[data-event-buy]').forEach((btn) => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
           e.preventDefault();
           if (purchasingDisabled) {
             window.tkToast?.(salesClosed ? 'Ticket sales are closed for this event.' : 'This event is sold out.', 'error');
@@ -224,8 +304,13 @@
             location.href = `login.html?next=${encodeURIComponent(location.pathname + location.search)}`;
             return;
           }
-          const qty = Number($('[data-qty] input')?.value || 1);
-          const typeId = Number(select?.value || selectedType?.id);
+          await refreshTicketAvailability();
+          if (!selectedType || Number(selectedType.quantity_available ?? selectedType.available_quantity ?? selectedType.remaining ?? 0) <= 0) {
+            window.tkToast?.('No tickets are currently available for this event.', 'error');
+            return;
+          }
+          const qty = Number(els.qtyWrap?.querySelector('input')?.value || 1);
+          const typeId = Number(els.select?.value || selectedType?.id);
           try {
             cart().setFromEvent(event, typeId, qty);
             location.href = 'checkout.html';
@@ -235,19 +320,17 @@
         });
       });
 
-      const favBtn = $('[data-event-fav]');
-      favBtn?.setAttribute('data-event-id', event.id);
-      favBtn?.setAttribute('data-fav', `event-${event.id}`);
-      if (favBtn) favBtn.disabled = false;
-      window.EventSphereFavorites?.syncFavoriteButtons();
+      els.favorite?.setAttribute('data-event-id', event.id);
+      els.favorite?.setAttribute('data-fav', `event-${event.id}`);
+      if (els.favorite) els.favorite.disabled = false;
+      onIdle(() => window.EventSphereFavorites?.syncFavoriteButtons());
 
-      $('[data-organizer-follow]')?.addEventListener('click', (e) => {
+      els.organizerFollow?.addEventListener('click', (e) => {
         e.preventDefault();
         window.tkToast?.('Organizer follow notifications will use your saved notification preferences.', 'info');
       });
     } catch (err) {
-      const alert = $('[data-event-alert]');
-      if (alert) alert.innerHTML = `<div class="alert border-pro dashboard-note text-danger"><i class="bi bi-exclamation-triangle me-2"></i>${u().escapeHtml(err.message || 'Failed to load event')}</div>`;
+      if (els.alert) els.alert.innerHTML = `<div class="alert border-pro dashboard-note text-danger"><i class="bi bi-exclamation-triangle me-2"></i>${u().escapeHtml(err.message || 'Failed to load event')}</div>`;
       window.tkToast?.(err.message || 'Failed to load event', 'error');
     }
   });

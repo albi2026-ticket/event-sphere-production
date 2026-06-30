@@ -9,21 +9,19 @@ use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
 
 class OrganizerDashboardService
 {
+    private const SUMMARY_TTL_SECONDS = 45;
+
     /**
      * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
      */
     public function summary(User $organizer, array $filters = []): array
     {
-        $events = $this->eventsQuery($organizer, $filters);
-        $tickets = $this->ticketsQuery($organizer, $filters);
-        $orderItems = $this->paidOrderItemsQuery($organizer, $filters);
-        $orders = $this->ordersQuery($organizer, $filters);
-
         return [
             'organizer' => [
                 'id' => $organizer->id,
@@ -32,22 +30,7 @@ class OrganizerDashboardService
                 'role' => $organizer->role,
                 'organizer_status' => $organizer->organizer_status,
             ],
-            'cards' => [
-                'events_count' => (clone $events)->count(),
-                'published_events_count' => (clone $events)->where('status', 'published')->count(),
-                'upcoming_events_count' => (clone $events)->where('starts_at', '>=', now())->count(),
-                'past_events_count' => (clone $events)->where('starts_at', '<', now())->count(),
-                'orders_count' => (clone $orders)->distinct('orders.id')->count('orders.id'),
-                'paid_orders_count' => (clone $orders)->where('orders.payment_status', Order::PAYMENT_STATUS_PAID)->distinct('orders.id')->count('orders.id'),
-                'tickets_sold' => (int) (clone $orderItems)->sum('order_items.quantity'),
-                'attendees_count' => (clone $tickets)->count(),
-                'checked_in_count' => (clone $tickets)->where('tickets.status', Ticket::STATUS_USED)->count(),
-                'active_tickets_count' => (clone $tickets)->where('tickets.status', Ticket::STATUS_ACTIVE)->count(),
-                'total_revenue' => (string) (clone $orderItems)->sum('order_items.total'),
-                'sold_out_ticket_types_count' => $this->ticketTypesQuery($organizer, $filters)
-                    ->where('ticket_types.status', TicketType::STATUS_SOLD_OUT)
-                    ->count(),
-            ],
+            'cards' => $this->summaryCards($organizer, $filters),
             'recent_orders' => $this->recentOrders($organizer, $filters, 5),
             'recent_attendees' => $this->recentAttendees($organizer, $filters, 5),
             'top_selling_events' => $this->topSellingEvents($organizer, $filters, 5),
@@ -255,6 +238,15 @@ class OrganizerDashboardService
      */
     protected function ticketsQuery(User $organizer, array $filters = []): Builder
     {
+        return $this->ticketsBaseQuery($organizer, $filters)
+            ->select('tickets.*');
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    protected function ticketsBaseQuery(User $organizer, array $filters = []): Builder
+    {
         return Ticket::query()
             ->join('events', 'events.id', '=', 'tickets.event_id')
             ->where('events.organizer_id', $organizer->id)
@@ -270,11 +262,10 @@ class OrganizerDashboardService
                         ->orWhere('tickets.attendee_email', 'like', $needle)
                         ->orWhere('events.title', 'like', $needle)
                         ->orWhereHas('user', fn ($userQuery) => $userQuery
-                            ->where('name', 'like', $needle)
-                            ->orWhere('email', 'like', $needle));
+                        ->where('name', 'like', $needle)
+                        ->orWhere('email', 'like', $needle));
                 });
-            })
-            ->select('tickets.*');
+            });
     }
 
     /**
@@ -286,5 +277,84 @@ class OrganizerDashboardService
             ->join('events as filtered_events', 'filtered_events.id', '=', 'ticket_types.event_id')
             ->where('filtered_events.organizer_id', $organizer->id)
             ->when($filters['event_id'] ?? null, fn ($query, $eventId) => $query->where('ticket_types.event_id', $eventId));
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    protected function summaryCards(User $organizer, array $filters = []): array
+    {
+        return Cache::remember(
+            $this->cacheKey('summary-cards', $organizer, $filters),
+            now()->addSeconds(self::SUMMARY_TTL_SECONDS),
+            function () use ($organizer, $filters): array {
+                $now = now();
+                $eventAgg = $this->eventsQuery($organizer, $filters)
+                    ->selectRaw(
+                        'COUNT(*) as events_count,
+                        SUM(CASE WHEN events.status = ? THEN 1 ELSE 0 END) as published_events_count,
+                        SUM(CASE WHEN events.starts_at >= ? THEN 1 ELSE 0 END) as upcoming_events_count,
+                        SUM(CASE WHEN events.starts_at < ? THEN 1 ELSE 0 END) as past_events_count',
+                        ['published', $now, $now],
+                    )
+                    ->first();
+
+                $orderAgg = $this->ordersQuery($organizer, $filters)
+                    ->selectRaw(
+                        'COUNT(DISTINCT orders.id) as orders_count,
+                        COUNT(DISTINCT CASE WHEN orders.payment_status = ? THEN orders.id END) as paid_orders_count',
+                        [Order::PAYMENT_STATUS_PAID],
+                    )
+                    ->first();
+
+                $orderItemAgg = $this->paidOrderItemsQuery($organizer, $filters)
+                    ->selectRaw('COALESCE(SUM(order_items.quantity), 0) as tickets_sold, COALESCE(SUM(order_items.total), 0) as total_revenue')
+                    ->first();
+
+                $ticketAgg = $this->ticketsBaseQuery($organizer, $filters)
+                    ->selectRaw(
+                        'COUNT(*) as attendees_count,
+                        SUM(CASE WHEN tickets.status = ? THEN 1 ELSE 0 END) as checked_in_count,
+                        SUM(CASE WHEN tickets.status = ? THEN 1 ELSE 0 END) as active_tickets_count',
+                        [Ticket::STATUS_USED, Ticket::STATUS_ACTIVE],
+                    )
+                    ->first();
+
+                $soldOutTicketTypes = $this->ticketTypesQuery($organizer, $filters)
+                    ->where('ticket_types.status', TicketType::STATUS_SOLD_OUT)
+                    ->count();
+
+                return [
+                    'events_count' => (int) ($eventAgg->events_count ?? 0),
+                    'published_events_count' => (int) ($eventAgg->published_events_count ?? 0),
+                    'upcoming_events_count' => (int) ($eventAgg->upcoming_events_count ?? 0),
+                    'past_events_count' => (int) ($eventAgg->past_events_count ?? 0),
+                    'orders_count' => (int) ($orderAgg->orders_count ?? 0),
+                    'paid_orders_count' => (int) ($orderAgg->paid_orders_count ?? 0),
+                    'tickets_sold' => (int) ($orderItemAgg->tickets_sold ?? 0),
+                    'attendees_count' => (int) ($ticketAgg->attendees_count ?? 0),
+                    'checked_in_count' => (int) ($ticketAgg->checked_in_count ?? 0),
+                    'active_tickets_count' => (int) ($ticketAgg->active_tickets_count ?? 0),
+                    'total_revenue' => (string) ($orderItemAgg->total_revenue ?? 0),
+                    'sold_out_ticket_types_count' => (int) $soldOutTicketTypes,
+                ];
+            },
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    protected function cacheKey(string $scope, User $organizer, array $filters = []): string
+    {
+        ksort($filters);
+
+        return sprintf(
+            'dashboard:organizer:%s:%d:%s',
+            $scope,
+            $organizer->id,
+            md5(json_encode($filters) ?: ''),
+        );
     }
 }

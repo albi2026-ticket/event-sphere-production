@@ -140,12 +140,6 @@
       .sort(categorySort);
   }
 
-  async function fetchHomepageSection(path, params = {}) {
-    const qs = new URLSearchParams({ limit: 8, ...params });
-    const result = await window.EventSphereApi.fetch(`${path}?${qs.toString()}`);
-    return result.data;
-  }
-
   function uniqueEvents(...groups) {
     const seen = new Set();
     return groups.flat().filter((event) => {
@@ -157,12 +151,18 @@
   }
 
   async function fetchHomepageData() {
-    const [featured, trending, upcoming, categories] = await Promise.all([
-      fetchHomepageSection('/homepage/featured-events', { limit: 8 }),
-      fetchHomepageSection('/homepage/trending-events', { limit: 8 }),
-      fetchHomepageSection('/homepage/upcoming-events', { limit: 8 }),
-      fetchHomepageSection('/homepage/categories', { limit: 3 }),
-    ]);
+    const qs = new URLSearchParams({
+      featured_limit: 8,
+      trending_limit: 8,
+      upcoming_limit: 8,
+      category_limit: 3,
+    });
+    const result = await window.EventSphereApi.fetch(`/homepage?${qs.toString()}`);
+    const payload = result.data || {};
+    const featured = payload.featured_events;
+    const trending = payload.trending_events;
+    const upcoming = payload.upcoming_events;
+    const categories = payload.categories;
 
     return {
       featured: Array.isArray(featured) ? featured.filter(isPublicActiveEvent) : [],

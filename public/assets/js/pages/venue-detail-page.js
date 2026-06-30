@@ -16,6 +16,11 @@
   let activeGalleryIndex = 0;
   let galleryTouchStartX = null;
   let liveStatusTimer = null;
+  let renderedVenueKey = '';
+  const availabilityCache = new Map();
+  const availabilityRequests = new Map();
+  const renderSignatures = new Map();
+  const availabilityCacheTtlMs = 30000;
 
   function slugFromLocation() {
     const params = new URLSearchParams(location.search);
@@ -28,6 +33,29 @@
 
   function imageUrl(image) {
     return image?.url || image?.image_path || fallbackImage;
+  }
+
+  function stableSignature(value) {
+    try {
+      return JSON.stringify(value);
+    } catch (err) {
+      return String(value ?? '');
+    }
+  }
+
+  function skipIdenticalRender(key, signature) {
+    if (renderSignatures.get(key) === signature) return true;
+    renderSignatures.set(key, signature);
+    return false;
+  }
+
+  function resetRenderStateForVenue(venue) {
+    const key = String(venue?.id || venue?.slug || '');
+    if (renderedVenueKey === key) return;
+    renderedVenueKey = key;
+    availabilityCache.clear();
+    availabilityRequests.clear();
+    renderSignatures.clear();
   }
 
   function setText(selector, value) {
@@ -333,9 +361,12 @@
         src: imageUrl(image),
         alt: `${venue.name || 'Restaurant or bar'} photo ${index + 1}`,
       }));
+    const signature = stableSignature(galleryImages);
+    if (skipIdenticalRender('gallery', signature)) return;
+
     root.innerHTML = galleryImages.map((image, index) => `
       <button class="gallery-photo ${index === 0 ? 'g-main' : ''}" type="button" data-gallery-open="${index}" aria-label="Open photo ${index + 1}">
-        <img src="${esc(image.src)}" alt="${esc(image.alt)}" />
+        <img src="${esc(image.src)}" alt="${esc(image.alt)}" loading="${index === 0 ? 'eager' : 'lazy'}" decoding="async" ${index === 0 ? 'fetchpriority="high"' : ''} />
         ${index === 0 ? '<span class="gallery-cover-label"><i class="bi bi-star-fill"></i> Cover Photo</span>' : ''}
       </button>
     `).join('');
@@ -392,6 +423,9 @@
     if (!root) return;
     const visible = Boolean(items?.length);
     if (sectionKey) setOptionalSection(sectionKey, visible);
+    const signature = stableSignature((items || []).map((item) => [item.id, item.name, icon(item)]));
+    if (skipIdenticalRender(`pills:${selector}`, signature)) return;
+
     root.innerHTML = visible ? items.map((item) => `
       <div class="col-md-4 col-6"><div class="facility"><i class="bi ${esc(icon(item))}"></i> ${esc(item.name)}</div></div>
     `).join('') : '';
@@ -400,6 +434,9 @@
   function renderHours(hours = []) {
     const root = $('[data-detail-hours]');
     if (!root) return;
+    const signature = stableSignature(hours.map((item) => [item.day_of_week, item.is_closed, item.opens_at, item.closes_at]));
+    if (skipIdenticalRender('hours', signature)) return;
+
     const byDay = new Map(hours.map((item) => [Number(item.day_of_week), item]));
     root.innerHTML = days.map((day, index) => {
       const item = byDay.get(index);
@@ -425,6 +462,17 @@
     const root = $('[data-detail-contact]');
     if (!root) return;
     const address = [venue.address, venue.city, venue.country].filter(Boolean).join(', ');
+    const coordinates = venueCoordinates(venue);
+    const signature = stableSignature({
+      address,
+      phone: venue.phone,
+      email: venue.email,
+      website: venue.website,
+      social_links: venue.social_links,
+      coordinates,
+    });
+    if (skipIdenticalRender('contact', signature)) return;
+
     const rows = [
       contactItem('bi-geo-alt-fill', 'Address', address),
       contactItem('bi-telephone-fill', 'Phone', venue.phone, venue.phone ? `tel:${venue.phone}` : null),
@@ -474,6 +522,7 @@
   }
 
   function renderVenue(venue) {
+    resetRenderStateForVenue(venue);
     currentVenue = venue;
     document.title = `${venue.name} - Event Sphere Reservations`;
     setText('[data-detail-city]', venue.city || 'City');
@@ -497,6 +546,8 @@
     const logo = $('[data-detail-logo]');
     if (logo && venue.logo_image) {
       logo.src = venue.logo_image;
+      logo.loading = 'lazy';
+      logo.decoding = 'async';
       logo.hidden = false;
     }
 
@@ -520,11 +571,14 @@
     for (let value = min; value <= Math.min(max, 8); value += 1) values.push(value);
     if (max > 8) values.push(Math.min(max, Math.max(9, defaultValue)));
 
-    panel.innerHTML = `<div class="reservation-guest-grid">${values.map((value) => `
-      <button class="reservation-choice reservation-choice-guest" type="button" data-picker-option="guests" data-value="${value}">
-        ${value > 8 ? `${value}+` : value}
-      </button>
-    `).join('')}</div>`;
+    const signature = stableSignature(values);
+    if (!skipIdenticalRender('reservation:guests', signature)) {
+      panel.innerHTML = `<div class="reservation-guest-grid">${values.map((value) => `
+        <button class="reservation-choice reservation-choice-guest" type="button" data-picker-option="guests" data-value="${value}">
+          ${value > 8 ? `${value}+` : value}
+        </button>
+      `).join('')}</div>`;
+    }
     selectPickerValue('guests', defaultValue, `Guests: ${defaultValue > 8 ? `${defaultValue}+` : defaultValue}`);
   }
 
@@ -544,13 +598,16 @@
       };
     });
 
-    panel.innerHTML = `<div class="reservation-date-grid">${dates.map((item) => `
-      <button class="reservation-choice reservation-choice-date" type="button" data-picker-option="date" data-value="${esc(item.value)}" data-label="${esc(`${item.day} — ${item.date}`)}">
-        <span>${esc(item.day)}</span>
-        <strong>${esc(item.date)}</strong>
-      </button>
-    `).join('')}</div>`;
     const selectedItem = dates.find((item) => item.value === selected) || dates[0];
+    const signature = stableSignature(dates);
+    if (!skipIdenticalRender('reservation:dates', signature)) {
+      panel.innerHTML = `<div class="reservation-date-grid">${dates.map((item) => `
+        <button class="reservation-choice reservation-choice-date" type="button" data-picker-option="date" data-value="${esc(item.value)}" data-label="${esc(`${item.day} — ${item.date}`)}">
+          <span>${esc(item.day)}</span>
+          <strong>${esc(item.date)}</strong>
+        </button>
+      `).join('')}</div>`;
+    }
     selectPickerValue('date', selectedItem.value, `Date: ${selectedItem.day} — ${selectedItem.date}`);
   }
 
@@ -558,12 +615,15 @@
     const panel = $('[data-picker-panel="time"]');
     if (!panel) return;
     const selected = times.includes('19:00') ? '19:00' : times[0];
+    const signature = stableSignature(times);
 
-    panel.innerHTML = times.length ? `<div class="reservation-time-grid">${times.map((time) => `
-      <button class="reservation-choice reservation-choice-time" type="button" data-picker-option="time" data-value="${time}" data-label="${esc(timeLabel(time))}">
-        ${esc(timeLabel(time))}
-      </button>
-    `).join('')}</div>` : '<div class="reservation-picker-empty">No reservation times are available for this date.</div>';
+    if (!skipIdenticalRender('reservation:times', signature)) {
+      panel.innerHTML = times.length ? `<div class="reservation-time-grid">${times.map((time) => `
+        <button class="reservation-choice reservation-choice-time" type="button" data-picker-option="time" data-value="${time}" data-label="${esc(timeLabel(time))}">
+          ${esc(timeLabel(time))}
+        </button>
+      `).join('')}</div>` : '<div class="reservation-picker-empty">No reservation times are available for this date.</div>';
+    }
     selectPickerValue('time', selected || '', selected ? `Time: ${timeLabel(selected)}` : 'Time');
   }
 
@@ -571,19 +631,60 @@
     const panel = $('[data-picker-panel="occasion"]');
     if (!panel) return;
 
-    panel.innerHTML = `
-      <div class="reservation-time-grid reservation-occasion-grid">
-        <button class="reservation-choice reservation-choice-time" type="button" data-picker-option="occasion" data-value="" data-label="Occasion">
-          No occasion
-        </button>
-        ${occasionOptions.map((occasion) => `
-          <button class="reservation-choice reservation-choice-time" type="button" data-picker-option="occasion" data-value="${esc(occasion)}" data-label="${esc(occasion)}">
-            ${esc(occasion)}
+    if (!skipIdenticalRender('reservation:occasion', stableSignature(occasionOptions))) {
+      panel.innerHTML = `
+        <div class="reservation-time-grid reservation-occasion-grid">
+          <button class="reservation-choice reservation-choice-time" type="button" data-picker-option="occasion" data-value="" data-label="Occasion">
+            No occasion
           </button>
-        `).join('')}
-      </div>
-    `;
+          ${occasionOptions.map((occasion) => `
+            <button class="reservation-choice reservation-choice-time" type="button" data-picker-option="occasion" data-value="${esc(occasion)}" data-label="${esc(occasion)}">
+              ${esc(occasion)}
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
     selectPickerValue('occasion', '', 'Occasion');
+  }
+
+  function availabilityCacheKey(venue, date) {
+    return `${venue.slug}:${date}`;
+  }
+
+  function cachedAvailability(cacheKey) {
+    const cached = availabilityCache.get(cacheKey);
+    if (!cached) return null;
+    if (cached.expiresAt <= Date.now()) {
+      availabilityCache.delete(cacheKey);
+      return null;
+    }
+    return cached.times;
+  }
+
+  async function loadAvailabilitySlots(venue, date) {
+    const cacheKey = availabilityCacheKey(venue, date);
+    const cached = cachedAvailability(cacheKey);
+    if (cached) return cached;
+    if (availabilityRequests.has(cacheKey)) return availabilityRequests.get(cacheKey);
+
+    const request = api().fetch(`/venues/${encodeURIComponent(venue.slug)}/availability?date=${encodeURIComponent(date)}`, {
+      skipAuthRedirect: true,
+    }).then(({ data }) => {
+      const times = Array.isArray(data?.slots)
+        ? data.slots.map((slot) => normalizeTime(slot?.time)).filter(Boolean)
+        : [];
+      availabilityCache.set(cacheKey, {
+        times,
+        expiresAt: Date.now() + availabilityCacheTtlMs,
+      });
+      return times;
+    }).finally(() => {
+      availabilityRequests.delete(cacheKey);
+    });
+
+    availabilityRequests.set(cacheKey, request);
+    return request;
   }
 
   async function renderTimeSelector(form, venue) {
@@ -592,23 +693,22 @@
     if (!panel || !venue?.slug || !date) return;
 
     const requestId = ++availabilityRequestId;
-    panel.innerHTML = `
-      <div class="reservation-time-grid" aria-hidden="true">
-        ${Array.from({ length: 6 }, () => '<div class="reservation-time-skeleton"></div>').join('')}
-      </div>
-      <div class="reservation-picker-loading"><span class="spinner-border spinner-border-sm"></span>Loading available times...</div>
-    `;
-    selectPickerValue('time', '', 'Time');
+    const cacheKey = availabilityCacheKey(venue, date);
+    if (!cachedAvailability(cacheKey)) {
+      renderSignatures.delete('reservation:times');
+      panel.innerHTML = `
+        <div class="reservation-time-grid" aria-hidden="true">
+          ${Array.from({ length: 6 }, () => '<div class="reservation-time-skeleton"></div>').join('')}
+        </div>
+        <div class="reservation-picker-loading"><span class="spinner-border spinner-border-sm"></span>Loading available times...</div>
+      `;
+      selectPickerValue('time', '', 'Time');
+    }
 
     try {
-      const { data } = await api().fetch(`/venues/${encodeURIComponent(venue.slug)}/availability?date=${encodeURIComponent(date)}`, {
-        skipAuthRedirect: true,
-      });
+      const times = await loadAvailabilitySlots(venue, date);
       if (requestId !== availabilityRequestId) return;
 
-      const times = Array.isArray(data?.slots)
-        ? data.slots.map((slot) => normalizeTime(slot?.time)).filter(Boolean)
-        : [];
       renderTimeOptions(times);
     } catch (err) {
       if (requestId !== availabilityRequestId) return;
@@ -724,6 +824,9 @@
       await api().fetch('/reservations', { method: 'POST', body: payload });
       bootstrap.Modal.getOrCreateInstance($('#reservationModal')).hide();
       form.reset();
+      availabilityCache.clear();
+      availabilityRequests.clear();
+      renderSignatures.delete('reservation:times');
       hydrateReservationForm(currentVenue);
       document.body.classList.add('reservation-success-burst');
       window.setTimeout(() => document.body.classList.remove('reservation-success-burst'), 900);

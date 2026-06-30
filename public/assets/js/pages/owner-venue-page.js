@@ -19,6 +19,13 @@
   let ownerMapsLoading = null;
   let syncingOwnerMap = false;
   let draggedOwnerImageId = null;
+  let reservationLoadId = 0;
+  let lastReservationRenderSignature = '';
+  let reservationFilterTimer = null;
+  const reservationRequests = new Map();
+  const calendarRequests = new Map();
+  const analyticsRequests = new Map();
+  const renderSignatures = new Map();
 
   const state = {
     venue: null,
@@ -64,6 +71,32 @@
     if (err?.status === 422) return validationMessages(err).join(' ');
     if (err?.status === 403) return 'Your organizer account cannot manage this restaurant or bar.';
     return err?.message || 'Something went wrong. Please try again.';
+  }
+
+  function debounceReservationLoad(delay = 250) {
+    if (reservationFilterTimer) window.clearTimeout(reservationFilterTimer);
+    reservationFilterTimer = window.setTimeout(() => {
+      reservationFilterTimer = null;
+      loadReservations();
+    }, delay);
+  }
+
+  function stableSignature(value) {
+    try {
+      return JSON.stringify(value);
+    } catch (err) {
+      return String(value ?? '');
+    }
+  }
+
+  function skipRender(key, signature) {
+    if (renderSignatures.get(key) === signature) return true;
+    renderSignatures.set(key, signature);
+    return false;
+  }
+
+  function clearOwnerRenderSignatures(...keys) {
+    keys.forEach((key) => renderSignatures.delete(key));
   }
 
   function validationMessages(err) {
@@ -724,11 +757,14 @@
     const root = $('[data-owner-gallery]');
     if (!root) return;
     const images = [...(state.venue?.images || [])].sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
+    const signature = stableSignature(images.map((image) => [image.id, imageUrl(image), image.sort_order]));
+    if (skipRender('gallery', signature)) return;
+
     root.innerHTML = images.length ? images.map((image, index) => `
       <div class="col-md-6 col-xl-4">
         <div class="owner-gallery-card ${index === 0 ? 'is-cover' : ''}" draggable="true" data-owner-gallery-card="${image.id}">
           <div class="owner-gallery-image">
-            <img src="${esc(imageUrl(image))}" alt="${esc(state.venue?.name || 'Restaurant or bar')} gallery photo ${index + 1}" />
+            <img loading="lazy" decoding="async" src="${esc(imageUrl(image))}" alt="${esc(state.venue?.name || 'Restaurant or bar')} gallery photo ${index + 1}" />
             <span class="owner-gallery-cover-badge"><i class="bi bi-star-fill"></i> Cover</span>
             <span class="owner-gallery-drag-hint"><i class="bi bi-grip-vertical"></i> Drag</span>
           </div>
@@ -851,7 +887,12 @@
     const venue = state.venue;
     const cover = venue.images?.[0];
     const status = venue.status || 'draft';
-    $('[data-owner-cover]').src = imageUrl(cover);
+    const coverEl = $('[data-owner-cover]');
+    if (coverEl) {
+      coverEl.loading = 'lazy';
+      coverEl.decoding = 'async';
+      coverEl.src = imageUrl(cover);
+    }
     $('[data-owner-title]').textContent = venue.name || 'Restaurant / Bar profile';
     $('[data-owner-type]').textContent = (venue.venue_type || 'restaurant / bar').replace(/^\w/, (letter) => letter.toUpperCase());
     const statusBadge = $('[data-owner-status]');
@@ -876,6 +917,9 @@
   }
 
   function renderVenueFilter() {
+    const signature = stableSignature(state.venues.map((venue) => [venue.id, venue.name]));
+    if (skipRender('venue-filters', signature)) return;
+
     const select = $('[data-owner-reservation-filter="venue_id"]');
     if (select) {
       const current = select.value;
@@ -900,6 +944,9 @@
     const root = $('[data-owner-reservation-stats]');
     if (!root) return;
     const stats = state.reservationStats || {};
+    const signature = stableSignature(stats);
+    if (skipRender('reservation-stats', signature)) return;
+
     root.innerHTML = [
       {
         label: 'Pending Reservations',
@@ -969,6 +1016,12 @@
   function renderReservations(loading = false) {
     const body = $('[data-owner-reservations-table]');
     if (!body) return;
+    const signature = loading
+      ? `loading:${reservationQuery()}`
+      : state.reservations.map((reservation) => `${reservation.id}:${reservation.status}:${reservation.updated_at || reservation.cancelled_at || ''}`).join('|');
+    if (signature === lastReservationRenderSignature) return;
+    lastReservationRenderSignature = signature;
+
     if (loading) {
       body.innerHTML = `
         <tr>
@@ -1061,6 +1114,9 @@
     });
 
     if (loading) {
+      const signature = `calendar-loading:${calendarQuery()}`;
+      if (skipRender('calendar', signature)) return;
+
       root.innerHTML = `
         <div class="owner-calendar-grid owner-calendar-grid-week" aria-label="Loading calendar">
           ${Array.from({ length: 7 }, () => `
@@ -1078,6 +1134,20 @@
     }
 
     const { start, end } = calendarPeriod();
+    const signature = stableSignature({
+      view: state.calendar.view,
+      start: toDateInputValue(start),
+      end: toDateInputValue(end),
+      reservations: state.calendar.reservations.map((reservation) => [
+        reservation.id,
+        reservation.status,
+        reservation.reservation_date,
+        reservation.reservation_time,
+        reservation.updated_at || reservation.cancelled_at || '',
+      ]),
+    });
+    if (skipRender('calendar', signature)) return;
+
     if (state.calendar.view === 'day') {
       root.innerHTML = `<div class="owner-calendar-grid owner-calendar-grid-day">${renderCalendarDay(start)}</div>`;
       return;
@@ -1119,6 +1189,9 @@
     $('[data-owner-analytics-apply]')?.toggleAttribute('hidden', !isCustom);
 
     if (loading) {
+      const signature = `analytics-loading:${analyticsQuery()}`;
+      if (skipRender('analytics-overview', signature)) return;
+
       overviewRoot.innerHTML = Array.from({ length: 6 }, () => `
         <div class="col-md-6 col-xl-2">
           <div class="reservation-stat reservation-stat-loading">
@@ -1132,11 +1205,18 @@
 
     const data = state.analytics.data;
     if (!data) {
+      if (skipRender('analytics-overview', 'empty')) {
+        renderAnalyticsCharts();
+        return;
+      }
       overviewRoot.innerHTML = '<div class="col-12"><div class="dashboard-empty"><i class="bi bi-graph-up"></i><span>No analytics loaded yet.</span></div></div>';
       renderAnalyticsCharts();
       return;
     }
 
+    const analyticsSignature = stableSignature(data);
+    const overviewSignature = stableSignature(data.overview || {});
+    if (!skipRender('analytics-overview', overviewSignature)) {
     const overview = data.overview || {};
     overviewRoot.innerHTML = [
       metricCard('Total Reservations', overview.total, 'today'),
@@ -1146,6 +1226,7 @@
       metricCard('Cancelled Reservations', overview.cancelled, 'cancelled'),
       metricCard('No Show Reservations', overview.no_show, 'no-show'),
     ].join('');
+    }
 
     renderMiniMetrics('[data-owner-analytics-today]', data.today || {}, [
       ['Reservations Today', 'reservations'],
@@ -1162,7 +1243,7 @@
 
     const rates = data.rates || {};
     const ratesRoot = $('[data-owner-analytics-rates]');
-    if (ratesRoot) {
+    if (ratesRoot && !skipRender('analytics-rates', stableSignature(rates))) {
       ratesRoot.innerHTML = [
         ['Completion Rate', rates.completion_rate],
         ['Cancellation Rate', rates.cancellation_rate],
@@ -1179,12 +1260,15 @@
 
     renderRankList('[data-owner-analytics-top-days]', data.top_days || [], 'day');
     renderRankList('[data-owner-analytics-top-times]', data.top_time_slots || [], 'time');
+    renderSignatures.set('analytics-data', analyticsSignature);
     renderAnalyticsCharts();
   }
 
   function renderMiniMetrics(selector, values, items) {
     const root = $(selector);
     if (!root) return;
+    if (skipRender(`mini:${selector}`, stableSignature(values))) return;
+
     root.innerHTML = items.map(([label, key]) => `
       <div>
         <span>${esc(label)}</span>
@@ -1196,6 +1280,8 @@
   function renderRankList(selector, items, key) {
     const root = $(selector);
     if (!root) return;
+    if (skipRender(`rank:${selector}`, stableSignature(items))) return;
+
     root.innerHTML = items.length ? items.map((item, index) => `
       <div class="owner-analytics-rank">
         <span>${index + 1}</span>
@@ -1210,8 +1296,20 @@
     const trendCanvas = document.getElementById('ownerReservationTrendChart');
     const statusCanvas = document.getElementById('ownerReservationStatusChart');
 
-    if (window._ownerReservationTrendChart) window._ownerReservationTrendChart.destroy();
-    if (window._ownerReservationStatusChart) window._ownerReservationStatusChart.destroy();
+    const chartSignature = data ? stableSignature({
+      trend: data.trend || [],
+      status_breakdown: data.status_breakdown || [],
+    }) : 'empty';
+    if (skipRender('analytics-charts', chartSignature)) return;
+
+    if (window._ownerReservationTrendChart) {
+      window._ownerReservationTrendChart.destroy();
+      window._ownerReservationTrendChart = null;
+    }
+    if (window._ownerReservationStatusChart) {
+      window._ownerReservationStatusChart.destroy();
+      window._ownerReservationStatusChart = null;
+    }
 
     if (!data || typeof Chart === 'undefined') return;
 
@@ -1362,6 +1460,7 @@
       state.venues = state.venues.some((venue) => String(venue.id) === String(data.id))
         ? state.venues.map((venue) => String(venue.id) === String(data.id) ? data : venue)
         : [data, ...state.venues];
+      clearOwnerRenderSignatures('gallery', 'venue-filters');
       renderSummary();
       fillForm();
       renderVenueFilter();
@@ -1393,6 +1492,7 @@
         });
         state.venue = data;
         state.venues = state.venues.map((venue) => String(venue.id) === String(data.id) ? data : venue);
+        clearOwnerRenderSignatures('gallery', 'venue-filters');
       }
       renderSummary();
       fillForm();
@@ -1475,6 +1575,7 @@
       await api().fetch(`/owner/venue-images/${imageId}`, { method: 'DELETE' });
       state.venue.images = (state.venue.images || []).filter((image) => String(image.id) !== String(imageId));
       state.venue.images = state.venue.images.map((image, index) => ({ ...image, sort_order: index }));
+      clearOwnerRenderSignatures('gallery');
       renderSummary();
       fillForm();
       window.tkToast?.('Image deleted successfully.', 'success');
@@ -1494,6 +1595,7 @@
       const { data } = await api().fetch(`/owner/venues/${state.venue.slug}/images/reorder`, { method: 'PUT', body: { images: payload } });
       state.venue = data;
       state.venues = state.venues.map((venue) => String(venue.id) === String(data.id) ? data : venue);
+      clearOwnerRenderSignatures('gallery', 'venue-filters');
       renderSummary();
       fillForm();
       window.tkToast?.(message, 'success');
@@ -1540,6 +1642,7 @@
       state.venues = [];
       state.blackoutDates = [];
       state.specialHours = [];
+      clearOwnerRenderSignatures('gallery', 'venue-filters', 'reservation-stats', 'calendar', 'analytics-overview', 'analytics-charts');
       renderSummary();
       fillForm();
       renderAvailabilityExceptions();
@@ -1586,15 +1689,43 @@
     return params.toString();
   }
 
-  async function loadReservations() {
+  async function loadReservations(options = {}) {
+    const query = reservationQuery();
+    const requestId = ++reservationLoadId;
+    if (options.force) reservationRequests.delete(query);
+    if (!options.force && reservationRequests.has(query)) {
+      try {
+        const { data, meta } = await reservationRequests.get(query);
+        if (requestId !== reservationLoadId) return;
+        state.reservations = Array.isArray(data) ? data : [];
+        state.reservationStats = meta?.stats || state.reservationStats;
+        renderReservations();
+      } catch (err) {
+        if (requestId !== reservationLoadId) return;
+        state.reservations = [];
+        lastReservationRenderSignature = '';
+        renderReservations();
+        window.tkToast?.(friendlyError(err), 'error');
+      }
+      return;
+    }
+
     renderReservations(true);
+    const request = api().fetch(`/owner/reservations?${query}`).finally(() => {
+      reservationRequests.delete(query);
+    });
+    reservationRequests.set(query, request);
+
     try {
-      const { data, meta } = await api().fetch(`/owner/reservations?${reservationQuery()}`);
+      const { data, meta } = await request;
+      if (requestId !== reservationLoadId) return;
       state.reservations = Array.isArray(data) ? data : [];
       state.reservationStats = meta?.stats || state.reservationStats;
       renderReservations();
     } catch (err) {
+      if (requestId !== reservationLoadId) return;
       state.reservations = [];
+      lastReservationRenderSignature = '';
       renderReservations();
       window.tkToast?.(friendlyError(err), 'error');
     }
@@ -1612,16 +1743,39 @@
     return params.toString();
   }
 
-  async function loadCalendarReservations() {
+  async function loadCalendarReservations(options = {}) {
+    const query = calendarQuery();
+    if (options.force) calendarRequests.delete(query);
+    if (!options.force && calendarRequests.has(query)) {
+      try {
+        const { data, meta } = await calendarRequests.get(query);
+        state.calendar.reservations = Array.isArray(data) ? data : [];
+        state.calendar.todaySummary = meta?.today_summary || state.calendar.todaySummary;
+        renderCalendar();
+      } catch (err) {
+        state.calendar.reservations = [];
+        clearOwnerRenderSignatures('calendar');
+        renderCalendar();
+        window.tkToast?.(friendlyError(err), 'error');
+      }
+      return;
+    }
+
     state.calendar.loading = true;
     renderCalendar(true);
+    const request = api().fetch(`/owner/reservations/calendar?${query}`).finally(() => {
+      calendarRequests.delete(query);
+    });
+    calendarRequests.set(query, request);
+
     try {
-      const { data, meta } = await api().fetch(`/owner/reservations/calendar?${calendarQuery()}`);
+      const { data, meta } = await request;
       state.calendar.reservations = Array.isArray(data) ? data : [];
       state.calendar.todaySummary = meta?.today_summary || state.calendar.todaySummary;
       renderCalendar();
     } catch (err) {
       state.calendar.reservations = [];
+      clearOwnerRenderSignatures('calendar');
       renderCalendar();
       window.tkToast?.(friendlyError(err), 'error');
     } finally {
@@ -1639,15 +1793,37 @@
     return params.toString();
   }
 
-  async function loadAnalytics() {
+  async function loadAnalytics(options = {}) {
+    const query = analyticsQuery();
+    if (options.force) analyticsRequests.delete(query);
+    if (!options.force && analyticsRequests.has(query)) {
+      try {
+        const { data } = await analyticsRequests.get(query);
+        state.analytics.data = data || null;
+        renderAnalytics();
+      } catch (err) {
+        state.analytics.data = null;
+        clearOwnerRenderSignatures('analytics-overview', 'analytics-charts');
+        renderAnalytics();
+        window.tkToast?.(friendlyError(err), 'error');
+      }
+      return;
+    }
+
     state.analytics.loading = true;
     renderAnalytics(true);
+    const request = api().fetch(`/owner/analytics?${query}`).finally(() => {
+      analyticsRequests.delete(query);
+    });
+    analyticsRequests.set(query, request);
+
     try {
-      const { data } = await api().fetch(`/owner/analytics?${analyticsQuery()}`);
+      const { data } = await request;
       state.analytics.data = data || null;
       renderAnalytics();
     } catch (err) {
       state.analytics.data = null;
+      clearOwnerRenderSignatures('analytics-overview', 'analytics-charts');
       renderAnalytics();
       window.tkToast?.(friendlyError(err), 'error');
     } finally {
@@ -1785,6 +1961,8 @@
       const { data } = await api().fetch(`/owner/reservations/${id}/${action}`, { method: 'PATCH', body });
       state.reservations = state.reservations.map((reservation) => String(reservation.id) === String(id) ? data : reservation);
       state.calendar.reservations = state.calendar.reservations.map((reservation) => String(reservation.id) === String(id) ? data : reservation);
+      lastReservationRenderSignature = '';
+      clearOwnerRenderSignatures('reservation-stats', 'calendar');
       renderReservations();
       renderCalendar();
       await loadReservations();
@@ -1930,14 +2108,18 @@
     });
     $('[data-owner-reservations-refresh]')?.addEventListener('click', () => {
       if (state.reservationView === 'analytics') {
-        loadAnalytics();
+        clearOwnerRenderSignatures('analytics-overview', 'analytics-rates', 'analytics-charts');
+        loadAnalytics({ force: true });
         return;
       }
       if (state.reservationView === 'calendar') {
-        loadCalendarReservations();
+        clearOwnerRenderSignatures('calendar');
+        loadCalendarReservations({ force: true });
         return;
       }
-      loadReservations();
+      lastReservationRenderSignature = '';
+      clearOwnerRenderSignatures('reservation-stats');
+      loadReservations({ force: true });
     });
     $('[data-owner-calendar-prev]')?.addEventListener('click', () => {
       state.calendar.anchorDate = state.calendar.view === 'month'
@@ -1954,18 +2136,21 @@
     $('[data-owner-calendar-jump]')?.addEventListener('change', (event) => {
       if (!event.target.value) return;
       state.calendar.anchorDate = localDate(event.target.value);
+      clearOwnerRenderSignatures('calendar');
       loadCalendarReservations();
     });
     $('[data-owner-reservations-clear]')?.addEventListener('click', () => {
       state.reservationFilters = { view: '', status: '', date: '', venue_id: '' };
       document.querySelectorAll('[data-owner-reservation-filter]').forEach((control) => { control.value = ''; });
+      lastReservationRenderSignature = '';
+      clearOwnerRenderSignatures('reservation-stats');
       loadReservations();
     });
 
     document.querySelectorAll('[data-owner-reservation-filter]').forEach((control) => {
       control.addEventListener('change', () => {
         state.reservationFilters[control.dataset.ownerReservationFilter] = control.value;
-        loadReservations();
+        debounceReservationLoad();
       });
     });
 
@@ -1991,6 +2176,7 @@
       button.addEventListener('click', () => {
         state.calendar.view = button.dataset.ownerCalendarView;
         if (state.calendar.view === 'day') state.calendar.anchorDate = new Date();
+        clearOwnerRenderSignatures('calendar');
         loadCalendarReservations();
       });
     });
@@ -1998,6 +2184,7 @@
     document.querySelectorAll('[data-owner-calendar-filter]').forEach((control) => {
       control.addEventListener('change', () => {
         state.calendar.filters[control.dataset.ownerCalendarFilter] = control.value;
+        clearOwnerRenderSignatures('calendar');
         loadCalendarReservations();
       });
     });
@@ -2005,6 +2192,7 @@
     document.querySelectorAll('[data-owner-analytics-range]').forEach((button) => {
       button.addEventListener('click', () => {
         state.analytics.range = button.dataset.ownerAnalyticsRange;
+        clearOwnerRenderSignatures('analytics-overview', 'analytics-rates', 'analytics-charts');
         renderAnalytics();
         if (state.analytics.range !== 'custom') loadAnalytics();
       });
@@ -2015,6 +2203,7 @@
     document.querySelectorAll('[data-owner-analytics-filter]').forEach((control) => {
       control.addEventListener('change', () => {
         state.analytics.filters[control.dataset.ownerAnalyticsFilter] = control.value;
+        clearOwnerRenderSignatures('analytics-overview', 'analytics-rates', 'analytics-charts');
         loadAnalytics();
       });
     });
