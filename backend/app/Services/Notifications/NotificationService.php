@@ -76,7 +76,7 @@ class NotificationService
             Notification::TYPE_EVENT_APPROVED,
             'Event Approved',
             sprintf('Your event "%s" has been approved and is now publicly visible.', $event->title),
-            $this->eventLink($event),
+            'organizer.html',
         );
     }
 
@@ -98,7 +98,7 @@ class NotificationService
             Notification::TYPE_EVENT_REJECTED,
             'Event Rejected',
             $message,
-            $this->eventLink($event),
+            'organizer.html',
         );
     }
 

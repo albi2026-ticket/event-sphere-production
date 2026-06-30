@@ -95,6 +95,47 @@ class NotificationCenterTest extends TestCase
         ]);
     }
 
+    public function test_event_and_reservation_notifications_are_unified_newest_first_with_global_unread_count(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_USER, 'status' => User::STATUS_ACTIVE]);
+
+        $reservation = Notification::query()->create([
+            'user_id' => $user->id,
+            'type' => Notification::TYPE_RESERVATION_CONFIRMED,
+            'title' => 'Reservation Confirmed',
+            'message' => 'Your reservation is confirmed.',
+            'link' => 'my-reservations.html',
+        ]);
+        $event = Notification::query()->create([
+            'user_id' => $user->id,
+            'type' => Notification::TYPE_EVENT_UPDATED,
+            'title' => 'Event Updated',
+            'message' => '"Unified Event" has been updated.',
+            'link' => 'event-details.html?id=123',
+        ]);
+        $reservation->forceFill([
+            'created_at' => now()->subMinutes(5),
+            'updated_at' => now()->subMinutes(5),
+        ])->save();
+        $event->forceFill([
+            'created_at' => now(),
+            'updated_at' => now(),
+        ])->save();
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/notifications')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $event->id)
+            ->assertJsonPath('data.0.type', Notification::TYPE_EVENT_UPDATED)
+            ->assertJsonPath('data.1.id', $reservation->id)
+            ->assertJsonPath('data.1.type', Notification::TYPE_RESERVATION_CONFIRMED);
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/notifications/unread-count')
+            ->assertOk()
+            ->assertJsonPath('data.count', 2);
+    }
+
     public function test_reservation_flow_creates_in_app_notifications_without_removing_emails(): void
     {
         Mail::fake();

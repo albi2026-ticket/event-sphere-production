@@ -215,6 +215,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::patch('/categories/{category}', [AdminCategoryController::class, 'update']);
         Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy']);
         Route::get('/email-center', [AdminEmailCenterController::class, 'index']);
+        Route::get('/email-center/export', [AdminEmailCenterController::class, 'export']);
+        Route::get('/email-center/{emailLog}', [AdminEmailCenterController::class, 'show']);
+        Route::post('/email-center/{emailLog}/retry', [AdminEmailCenterController::class, 'retry']);
         Route::patch('/email-templates/{template}', [AdminEmailCenterController::class, 'updateTemplate']);
         Route::get('/email-templates/{template}/preview', [AdminEmailCenterController::class, 'preview']);
         Route::get('/audit-logs', [AdminAuditLogController::class, 'index']);

@@ -2,7 +2,10 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Mail\ReservationConfirmedMail;
+use App\Listeners\LogOutgoingEmail;
 use App\Models\CheckoutReservation;
+use App\Models\EmailLog;
 use App\Models\Event;
 use App\Models\EmailTemplate;
 use App\Models\EventCategory;
@@ -16,6 +19,9 @@ use App\Models\User;
 use App\Models\Venue;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Mail\Events\MessageSending;
+use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mime\Email;
 use Tests\TestCase;
 
 class AdminDashboardTest extends TestCase
@@ -892,10 +898,33 @@ class AdminDashboardTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.rendered', '<h1>Event Sphere</h1>');
 
+        EmailLog::query()->create([
+            'recipient_name' => 'Ticket Buyer',
+            'recipient_email' => 'buyer@example.test',
+            'email_type' => 'Ticket Purchased',
+            'module' => EmailLog::MODULE_EVENTS,
+            'subject' => 'Your Event Sphere tickets',
+            'status' => EmailLog::STATUS_SUCCESS,
+            'sent_at' => now(),
+        ]);
+
+        EmailLog::query()->create([
+            'recipient_name' => 'Venue Owner',
+            'recipient_email' => 'owner@example.test',
+            'email_type' => 'Reservation Confirmed',
+            'module' => EmailLog::MODULE_RESERVATIONS,
+            'subject' => 'Reservation Confirmed',
+            'status' => EmailLog::STATUS_FAILED,
+            'sent_at' => null,
+        ]);
+
         $this->actingAs($admin, 'sanctum')
-            ->getJson('/api/admin/email-center')
+            ->getJson('/api/admin/email-center?module=Events&status=Success&q=buyer')
             ->assertOk()
-            ->assertJsonStructure(['data' => ['email_statuses', 'templates', 'future_ready']]);
+            ->assertJsonPath('data.email_logs.0.email_type', 'Ticket Purchased')
+            ->assertJsonPath('data.email_logs.0.recipient_email', 'buyer@example.test')
+            ->assertJsonPath('data.meta.total', 1)
+            ->assertJsonStructure(['data' => ['email_logs', 'meta', 'filters', 'templates']]);
 
         $response = $this->actingAs($admin, 'sanctum')
             ->getJson('/api/admin/audit-logs?action=settings.updated')
@@ -903,6 +932,144 @@ class AdminDashboardTest extends TestCase
 
         $this->assertTrue(collect($response->json('data'))->contains(fn (array $log) => $log['action'] === 'settings.updated'));
         $this->assertDatabaseHas('audit_logs', ['action' => 'email_template.updated']);
+    }
+
+    public function test_outgoing_email_attempts_are_logged_for_admin_email_center(): void
+    {
+        $owner = User::factory()->create([
+            'role' => User::ROLE_OWNER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+        $guest = User::factory()->create([
+            'name' => 'Logged Guest',
+            'email' => 'logged-guest@example.test',
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+        $venue = Venue::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Email Log Bistro',
+            'slug' => 'email-log-bistro',
+            'venue_type' => Venue::TYPE_RESTAURANT,
+            'city' => 'Boston',
+            'status' => Venue::STATUS_ACTIVE,
+        ]);
+        $reservation = Reservation::query()->create([
+            'venue_id' => $venue->id,
+            'user_id' => $guest->id,
+            'guest_name' => 'Logged Guest',
+            'party_size' => 2,
+            'reservation_date' => now()->addDay()->toDateString(),
+            'reservation_time' => '18:00',
+            'status' => Reservation::STATUS_CONFIRMED,
+        ]);
+
+        Mail::to($guest->email, $guest->name)->send(new ReservationConfirmedMail($reservation));
+
+        $this->assertSame(1, EmailLog::query()
+            ->where('recipient_email', 'logged-guest@example.test')
+            ->where('subject', 'Reservation Confirmed')
+            ->count());
+
+        $this->assertDatabaseHas('email_logs', [
+            'recipient_name' => 'Logged Guest',
+            'recipient_email' => 'logged-guest@example.test',
+            'email_type' => 'Reservation Confirmed',
+            'module' => EmailLog::MODULE_RESERVATIONS,
+            'subject' => 'Reservation Confirmed',
+            'status' => EmailLog::STATUS_SUCCESS,
+            'related_user_id' => $guest->id,
+            'related_reservation_id' => $reservation->id,
+        ]);
+    }
+
+    public function test_email_logger_does_not_duplicate_rows_when_mail_event_is_observed_twice(): void
+    {
+        $message = (new Email)
+            ->to('duplicate-check@example.test')
+            ->subject('Duplicate Check')
+            ->html('<p>Duplicate Check</p>')
+            ->text('Duplicate Check');
+        $event = new MessageSending($message, [
+            '__laravel_mailable' => ReservationConfirmedMail::class,
+        ]);
+        $logger = new LogOutgoingEmail();
+
+        $logger->handleSending($event);
+        $logger->handleSending($event);
+
+        $this->assertSame(1, EmailLog::query()
+            ->where('recipient_email', 'duplicate-check@example.test')
+            ->where('subject', 'Duplicate Check')
+            ->count());
+    }
+
+    public function test_admin_can_inspect_retry_and_export_email_logs(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $failedLog = EmailLog::query()->create([
+            'recipient_name' => 'Failed Recipient',
+            'recipient_email' => 'failed@example.test',
+            'email_type' => 'System Announcement',
+            'module' => EmailLog::MODULE_SYSTEM,
+            'subject' => 'System Notice',
+            'status' => EmailLog::STATUS_FAILED,
+            'html_body' => '<h1>System Notice</h1>',
+            'text_body' => 'System Notice',
+        ]);
+
+        $successLog = EmailLog::query()->create([
+            'recipient_name' => 'Successful Recipient',
+            'recipient_email' => 'success@example.test',
+            'email_type' => 'Verify Email',
+            'module' => EmailLog::MODULE_SYSTEM,
+            'subject' => 'Verify your Event Sphere email address',
+            'status' => EmailLog::STATUS_SUCCESS,
+            'sent_at' => now(),
+            'html_body' => '<h1>Verify</h1>',
+            'text_body' => 'Verify',
+        ]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson("/api/admin/email-center/{$failedLog->id}")
+            ->assertOk()
+            ->assertJsonPath('data.recipient_email', 'failed@example.test')
+            ->assertJsonPath('data.html_body', '<h1>System Notice</h1>')
+            ->assertJsonPath('data.can_retry', true);
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/admin/email-center/{$successLog->id}/retry")
+            ->assertStatus(422);
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/admin/email-center/{$failedLog->id}/retry")
+            ->assertOk();
+
+        $this->assertDatabaseHas('email_logs', [
+            'id' => $failedLog->id,
+            'status' => EmailLog::STATUS_FAILED,
+        ]);
+        $this->assertDatabaseHas('email_logs', [
+            'recipient_email' => 'failed@example.test',
+            'email_type' => 'System Announcement',
+            'module' => EmailLog::MODULE_SYSTEM,
+            'subject' => 'System Notice',
+            'status' => EmailLog::STATUS_SUCCESS,
+        ]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->get('/api/admin/email-center/export?format=csv')
+            ->assertOk()
+            ->assertHeader('content-disposition');
+
+        $this->actingAs($admin, 'sanctum')
+            ->get('/api/admin/email-center/export?format=excel')
+            ->assertOk()
+            ->assertHeader('content-disposition');
     }
 
     private function createAdminEventWithInventory(User $organizer, string $title, string $slug, string $status, mixed $startsAt, mixed $endsAt, int $total, int $sold): Event

@@ -268,6 +268,7 @@ a:hover { color: var(--secondary); }
   overflow-y: auto;
 }
 .notification-item {
+  position: relative;
   width: 100%;
   border: 0;
   border-bottom: 1px solid var(--border);
@@ -284,6 +285,20 @@ a:hover { color: var(--secondary); }
 .notification-item.unread {
   background: var(--card-2);
 }
+.notification-item.unread {
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+.notification-item.unread::after {
+  content: "";
+  position: absolute;
+  top: .9rem;
+  right: .85rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+}
 .notification-icon {
   width: 34px;
   height: 34px;
@@ -296,6 +311,7 @@ a:hover { color: var(--secondary); }
 }
 .notification-copy {
   min-width: 0;
+  flex: 1 1 auto;
 }
 .notification-title,
 .notification-message,

@@ -27,6 +27,8 @@
     reservationMeta: null,
     paymentFilters: {},
     ticketFilters: {},
+    emailFilters: {},
+    emailMeta: null,
     auditFilters: {},
     checkInFilters: {},
     currentSection: 'overview',
@@ -231,8 +233,10 @@
     state.errors.emailCenter = null;
     renderEmailCenter();
     try {
-      const { data } = await api().fetch('/admin/email-center');
+      const query = qs({ page: state.emailFilters.page || 1, ...state.emailFilters });
+      const { data } = await api().fetch(`/admin/email-center${query ? `?${query}` : ''}`);
       state.emailCenter = data;
+      state.emailMeta = data.meta || null;
     } catch (err) {
       state.errors.emailCenter = err.message || 'Failed to load email center';
     } finally {
@@ -941,18 +945,37 @@
   }
 
   function renderEmailCenter() {
+    renderEmailSummary();
     const statusBody = document.querySelector('[data-admin-email-statuses]');
+    const pager = document.querySelector('[data-admin-email-pagination]');
     const select = document.querySelector('[data-email-template-select]');
     if (statusBody) {
       if (state.loading.emailCenter) {
-        statusBody.innerHTML = loadingRow(5, 'Loading email statuses...');
+        statusBody.innerHTML = loadingRow(7, 'Loading email logs...');
+        if (pager) pager.innerHTML = '';
       } else if (state.errors.emailCenter) {
-        statusBody.innerHTML = errorRow(5, state.errors.emailCenter, 'data-retry-email-center');
+        statusBody.innerHTML = errorRow(7, state.errors.emailCenter, 'data-retry-email-center');
+        if (pager) pager.innerHTML = '';
       } else {
-        const statuses = state.emailCenter?.email_statuses || [];
-        statusBody.innerHTML = statuses.map((email) => `
-          <tr><td data-label="Type">${u().escapeHtml(email.label)}</td><td data-label="Recipient">${u().escapeHtml(email.recipient || '-')}</td><td data-label="Reference">${u().escapeHtml(email.reference || '-')}</td><td data-label="Status">${badge(email.sent ? 'sent' : 'not_sent')}</td><td data-label="Timestamp">${dateTimeLabel(email.sent_at)}</td></tr>
-        `).join('') || emptyRow(5, 'bi-envelope', 'No email status records yet');
+        const logs = state.emailCenter?.email_logs || [];
+        statusBody.innerHTML = logs.map((email) => `
+          <tr data-email-log-id="${email.id}" role="button" tabindex="0">
+            <td data-label="Recipient"><div class="fw-semibold">${u().escapeHtml(email.recipient_name || '-')}</div></td>
+            <td data-label="Email">${u().escapeHtml(email.recipient_email || '-')}</td>
+            <td data-label="Module">${badge(email.module || 'System')}</td>
+            <td data-label="Email Type">${u().escapeHtml(email.email_type || '-')}</td>
+            <td data-label="Subject">${u().escapeHtml(email.subject || '-')}</td>
+            <td data-label="Status">${badge(email.status || 'Pending')}</td>
+            <td data-label="Sent At">${dateTimeLabel(email.sent_at || email.created_at)}</td>
+          </tr>
+        `).join('') || emptyRow(7, 'bi-envelope', 'No email logs yet');
+
+        if (pager && state.emailMeta?.last_page > 1) {
+          const current = Number(state.emailMeta.current_page || 1);
+          pager.innerHTML = `<div class="dashboard-pagination"><button class="btn btn-glass btn-sm" data-email-page="${current - 1}" ${current <= 1 ? 'disabled' : ''}>Previous</button><span class="text-muted-pro small">Page ${current} of ${state.emailMeta.last_page}</span><button class="btn btn-glass btn-sm" data-email-page="${current + 1}" ${current >= state.emailMeta.last_page ? 'disabled' : ''}>Next</button></div>`;
+        } else if (pager) {
+          pager.innerHTML = '';
+        }
       }
     }
     if (select && state.emailCenter?.templates) {
@@ -961,6 +984,24 @@
       select.value = current || String(state.emailCenter.templates[0]?.id || '');
       fillEmailTemplateForm();
     }
+  }
+
+  function renderEmailSummary() {
+    const row = document.querySelector('[data-admin-email-summary]');
+    if (!row) return;
+    const summary = state.emailCenter?.summary || {
+      emails_sent_today: 0,
+      emails_failed_today: 0,
+      pending_emails: 0,
+      success_rate: 100,
+    };
+
+    row.innerHTML = `
+      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Emails Sent Today</div><div class="value">${summary.emails_sent_today ?? 0}</div></div></div>
+      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Emails Failed Today</div><div class="value">${summary.emails_failed_today ?? 0}</div></div></div>
+      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Pending Emails</div><div class="value">${summary.pending_emails ?? 0}</div></div></div>
+      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Success Rate</div><div class="value">${Number(summary.success_rate ?? 0).toFixed(1)}%</div></div></div>
+    `;
   }
 
   function selectedEmailTemplate() {
@@ -1154,6 +1195,19 @@
     URL.revokeObjectURL(url);
   }
 
+  async function exportEmailLogs(format) {
+    const params = Object.assign({}, state.emailFilters, { format });
+    delete params.page;
+    const query = qs(params);
+    const blob = await api().fetchBlob(`/admin/email-center/export${query ? `?${query}` : ''}`);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `event-sphere-email-logs.${format === 'excel' ? 'xls' : 'csv'}`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   function renderCheckIns() {
     const statsRow = document.querySelector('[data-admin-checkin-stats]');
     const body = document.querySelector('[data-admin-checkin-logs]');
@@ -1342,6 +1396,11 @@
     await loadData('emailCenter', loadEmailCenter, true);
   }
 
+  async function refreshEmailCenterPage(page = 1) {
+    state.emailFilters.page = page;
+    await loadData('emailCenter', loadEmailCenter, true);
+  }
+
   async function refreshAuditLogs(page = 1) {
     await loadData('auditLogs', () => loadAuditLogs(page), true);
   }
@@ -1407,6 +1466,38 @@
     modalEl.querySelector('.modal-title').textContent = title;
     modalEl.querySelector('.modal-body').innerHTML = body;
     bootstrap.Modal.getOrCreateInstance(modalEl).show();
+  }
+
+  async function showEmailLogDetail(id) {
+    setModal('Email Details', '<div class="py-4 text-muted-pro"><span class="spinner-border spinner-border-sm me-2"></span>Loading email...</div>');
+    const { data } = await api().fetch(`/admin/email-center/${id}`);
+    const hasHtml = Boolean(data.html_body);
+    const fallbackText = data.text_body || 'No rendered email body was captured for this log.';
+
+    setModal('Email Details', `
+      <div class="dashboard-stack">
+        <div class="row g-2">
+          <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Recipient</small><span class="fw-semibold d-block">${u().escapeHtml(data.recipient_name || '-')}</span></span></div></div>
+          <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Recipient Email</small><span class="fw-semibold d-block">${u().escapeHtml(data.recipient_email || '-')}</span></span></div></div>
+          <div class="col-md-4"><div class="dashboard-mini-row"><span><small>Module</small><span class="fw-semibold d-block">${u().escapeHtml(data.module || '-')}</span></span></div></div>
+          <div class="col-md-4"><div class="dashboard-mini-row"><span><small>Email Type</small><span class="fw-semibold d-block">${u().escapeHtml(data.email_type || '-')}</span></span></div></div>
+          <div class="col-md-4"><div class="dashboard-mini-row"><span><small>Status</small><span class="fw-semibold d-block">${badge(data.status || 'Pending')}</span></span></div></div>
+          <div class="col-12"><div class="dashboard-mini-row"><span><small>Subject</small><span class="fw-semibold d-block">${u().escapeHtml(data.subject || '-')}</span></span></div></div>
+          <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Created At</small><span class="fw-semibold d-block">${dateTimeLabel(data.created_at)}</span></span></div></div>
+          <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Sent At</small><span class="fw-semibold d-block">${dateTimeLabel(data.sent_at)}</span></span></div></div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+          <h5 class="mb-0">Rendered Email Body</h5>
+          ${data.can_retry ? `<button class="btn btn-primary-grad btn-sm" type="button" data-email-retry="${data.id}"><i class="bi bi-arrow-clockwise me-1"></i>Retry Email</button>` : ''}
+        </div>
+        ${hasHtml
+          ? '<iframe title="Email preview" data-email-preview-frame sandbox="" style="width:100%;min-height:420px;border:1px solid var(--border);border-radius:8px;background:#fff;"></iframe>'
+          : `<pre class="border-pro rounded-pro p-3 mb-0" style="white-space:pre-wrap;overflow-wrap:anywhere;">${u().escapeHtml(fallbackText)}</pre>`}
+      </div>
+    `);
+
+    const frame = document.querySelector('[data-email-preview-frame]');
+    if (frame) frame.srcdoc = data.html_body;
   }
 
   function showSection(section) {
@@ -1940,6 +2031,26 @@
     const templateSelect = document.querySelector('[data-email-template-select]');
     templateSelect?.addEventListener('change', fillEmailTemplateForm);
 
+    const emailForm = document.querySelector('[data-admin-email-filters]');
+    emailForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const fd = new FormData(emailForm);
+      state.emailFilters = {
+        module: fd.get('module'),
+        status: fd.get('status'),
+        date_from: fd.get('date_from'),
+        date_to: fd.get('date_to'),
+        q: fd.get('q'),
+        page: 1,
+      };
+      await refreshEmailCenterPage();
+    });
+
+    emailForm?.addEventListener('reset', () => {
+      state.emailFilters = { page: 1 };
+      setTimeout(() => refreshEmailCenterPage(), 0);
+    });
+
     document.querySelector('[data-email-template-form]')?.addEventListener('submit', async (event) => {
       event.preventDefault();
       const form = event.currentTarget;
@@ -2021,6 +2132,16 @@
     });
 
     document.addEventListener('click', async (event) => {
+      const emailRow = event.target.closest('[data-email-log-id]');
+      if (emailRow && !event.target.closest('button,a,input,select,textarea')) {
+        try {
+          await showEmailLogDetail(emailRow.dataset.emailLogId);
+        } catch (err) {
+          window.tkToast?.(err.message || 'Failed to load email details', 'error');
+        }
+        return;
+      }
+
       const button = event.target.closest('button');
       if (!button) return;
 
@@ -2043,6 +2164,24 @@
         if (button.dataset.auditPage) {
           button.disabled = true;
           await refreshAuditLogs(button.dataset.auditPage);
+        }
+
+        if (button.dataset.emailPage) {
+          button.disabled = true;
+          await refreshEmailCenterPage(button.dataset.emailPage);
+        }
+
+        if (button.dataset.exportEmailLogs) {
+          button.disabled = true;
+          await exportEmailLogs(button.dataset.exportEmailLogs);
+        }
+
+        if (button.dataset.emailRetry) {
+          button.disabled = true;
+          await api().fetch(`/admin/email-center/${button.dataset.emailRetry}/retry`, { method: 'POST' });
+          window.tkToast?.('Retry email sent');
+          bootstrap.Modal.getInstance(document.getElementById('adminDetailModal'))?.hide();
+          await refreshEmailCenter();
         }
 
         if (button.dataset.previewEmailTemplate !== undefined) {

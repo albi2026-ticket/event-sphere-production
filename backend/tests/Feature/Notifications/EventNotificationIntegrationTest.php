@@ -70,6 +70,7 @@ class EventNotificationIntegrationTest extends TestCase
             'type' => Notification::TYPE_EVENT_APPROVED,
             'title' => 'Event Approved',
             'message' => 'Your event "Notification Event" has been approved and is now publicly visible.',
+            'link' => 'organizer.html',
         ]);
 
         $rejected = $this->event($organizer, 'pending_review', 'Rejected Event');
@@ -82,6 +83,7 @@ class EventNotificationIntegrationTest extends TestCase
             'type' => Notification::TYPE_EVENT_REJECTED,
             'title' => 'Event Rejected',
             'message' => 'Your event "Rejected Event" has been rejected. Reason: Needs a clearer venue.',
+            'link' => 'organizer.html',
         ]);
     }
 

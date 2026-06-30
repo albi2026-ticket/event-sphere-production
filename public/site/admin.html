@@ -201,9 +201,38 @@
     </section>
 
     <section id="email-center" class="admin-section" data-admin-section="email-center">
-      <div class="row g-3">
-        <div class="col-xl-7"><div class="card-pro p-3 h-100"><h4 class="mb-3">Email Status</h4><div class="table-responsive"><table class="table table-borderless align-middle mb-0 dashboard-table"><thead><tr><th>Type</th><th>Recipient</th><th>Reference</th><th>Status</th><th>Timestamp</th></tr></thead><tbody data-admin-email-statuses><tr><td colspan="5" class="text-muted-pro">Loading email statuses...</td></tr></tbody></table></div></div></div>
-        <div class="col-xl-5"><div class="card-pro p-3 h-100"><h4 class="mb-3">Template Editor</h4><select class="form-select mb-3" data-email-template-select></select><form data-email-template-form><label class="form-label">Subject</label><input class="form-control mb-2" name="subject"/><label class="form-label">HTML Template</label><textarea class="form-control mb-2" name="html_template" rows="7"></textarea><label class="form-label">Plain Text Template</label><textarea class="form-control mb-3" name="text_template" rows="5"></textarea><div class="d-flex gap-2 flex-wrap"><button class="btn btn-primary-grad btn-sm" type="submit">Save Template</button><button class="btn btn-glass btn-sm" type="button" data-preview-email-template>Preview</button></div></form><div class="border-pro rounded-pro p-3 mt-3" data-email-template-preview hidden></div></div></div>
+      <div class="row g-3 mb-3" data-admin-email-summary>
+        <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Emails Sent Today</div><div class="value">0</div></div></div>
+        <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Emails Failed Today</div><div class="value">0</div></div></div>
+        <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Pending Emails</div><div class="value">0</div></div></div>
+        <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Success Rate</div><div class="value">100%</div></div></div>
+      </div>
+      <div class="card-pro p-3">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
+          <div>
+            <h4 class="mb-1">Email Center</h4>
+            <p class="text-muted-pro mb-0">Read-only log of outgoing system email attempts.</p>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-glass btn-sm" type="button" data-export-email-logs="csv"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+            <button class="btn btn-glass btn-sm" type="button" data-export-email-logs="excel"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Excel</button>
+          </div>
+          <form class="row g-2 align-items-end admin-filter-bar" data-admin-email-filters>
+            <div class="col-sm-6 col-lg-auto"><label class="form-label">Module</label><select class="form-select" name="module"><option value="">All modules</option><option>Reservations</option><option>Events</option><option>System</option><option>Organizer</option><option>Owner</option><option>User</option></select></div>
+            <div class="col-sm-6 col-lg-auto"><label class="form-label">Status</label><select class="form-select" name="status"><option value="">All statuses</option><option>Pending</option><option>Success</option><option>Failed</option></select></div>
+            <div class="col-sm-6 col-lg-auto"><label class="form-label">From</label><input class="form-control" type="date" name="date_from"></div>
+            <div class="col-sm-6 col-lg-auto"><label class="form-label">To</label><input class="form-control" type="date" name="date_to"></div>
+            <div class="col-lg"><label class="form-label">Search</label><input class="form-control" name="q" placeholder="Recipient, email, or subject"></div>
+            <div class="col-lg-auto d-flex gap-2"><button class="btn btn-primary-grad" type="submit">Filter</button><button class="btn btn-glass" type="reset">Reset</button></div>
+          </form>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-borderless align-middle mb-0 dashboard-table">
+            <thead><tr><th>Recipient</th><th>Email</th><th>Module</th><th>Email Type</th><th>Subject</th><th>Status</th><th>Sent At</th></tr></thead>
+            <tbody data-admin-email-statuses><tr><td colspan="7" class="text-muted-pro">Loading email logs...</td></tr></tbody>
+          </table>
+        </div>
+        <div data-admin-email-pagination></div>
       </div>
     </section>
 

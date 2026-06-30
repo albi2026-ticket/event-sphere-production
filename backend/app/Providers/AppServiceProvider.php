@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Events\EventCancelled as EventCancelledEvent;
+use App\Listeners\LogOutgoingEmail;
 use App\Listeners\SendEventCancellationNotifications;
 use App\Models\Event;
 use App\Models\Ticket;
@@ -10,6 +11,8 @@ use App\Policies\EventPolicy;
 use App\Policies\TicketPolicy;
 use App\Support\AppUrls;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Mail\Events\MessageSending;
+use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Event as EventFacade;
 use Illuminate\Support\Facades\Gate;
@@ -34,6 +37,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Event::class, EventPolicy::class);
         Gate::policy(Ticket::class, TicketPolicy::class);
         EventFacade::listen(EventCancelledEvent::class, SendEventCancellationNotifications::class);
+        EventFacade::listen(MessageSending::class, [LogOutgoingEmail::class, 'handleSending']);
+        EventFacade::listen(MessageSent::class, [LogOutgoingEmail::class, 'handleSent']);
 
         URL::forceRootUrl(AppUrls::backend());
 
