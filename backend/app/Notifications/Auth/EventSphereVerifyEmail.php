@@ -15,7 +15,7 @@ class EventSphereVerifyEmail extends VerifyEmail
         $verificationUrl = $this->verificationUrl($notifiable);
 
         return (new MailMessage)
-            ->subject('Verify your Event Sphere email address')
+            ->subject('Verify your Tiketa email address')
             ->view(
                 ['emails.auth.verify-email', 'emails.auth.verify-email-text'],
                 [

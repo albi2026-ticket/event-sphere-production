@@ -58,13 +58,13 @@
     if (!list) return;
 
     if (state.loading) {
-      list.innerHTML = '<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading notifications...</span></div>';
+      list.innerHTML = `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span data-i18n="loading.loading_notifications">${window.t?.('loading.loading_notifications') || 'Loading notifications...'}</span></div>`;
       if (pager) pager.innerHTML = '';
       return;
     }
 
     if (state.error) {
-      list.innerHTML = `<div class="dashboard-empty text-danger"><i class="bi bi-exclamation-triangle"></i><span>${esc(state.error)}</span><button class="btn btn-glass btn-sm" type="button" data-notifications-retry>Retry</button></div>`;
+      list.innerHTML = `<div class="dashboard-empty text-danger"><i class="bi bi-exclamation-triangle"></i><span>${esc(state.error)}</span><button class="btn btn-glass btn-sm" type="button" data-notifications-retry data-i18n="buttons.retry">${window.t?.('buttons.retry') || 'Retry'}</button></div>`;
       if (pager) pager.innerHTML = '';
       return;
     }
@@ -78,15 +78,15 @@
           <span class="notification-time">${relativeTime(item.created_at)}</span>
         </span>
         <span class="dashboard-actions ms-auto">
-          ${item.is_read ? '' : `<button class="btn btn-glass btn-sm" type="button" data-mark-notification-read="${item.id}">Mark as read</button>`}
-          ${item.link ? `<button class="btn btn-primary-grad btn-sm" type="button" data-open-notification="${item.id}">Open</button>` : ''}
+          ${item.is_read ? '' : `<button class="btn btn-glass btn-sm" type="button" data-mark-notification-read="${item.id}" data-i18n="header.mark_as_read">${window.t?.('header.mark_as_read') || 'Mark as read'}</button>`}
+          ${item.link ? `<button class="btn btn-primary-grad btn-sm" type="button" data-open-notification="${item.id}" data-i18n="buttons.open">${window.t?.('buttons.open') || 'Open'}</button>` : ''}
         </span>
       </div>
-    `).join('') : '<div class="dashboard-empty"><i class="bi bi-bell"></i><span>No notifications yet.</span></div>';
+    `).join('') : `<div class="dashboard-empty"><i class="bi bi-bell"></i><span data-i18n="empty.no_notifications">${window.t?.('empty.no_notifications') || 'No notifications yet.'}</span></div>`;
 
     if (pager && state.meta?.last_page > 1) {
       const current = Number(state.meta.current_page || state.page);
-      pager.innerHTML = `<div class="dashboard-pagination"><button class="btn btn-glass btn-sm" type="button" data-notifications-page="${current - 1}" ${current <= 1 ? 'disabled' : ''}>Previous</button><span class="text-muted-pro small">Page ${current} of ${state.meta.last_page}</span><button class="btn btn-glass btn-sm" type="button" data-notifications-page="${current + 1}" ${current >= state.meta.last_page ? 'disabled' : ''}>Next</button></div>`;
+      pager.innerHTML = `<div class="dashboard-pagination"><button class="btn btn-glass btn-sm" type="button" data-notifications-page="${current - 1}" ${current <= 1 ? 'disabled' : ''} data-i18n="buttons.previous">${window.t?.('buttons.previous') || 'Previous'}</button><span class="text-muted-pro small">Page ${current} of ${state.meta.last_page}</span><button class="btn btn-glass btn-sm" type="button" data-notifications-page="${current + 1}" ${current >= state.meta.last_page ? 'disabled' : ''} data-i18n="buttons.next">${window.t?.('buttons.next') || 'Next'}</button></div>`;
     } else if (pager) {
       pager.innerHTML = '';
     }

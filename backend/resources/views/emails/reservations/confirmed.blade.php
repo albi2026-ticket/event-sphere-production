@@ -7,7 +7,7 @@
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 16px 40px rgba(17,24,39,0.08)">
           <tr>
             <td style="padding:30px 32px 22px;background:#111827">
-              <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#d4a75a;margin-bottom:10px">Event Sphere Reservations</div>
+              <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#d4a75a;margin-bottom:10px">Tiketa Reservations</div>
               <h1 style="font-size:28px;line-height:1.2;margin:0;color:#ffffff;font-weight:700">Reservation Confirmed</h1>
             </td>
           </tr>
@@ -32,7 +32,7 @@
               @if ($reservation->notes)
                 <p style="margin:0 0 24px;font-size:16px;color:#374151"><strong style="color:#111827">Special Request:</strong> {{ $reservation->notes }}</p>
               @endif
-              <p style="margin:0 0 24px;font-size:16px;color:#374151">Thank you for choosing Event Sphere. The venue has received your reservation details.</p>
+              <p style="margin:0 0 24px;font-size:16px;color:#374151">Thank you for choosing Tiketa. The venue has received your reservation details.</p>
             </td>
           </tr>
         </table>

@@ -100,7 +100,7 @@
         const next = encodeURIComponent(location.pathname + location.search);
         location.href = `${login}?next=${next}`;
       }
-      console.error('Event Sphere API error', { status: response.status, path, payload });
+      console.error('Tiketa API error', { status: response.status, path, payload });
       const err = new Error(userFriendlyMessage(payload, response.status));
       err.status = 401;
       err.payload = payload;
@@ -109,7 +109,7 @@
     }
 
     if (!response.ok) {
-      console.error('Event Sphere API error', { status: response.status, path, payload });
+      console.error('Tiketa API error', { status: response.status, path, payload });
       const err = new Error(userFriendlyMessage(payload, response.status));
       err.status = response.status;
       err.payload = payload;

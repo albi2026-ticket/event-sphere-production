@@ -21,7 +21,7 @@
                 <table role="presentation" class="shell" width="640" cellspacing="0" cellpadding="0" style="width:640px;max-width:640px;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #dbe3ef;">
                     <tr>
                         <td style="background:#111827;padding:28px 32px;color:#ffffff;">
-                            <div style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#93c5fd;">Event Sphere</div>
+                            <div style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#93c5fd;">Tiketa</div>
                             <h1 style="margin:10px 0 0;font-size:26px;line-height:1.25;">New ticket sold</h1>
                             <p style="margin:10px 0 0;color:#d1d5db;">{{ $emailData['event_name'] }} received a new paid ticket order.</p>
                         </td>

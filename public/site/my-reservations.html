@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>My Reservations — Event Sphere Reservations</title>
-<meta name="description" content="View and manage your Event Sphere restaurant and bar reservations." />
+<title>My Reservations — Tiketa Reservations</title>
+<meta name="description" content="View and manage your Tiketa restaurant and bar reservations." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
@@ -17,33 +17,33 @@
 
 <nav class="navbar navbar-expand-lg nav-blur nav-res">
   <div class="container-xxl">
-    <a class="brand" href="welcome.html"><span class="brand-logo" style="background:var(--grad-res)"><i class="bi bi-cup-hot-fill"></i></span>Event Sphere <span class="text-gold ms-1 d-none d-sm-inline" style="font-weight:500;font-size:.95rem">· Reservations</span></a>
+    <a class="brand" href="welcome.html"><span class="brand-logo" style="background:var(--grad-res)"><i class="bi bi-cup-hot-fill"></i></span>Tiketa <span class="text-gold ms-1 d-none d-sm-inline" style="font-weight:500;font-size:.95rem">· Reservations</span></a>
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#resNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
     <div class="collapse navbar-collapse" id="resNav">
       <ul class="navbar-nav mx-auto gap-1">
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="reservations.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro active" href="my-reservations.html" data-auth-role-nav="user" hidden>My Reservations</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="owner-venue.html" data-auth-role-nav="owner" hidden>Restaurant & Bar Reservations</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="reservations.html" data-i18n="header.home">Home</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro active" href="my-reservations.html" data-auth-role-nav="user" data-i18n="header.my_reservations" hidden>My Reservations</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="owner-venue.html" data-auth-role-nav="owner" data-i18n="header.venue_reservations" hidden>Restaurant & Bar Reservations</a></li>
       </ul>
       <div class="d-flex align-items-center gap-2">
-        <a class="btn btn-ghost" href="login.html" data-auth-guest>Login</a>
-        <a class="btn btn-gold" href="register.html" data-auth-guest>Register</a>
+        <a class="btn btn-ghost" href="login.html" data-auth-guest data-i18n="header.login">Login</a>
+        <a class="btn btn-gold" href="register.html" data-auth-guest data-i18n="header.register">Register</a>
         <div class="notification-root" data-notification-root data-auth-user hidden>
-          <button class="icon-btn notification-toggle" type="button" data-notification-toggle aria-label="Notifications" aria-expanded="false">
+          <button class="icon-btn notification-toggle" type="button" data-notification-toggle aria-label="Notifications" data-i18n-attr="aria-label:header.notifications" aria-expanded="false">
             <i class="bi bi-bell"></i>
             <span class="notification-badge" data-notification-count hidden>0</span>
           </button>
           <div class="notification-panel" data-notification-panel hidden>
             <div class="notification-head">
-              <div><strong>Notifications</strong><span>In-app updates</span></div>
-              <button type="button" data-notification-mark-all>Mark all read</button>
+              <div><strong data-i18n="header.notifications">Notifications</strong><span data-i18n="header.notifications_copy">In-app updates</span></div>
+              <button type="button" data-notification-mark-all data-i18n="header.mark_all_read">Mark all read</button>
             </div>
             <div class="notification-list" data-notification-list></div>
-            <div class="notification-empty" data-notification-empty hidden>No notifications yet.</div>
-            <a class="notification-view-all" href="notifications.html">View all notifications</a>
+            <div class="notification-empty" data-notification-empty data-i18n="header.no_notifications" hidden>No notifications yet.</div>
+            <a class="notification-view-all" href="notifications.html" data-i18n="header.view_all_notifications">View all notifications</a>
           </div>
         </div>
-        <a class="btn btn-gold" href="#" data-auth-user data-logout hidden>Logout</a>
+        <a class="btn btn-gold" href="#" data-auth-user data-logout data-i18n="header.logout" hidden>Logout</a>
       </div>
     </div>
   </div>
@@ -52,13 +52,13 @@
 <main class="my-reservations-page">
   <section class="my-reservations-hero">
     <div class="container-xxl">
-      <span class="eyebrow-res"><i class="bi bi-calendar-heart"></i> Reservation center</span>
+      <span class="eyebrow-res"><i class="bi bi-calendar-heart"></i> <span data-i18n="reservation.center">Reservation center</span></span>
       <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mt-3">
         <div>
-          <h1>My Reservations</h1>
-          <p class="text-muted-pro mb-0">Track your table requests, confirmed visits, and reservation history.</p>
+          <h1 data-i18n="reservation.my_reservations">My Reservations</h1>
+          <p class="text-muted-pro mb-0" data-i18n="reservation.track_copy">Track your table requests, confirmed visits, and reservation history.</p>
         </div>
-        <a class="btn btn-gold" href="reservations.html"><i class="bi bi-search me-1"></i>Discover restaurants & bars</a>
+        <a class="btn btn-gold" href="reservations.html"><i class="bi bi-search me-1"></i><span data-i18n="buttons.discover_restaurants">Discover restaurants & bars</span></a>
       </div>
     </div>
   </section>
@@ -69,35 +69,35 @@
 
     <div class="reservation-section" data-reservation-section="pending">
       <div class="section-head-res">
-        <div><h2>Pending Reservations</h2><div class="sub">Requests waiting for restaurant or bar approval</div></div>
+        <div><h2 data-i18n="reservation.pending_reservations">Pending Reservations</h2><div class="sub" data-i18n="reservation.requests_waiting">Requests waiting for restaurant or bar approval</div></div>
       </div>
       <div class="row g-4" data-reservations-list="pending"></div>
     </div>
 
     <div class="reservation-section" data-reservation-section="confirmed">
       <div class="section-head-res">
-        <div><h2>Confirmed Reservations</h2><div class="sub">Reservations approved by the restaurant or bar</div></div>
+        <div><h2 data-i18n="reservation.confirmed_reservations">Confirmed Reservations</h2><div class="sub" data-i18n="reservation.approved_by_venue">Reservations approved by the restaurant or bar</div></div>
       </div>
       <div class="row g-4" data-reservations-list="confirmed"></div>
     </div>
 
     <div class="reservation-section" data-reservation-section="cancelled">
       <div class="section-head-res">
-        <div><h2>Cancelled Reservations</h2><div class="sub">Requests that are no longer active</div></div>
+        <div><h2 data-i18n="reservation.cancelled_reservations">Cancelled Reservations</h2><div class="sub" data-i18n="reservation.no_longer_active">Requests that are no longer active</div></div>
       </div>
       <div class="row g-4" data-reservations-list="cancelled"></div>
     </div>
 
     <div class="reservation-section" data-reservation-section="completed">
       <div class="section-head-res">
-        <div><h2>Completed Reservations</h2><div class="sub">Past restaurant and bar visits</div></div>
+        <div><h2 data-i18n="reservation.completed_reservations">Completed Reservations</h2><div class="sub" data-i18n="reservation.past_visits">Past restaurant and bar visits</div></div>
       </div>
       <div class="row g-4" data-reservations-list="completed"></div>
     </div>
 
     <div class="reservation-section" data-reservation-section="no_show">
       <div class="section-head-res">
-        <div><h2>No Show Reservations</h2><div class="sub">Reservations marked as missed by the restaurant or bar</div></div>
+        <div><h2 data-i18n="reservation.no_show_reservations">No Show Reservations</h2><div class="sub" data-i18n="reservation.marked_missed">Reservations marked as missed by the restaurant or bar</div></div>
       </div>
       <div class="row g-4" data-reservations-list="no_show"></div>
     </div>
@@ -108,8 +108,8 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content dashboard-modal">
       <div class="modal-header">
-        <h5 class="modal-title" data-reservation-detail-title>Reservation</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" data-reservation-detail-title data-i18n="reservation.reservation">Reservation</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>
       </div>
       <div class="modal-body" data-reservation-detail-body></div>
     </div>
@@ -120,24 +120,26 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content dashboard-modal">
       <div class="modal-header">
-        <h5 class="modal-title">Cancel reservation?</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" data-i18n="reservation.cancel_reservation_question">Cancel reservation?</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>
       </div>
       <div class="modal-body">
-        <p class="text-muted-pro">This reservation will be cancelled and the restaurant or bar will be notified.</p>
-        <label class="form-label small text-muted-pro" for="reservationCancellationReason">Cancellation Reason <span class="text-muted-pro">(optional)</span></label>
-        <textarea class="form-control" id="reservationCancellationReason" rows="4" maxlength="1000" data-reservation-cancel-reason placeholder="Tell the venue why you are cancelling (optional)"></textarea>
-        <div class="small text-muted-pro mt-2">Examples: Change of plans, unable to attend, booked another time.</div>
+        <p class="text-muted-pro" data-i18n="reservation.cancel_notice">This reservation will be cancelled and the restaurant or bar will be notified.</p>
+        <label class="form-label small text-muted-pro" for="reservationCancellationReason"><span data-i18n="reservation.cancellation_reason">Cancellation Reason</span> <span class="text-muted-pro" data-i18n="reservation.optional">(optional)</span></label>
+        <textarea class="form-control" id="reservationCancellationReason" rows="4" maxlength="1000" data-reservation-cancel-reason placeholder="Tell the venue why you are cancelling (optional)" data-i18n-attr="placeholder:reservation.cancel_placeholder"></textarea>
+        <div class="small text-muted-pro mt-2" data-i18n="reservation.cancel_examples">Examples: Change of plans, unable to attend, booked another time.</div>
       </div>
       <div class="modal-footer border-pro">
-        <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Keep reservation</button>
-        <button type="button" class="btn btn-outline-danger" data-reservation-cancel-confirm>Cancel reservation</button>
+        <button type="button" class="btn btn-glass" data-bs-dismiss="modal" data-i18n="buttons.keep_reservation">Keep reservation</button>
+        <button type="button" class="btn btn-outline-danger" data-reservation-cancel-confirm data-i18n="buttons.cancel_reservation">Cancel reservation</button>
       </div>
     </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/i18n/dictionaries.js"></script>
+<script src="../assets/js/i18n/language-service.js"></script>
 <script src="../assets/js/main.js"></script>
 <script src="../assets/js/api/config.js"></script>
 <script src="../assets/js/api/api-client.js"></script>

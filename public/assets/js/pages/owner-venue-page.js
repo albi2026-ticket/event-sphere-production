@@ -4,6 +4,7 @@
   const $ = (selector) => document.querySelector(selector);
   const api = () => window.EventSphereApi;
   const auth = () => window.EventSphereAuth;
+  const tr = (key, fallback, replacements) => window.t?.(key, replacements) || fallback;
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
   const imageUrl = (image) => image?.url || image?.image_path || 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1000&q=80';
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -63,14 +64,14 @@
     const save = $('[data-owner-save]');
     if (save) {
       save.disabled = busy;
-      save.innerHTML = busy ? '<span class="spinner-border spinner-border-sm me-1"></span>Saving...' : '<i class="bi bi-check2-circle me-1"></i>Save profile';
+      save.innerHTML = busy ? `<span class="spinner-border spinner-border-sm me-1"></span>${tr('loading.saving', 'Saving...')}` : `<i class="bi bi-check2-circle me-1"></i><span data-i18n="buttons.save_profile">${tr('buttons.save_profile', 'Save profile')}</span>`;
     }
   }
 
   function friendlyError(err) {
     if (err?.status === 422) return validationMessages(err).join(' ');
-    if (err?.status === 403) return 'Your organizer account cannot manage this restaurant or bar.';
-    return err?.message || 'Something went wrong. Please try again.';
+    if (err?.status === 403) return tr('toast.operation_failed', 'Your organizer account cannot manage this restaurant or bar.');
+    return err?.message || tr('toast.unexpected_error', 'Something went wrong. Please try again.');
   }
 
   function debounceReservationLoad(delay = 250) {
@@ -126,7 +127,7 @@
   }
 
   function timeOptions() {
-    const options = ['<option value="">Select time</option>'];
+    const options = [`<option value="">${tr('availability.select_time', 'Select time')}</option>`];
     for (let hour = 0; hour < 24; hour += 1) {
       for (let minute = 0; minute < 60; minute += 30) {
         const value = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
@@ -174,7 +175,14 @@
   }
 
   function statusLabel(value) {
-    return String(value || 'pending').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+    const key = {
+      pending: 'owner.pending',
+      confirmed: 'owner.confirmed',
+      completed: 'owner.completed',
+      cancelled: 'owner.cancelled',
+      no_show: 'owner.no_show',
+    }[value || 'pending'];
+    return tr(key || 'owner.pending', String(value || 'pending').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()));
   }
 
   function occasionLabel(value) {
@@ -188,7 +196,17 @@
       'Friends Night Out': 'Friends Night Out',
       Other: 'Other',
     };
-    return labels[value] || value || 'Not provided';
+    const key = {
+      Birthday: 'reservation.birthday',
+      Anniversary: 'reservation.anniversary',
+      'Date Night': 'reservation.date_night',
+      'Business Meeting': 'reservation.business_meeting',
+      'Family Gathering': 'reservation.family_gathering',
+      Celebration: 'reservation.celebration',
+      'Friends Night Out': 'reservation.friends_night_out',
+      Other: 'reservation.other',
+    }[value];
+    return key ? tr(key, labels[value] || value) : (value || tr('reservation.not_provided', 'Not provided'));
   }
 
   function cssVar(name) {
@@ -205,7 +223,7 @@
   }
 
   function dateTimeLabel(value) {
-    if (!value) return 'Not set';
+    if (!value) return tr('reservation.not_set', 'Not set');
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
     return date.toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
@@ -481,7 +499,7 @@
         const place = ownerSearchBox.getPlaces()?.[0];
         const location = place?.geometry?.location;
         if (!location) {
-          window.tkToast?.('No matching address found. Try a more specific search.', 'error');
+          window.tkToast?.(tr('owner.no_matching_address', 'No matching address found. Try a more specific search.'), 'error');
           return;
         }
         moveOwnerMarker(location.lat(), location.lng(), {
@@ -490,7 +508,7 @@
           reverseGeocode: false,
         });
         ownerGoogleMap.setZoom(16);
-        window.tkToast?.('Map location updated.', 'success');
+        window.tkToast?.(tr('owner.map_location_updated', 'Map location updated.'), 'success');
       });
     }
 
@@ -503,7 +521,7 @@
     const query = String(search?.value || locationSearchText()).trim();
 
     if (!query) {
-      window.tkToast?.('Enter an address to search.', 'error');
+      window.tkToast?.(tr('owner.enter_address_search', 'Enter an address to search.'), 'error');
       return;
     }
 
@@ -523,7 +541,7 @@
           reverseGeocode: false,
         });
         if (ownerGoogleMap) ownerGoogleMap.setZoom(16);
-        window.tkToast?.('Map location updated.', 'success');
+        window.tkToast?.(tr('owner.map_location_updated', 'Map location updated.'), 'success');
         return;
       }
 
@@ -534,7 +552,7 @@
       const result = Array.isArray(results) ? results[0] : null;
 
       if (!result) {
-        window.tkToast?.('No matching address found. Try a more specific search.', 'error');
+        window.tkToast?.(tr('owner.no_matching_address', 'No matching address found. Try a more specific search.'), 'error');
         return;
       }
 
@@ -543,9 +561,9 @@
         animate: true,
         reverseGeocode: false,
       });
-      window.tkToast?.('Map location updated.', 'success');
+      window.tkToast?.(tr('owner.map_location_updated', 'Map location updated.'), 'success');
     } catch (err) {
-      window.tkToast?.('Unable to search this address right now.', 'error');
+      window.tkToast?.(tr('owner.address_search_failed', 'Unable to search this address right now.'), 'error');
     } finally {
       if (button) {
         button.disabled = false;
@@ -680,7 +698,7 @@
             ${timeSelect(`data-hours-close="${index}" aria-label="${esc(day)} closes at"`, item.closes_at, closed)}
             <label class="form-check owner-hours-closed">
               <input class="form-check-input" type="checkbox" data-hours-closed="${index}" ${closed ? 'checked' : ''}>
-              <span>Closed</span>
+              <span data-i18n="availability.closed">${tr('availability.closed', 'Closed')}</span>
             </label>
           </div>
         </div>
@@ -701,13 +719,13 @@
       <div class="availability-item">
         <div>
           <strong>${esc(dateLabel(item.date))}</strong>
-          <span>${esc(item.reason || 'Closed')}</span>
+          <span>${esc(item.reason || tr('availability.closed', 'Closed'))}</span>
         </div>
         <button class="btn btn-glass btn-sm" type="button" data-blackout-delete="${item.id}" aria-label="Remove blackout date">
           <i class="bi bi-trash"></i>
         </button>
       </div>
-    `).join('') : '<div class="availability-empty">No blackout dates added.</div>';
+    `).join('') : `<div class="availability-empty" data-i18n="availability.no_blackout_dates">${tr('availability.no_blackout_dates', 'No blackout dates added.')}</div>`;
   }
 
   function renderSpecialHours() {
@@ -717,7 +735,7 @@
       <div class="availability-item">
         <div>
           <strong>${esc(dateLabel(item.date))}</strong>
-          <span>${item.is_closed ? 'Closed' : `${esc(timeLabel(item.opens_at))} - ${esc(timeLabel(item.closes_at))}`}</span>
+          <span>${item.is_closed ? tr('availability.closed', 'Closed') : `${esc(timeLabel(item.opens_at))} - ${esc(timeLabel(item.closes_at))}`}</span>
         </div>
         <div class="btn-group btn-group-sm">
           <button class="btn btn-glass" type="button" data-special-edit="${item.id}" aria-label="Edit special hours">
@@ -728,7 +746,7 @@
           </button>
         </div>
       </div>
-    `).join('') : '<div class="availability-empty">No special hours added.</div>';
+    `).join('') : `<div class="availability-empty" data-i18n="availability.no_special_hours">${tr('availability.no_special_hours', 'No special hours added.')}</div>`;
   }
 
   function clearSpecialForm() {
@@ -765,13 +783,13 @@
         <div class="owner-gallery-card ${index === 0 ? 'is-cover' : ''}" draggable="true" data-owner-gallery-card="${image.id}">
           <div class="owner-gallery-image">
             <img loading="lazy" decoding="async" src="${esc(imageUrl(image))}" alt="${esc(state.venue?.name || 'Restaurant or bar')} gallery photo ${index + 1}" />
-            <span class="owner-gallery-cover-badge"><i class="bi bi-star-fill"></i> Cover</span>
-            <span class="owner-gallery-drag-hint"><i class="bi bi-grip-vertical"></i> Drag</span>
+            <span class="owner-gallery-cover-badge"><i class="bi bi-star-fill"></i> ${tr('owner.cover', 'Cover')}</span>
+            <span class="owner-gallery-drag-hint"><i class="bi bi-grip-vertical"></i> ${tr('owner.drag', 'Drag')}</span>
           </div>
           <div class="owner-gallery-card-body">
             <div>
-              <strong>${index === 0 ? 'Cover Photo' : `Gallery Photo ${index + 1}`}</strong>
-              <small class="text-muted-pro">Drag to reorder</small>
+              <strong>${index === 0 ? tr('venue.cover_photo', 'Cover Photo') : `${tr('venue.gallery', 'Gallery')} ${index + 1}`}</strong>
+              <small class="text-muted-pro">${tr('owner.drag_to_reorder', 'Drag to reorder')}</small>
             </div>
             <div class="owner-gallery-actions">
               <button class="btn btn-glass btn-sm" type="button" data-owner-image-cover="${image.id}" ${index === 0 ? 'disabled' : ''} aria-label="Set as cover photo"><i class="bi bi-star"></i></button>
@@ -782,7 +800,7 @@
           </div>
         </div>
       </div>
-    `).join('') : '<div class="col-12"><div class="owner-gallery-empty">No uploaded images yet. Add a cover photo and a few ambience shots to make the public page feel alive.</div></div>';
+    `).join('') : `<div class="col-12"><div class="owner-gallery-empty">${tr('empty.nothing_here', 'No uploaded images yet. Add a cover photo and a few ambience shots to make the public page feel alive.')}</div></div>`;
   }
 
   function hasOpeningHours(venue) {
@@ -832,7 +850,7 @@
     if (missingRoot) {
       missingRoot.innerHTML = missing.length
         ? missing.map((item) => `<span><i class="bi bi-plus-circle"></i>${esc(item.missing)}</span>`).join('')
-        : '<span class="complete"><i class="bi bi-patch-check"></i>Profile looks complete</span>';
+        : `<span class="complete"><i class="bi bi-patch-check"></i>${tr('owner.profile_complete', 'Profile looks complete')}</span>`;
     }
   }
 
@@ -893,16 +911,16 @@
       coverEl.decoding = 'async';
       coverEl.src = imageUrl(cover);
     }
-    $('[data-owner-title]').textContent = venue.name || 'Restaurant / Bar profile';
+    $('[data-owner-title]').textContent = venue.name || tr('venue.profile', 'Restaurant / Bar profile');
     $('[data-owner-type]').textContent = (venue.venue_type || 'restaurant / bar').replace(/^\w/, (letter) => letter.toUpperCase());
     const statusBadge = $('[data-owner-status]');
     if (statusBadge) {
       statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
       statusBadge.className = `chip-available owner-status-${status}`;
     }
-    $('[data-owner-location]').textContent = [venue.city, venue.country].filter(Boolean).join(', ') || 'Location not set';
-    $('[data-owner-image-count]').textContent = `${venue.images?.length || 0} images`;
-    $('[data-owner-description]').textContent = venue.description || 'Complete your profile details below.';
+    $('[data-owner-location]').textContent = [venue.city, venue.country].filter(Boolean).join(', ') || tr('reservation.location_not_set', 'Location not set');
+    $('[data-owner-image-count]').textContent = `${venue.images?.length || 0} ${tr('owner.images', 'images')}`;
+    $('[data-owner-description]').textContent = venue.description || tr('venue.complete_profile_details', 'Complete your profile details below.');
     const publicLink = $('[data-owner-public-link]');
     if (publicLink) {
       publicLink.href = venue.slug ? `venue.html?venue=${encodeURIComponent(venue.slug)}` : '#';
@@ -911,8 +929,8 @@
     const publicNote = $('[data-owner-public-note]');
     if (publicNote) {
       publicNote.textContent = status === 'active'
-        ? 'Opens the public restaurant or bar page.'
-        : 'Public visibility depends on this profile being active.';
+        ? tr('venue.public_page_preview', 'Opens the public restaurant or bar page.')
+        : tr('owner.availability', 'Public visibility depends on this profile being active.');
     }
   }
 
@@ -923,19 +941,19 @@
     const select = $('[data-owner-reservation-filter="venue_id"]');
     if (select) {
       const current = select.value;
-      select.innerHTML = '<option value="">All restaurants & bars</option>' + state.venues.map((venue) => `<option value="${venue.id}">${esc(venue.name)}</option>`).join('');
+      select.innerHTML = `<option value="">${tr('owner.all_restaurants_bars', 'All restaurants & bars')}</option>` + state.venues.map((venue) => `<option value="${venue.id}">${esc(venue.name)}</option>`).join('');
       select.value = current;
     }
     const calendarSelect = $('[data-owner-calendar-filter="venue_id"]');
     if (calendarSelect) {
       const current = calendarSelect.value;
-      calendarSelect.innerHTML = '<option value="">All restaurants & bars</option>' + state.venues.map((venue) => `<option value="${venue.id}">${esc(venue.name)}</option>`).join('');
+      calendarSelect.innerHTML = `<option value="">${tr('owner.all_restaurants_bars', 'All restaurants & bars')}</option>` + state.venues.map((venue) => `<option value="${venue.id}">${esc(venue.name)}</option>`).join('');
       calendarSelect.value = current;
     }
     const analyticsSelect = $('[data-owner-analytics-filter="venue_id"]');
     if (analyticsSelect) {
       const current = analyticsSelect.value;
-      analyticsSelect.innerHTML = '<option value="">All restaurants & bars</option>' + state.venues.map((venue) => `<option value="${venue.id}">${esc(venue.name)}</option>`).join('');
+      analyticsSelect.innerHTML = `<option value="">${tr('owner.all_restaurants_bars', 'All restaurants & bars')}</option>` + state.venues.map((venue) => `<option value="${venue.id}">${esc(venue.name)}</option>`).join('');
       analyticsSelect.value = current;
     }
   }
@@ -949,30 +967,30 @@
 
     root.innerHTML = [
       {
-        label: 'Pending Reservations',
+        label: tr('reservation.pending_reservations', 'Pending Reservations'),
         value: stats.pending || 0,
-        description: 'Requests waiting for your review',
+        description: tr('reservation.requests_waiting', 'Requests waiting for your review'),
         icon: 'bi-hourglass-split',
         tone: 'pending',
       },
       {
-        label: 'Confirmed Reservations',
+        label: tr('reservation.confirmed_reservations', 'Confirmed Reservations'),
         value: stats.confirmed || 0,
-        description: 'Approved upcoming bookings',
+        description: tr('reservation.approved_by_venue', 'Approved upcoming bookings'),
         icon: 'bi-patch-check',
         tone: 'confirmed',
       },
       {
-        label: 'Cancelled Reservations',
+        label: tr('reservation.cancelled_reservations', 'Cancelled Reservations'),
         value: stats.cancelled || 0,
-        description: 'Requests that were cancelled',
+        description: tr('reservation.no_longer_active', 'Requests that were cancelled'),
         icon: 'bi-x-circle',
         tone: 'cancelled',
       },
       {
-        label: 'Today\'s Reservations',
+        label: tr('owner.today_reservations', 'Today\'s Reservations'),
         value: stats.today || 0,
-        description: 'Guest arrivals scheduled today',
+        description: tr('owner.guest_arrivals_today', 'Guest arrivals scheduled today'),
         icon: 'bi-calendar2-check',
         tone: 'today',
       },
@@ -995,19 +1013,19 @@
     return `
       <div class="owner-reservation-actions">
         <button class="btn btn-glass btn-sm" type="button" data-owner-reservation-view="${id}">
-          <i class="bi bi-eye"></i><span>View Details</span>
+          <i class="bi bi-eye"></i><span data-i18n="buttons.view_details">${tr('buttons.view_details', 'View Details')}</span>
         </button>
         <button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservation-action="confirm" data-owner-reservation-id="${id}" ${status !== 'pending' ? 'disabled' : ''}>
-          <i class="bi bi-check2-circle"></i><span>Confirm</span>
+          <i class="bi bi-check2-circle"></i><span data-i18n="owner.confirm">${tr('owner.confirm', 'Confirm')}</span>
         </button>
         <button class="btn btn-glass btn-sm" type="button" data-owner-reservation-action="complete" data-owner-reservation-id="${id}" ${!isConfirmed ? 'disabled' : ''}>
-          <i class="bi bi-patch-check"></i><span>Mark Completed</span>
+          <i class="bi bi-patch-check"></i><span data-i18n="owner.mark_completed">${tr('owner.mark_completed', 'Mark Completed')}</span>
         </button>
         <button class="btn btn-glass btn-sm" type="button" data-owner-reservation-action="no-show" data-owner-reservation-id="${id}" ${!isConfirmed ? 'disabled' : ''}>
-          <i class="bi bi-person-x"></i><span>Mark No Show</span>
+          <i class="bi bi-person-x"></i><span data-i18n="owner.mark_no_show">${tr('owner.mark_no_show', 'Mark No Show')}</span>
         </button>
         <button class="btn btn-outline-danger btn-sm" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${id}" ${!['pending', 'confirmed'].includes(status) ? 'disabled' : ''}>
-          <i class="bi bi-x-circle"></i><span>Cancel</span>
+          <i class="bi bi-x-circle"></i><span data-i18n="buttons.cancel">${tr('buttons.cancel', 'Cancel')}</span>
         </button>
       </div>
     `;
@@ -1026,7 +1044,7 @@
       body.innerHTML = `
         <tr>
           <td colspan="7">
-            <div class="reservation-table-skeleton" aria-label="Loading reservations">
+            <div class="reservation-table-skeleton" aria-label="${tr('reservation.loading_reservations', 'Loading reservations')}">
               ${Array.from({ length: 4 }, () => '<span></span>').join('')}
             </div>
           </td>
@@ -1038,17 +1056,17 @@
 
     body.innerHTML = state.reservations.length ? state.reservations.map((reservation) => `
       <tr>
-        <td data-label="Guest">
+        <td data-label="${tr('owner.guest', 'Guest')}">
           <span class="owner-reservation-guest">${esc(reservation.guest_name)}</span>
         </td>
-        <td data-label="Phone">${esc(reservation.phone || 'Not provided')}</td>
-        <td data-label="Date">${esc(dateLabel(reservation.reservation_date))}</td>
-        <td data-label="Time">${esc(timeLabel(reservation.reservation_time))}</td>
-        <td data-label="Guests">${reservation.party_size}</td>
-        <td data-label="Status">${statusBadge(reservation.status)}</td>
-        <td data-label="Actions">${reservationActions(reservation)}</td>
+        <td data-label="${tr('owner.phone', 'Phone')}">${esc(reservation.phone || tr('reservation.not_provided', 'Not provided'))}</td>
+        <td data-label="${tr('owner.date', 'Date')}">${esc(dateLabel(reservation.reservation_date))}</td>
+        <td data-label="${tr('owner.time', 'Time')}">${esc(timeLabel(reservation.reservation_time))}</td>
+        <td data-label="${tr('reservation.guests', 'Guests')}">${reservation.party_size}</td>
+        <td data-label="${tr('owner.status', 'Status')}">${statusBadge(reservation.status)}</td>
+        <td data-label="${tr('owner.actions', 'Actions')}">${reservationActions(reservation)}</td>
       </tr>
-    `).join('') : '<tr><td colspan="7"><div class="dashboard-empty owner-reservation-empty"><i class="bi bi-calendar-check"></i><strong>No reservations yet.</strong><span>Once guests start booking tables, reservations will appear here.</span></div></td></tr>';
+    `).join('') : `<tr><td colspan="7"><div class="dashboard-empty owner-reservation-empty"><i class="bi bi-calendar-check"></i><strong data-i18n="reservation.no_reservations_yet">${tr('reservation.no_reservations_yet', 'No reservations yet.')}</strong><span data-i18n="owner.no_reservations_copy">${tr('owner.no_reservations_copy', 'Once guests start booking tables, reservations will appear here.')}</span></div></td></tr>`;
     renderReservationStats();
   }
 
@@ -1057,10 +1075,10 @@
     if (!root) return;
     const summary = state.calendar.todaySummary || {};
     root.innerHTML = [
-      ['Today\'s Reservations', summary.total || 0],
-      ['Pending Today', summary.pending || 0],
-      ['Confirmed Today', summary.confirmed || 0],
-      ['Cancelled Today', summary.cancelled || 0],
+      [tr('owner.today_reservations', 'Today\'s Reservations'), summary.total || 0],
+      [tr('owner.pending_today', 'Pending Today'), summary.pending || 0],
+      [tr('owner.confirmed_today', 'Confirmed Today'), summary.confirmed || 0],
+      [tr('owner.cancelled_today', 'Cancelled Today'), summary.cancelled || 0],
     ].map(([label, value]) => `<div><span>${esc(label)}</span><strong>${value}</strong></div>`).join('');
   }
 
@@ -1079,7 +1097,7 @@
       <button class="owner-calendar-item owner-calendar-item-${status}" type="button" data-owner-calendar-reservation="${reservation.id}">
         <strong>${esc(reservation.guest_name)}</strong>
         <span>${esc(timeLabel(reservation.reservation_time))}</span>
-        <span>${reservation.party_size} ${Number(reservation.party_size) === 1 ? 'Guest' : 'Guests'}</span>
+        <span>${reservation.party_size} ${Number(reservation.party_size) === 1 ? tr('reservation.guest', 'Guest') : tr('reservation.guests', 'Guests')}</span>
         <em>${esc(statusLabel(reservation.status))}</em>
       </button>
     `;
@@ -1095,7 +1113,7 @@
           <strong>${date.getDate()}</strong>
         </div>
         <div class="owner-calendar-day-items">
-          ${reservations.length ? reservations.map(calendarReservationCard).join('') : '<div class="owner-calendar-empty">No reservations</div>'}
+          ${reservations.length ? reservations.map(calendarReservationCard).join('') : `<div class="owner-calendar-empty" data-i18n="empty.no_reservations_found">${tr('empty.no_reservations_found', 'No reservations')}</div>`}
         </div>
       </section>
     `;
@@ -1209,7 +1227,7 @@
         renderAnalyticsCharts();
         return;
       }
-      overviewRoot.innerHTML = '<div class="col-12"><div class="dashboard-empty"><i class="bi bi-graph-up"></i><span>No analytics loaded yet.</span></div></div>';
+      overviewRoot.innerHTML = `<div class="col-12"><div class="dashboard-empty"><i class="bi bi-graph-up"></i><span data-i18n="owner.no_analytics_loaded">${tr('owner.no_analytics_loaded', 'No analytics loaded yet.')}</span></div></div>`;
       renderAnalyticsCharts();
       return;
     }
@@ -1219,35 +1237,35 @@
     if (!skipRender('analytics-overview', overviewSignature)) {
     const overview = data.overview || {};
     overviewRoot.innerHTML = [
-      metricCard('Total Reservations', overview.total, 'today'),
-      metricCard('Pending Reservations', overview.pending, 'pending'),
-      metricCard('Confirmed Reservations', overview.confirmed, 'confirmed'),
-      metricCard('Completed Reservations', overview.completed, 'completed'),
-      metricCard('Cancelled Reservations', overview.cancelled, 'cancelled'),
-      metricCard('No Show Reservations', overview.no_show, 'no-show'),
+      metricCard(tr('owner.total_reservations', 'Total Reservations'), overview.total, 'today'),
+      metricCard(tr('reservation.pending_reservations', 'Pending Reservations'), overview.pending, 'pending'),
+      metricCard(tr('reservation.confirmed_reservations', 'Confirmed Reservations'), overview.confirmed, 'confirmed'),
+      metricCard(tr('reservation.completed_reservations', 'Completed Reservations'), overview.completed, 'completed'),
+      metricCard(tr('reservation.cancelled_reservations', 'Cancelled Reservations'), overview.cancelled, 'cancelled'),
+      metricCard(tr('reservation.no_show_reservations', 'No Show Reservations'), overview.no_show, 'no-show'),
     ].join('');
     }
 
     renderMiniMetrics('[data-owner-analytics-today]', data.today || {}, [
-      ['Reservations Today', 'reservations'],
-      ['Completed Today', 'completed'],
-      ['Cancelled Today', 'cancelled'],
-      ['No Shows Today', 'no_show'],
+      [tr('owner.reservations_today', 'Reservations Today'), 'reservations'],
+      [tr('owner.completed_today', 'Completed Today'), 'completed'],
+      [tr('owner.cancelled_today_metric', 'Cancelled Today'), 'cancelled'],
+      [tr('owner.no_shows_today', 'No Shows Today'), 'no_show'],
     ]);
     renderMiniMetrics('[data-owner-analytics-month]', data.month || {}, [
-      ['Reservations This Month', 'reservations'],
-      ['Completed This Month', 'completed'],
-      ['Cancelled This Month', 'cancelled'],
-      ['No Shows This Month', 'no_show'],
+      [tr('owner.reservations_month', 'Reservations This Month'), 'reservations'],
+      [tr('owner.completed_month', 'Completed This Month'), 'completed'],
+      [tr('owner.cancelled_month', 'Cancelled This Month'), 'cancelled'],
+      [tr('owner.no_shows_month', 'No Shows This Month'), 'no_show'],
     ]);
 
     const rates = data.rates || {};
     const ratesRoot = $('[data-owner-analytics-rates]');
     if (ratesRoot && !skipRender('analytics-rates', stableSignature(rates))) {
       ratesRoot.innerHTML = [
-        ['Completion Rate', rates.completion_rate],
-        ['Cancellation Rate', rates.cancellation_rate],
-        ['No Show Rate', rates.no_show_rate],
+        [tr('owner.completion_rate', 'Completion Rate'), rates.completion_rate],
+        [tr('owner.cancellation_rate', 'Cancellation Rate'), rates.cancellation_rate],
+        [tr('owner.no_show_rate', 'No Show Rate'), rates.no_show_rate],
       ].map(([label, value]) => `
         <div class="col-md-4">
           <div class="owner-analytics-rate">
@@ -1286,9 +1304,9 @@
       <div class="owner-analytics-rank">
         <span>${index + 1}</span>
         <strong>${esc(item[key] || '-')}</strong>
-        <em>${Number(item.total || 0)} reservations</em>
+        <em>${Number(item.total || 0)} ${tr('owner.reservations', 'reservations')}</em>
       </div>
-    `).join('') : '<div class="availability-empty">No reservation data yet.</div>';
+    `).join('') : `<div class="availability-empty" data-i18n="owner.no_reservation_data">${tr('owner.no_reservation_data', 'No reservation data yet.')}</div>`;
   }
 
   function renderAnalyticsCharts() {
@@ -1316,14 +1334,14 @@
     const theme = chartTheme();
     const trend = data.trend || [];
     const trendEmpty = $('[data-owner-analytics-trend-empty]');
-    if (trendEmpty) trendEmpty.innerHTML = trend.some((item) => Number(item.total) > 0) ? '' : '<div class="availability-empty mt-3">No reservations in this range.</div>';
+    if (trendEmpty) trendEmpty.innerHTML = trend.some((item) => Number(item.total) > 0) ? '' : `<div class="availability-empty mt-3" data-i18n="owner.no_reservations_range">${tr('owner.no_reservations_range', 'No reservations in this range.')}</div>`;
     if (trendCanvas) {
       window._ownerReservationTrendChart = new Chart(trendCanvas, {
         type: 'line',
         data: {
           labels: trend.map((item) => dateLabel(item.date)),
           datasets: [{
-            label: 'Reservations',
+            label: tr('owner.reservations', 'Reservations'),
             data: trend.map((item) => item.total),
             borderColor: theme.gold,
             backgroundColor: 'rgba(212, 167, 90, .18)',
@@ -1343,7 +1361,7 @@
 
     const breakdown = data.status_breakdown || [];
     const statusEmpty = $('[data-owner-analytics-status-empty]');
-    if (statusEmpty) statusEmpty.innerHTML = breakdown.some((item) => Number(item.total) > 0) ? '' : '<div class="availability-empty mt-3">No statuses to chart yet.</div>';
+    if (statusEmpty) statusEmpty.innerHTML = breakdown.some((item) => Number(item.total) > 0) ? '' : `<div class="availability-empty mt-3" data-i18n="owner.no_statuses_chart">${tr('owner.no_statuses_chart', 'No statuses to chart yet.')}</div>`;
     if (statusCanvas) {
       window._ownerReservationStatusChart = new Chart(statusCanvas, {
         type: 'doughnut',
@@ -1364,24 +1382,24 @@
   }
 
   function renderReservationDetail(reservation) {
-    $('[data-owner-reservation-title]').textContent = `Reservation #${reservation.id}`;
+    $('[data-owner-reservation-title]').textContent = tr('owner.reservation_detail_title', 'Reservation Details');
     const body = $('[data-owner-reservation-detail]');
     if (!body) return;
     body.innerHTML = `
       <div class="row g-3 owner-reservation-detail-grid">
-        <div class="col-md-6"><div class="facility justify-content-between"><span>Guest</span><strong>${esc(reservation.guest_name)}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span>Status</span>${statusBadge(reservation.status)}</div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span>Phone</span><strong>${esc(reservation.phone || 'Not provided')}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span>Party Size</span><strong>${reservation.party_size}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span>Date</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span>Time</span><strong>${esc(timeLabel(reservation.reservation_time))}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span>Created At</span><strong>${esc(dateTimeLabel(reservation.created_at))}</strong></div></div>
-        <div class="col-12"><div class="facility justify-content-between"><span>Restaurant / Bar</span><strong>${esc(reservation.venue?.name || '')}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span>Occasion</span><strong>${esc(occasionLabel(reservation.occasion))}</strong></div></div>
-        <div class="col-12"><div class="facility"><span><span class="text-muted-pro d-block mb-1">Special Request</span>${esc(reservation.notes || 'No special request provided.')}</span></div></div>
+        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.guest">${tr('owner.guest', 'Guest')}</span><strong>${esc(reservation.guest_name)}</strong></div></div>
+        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.status">${tr('owner.status', 'Status')}</span>${statusBadge(reservation.status)}</div></div>
+        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.phone">${tr('owner.phone', 'Phone')}</span><strong>${esc(reservation.phone || tr('reservation.not_provided', 'Not provided'))}</strong></div></div>
+        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.party_size">${tr('reservation.party_size', 'Party Size')}</span><strong>${reservation.party_size}</strong></div></div>
+        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.date">${tr('owner.date', 'Date')}</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div></div>
+        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.time">${tr('owner.time', 'Time')}</span><strong>${esc(timeLabel(reservation.reservation_time))}</strong></div></div>
+        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.created_at">${tr('reservation.created_at', 'Created At')}</span><strong>${esc(dateTimeLabel(reservation.created_at))}</strong></div></div>
+        <div class="col-12"><div class="facility justify-content-between"><span data-i18n="common.restaurant_bar">${tr('common.restaurant_bar', 'Restaurant / Bar')}</span><strong>${esc(reservation.venue?.name || '')}</strong></div></div>
+        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.occasion">${tr('reservation.occasion', 'Occasion')}</span><strong>${esc(occasionLabel(reservation.occasion))}</strong></div></div>
+        <div class="col-12"><div class="facility"><span><span class="text-muted-pro d-block mb-1" data-i18n="reservation.special_request">${tr('reservation.special_request', 'Special Request')}</span>${esc(reservation.notes || tr('reservation.no_special_request', 'No special request provided.'))}</span></div></div>
         ${reservation.status === 'cancelled' ? `
-          <div class="col-md-6"><div class="facility justify-content-between"><span>Cancelled At</span><strong>${esc(dateTimeLabel(reservation.cancelled_at))}</strong></div></div>
-          <div class="col-12"><div class="facility"><span><span class="text-muted-pro d-block mb-1">Cancellation Reason</span>${esc(reservation.owner_cancellation_reason || reservation.cancellation_reason || 'No reason provided.')}</span></div></div>
+          <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.cancelled_at">${tr('reservation.cancelled_at', 'Cancelled At')}</span><strong>${esc(dateTimeLabel(reservation.cancelled_at))}</strong></div></div>
+          <div class="col-12"><div class="facility"><span><span class="text-muted-pro d-block mb-1" data-i18n="reservation.cancellation_reason">${tr('reservation.cancellation_reason', 'Cancellation Reason')}</span>${esc(reservation.owner_cancellation_reason || reservation.cancellation_reason || tr('reservation.no_reason_provided', 'No reason provided.'))}</span></div></div>
         ` : ''}
       </div>
     `;
@@ -1445,8 +1463,8 @@
     if (state.saving) return;
     const payload = payloadFromForm();
     if (!payload.name || !payload.venue_type || !payload.city) {
-      showOwnerAlert('Please add a restaurant or bar name, type, and city.');
-      window.tkToast?.('Please add a restaurant or bar name, type, and city.', 'error');
+      showOwnerAlert(tr('toast.operation_failed', 'Please add a restaurant or bar name, type, and city.'));
+      window.tkToast?.(tr('toast.operation_failed', 'Please add a restaurant or bar name, type, and city.'), 'error');
       return;
     }
 
@@ -1465,7 +1483,7 @@
       fillForm();
       renderVenueFilter();
       await loadAvailabilityExceptions();
-      window.tkToast?.(method === 'POST' ? 'Restaurant or bar created successfully.' : 'Restaurant or bar updated successfully.', 'success');
+      window.tkToast?.(method === 'POST' ? tr('toast.saved_successfully', 'Restaurant or bar created successfully.') : tr('toast.updated_successfully', 'Restaurant or bar updated successfully.'), 'success');
     } catch (err) {
       const messages = err?.status === 422 ? validationMessages(err) : [friendlyError(err)];
       showOwnerAlert(messages);
@@ -1477,7 +1495,7 @@
 
   async function uploadImages(files) {
     if (!state.venue) {
-      window.tkToast?.('Create the restaurant or bar before uploading images.', 'error');
+      window.tkToast?.(tr('toast.operation_failed', 'Create the restaurant or bar before uploading images.'), 'error');
       return;
     }
     const valid = Array.from(files || []).filter((file) => file.type.startsWith('image/'));
@@ -1485,7 +1503,7 @@
 
     setBusy(true);
     try {
-      renderUploadProgress(valid, 0, 'Preparing uploads...');
+      renderUploadProgress(valid, 0, tr('loading.uploading', 'Preparing uploads...'));
       for (const [index, file] of valid.entries()) {
         const data = await uploadVenueImage(file, (progress) => {
           renderUploadProgress(valid, index, `Uploading ${file.name}`, progress);
@@ -1496,7 +1514,7 @@
       }
       renderSummary();
       fillForm();
-      window.tkToast?.(valid.length === 1 ? 'Image uploaded successfully.' : 'Images uploaded successfully.', 'success');
+      window.tkToast?.(tr('toast.saved_successfully', valid.length === 1 ? 'Image uploaded successfully.' : 'Images uploaded successfully.'), 'success');
     } catch (err) {
       window.tkToast?.(friendlyError(err), 'error');
     } finally {
@@ -1524,7 +1542,7 @@
     root.hidden = false;
     root.innerHTML = `
       <div class="owner-upload-progress-head">
-        <span>${esc(label || 'Uploading photos...')}</span>
+        <span>${esc(label || tr('loading.uploading', 'Uploading photos...'))}</span>
         <strong>${overall}%</strong>
       </div>
       <div class="owner-upload-progress-bar" aria-hidden="true"><span style="width:${overall}%"></span></div>
@@ -1578,7 +1596,7 @@
       clearOwnerRenderSignatures('gallery');
       renderSummary();
       fillForm();
-      window.tkToast?.('Image deleted successfully.', 'success');
+      window.tkToast?.(tr('toast.deleted_successfully', 'Image deleted successfully.'), 'success');
     } catch (err) {
       window.tkToast?.(friendlyError(err), 'error');
     } finally {
@@ -1586,7 +1604,7 @@
     }
   }
 
-  async function persistGalleryOrder(images, message = 'Gallery order updated.') {
+  async function persistGalleryOrder(images, message = tr('toast.updated_successfully', 'Gallery order updated.')) {
     if (!state.venue?.slug || !images.length) return;
     const payload = images.map((image, order) => ({ id: image.id, sort_order: order }));
 
@@ -1619,7 +1637,7 @@
     const images = [...(state.venue?.images || [])].sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
     const image = images.find((item) => String(item.id) === String(imageId));
     if (!image) return;
-    await persistGalleryOrder([image, ...images.filter((item) => String(item.id) !== String(imageId))], 'Cover photo updated.');
+    await persistGalleryOrder([image, ...images.filter((item) => String(item.id) !== String(imageId))], tr('toast.updated_successfully', 'Cover photo updated.'));
   }
 
   async function moveImageBefore(sourceId, targetId) {
@@ -1648,7 +1666,7 @@
       renderAvailabilityExceptions();
       renderVenueFilter();
       bootstrap.Modal.getOrCreateInstance($('#ownerDeleteModal')).hide();
-      window.tkToast?.('Restaurant or bar deleted successfully.', 'success');
+      window.tkToast?.(tr('toast.deleted_successfully', 'Restaurant or bar deleted successfully.'), 'success');
     } catch (err) {
       window.tkToast?.(friendlyError(err), 'error');
     } finally {
@@ -1854,14 +1872,14 @@
 
   async function addBlackoutDate() {
     if (!state.venue) {
-      window.tkToast?.('Create the restaurant or bar before adding blackout dates.', 'error');
+      window.tkToast?.(tr('toast.operation_failed', 'Create the restaurant or bar before adding blackout dates.'), 'error');
       return;
     }
 
     const date = $('[data-blackout-date]')?.value;
     const reason = nullable($('[data-blackout-reason]')?.value);
     if (!date) {
-      window.tkToast?.('Select a blackout date.', 'error');
+      window.tkToast?.(tr('availability.select_blackout_date', 'Select a blackout date.'), 'error');
       return;
     }
 
@@ -1874,7 +1892,7 @@
       if ($('[data-blackout-date]')) $('[data-blackout-date]').value = '';
       if ($('[data-blackout-reason]')) $('[data-blackout-reason]').value = '';
       renderBlackoutDates();
-      window.tkToast?.('Blackout date added.', 'success');
+      window.tkToast?.(tr('availability.blackout_added', 'Blackout date added.'), 'success');
     } catch (err) {
       window.tkToast?.(friendlyError(err), 'error');
     }
@@ -1886,7 +1904,7 @@
       await api().fetch(`/owner/venues/${state.venue.slug}/blackout-dates/${id}`, { method: 'DELETE' });
       state.blackoutDates = state.blackoutDates.filter((item) => String(item.id) !== String(id));
       renderBlackoutDates();
-      window.tkToast?.('Blackout date removed.', 'success');
+      window.tkToast?.(tr('availability.blackout_removed', 'Blackout date removed.'), 'success');
     } catch (err) {
       window.tkToast?.(friendlyError(err), 'error');
     }
@@ -1894,7 +1912,7 @@
 
   async function saveSpecialHours() {
     if (!state.venue) {
-      window.tkToast?.('Create the restaurant or bar before adding special hours.', 'error');
+      window.tkToast?.(tr('toast.operation_failed', 'Create the restaurant or bar before adding special hours.'), 'error');
       return;
     }
 
@@ -1908,7 +1926,7 @@
     };
 
     if (!payload.date || (!payload.is_closed && (!payload.opens_at || !payload.closes_at))) {
-      window.tkToast?.('Select a date and special opening hours.', 'error');
+      window.tkToast?.(tr('availability.select_special_hours', 'Select a date and special opening hours.'), 'error');
       return;
     }
 
@@ -1925,7 +1943,7 @@
       state.specialHours = state.specialHours.sort((a, b) => String(a.date).localeCompare(String(b.date)));
       clearSpecialForm();
       renderSpecialHours();
-      window.tkToast?.(editingId ? 'Special hours updated.' : 'Special hours added.', 'success');
+      window.tkToast?.(editingId ? tr('availability.special_updated', 'Special hours updated.') : tr('availability.special_added', 'Special hours added.'), 'success');
     } catch (err) {
       window.tkToast?.(friendlyError(err), 'error');
     }
@@ -1950,7 +1968,7 @@
       state.specialHours = state.specialHours.filter((item) => String(item.id) !== String(id));
       if (String(state.editingSpecialHourId) === String(id)) clearSpecialForm();
       renderSpecialHours();
-      window.tkToast?.('Special hours removed.', 'success');
+      window.tkToast?.(tr('availability.special_removed', 'Special hours removed.'), 'success');
     } catch (err) {
       window.tkToast?.(friendlyError(err), 'error');
     }
@@ -1968,10 +1986,10 @@
       await loadReservations();
       if (state.reservationView === 'calendar') await loadCalendarReservations();
       const message = action === 'complete'
-        ? 'Reservation marked completed successfully.'
+        ? tr('toast.operation_completed', 'Reservation marked completed successfully.')
         : action === 'no-show'
-          ? 'Reservation marked as no show successfully.'
-          : `Reservation ${action}ed successfully.`;
+          ? tr('toast.operation_completed', 'Reservation marked as no show successfully.')
+          : tr('toast.operation_completed', `Reservation ${action}ed successfully.`);
       window.tkToast?.(message, 'success');
     } catch (err) {
       window.tkToast?.(friendlyError(err), 'error');
@@ -1981,29 +1999,29 @@
   function reservationActionMeta(action) {
     return {
       confirm: {
-        title: 'Confirm reservation?',
-        body: 'This will confirm the guest reservation.',
-        confirm: 'Confirm reservation',
+        title: tr('reservation.confirm_reservation', 'Confirm reservation?'),
+        body: tr('reservation.confirm_reservation', 'This will confirm the guest reservation.'),
+        confirm: tr('reservation.confirm_reservation', 'Confirm reservation'),
       },
       cancel: {
-        title: 'Cancel reservation?',
-        body: 'This will cancel the guest reservation.',
-        confirm: 'Cancel reservation',
+        title: tr('reservation.cancel_reservation', 'Cancel reservation?'),
+        body: tr('reservation.cancel_notice', 'This will cancel the guest reservation.'),
+        confirm: tr('reservation.cancel_reservation', 'Cancel reservation'),
       },
       complete: {
-        title: 'Mark reservation completed?',
-        body: 'Use this after the guest visit has finished.',
-        confirm: 'Mark completed',
+        title: tr('owner.mark_completed', 'Mark reservation completed?'),
+        body: tr('reservation.reservation_completed', 'Use this after the guest visit has finished.'),
+        confirm: tr('owner.mark_completed', 'Mark completed'),
       },
       'no-show': {
-        title: 'Mark reservation as no show?',
-        body: 'Use this only when the guest did not arrive for a confirmed reservation.',
-        confirm: 'Mark no show',
+        title: tr('owner.mark_no_show', 'Mark reservation as no show?'),
+        body: tr('reservation.no_show', 'Use this only when the guest did not arrive for a confirmed reservation.'),
+        confirm: tr('owner.mark_no_show', 'Mark no show'),
       },
     }[action] || {
-      title: 'Update reservation?',
-      body: 'This will update the reservation status.',
-      confirm: 'Update reservation',
+      title: tr('reservation.reservation', 'Update reservation?'),
+      body: tr('reservation.reservation_status', 'This will update the reservation status.'),
+      confirm: tr('buttons.update', 'Update reservation'),
     };
   }
 
@@ -2039,7 +2057,7 @@
     if (pending.action === 'cancel') {
       const reason = ownerCancellationReason();
       if (!reason) {
-        window.tkToast?.('Please add a cancellation reason.', 'error');
+        window.tkToast?.(tr('owner.add_cancellation_reason', 'Please add a cancellation reason.'), 'error');
         return;
       }
       body.owner_cancellation_reason = reason;
@@ -2313,5 +2331,18 @@
     hydrateTimeSelects();
     bindEvents();
     loadData();
+  });
+
+  document.addEventListener('tiketa:language-changed', () => {
+    renderSignatures.clear();
+    lastReservationRenderSignature = '';
+    hydrateTimeSelects();
+    renderSummary();
+    fillForm();
+    renderVenueFilter();
+    renderReservations();
+    renderCalendar();
+    renderAnalytics();
+    renderAvailabilityExceptions();
   });
 })();

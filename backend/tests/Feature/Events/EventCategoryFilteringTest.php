@@ -207,7 +207,7 @@ class EventCategoryFilteringTest extends TestCase
             'title' => 'Test Event',
             'slug' => fake()->unique()->slug(),
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Arena',
+            'venue_name' => 'Tiketa Arena',
             'city' => 'Prishtina',
             'starts_at' => now()->addWeek(),
             'ends_at' => now()->addWeek()->addHours(2),

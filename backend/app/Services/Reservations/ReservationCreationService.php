@@ -36,7 +36,7 @@ class ReservationCreationService
             $reservation = Reservation::query()->create([
                 'venue_id' => $venue->id,
                 'user_id' => $user->id,
-                'guest_name' => $user->name ?: trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: 'Event Sphere guest',
+                'guest_name' => $user->name ?: trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: 'Tiketa guest',
                 'phone' => ($payload['phone'] ?? null) ?: $user->phone,
                 'party_size' => $payload['party_size'],
                 'reservation_date' => $payload['reservation_date'],

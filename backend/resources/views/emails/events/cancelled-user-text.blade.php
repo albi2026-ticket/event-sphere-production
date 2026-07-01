@@ -14,4 +14,4 @@ Event Details:
 - Location: {{ $emailData['location'] }}
 - Order Number: {{ $order->order_number }}
 
-Event Sphere Team
+Tiketa Team

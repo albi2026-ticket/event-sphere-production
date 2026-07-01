@@ -201,7 +201,7 @@
   async function lookup(search) {
     const wrap = $('[data-scanner-lookup-results]');
     if (!wrap) return;
-    wrap.innerHTML = '<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Looking up tickets...</span></div>';
+    wrap.innerHTML = `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span data-i18n="loading.looking_up_tickets">${window.t?.('loading.looking_up_tickets') || 'Looking up tickets...'}</span></div>`;
     const query = qs({ q: search, event_id: selectedEventId() });
     const res = await api().fetch(`${state.roleBase}/tickets/lookup${query ? `?${query}` : ''}`);
     const tickets = rows(res.data);
@@ -210,7 +210,7 @@
         <div><div class="fw-semibold">${esc(ticket.attendee?.name || 'Guest')}</div><small>${esc(ticket.event?.title || '-')} · ${esc(ticket.order?.order_number || '-')}</small></div>
         ${badge(ticket.status)}
       </button>
-    `).join('') || '<div class="dashboard-empty"><i class="bi bi-search"></i><span>No tickets found.</span></div>';
+    `).join('') || `<div class="dashboard-empty"><i class="bi bi-search"></i><span data-i18n="empty.no_tickets_found">${window.t?.('empty.no_tickets_found') || 'No tickets found.'}</span></div>`;
   }
 
   async function startCamera() {

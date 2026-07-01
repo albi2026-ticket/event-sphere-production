@@ -241,7 +241,7 @@
       }
       const markAll = event.target.closest('[data-notification-mark-all]');
       if (markAll) {
-        markAllNotificationsRead().catch(() => window.tkToast?.('Notification update failed', 'error'));
+        markAllNotificationsRead().catch(() => window.tkToast?.(window.t?.('toast.notification_update_failed') || 'Notification update failed', 'error'));
         return;
       }
       const item = event.target.closest('[data-notification-id]');
@@ -251,7 +251,7 @@
           .then(() => {
             if (notification?.link) location.href = notification.link;
           })
-          .catch(() => window.tkToast?.('Notification update failed', 'error'));
+          .catch(() => window.tkToast?.(window.t?.('toast.notification_update_failed') || 'Notification update failed', 'error'));
         return;
       }
       if (!root && panel) {
@@ -309,17 +309,22 @@
       try {
         const result = await window.EventSphereFavorites.toggleFavorite(Number(eventId));
         window.EventSphereFavorites.updateFavoriteButtons?.(eventId, result?.is_favorited);
-        window.tkToast(result?.is_favorited ? 'Saved to favorites' : 'Removed from favorites', result?.is_favorited ? 'success' : 'info');
+        window.tkToast(
+          result?.is_favorited
+            ? (window.t?.('toast.saved_to_favorites') || 'Saved to favorites')
+            : (window.t?.('toast.removed_from_favorites') || 'Removed from favorites'),
+          result?.is_favorited ? 'success' : 'info'
+        );
       } catch (err) {
-        window.tkToast(err.message || 'Favorite update failed', 'error');
+        window.tkToast(err.message || window.t?.('toast.favorite_update_failed') || 'Favorite update failed', 'error');
       }
       return;
     }
     const id = b.dataset.fav;
     const list = favs();
     const i = list.indexOf(id);
-    if (i >= 0) { list.splice(i, 1); window.tkToast('Removed from favorites', 'info'); }
-    else { list.push(id); window.tkToast('Saved to favorites'); }
+    if (i >= 0) { list.splice(i, 1); window.tkToast(window.t?.('toast.removed_from_favorites') || 'Removed from favorites', 'info'); }
+    else { list.push(id); window.tkToast(window.t?.('toast.saved_to_favorites') || 'Saved to favorites'); }
     setFavs(list); paintFavs();
   });
 
@@ -417,7 +422,7 @@
     }
     menu.innerHTML = hits.length
       ? hits.map(h => `<div class="px-3 py-2 rounded" data-ac-value="${h.replace(/"/g, '&quot;')}" style="cursor:pointer" onmouseover="this.style.background='var(--card-2)'" onmouseout="this.style.background=''"><i class="bi bi-search me-2 text-muted-pro"></i>${h}</div>`).join('')
-      : '<div class="px-3 py-2 text-muted-pro">No matches</div>';
+      : `<div class="px-3 py-2 text-muted-pro" data-i18n="empty.no_matches">${window.t?.('empty.no_matches') || 'No matches'}</div>`;
   });
   document.addEventListener('click', (e) => {
     const suggestion = e.target.closest('[data-ac-value]');

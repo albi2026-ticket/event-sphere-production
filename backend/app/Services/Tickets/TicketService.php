@@ -270,7 +270,7 @@ class TicketService
 
         return '<!doctype html><html><head><meta charset="utf-8"><title>Ticket '.$ticket->ticket_code.'</title></head><body style="font-family:Arial,sans-serif;margin:32px;color:#111827;">'
             .'<main style="max-width:720px;margin:0 auto;border:1px solid #d1d5db;padding:28px;border-radius:8px;">'
-            .'<p style="text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin:0 0 8px;">Event Sphere Digital Ticket</p>'
+            .'<p style="text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin:0 0 8px;">Tiketa Digital Ticket</p>'
             .'<h1 style="margin:0 0 8px;font-size:28px;">'.e($ticket->event->title).'</h1>'
             .'<p style="margin:0 0 20px;color:#374151;">'.e($ticket->event->venue_name).' · '.e($ticket->event->city).'</p>'
             .'<img src="'.$qr.'" alt="Ticket QR code" style="width:280px;height:280px;display:block;margin:0 0 20px;">'

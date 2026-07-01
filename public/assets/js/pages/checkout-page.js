@@ -5,6 +5,7 @@
   const cart = () => window.EventSphereCart;
   const orders = () => window.EventSphereOrders;
   const u = () => window.EventSphereUtils;
+  const tr = (key, fallback, replacements) => window.t?.(key, replacements) || fallback;
 
   function defer(callback) {
     if ('requestIdleCallback' in window) {
@@ -28,7 +29,7 @@
     };
 
     if (!c || !c.items?.length) {
-      window.tkToast?.('Your cart is empty', 'info');
+      window.tkToast?.(tr('checkout.cart_empty', 'Your cart is empty'), 'info');
       setTimeout(() => { location.href = 'events.html'; }, 800);
       return;
     }
@@ -66,10 +67,10 @@
       reservationExpired = true;
       if (countdownInterval) clearInterval(countdownInterval);
       reservationCountdown?.replaceChildren(document.createTextNode('00:00'));
-      reservationMessage?.replaceChildren(document.createTextNode('Your reservation has expired.'));
+      reservationMessage?.replaceChildren(document.createTextNode(tr('checkout.reservation_expired_message', 'Your reservation has expired.')));
       if (els.payBtn) {
         els.payBtn.disabled = true;
-        els.payBtn.textContent = 'Reservation expired';
+        els.payBtn.textContent = tr('checkout.reservation_expired', 'Reservation expired');
       }
     }
 
@@ -94,17 +95,17 @@
           <div><div class="fw-semibold">${u().escapeHtml(c.event_title)}</div>
           <small class="text-muted-pro">${u().escapeHtml(c.venue_name || '')}</small><br>
           <small class="text-muted-pro">${item.quantity}× ${u().escapeHtml(item.ticket_type_name)}</small>
-          ${c.max_tickets_per_user ? `<br><small class="text-muted-pro">Limit ${c.max_tickets_per_user} ticket${Number(c.max_tickets_per_user) === 1 ? '' : 's'} per user</small>` : ''}</div>
+          ${c.max_tickets_per_user ? `<br><small class="text-muted-pro">${tr('events.purchase_limit', 'Limit {count} ticket(s) per user', { count: c.max_tickets_per_user })}</small>` : ''}</div>
         </div>
-        <div class="d-flex justify-content-between small mb-1"><span class="text-muted-pro">Subtotal</span><span>${u().formatMoney(subtotal, c.currency)}</span></div>
-        <div class="d-flex justify-content-between small mb-1"><span class="text-muted-pro">Service fee (${feePercentage}%)</span><span>${u().formatMoney(serviceFee, c.currency)}</span></div>
+        <div class="d-flex justify-content-between small mb-1"><span class="text-muted-pro" data-i18n="checkout.subtotal">${tr('checkout.subtotal', 'Subtotal')}</span><span>${u().formatMoney(subtotal, c.currency)}</span></div>
+        <div class="d-flex justify-content-between small mb-1"><span class="text-muted-pro"><span data-i18n="checkout.service_fee">${tr('checkout.service_fee', 'Service fee')}</span> (${feePercentage}%)</span><span>${u().formatMoney(serviceFee, c.currency)}</span></div>
         <hr class="divider"/>
         <div class="d-flex align-items-center justify-content-between gap-3 mb-3 rounded-3 p-3" style="background:rgba(49,130,206,.08);border:1px solid rgba(49,130,206,.18)">
-          <small class="text-muted-pro" data-reservation-message>Preparing ticket reservation...</small>
+          <small class="text-muted-pro" data-reservation-message data-i18n="checkout.preparing_reservation">${tr('checkout.preparing_reservation', 'Preparing ticket reservation...')}</small>
           <span class="fw-bold" data-reservation-countdown>--:--</span>
         </div>
-        <div class="d-flex justify-content-between fw-bold fs-5"><span>Total</span><span>${formattedTotal}</span></div>`;
-      els.summary.innerHTML = `<h6 class="mb-3">Order summary</h6>${inner}`;
+        <div class="d-flex justify-content-between fw-bold fs-5"><span data-i18n="checkout.total">${tr('checkout.total', 'Total')}</span><span>${formattedTotal}</span></div>`;
+      els.summary.innerHTML = `<h6 class="mb-3" data-i18n="checkout.order_summary">${tr('checkout.order_summary', 'Order summary')}</h6>${inner}`;
       reservationCountdown = els.summary.querySelector('[data-reservation-countdown]');
       reservationMessage = els.summary.querySelector('[data-reservation-message]');
     }
@@ -112,7 +113,7 @@
     function setPayReady(ready) {
       if (!els.payBtn) return;
       els.payBtn.disabled = !ready;
-      els.payBtn.textContent = ready ? `Pay ${formattedTotal}` : 'Preparing checkout...';
+      els.payBtn.textContent = ready ? `${tr('checkout.pay', 'Pay')} ${formattedTotal}` : tr('checkout.preparing_checkout', 'Preparing checkout...');
     }
 
     function renderAttendeeFields() {
@@ -121,13 +122,13 @@
       const attendeeHtml = Array.from({ length: quantity }, (_, index) => `
         <div class="${index > 0 ? 'pt-3 mt-3 border-top' : ''}" style="${index > 0 ? 'border-color:var(--border) !important' : ''}">
           <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="fw-semibold">Ticket ${index + 1}</div>
+            <div class="fw-semibold"><span data-i18n="forms.ticket">${window.t?.('forms.ticket') || 'Ticket'}</span> ${index + 1}</div>
             <small class="text-muted-pro">${u().escapeHtml(item.ticket_type_name || 'Ticket')}</small>
           </div>
           <div class="row g-3">
-            <div class="col-md-6"><label class="form-label">Full name</label><input class="form-control" name="attendees[${index}][name]" required placeholder="Attendee name"/></div>
-            <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="attendees[${index}][email]" required placeholder="attendee@email.com"/></div>
-            <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="attendees[${index}][phone]" placeholder="+1 (555) 000-0000"/></div>
+            <div class="col-md-6"><label class="form-label" data-i18n="forms.full_name">${window.t?.('forms.full_name') || 'Full name'}</label><input class="form-control" name="attendees[${index}][name]" required placeholder="${window.t?.('forms.attendee_name') || 'Attendee name'}" data-i18n-attr="placeholder:forms.attendee_name"/></div>
+            <div class="col-md-6"><label class="form-label" data-i18n="forms.email">${window.t?.('forms.email') || 'Email'}</label><input class="form-control" type="email" name="attendees[${index}][email]" required placeholder="attendee@email.com"/></div>
+            <div class="col-md-6"><label class="form-label" data-i18n="forms.phone">${window.t?.('forms.phone') || 'Phone'}</label><input class="form-control" name="attendees[${index}][phone]" placeholder="+1 (555) 000-0000"/></div>
           </div>
         </div>`).join('');
 
@@ -154,7 +155,7 @@
       setPayReady(true);
       startCountdown();
     } catch (err) {
-      window.tkToast?.(err.message || 'Unable to reserve these tickets.', 'error');
+      window.tkToast?.(err.message || tr('checkout.unable_reserve_tickets', 'Unable to reserve these tickets.'), 'error');
       if (els.payBtn) {
         els.payBtn.disabled = true;
         els.payBtn.textContent = 'Tickets unavailable';
@@ -186,7 +187,7 @@
       if (!els.form?.reportValidity()) return;
       if (!checkoutReservation || reservationExpired || reservationSecondsRemaining() <= 0) {
         markReservationExpired();
-        window.tkToast?.('Your reservation has expired.', 'error');
+        window.tkToast?.(tr('checkout.reservation_expired_message', 'Your reservation has expired.'), 'error');
         return;
       }
       checkoutInFlight = true;
@@ -228,10 +229,10 @@
             // Backend payment handlers may have already released the reservation.
           }
         }
-        window.tkToast?.(err.message || 'Checkout failed', 'error');
+        window.tkToast?.(err.message || tr('checkout.checkout_failed', 'Checkout failed'), 'error');
         checkoutInFlight = false;
         els.payBtn.disabled = false;
-        els.payBtn.textContent = `Pay ${formattedTotal}`;
+        els.payBtn.textContent = `${tr('checkout.pay', 'Pay')} ${formattedTotal}`;
       }
     });
 

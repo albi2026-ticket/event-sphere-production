@@ -11,7 +11,7 @@
                 <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="width:640px;max-width:640px;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #dbe3ef;">
                     <tr>
                         <td style="background:#111827;padding:28px 32px;color:#ffffff;">
-                            <div style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#93c5fd;">Event Sphere</div>
+                            <div style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#93c5fd;">Tiketa</div>
                             <h1 style="margin:10px 0 0;font-size:26px;line-height:1.25;">Event Cancelled</h1>
                         </td>
                     </tr>
@@ -30,7 +30,7 @@
                                 <tr><td style="padding:10px 14px;color:#64748b;">Order Number</td><td style="padding:10px 14px;">{{ $order->order_number }}</td></tr>
                             </table>
 
-                            <p style="margin:0;color:#334155;line-height:1.6;">Event Sphere Team</p>
+                            <p style="margin:0;color:#334155;line-height:1.6;">Tiketa Team</p>
                         </td>
                     </tr>
                 </table>

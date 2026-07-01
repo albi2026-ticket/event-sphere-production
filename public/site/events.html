@@ -17,11 +17,11 @@
 <!-- Page header -->
 <section class="section-sm" style="padding-top:2.5rem">
   <div class="container-xxl">
-    <nav class="text-muted-pro small mb-2"><a href="index.html" style="color:inherit">Home</a> <i class="bi bi-chevron-right mx-1"></i> Events</nav>
+    <nav class="text-muted-pro small mb-2"><a href="index.html" style="color:inherit" data-i18n="header.home">Home</a> <i class="bi bi-chevron-right mx-1"></i> <span data-i18n="header.events">Events</span></nav>
     <div class="d-flex justify-content-between align-items-end flex-wrap gap-3">
-      <div><h1 style="font-size:2.2rem">All events</h1><p class="mb-0">48,231 events · sorted by relevance</p></div>
+      <div><h1 style="font-size:2.2rem" data-i18n="events.all_events">All events</h1><p class="mb-0" data-i18n="events.sorted_by_relevance">48,231 events · sorted by relevance</p></div>
       <div class="d-flex gap-2 ac-wrap" style="position:relative">
-        <input class="form-control" data-autocomplete data-events-search placeholder="Search events..." style="min-width:280px"/>
+        <input class="form-control" data-autocomplete data-events-search placeholder="Search events..." data-i18n-attr="placeholder:forms.search_events" style="min-width:280px"/>
         <button class="btn btn-primary-grad" data-events-search-btn type="button"><i class="bi bi-search"></i></button>
       </div>
     </div>
@@ -35,28 +35,28 @@
       <aside class="col-lg-3">
         <div class="card-pro filter-card">
           <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="m-0">Filters</h6>
-            <a href="#" class="small" data-events-clear-filters>Clear all</a>
+            <h6 class="m-0" data-i18n="events.filters">Filters</h6>
+            <a href="#" class="small" data-events-clear-filters data-i18n="events.clear_all">Clear all</a>
           </div>
           <div class="filter-group">
-            <label class="form-label">Category</label>
+            <label class="form-label" data-i18n="events.category">Category</label>
             <div class="d-flex gap-2 flex-wrap" data-events-category-chips>
-              <span class="chip active" data-filter-category-chip="">All</span><span class="chip" data-filter-category-chip="concerts">Concerts</span><span class="chip" data-filter-category-chip="sports">Sports</span><span class="chip" data-filter-category-chip="festivals">Festivals</span><span class="chip" data-filter-category-chip="theater">Theater</span><span class="chip" data-filter-category-chip="comedy">Comedy</span><span class="chip" data-filter-category-chip="family">Family</span><span class="chip" data-filter-category-chip="conferences">Conferences</span>
+              <span class="chip active" data-filter-category-chip="" data-i18n="events.all_categories">All</span><span class="chip" data-filter-category-chip="concerts">Concerts</span><span class="chip" data-filter-category-chip="sports">Sports</span><span class="chip" data-filter-category-chip="festivals">Festivals</span><span class="chip" data-filter-category-chip="theater">Theater</span><span class="chip" data-filter-category-chip="comedy">Comedy</span><span class="chip" data-filter-category-chip="family">Family</span><span class="chip" data-filter-category-chip="conferences">Conferences</span>
             </div>
           </div>
           <div class="filter-group">
-            <label class="form-label">Date</label>
-            <select class="form-select" data-filter-date><option value="">Any date</option><option value="today">Today</option><option value="weekend">This weekend</option><option value="month">This month</option></select>
+            <label class="form-label" data-i18n="events.date">Date</label>
+            <select class="form-select" data-filter-date><option value="" data-i18n="events.any_date">Any date</option><option value="today" data-i18n="events.today">Today</option><option value="weekend" data-i18n="events.this_weekend">This weekend</option><option value="month" data-i18n="events.this_month">This month</option></select>
           </div>
           <div class="filter-group">
-            <label class="form-label">City</label>
-            <input class="form-control" data-filter-city placeholder="Search city"/>
+            <label class="form-label" data-i18n="events.city">City</label>
+            <input class="form-control" data-filter-city placeholder="Search city" data-i18n-attr="placeholder:forms.search_city"/>
           </div>
           <div class="filter-group">
-            <label class="form-label d-flex justify-content-between">Price <span class="text-muted-pro small">$0 – $500</span></label>
+            <label class="form-label d-flex justify-content-between"><span data-i18n="events.price">Price</span> <span class="text-muted-pro small">$0 - $500</span></label>
             <input type="range" class="form-range" min="0" max="500" value="500" data-filter-max-price/>
           </div>
-          <button class="btn btn-primary-grad w-100 mt-2" type="button" data-events-apply-filters>Apply filters</button>
+          <button class="btn btn-primary-grad w-100 mt-2" type="button" data-events-apply-filters data-i18n="events.apply_filters">Apply filters</button>
         </div>
       </aside>
 
@@ -64,7 +64,7 @@
       <div class="col-lg-9">
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
           <div class="d-flex gap-2 flex-wrap">
-            <span class="chip active" data-events-sort>Trending</span><span class="chip" data-events-sort>Newest</span><span class="chip" data-events-sort>Soonest</span><span class="chip" data-events-sort>Lowest price</span>
+            <span class="chip active" data-events-sort data-sort-key="trending" data-i18n="events.trending">Trending</span><span class="chip" data-events-sort data-sort-key="newest" data-i18n="events.newest">Newest</span><span class="chip" data-events-sort data-sort-key="soonest" data-i18n="events.soonest">Soonest</span><span class="chip" data-events-sort data-sort-key="lowest_price" data-i18n="events.lowest_price">Lowest price</span>
           </div>
           <div class="btn-group">
             <button class="btn btn-glass active" type="button" data-events-view="grid"><i class="bi bi-grid-3x3-gap"></i></button>
@@ -88,7 +88,7 @@
   <div class="container-xxl">
     <div class="footer-top">
       <div class="footer-brand">
-        <a class="brand mb-3" href="welcome.html"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Event Sphere</a>
+        <a class="brand mb-3" href="welcome.html"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Tiketa</a>
         <p>The premium marketplace to discover, buy, and manage tickets for live events with confidence.</p>
         <div class="footer-social" aria-label="Social links">
           <a href="https://www.facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
@@ -102,7 +102,7 @@
     <div class="footer-links-grid">
       <div>
         <h6>Company</h6>
-        <a href="about.html">About Event Sphere</a>
+        <a href="about.html">About Tiketa</a>
         <a href="help-center.html#contact">Contact Us</a>
         <a href="careers.html">Careers</a>
         <span>Blog</span>
@@ -129,7 +129,7 @@
     </div>
 
     <div class="legal">
-      <div>© Event Sphere <span data-year></span></div>
+      <div>© Tiketa <span data-year></span></div>
       <div class="footer-badges">
         <span><i class="bi bi-shield-check"></i> Secure Ticket Purchases</span>
         <span><i class="bi bi-qr-code"></i> QR Ticket Entry</span>
@@ -147,6 +147,8 @@
 <script src="../assets/js/api/utils.js"></script>
 <script src="../assets/js/api/events.js"></script>
 <script src="../assets/js/api/favorites.js"></script>
+<script src="../assets/js/i18n/dictionaries.js"></script>
+<script src="../assets/js/i18n/language-service.js"></script>
 <script src="../assets/js/main.js"></script>
 <script src="../assets/js/pages/events-page.js"></script>
 </body>

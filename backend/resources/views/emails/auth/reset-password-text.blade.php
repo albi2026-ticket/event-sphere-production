@@ -1,8 +1,8 @@
-Event Sphere
+Tiketa
 
 Hello {{ $user->name ?: 'there' }},
 
-We received a request to reset your Event Sphere password.
+We received a request to reset your Tiketa password.
 
 Reset Password:
 {{ $resetUrl }}
@@ -11,4 +11,4 @@ This password reset link expires in {{ $expirationMinutes }} minutes and can onl
 
 If you did not request a password reset, you can safely ignore this email.
 
-Event Sphere Team
+Tiketa Team

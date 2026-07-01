@@ -4,6 +4,7 @@
   const $ = (selector) => document.querySelector(selector);
   const api = () => window.EventSphereApi;
   const auth = () => window.EventSphereAuth;
+  const tr = (key, fallback, replacements) => window.t?.(key, replacements) || fallback;
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
   const fallbackImage = 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1000&q=80';
   const statuses = ['pending', 'confirmed', 'cancelled', 'completed', 'no_show'];
@@ -44,19 +45,26 @@
       cancelled: 'reservation-status-cancelled',
       no_show: 'reservation-status-no_show',
     };
-    const label = String(status || 'pending').replace(/_/g, ' ');
+    const keys = {
+      pending: 'reservation.reservation_pending',
+      confirmed: 'reservation.reservation_confirmed',
+      completed: 'reservation.reservation_completed',
+      cancelled: 'reservation.reservation_cancelled',
+      no_show: 'reservation.no_show',
+    };
+    const label = tr(keys[status] || 'reservation.reservation_pending', String(status || 'pending').replace(/_/g, ' '));
     return `<span class="reservation-status ${map[status] || ''}">${esc(label)}</span>`;
   }
 
   function dateLabel(value) {
-    if (!value) return 'Date not set';
+    if (!value) return tr('reservation.date_not_set', 'Date not set');
     const date = new Date(`${value}T00:00:00`);
     if (Number.isNaN(date.getTime())) return value;
     return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
   }
 
   function timeLabel(value) {
-    return String(value || '').slice(0, 5) || 'Time not set';
+    return String(value || '').slice(0, 5) || tr('reservation.time_not_set', 'Time not set');
   }
 
   function reservationDateTime(reservation) {
@@ -90,7 +98,7 @@
   }
 
   function dateTimeLabel(value) {
-    if (!value) return 'Not set';
+    if (!value) return tr('reservation.not_set', 'Not set');
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
     return date.toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
@@ -117,7 +125,7 @@
           </div>
           <div class="body">
             <div class="d-flex justify-content-between gap-2 align-items-start">
-              <h3 class="title m-0">${esc(reservation.venue?.name || 'Restaurant / Bar')}</h3>
+              <h3 class="title m-0">${esc(reservation.venue?.name || tr('common.restaurant_bar', 'Restaurant / Bar'))}</h3>
               <span class="rating"><i class="bi bi-people"></i> ${esc(reservation.party_size || '')}</span>
             </div>
             <div class="meta">
@@ -126,13 +134,13 @@
               <span><i class="bi bi-clock me-1"></i>${esc(timeLabel(reservation.reservation_time))}</span>
             </div>
             <div class="meta">
-              <span>${esc(reservation.venue?.city || 'City')}</span>
+              <span>${esc(reservation.venue?.city || tr('restaurants.city', 'City'))}</span>
               <span class="dot"></span>
               <span>${esc(reservation.venue?.venue_type || 'restaurant / bar')}</span>
             </div>
             <div class="footer-row my-reservation-actions">
-              <button class="btn btn-gold-outline btn-sm" type="button" data-reservation-view="${reservation.id}">View Reservation</button>
-              ${canCancel ? `<button class="btn btn-glass btn-sm" type="button" data-reservation-cancel="${reservation.id}">Cancel Reservation</button>` : ''}
+              <button class="btn btn-gold-outline btn-sm" type="button" data-reservation-view="${reservation.id}" data-i18n="buttons.view_reservation">${window.t?.('buttons.view_reservation') || 'View Reservation'}</button>
+              ${canCancel ? `<button class="btn btn-glass btn-sm" type="button" data-reservation-cancel="${reservation.id}" data-i18n="buttons.cancel_reservation">${window.t?.('buttons.cancel_reservation') || 'Cancel Reservation'}</button>` : ''}
             </div>
           </div>
         </article>
@@ -152,8 +160,14 @@
       <div class="col-12">
         <div class="reservation-empty-state">
           <i class="bi bi-calendar-check"></i>
-          <h3>${labels[status]}</h3>
-          <p class="mb-0">Your ${status} reservations will appear here.</p>
+          <h3>${esc(tr({
+            pending: 'reservation.pending_reservations',
+            confirmed: 'reservation.confirmed_reservations',
+            cancelled: 'reservation.cancelled_reservations',
+            completed: 'reservation.completed_reservations',
+            no_show: 'reservation.no_show_reservations',
+          }[status] || 'reservation.no_reservations_found', labels[status]))}</h3>
+          <p class="mb-0" data-i18n="empty.no_reservations_found">${tr('empty.no_reservations_found', 'No reservations found.')}</p>
         </div>
       </div>
     `;
@@ -167,11 +181,11 @@
     lastStatsSignature = signature;
 
     const labels = {
-      pending: 'Pending Reservations',
-      confirmed: 'Confirmed Reservations',
-      cancelled: 'Cancelled Reservations',
-      completed: 'Completed Reservations',
-      no_show: 'No Show Reservations',
+      pending: tr('reservation.pending_reservations', 'Pending Reservations'),
+      confirmed: tr('reservation.confirmed_reservations', 'Confirmed Reservations'),
+      cancelled: tr('reservation.cancelled_reservations', 'Cancelled Reservations'),
+      completed: tr('reservation.completed_reservations', 'Completed Reservations'),
+      no_show: tr('reservation.no_show_reservations', 'No Show Reservations'),
     };
     root.innerHTML = statuses.map((status) => `
       <div class="col-md-6 col-xl">
@@ -227,22 +241,22 @@
   }
 
   function renderDetail(reservation) {
-    $('[data-reservation-detail-title]').textContent = `Reservation #${reservation.id}`;
+    $('[data-reservation-detail-title]').textContent = tr('reservation.reservation_details', 'Reservation Details');
     $('[data-reservation-detail-body]').innerHTML = `
       <div class="my-reservation-detail">
         <img loading="lazy" decoding="async" src="${esc(reservation.venue?.image_url || fallbackImage)}" alt="">
-        <div class="facility justify-content-between"><span>Restaurant / Bar</span><strong>${esc(reservation.venue?.name || 'Restaurant / Bar')}</strong></div>
-        <div class="facility justify-content-between"><span>Status</span>${statusBadge(reservation.status)}</div>
-        <div class="facility justify-content-between"><span>Date</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div>
-        <div class="facility justify-content-between"><span>Time</span><strong>${esc(timeLabel(reservation.reservation_time))}</strong></div>
-        <div class="facility justify-content-between"><span>Party size</span><strong>${esc(reservation.party_size || '')}</strong></div>
-        <div class="facility justify-content-between"><span>Location</span><strong>${esc([reservation.venue?.city, reservation.venue?.country].filter(Boolean).join(', ') || 'Location not set')}</strong></div>
+        <div class="facility justify-content-between"><span data-i18n="common.restaurant_bar">${tr('common.restaurant_bar', 'Restaurant / Bar')}</span><strong>${esc(reservation.venue?.name || tr('common.restaurant_bar', 'Restaurant / Bar'))}</strong></div>
+        <div class="facility justify-content-between"><span data-i18n="common.status">${window.t?.('common.status') || 'Status'}</span>${statusBadge(reservation.status)}</div>
+        <div class="facility justify-content-between"><span data-i18n="common.date">${window.t?.('common.date') || 'Date'}</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div>
+        <div class="facility justify-content-between"><span data-i18n="common.time">${window.t?.('common.time') || 'Time'}</span><strong>${esc(timeLabel(reservation.reservation_time))}</strong></div>
+        <div class="facility justify-content-between"><span data-i18n="common.party_size">${window.t?.('common.party_size') || 'Party size'}</span><strong>${esc(reservation.party_size || '')}</strong></div>
+        <div class="facility justify-content-between"><span data-i18n="common.location">${tr('common.location', 'Location')}</span><strong>${esc([reservation.venue?.city, reservation.venue?.country].filter(Boolean).join(', ') || tr('reservation.location_not_set', 'Location not set'))}</strong></div>
         ${reservation.status === 'cancelled' ? `
-          <div class="facility justify-content-between"><span>Cancelled At</span><strong>${esc(dateTimeLabel(reservation.cancelled_at))}</strong></div>
-          ${reservation.owner_cancellation_reason ? '<div class="facility justify-content-between"><span>Cancelled By</span><strong>Restaurant</strong></div>' : ''}
-          <div class="facility"><span><span class="text-muted-pro d-block mb-1">Reason</span>${esc(reservation.owner_cancellation_reason || reservation.cancellation_reason || 'No reason provided.')}</span></div>
+          <div class="facility justify-content-between"><span data-i18n="reservation.cancelled_at">${tr('reservation.cancelled_at', 'Cancelled At')}</span><strong>${esc(dateTimeLabel(reservation.cancelled_at))}</strong></div>
+          ${reservation.owner_cancellation_reason ? `<div class="facility justify-content-between"><span data-i18n="reservation.cancelled_by">${tr('reservation.cancelled_by', 'Cancelled By')}</span><strong>${tr('restaurants.restaurant', 'Restaurant')}</strong></div>` : ''}
+          <div class="facility"><span><span class="text-muted-pro d-block mb-1" data-i18n="reservation.reason">${tr('reservation.reason', 'Reason')}</span>${esc(reservation.owner_cancellation_reason || reservation.cancellation_reason || tr('reservation.no_reason_provided', 'No reason provided.'))}</span></div>
         ` : ''}
-        <div class="d-grid mt-3"><a class="btn btn-gold-outline" href="${esc(venueUrl(reservation))}">Open Restaurant / Bar</a></div>
+        <div class="d-grid mt-3"><a class="btn btn-gold-outline" href="${esc(venueUrl(reservation))}" data-i18n="buttons.open_restaurant_bar">${window.t?.('buttons.open_restaurant_bar') || 'Open Restaurant / Bar'}</a></div>
       </div>
     `;
     bootstrap.Modal.getOrCreateInstance($('#reservationDetailModal')).show();
@@ -291,7 +305,7 @@
     try {
       await reservationsRequest;
     } catch (err) {
-      window.tkToast?.(err?.message || 'Unable to load reservations.', 'error');
+      window.tkToast?.(err?.message || tr('loading.loading_reservations', 'Unable to load reservations.'), 'error');
       render();
     } finally {
       reservationsRequest = null;
@@ -303,7 +317,7 @@
     const button = $('[data-reservation-cancel-confirm]');
     if (button) {
       button.disabled = true;
-      button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Cancelling...';
+      button.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>${tr('reservation.cancelling', 'Cancelling...')}`;
     }
     try {
       const reason = String($('[data-reservation-cancel-reason]')?.value || '').trim();
@@ -319,13 +333,13 @@
       if (reasonField) reasonField.value = '';
       cancelId = null;
       render();
-      window.tkToast?.('Reservation cancelled successfully.', 'success');
+      window.tkToast?.(window.t?.('toast.reservation_cancelled_successfully') || 'Reservation cancelled successfully.', 'success');
     } catch (err) {
-      window.tkToast?.(err?.originalMessage || err?.message || 'Unable to cancel reservation.', 'error');
+      window.tkToast?.(err?.originalMessage || err?.message || tr('toast.operation_failed', 'Unable to cancel reservation.'), 'error');
     } finally {
       if (button) {
         button.disabled = false;
-        button.textContent = 'Cancel reservation';
+        button.textContent = window.t?.('buttons.cancel_reservation') || 'Cancel reservation';
       }
     }
   }
@@ -354,5 +368,12 @@
     });
 
     $('[data-reservation-cancel-confirm]')?.addEventListener('click', cancelReservation);
+  });
+
+  document.addEventListener('tiketa:language-changed', () => {
+    lastRenderSignature = '';
+    lastStatsSignature = '';
+    sectionRenderSignatures.clear();
+    render();
   });
 })();

@@ -3,6 +3,7 @@
 
   const api = () => window.EventSphereApi;
   const $ = (selector) => document.querySelector(selector);
+  const tr = (key, fallback, replacements) => window.t?.(key, replacements) || fallback;
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
   const fallbackImage = 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80';
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -29,6 +30,19 @@
 
   function titleCase(value) {
     return String(value || 'Restaurant / Bar').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }
+
+  function occasionKey(value) {
+    return {
+      Birthday: 'reservation.birthday',
+      Anniversary: 'reservation.anniversary',
+      'Date Night': 'reservation.date_night',
+      'Business Meeting': 'reservation.business_meeting',
+      'Family Gathering': 'reservation.family_gathering',
+      Celebration: 'reservation.celebration',
+      'Friends Night Out': 'reservation.friends_night_out',
+      Other: 'reservation.other',
+    }[value] || '';
   }
 
   function imageUrl(image) {
@@ -166,8 +180,8 @@
     if (currentWindow) {
       return {
         open: true,
-        label: 'Open Now',
-        detail: `Closes at ${currentWindow.closes_at}`,
+        label: tr('restaurants.open_now', 'Open Now'),
+        detail: `${tr('restaurants.closes', 'Closes')} ${currentWindow.closes_at}`,
       };
     }
 
@@ -177,16 +191,16 @@
       if (window && window.start > now) {
         return {
           open: false,
-          label: 'Closed',
-          detail: `Opens ${relationLabel(window.start, now)} at ${window.opens_at}`,
+          label: tr('restaurants.closed', 'Closed'),
+          detail: `${tr('restaurants.opens', 'Opens')} ${relationLabel(window.start, now)} ${window.opens_at}`,
         };
       }
     }
 
     return {
       open: false,
-      label: 'Closed',
-      detail: 'No upcoming opening hours listed',
+      label: tr('restaurants.closed', 'Closed'),
+      detail: tr('availability.no_available_slots', 'No upcoming opening hours listed'),
     };
   }
 
@@ -367,7 +381,7 @@
     root.innerHTML = galleryImages.map((image, index) => `
       <button class="gallery-photo ${index === 0 ? 'g-main' : ''}" type="button" data-gallery-open="${index}" aria-label="Open photo ${index + 1}">
         <img src="${esc(image.src)}" alt="${esc(image.alt)}" loading="${index === 0 ? 'eager' : 'lazy'}" decoding="async" ${index === 0 ? 'fetchpriority="high"' : ''} />
-        ${index === 0 ? '<span class="gallery-cover-label"><i class="bi bi-star-fill"></i> Cover Photo</span>' : ''}
+        ${index === 0 ? `<span class="gallery-cover-label"><i class="bi bi-star-fill"></i> ${tr('venue.cover_photo', 'Cover Photo')}</span>` : ''}
       </button>
     `).join('');
   }
@@ -440,7 +454,7 @@
     const byDay = new Map(hours.map((item) => [Number(item.day_of_week), item]));
     root.innerHTML = days.map((day, index) => {
       const item = byDay.get(index);
-      const label = !item || item.is_closed ? 'Closed' : `${item.opens_at || '--:--'} - ${item.closes_at || '--:--'}`;
+      const label = !item || item.is_closed ? tr('availability.closed', 'Closed') : `${item.opens_at || '--:--'} - ${item.closes_at || '--:--'}`;
       return `
         <div class="col-md-6">
           <div class="facility justify-content-between">
@@ -474,15 +488,15 @@
     if (skipIdenticalRender('contact', signature)) return;
 
     const rows = [
-      contactItem('bi-geo-alt-fill', 'Address', address),
-      contactItem('bi-telephone-fill', 'Phone', venue.phone, venue.phone ? `tel:${venue.phone}` : null),
-      contactItem('bi-envelope-fill', 'Email', venue.email, venue.email ? `mailto:${venue.email}` : null),
-      contactItem('bi-globe2', 'Website', venue.website, venue.website),
+      contactItem('bi-geo-alt-fill', tr('venue.address', 'Address'), address),
+      contactItem('bi-telephone-fill', tr('venue.phone', 'Phone'), venue.phone, venue.phone ? `tel:${venue.phone}` : null),
+      contactItem('bi-envelope-fill', tr('venue.email', 'Email'), venue.email, venue.email ? `mailto:${venue.email}` : null),
+      contactItem('bi-globe2', tr('venue.website', 'Website'), venue.website, venue.website),
       contactItem('bi-facebook', 'Facebook', venue.social_links?.facebook_url, venue.social_links?.facebook_url),
       contactItem('bi-instagram', 'Instagram', venue.social_links?.instagram_url, venue.social_links?.instagram_url),
       contactItem('bi-tiktok', 'TikTok', venue.social_links?.tiktok_url, venue.social_links?.tiktok_url),
     ].filter(Boolean);
-    root.innerHTML = rows.join('') || '<div class="col-12 text-muted-pro">Contact details are not available yet.</div>';
+    root.innerHTML = rows.join('') || `<div class="col-12 text-muted-pro" data-i18n="venue.contact_unavailable">${tr('venue.contact_unavailable', 'Contact details are not available yet.')}</div>`;
 
     renderMap(venue);
   }
@@ -516,7 +530,7 @@
     }
     if (directions) directions.href = googleDirectionsUrl(lat, lng);
     if (openMap) openMap.href = googleMapsUrl(lat, lng);
-    if (mapTitle) mapTitle.textContent = venue.name || 'Find us here';
+    if (mapTitle) mapTitle.textContent = venue.name || tr('venue.find_us_here', 'Find us here');
     if (coordinatesLabel) coordinatesLabel.textContent = `${formatCoordinate(lat)}, ${formatCoordinate(lng)}`;
     renderInteractiveMap(lat, lng, venue);
   }
@@ -524,7 +538,7 @@
   function renderVenue(venue) {
     resetRenderStateForVenue(venue);
     currentVenue = venue;
-    document.title = `${venue.name} - Event Sphere Reservations`;
+    document.title = `${venue.name} - Tiketa Reservations`;
     setText('[data-detail-city]', venue.city || 'City');
     setText('[data-detail-name]', venue.name || 'Restaurant / Bar');
     setText('[data-detail-title]', venue.name || 'Restaurant / Bar');
@@ -536,8 +550,8 @@
       cuisineMeta.textContent = hasCuisines ? listNames(venue.cuisine_types, '') : '';
     }
     setText('[data-detail-location]', [venue.city, venue.country].filter(Boolean).join(', '));
-    setText('[data-detail-description]', venue.description || 'This restaurant or bar has not added a description yet.');
-    setText('[data-detail-side-title]', venue.name || 'Restaurant & Bar details');
+    setText('[data-detail-description]', venue.description || tr('venue.no_description', 'This restaurant or bar has not added a description yet.'));
+    setText('[data-detail-side-title]', venue.name || tr('venue.details', 'Restaurant & Bar details'));
     setText('[data-detail-side-copy]', `${titleCase(venue.venue_type)} in ${venue.city || 'your city'}`);
 
     const featured = $('[data-detail-featured]');
@@ -579,7 +593,7 @@
         </button>
       `).join('')}</div>`;
     }
-    selectPickerValue('guests', defaultValue, `Guests: ${defaultValue > 8 ? `${defaultValue}+` : defaultValue}`);
+    selectPickerValue('guests', defaultValue, `${tr('reservation.guests', 'Guests')}: ${defaultValue > 8 ? `${defaultValue}+` : defaultValue}`);
   }
 
   function renderDateSelector(form, venue) {
@@ -593,7 +607,7 @@
       const value = localDateValue(date);
       return {
         value,
-        day: index === 0 ? 'Today' : index === 1 ? 'Tomorrow' : date.toLocaleDateString(undefined, { weekday: 'short' }),
+        day: index === 0 ? tr('events.today', 'Today') : index === 1 ? tr('events.tomorrow', 'Tomorrow') : date.toLocaleDateString(undefined, { weekday: 'short' }),
         date: date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
       };
     });
@@ -608,7 +622,7 @@
         </button>
       `).join('')}</div>`;
     }
-    selectPickerValue('date', selectedItem.value, `Date: ${selectedItem.day} — ${selectedItem.date}`);
+    selectPickerValue('date', selectedItem.value, `${tr('common.date', 'Date')}: ${selectedItem.day} - ${selectedItem.date}`);
   }
 
   function renderTimeOptions(times) {
@@ -622,9 +636,9 @@
         <button class="reservation-choice reservation-choice-time" type="button" data-picker-option="time" data-value="${time}" data-label="${esc(timeLabel(time))}">
           ${esc(timeLabel(time))}
         </button>
-      `).join('')}</div>` : '<div class="reservation-picker-empty">No reservation times are available for this date.</div>';
+      `).join('')}</div>` : `<div class="reservation-picker-empty" data-i18n="availability.no_reservation_times">${tr('availability.no_reservation_times', 'No reservation times are available for this date.')}</div>`;
     }
-    selectPickerValue('time', selected || '', selected ? `Time: ${timeLabel(selected)}` : 'Time');
+    selectPickerValue('time', selected || '', selected ? `${tr('common.time', 'Time')}: ${timeLabel(selected)}` : tr('common.time', 'Time'));
   }
 
   function renderOccasionSelector() {
@@ -634,18 +648,18 @@
     if (!skipIdenticalRender('reservation:occasion', stableSignature(occasionOptions))) {
       panel.innerHTML = `
         <div class="reservation-time-grid reservation-occasion-grid">
-          <button class="reservation-choice reservation-choice-time" type="button" data-picker-option="occasion" data-value="" data-label="Occasion">
-            No occasion
+          <button class="reservation-choice reservation-choice-time" type="button" data-picker-option="occasion" data-value="" data-label="${tr('reservation.occasion', 'Occasion')}">
+            ${tr('reservation.no_occasion', 'No occasion')}
           </button>
           ${occasionOptions.map((occasion) => `
-            <button class="reservation-choice reservation-choice-time" type="button" data-picker-option="occasion" data-value="${esc(occasion)}" data-label="${esc(occasion)}">
-              ${esc(occasion)}
+            <button class="reservation-choice reservation-choice-time" type="button" data-picker-option="occasion" data-value="${esc(occasion)}" data-label="${esc(tr(occasionKey(occasion), occasion))}">
+              ${esc(tr(occasionKey(occasion), occasion))}
             </button>
           `).join('')}
         </div>
       `;
     }
-    selectPickerValue('occasion', '', 'Occasion');
+    selectPickerValue('occasion', '', tr('reservation.occasion', 'Occasion'));
   }
 
   function availabilityCacheKey(venue, date) {
@@ -700,9 +714,9 @@
         <div class="reservation-time-grid" aria-hidden="true">
           ${Array.from({ length: 6 }, () => '<div class="reservation-time-skeleton"></div>').join('')}
         </div>
-        <div class="reservation-picker-loading"><span class="spinner-border spinner-border-sm"></span>Loading available times...</div>
+        <div class="reservation-picker-loading"><span class="spinner-border spinner-border-sm"></span>${tr('availability.loading_available_times', 'Loading available times...')}</div>
       `;
-      selectPickerValue('time', '', 'Time');
+      selectPickerValue('time', '', tr('common.time', 'Time'));
     }
 
     try {
@@ -713,16 +727,16 @@
     } catch (err) {
       if (requestId !== availabilityRequestId) return;
 
-      panel.innerHTML = '<div class="reservation-picker-empty">No reservation times are available for this date.</div>';
-      selectPickerValue('time', '', 'Time');
-      window.tkToast?.(err?.message || 'Unable to load reservation times.', 'error');
+      panel.innerHTML = `<div class="reservation-picker-empty" data-i18n="availability.no_reservation_times">${tr('availability.no_reservation_times', 'No reservation times are available for this date.')}</div>`;
+      selectPickerValue('time', '', tr('common.time', 'Time'));
+      window.tkToast?.(err?.message || tr('reservation.unable_load_times', 'Unable to load reservation times.'), 'error');
     }
   }
 
   async function hydrateReservationForm(venue) {
     const form = $('[data-reservation-form]');
     if (!form) return;
-    setText('[data-reservation-modal-venue]', `${venue.name || 'This restaurant or bar'} will receive your reservation request.`);
+    setText('[data-reservation-modal-venue]', `${venue.name || tr('common.restaurant_bar', 'This restaurant or bar')} will receive your reservation request.`);
     renderGuestSelector(form, venue);
     renderDateSelector(form, venue);
     renderOccasionSelector();
@@ -780,7 +794,7 @@
       const first = Object.values(errors).flat().filter(Boolean)[0];
       if (first) return String(first);
     }
-    return err?.message || 'Unable to create reservation. Please try again.';
+    return err?.message || tr('reservation.unable_create', 'Unable to create reservation. Please try again.');
   }
 
   function userHasVerifiedEmail() {
@@ -796,7 +810,7 @@
     const button = $('[data-reservation-submit]');
     if (!button) return;
     button.disabled = busy;
-    button.innerHTML = busy ? '<span class="spinner-border spinner-border-sm me-1"></span>Saving...' : 'Save Reservation Request';
+    button.innerHTML = busy ? `<span class="spinner-border spinner-border-sm me-1"></span>${tr('loading.saving', 'Saving...')}` : tr('reservation.save_request', 'Save Reservation Request');
   }
 
   async function submitReservation(event) {
@@ -830,7 +844,7 @@
       hydrateReservationForm(currentVenue);
       document.body.classList.add('reservation-success-burst');
       window.setTimeout(() => document.body.classList.remove('reservation-success-burst'), 900);
-      window.tkToast?.('Your reservation request has been sent successfully', 'success');
+      window.tkToast?.(tr('reservation.request_sent', 'Your reservation request has been sent successfully'), 'success');
     } catch (err) {
       window.tkToast?.(reservationError(err), 'error');
     } finally {
@@ -841,8 +855,8 @@
   async function loadVenue() {
     const slug = slugFromLocation();
     if (!slug) {
-      setText('[data-detail-description]', 'Choose a restaurant or bar from the discovery page to view details.');
-      window.tkToast?.('Choose a restaurant or bar from discovery first.', 'info');
+      setText('[data-detail-description]', tr('venue.choose_from_discovery', 'Choose a restaurant or bar from the discovery page to view details.'));
+      window.tkToast?.(tr('venue.choose_from_discovery_toast', 'Choose a restaurant or bar from discovery first.'), 'info');
       return;
     }
 
@@ -850,13 +864,18 @@
       const { data } = await api().fetch(`/venues/${encodeURIComponent(slug)}`, { skipAuthRedirect: true });
       renderVenue(data);
     } catch (err) {
-      setText('[data-detail-title]', 'Restaurant or bar unavailable');
-      setText('[data-detail-description]', 'This restaurant or bar is not available for reservations right now.');
-      window.tkToast?.(err?.message || 'Unable to load restaurant or bar.', 'error');
+      setText('[data-detail-title]', tr('venue.not_available', 'Restaurant or bar unavailable'));
+      setText('[data-detail-description]', tr('venue.not_available', 'This restaurant or bar is not available for reservations right now.'));
+      window.tkToast?.(err?.message || tr('venue.unable_to_load', 'Unable to load restaurant or bar.'), 'error');
     }
   }
 
   document.addEventListener('DOMContentLoaded', loadVenue);
+  document.addEventListener('tiketa:language-changed', () => {
+    if (!currentVenue) return;
+    renderSignatures.clear();
+    renderVenue(currentVenue);
+  });
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-reserve-button]').forEach((button) => {
       button.addEventListener('click', () => {
@@ -911,7 +930,7 @@
         const type = option.dataset.pickerOption;
         const value = option.dataset.value;
         const label = option.dataset.label || option.textContent.trim();
-        const prefix = { guests: 'Guests', date: 'Date', time: 'Time' }[type] || '';
+        const prefix = { guests: tr('reservation.guests', 'Guests'), date: tr('common.date', 'Date'), time: tr('common.time', 'Time') }[type] || '';
         selectPickerValue(type, value, `${prefix}: ${label}`);
         if (type === 'date' && currentVenue) {
           renderTimeSelector($('[data-reservation-form]'), currentVenue);

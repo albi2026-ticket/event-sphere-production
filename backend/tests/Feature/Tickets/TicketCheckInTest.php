@@ -382,7 +382,7 @@ class TicketCheckInTest extends TestCase
             'title' => 'QR Validation Event',
             'slug' => 'qr-validation-event-'.Str::random(6),
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addWeek(),
             'status' => 'published',

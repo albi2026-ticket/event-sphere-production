@@ -1,4 +1,4 @@
-Event Sphere order confirmation
+Tiketa order confirmation
 
 Your tickets are confirmed.
 
@@ -53,4 +53,4 @@ Each issued ticket includes QR access for check-in.
 @endforeach
 @endif
 
-This confirmation was sent by Event Sphere after successful payment.
+This confirmation was sent by Tiketa after successful payment.

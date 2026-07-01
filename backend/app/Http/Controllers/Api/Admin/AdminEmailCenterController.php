@@ -187,7 +187,7 @@ class AdminEmailCenterController extends Controller
         ]);
 
         $sample = [
-            'platform_name' => 'Event Sphere',
+            'platform_name' => 'Tiketa',
             'user_name' => 'Jane Doe',
             'event_name' => 'Sample Event',
             'order' => (object) ['order_number' => 'ES-SAMPLE-0001'],

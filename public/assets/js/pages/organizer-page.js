@@ -121,7 +121,7 @@
   }
 
   function errorRow(cols, message, retryAttr) {
-    return `<tr><td colspan="${cols}"><div class="dashboard-empty text-danger"><i class="bi bi-exclamation-triangle"></i><span>${esc(message)}</span><button class="btn btn-glass btn-sm" type="button" ${retryAttr}>Retry</button></div></td></tr>`;
+    return `<tr><td colspan="${cols}"><div class="dashboard-empty text-danger"><i class="bi bi-exclamation-triangle"></i><span>${esc(message)}</span><button class="btn btn-glass btn-sm" type="button" ${retryAttr} data-i18n="buttons.retry">${window.t?.('buttons.retry') || 'Retry'}</button></div></td></tr>`;
   }
 
   function emptyRow(cols, icon, title, detail) {
@@ -1454,7 +1454,7 @@
     }
     win.document.write(`<!doctype html><html><head><title>${esc(report.title)}</title><style>
       body{font-family:Arial,sans-serif;color:#111827;padding:28px}h1{margin:0 0 4px}p{color:#64748b}table{width:100%;border-collapse:collapse;margin-top:22px}th,td{border-bottom:1px solid #e5e7eb;padding:10px;text-align:left;font-size:12px}th{background:#f8fafc;text-transform:uppercase;color:#475569}.brand{font-weight:700;color:#2563eb}
-    </style></head><body><div class="brand">Event Sphere</div><h1>${esc(report.title)}</h1><p>Generated ${esc(dateLabel(new Date().toISOString()))}</p><table><thead><tr>${report.headers.map((header) => `<th>${esc(header)}</th>`).join('')}</tr></thead><tbody>${rowsHtml || `<tr><td colspan="${report.headers.length}">No report data available.</td></tr>`}</tbody></table><script>window.print();<\/script></body></html>`);
+    </style></head><body><div class="brand">Tiketa</div><h1>${esc(report.title)}</h1><p>Generated ${esc(dateLabel(new Date().toISOString()))}</p><table><thead><tr>${report.headers.map((header) => `<th>${esc(header)}</th>`).join('')}</tr></thead><tbody>${rowsHtml || `<tr><td colspan="${report.headers.length}">No report data available.</td></tr>`}</tbody></table><script>window.print();<\/script></body></html>`);
     win.document.close();
   }
 

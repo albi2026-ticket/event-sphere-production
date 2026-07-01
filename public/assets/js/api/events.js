@@ -3,6 +3,7 @@
 
   const api = () => window.EventSphereApi;
   const u = () => window.EventSphereUtils;
+  const tr = (key, fallback, replacements) => window.t?.(key, replacements) || fallback;
   const inFlight = new Map();
 
   function once(key, loader) {
@@ -65,42 +66,42 @@
     const apiState = event?.event_state?.key;
 
     if (apiState === 'ended') {
-      return { key: 'ended', label: 'Event Ended', priceLabel: 'Sales Closed', canBuy: false };
+      return { key: 'ended', label: tr('events.event_ended', 'Event Ended'), priceLabel: tr('events.sales_closed', 'Sales Closed'), canBuy: false, labelKey: 'events.event_ended', priceKey: 'events.sales_closed' };
     }
     if (apiState === 'sold_out') {
-      return { key: 'sold_out', label: 'Sold Out', priceLabel: 'Sold Out', canBuy: false };
+      return { key: 'sold_out', label: tr('events.sold_out', 'Sold Out'), priceLabel: tr('events.sold_out', 'Sold Out'), canBuy: false, labelKey: 'events.sold_out', priceKey: 'events.sold_out' };
     }
     if (apiState === 'live') {
-      return { key: 'live', label: 'Live', priceLabel: '', canBuy: true };
+      return { key: 'live', label: tr('events.live', 'Live'), priceLabel: '', canBuy: true, labelKey: 'events.live' };
     }
     if (apiState === 'upcoming') {
-      return { key: 'upcoming', label: 'Upcoming', priceLabel: '', canBuy: true };
+      return { key: 'upcoming', label: tr('events.upcoming', 'Upcoming'), priceLabel: '', canBuy: true, labelKey: 'events.upcoming' };
     }
 
     if (u().isEventSalesClosed(event)) {
-      return { key: 'ended', label: 'Event Ended', priceLabel: 'Sales Closed', canBuy: false };
+      return { key: 'ended', label: tr('events.event_ended', 'Event Ended'), priceLabel: tr('events.sales_closed', 'Sales Closed'), canBuy: false, labelKey: 'events.event_ended', priceKey: 'events.sales_closed' };
     }
 
     if (!Array.isArray(event?.ticket_types) && (event?.price_from !== undefined || event?.base_price !== undefined)) {
       const start = event?.starts_at ? new Date(event.starts_at) : null;
       if (start && !Number.isNaN(start.getTime()) && Date.now() >= start.getTime()) {
-        return { key: 'live', label: 'Live', priceLabel: '', canBuy: true };
+        return { key: 'live', label: tr('events.live', 'Live'), priceLabel: '', canBuy: true, labelKey: 'events.live' };
       }
 
-      return { key: 'upcoming', label: 'Upcoming', priceLabel: '', canBuy: true };
+      return { key: 'upcoming', label: tr('events.upcoming', 'Upcoming'), priceLabel: '', canBuy: true, labelKey: 'events.upcoming' };
     }
 
     const inventory = inventorySummary(event);
     if (inventory.available <= 0) {
-      return { key: 'sold_out', label: 'Sold Out', priceLabel: 'Sold Out', canBuy: false };
+      return { key: 'sold_out', label: tr('events.sold_out', 'Sold Out'), priceLabel: tr('events.sold_out', 'Sold Out'), canBuy: false, labelKey: 'events.sold_out', priceKey: 'events.sold_out' };
     }
 
     const start = event?.starts_at ? new Date(event.starts_at) : null;
     if (start && !Number.isNaN(start.getTime()) && Date.now() >= start.getTime()) {
-      return { key: 'live', label: 'Live', priceLabel: '', canBuy: true };
+      return { key: 'live', label: tr('events.live', 'Live'), priceLabel: '', canBuy: true, labelKey: 'events.live' };
     }
 
-    return { key: 'upcoming', label: 'Upcoming', priceLabel: '', canBuy: true };
+    return { key: 'upcoming', label: tr('events.upcoming', 'Upcoming'), priceLabel: '', canBuy: true, labelKey: 'events.upcoming' };
   }
 
   function lowestAvailablePrice(event) {
@@ -133,16 +134,16 @@
     const breakdown = priceBreakdown(amount, event);
     if (compact) {
       return `<span class="price-breakdown small d-block">
-        <span class="d-block">Ticket ${u().formatMoney(breakdown.ticketPrice, currency)}</span>
-        <span class="d-block">Fee (${breakdown.percentage}%) ${u().formatMoney(breakdown.serviceFee, currency)}</span>
-        <strong class="d-block">Total ${u().formatMoney(breakdown.total, currency)}</strong>
+        <span class="d-block"><span data-i18n="forms.ticket">${tr('forms.ticket', 'Ticket')}</span> ${u().formatMoney(breakdown.ticketPrice, currency)}</span>
+        <span class="d-block"><span data-i18n="checkout.service_fee">${tr('checkout.service_fee', 'Service fee')}</span> (${breakdown.percentage}%) ${u().formatMoney(breakdown.serviceFee, currency)}</span>
+        <strong class="d-block"><span data-i18n="checkout.total">${tr('checkout.total', 'Total')}</span> ${u().formatMoney(breakdown.total, currency)}</strong>
       </span>`;
     }
 
     return `<div class="price-breakdown small">
-      <div class="d-flex justify-content-between gap-3"><span class="text-muted-pro">Ticket Price</span><span>${u().formatMoney(breakdown.ticketPrice, currency)}</span></div>
-      <div class="d-flex justify-content-between gap-3"><span class="text-muted-pro">Service Fee (${breakdown.percentage}%)</span><span>${u().formatMoney(breakdown.serviceFee, currency)}</span></div>
-      <div class="d-flex justify-content-between gap-3 fw-bold"><span>Total</span><span>${u().formatMoney(breakdown.total, currency)}</span></div>
+      <div class="d-flex justify-content-between gap-3"><span class="text-muted-pro" data-i18n="tickets.ticket_price">${tr('tickets.ticket_price', 'Ticket Price')}</span><span>${u().formatMoney(breakdown.ticketPrice, currency)}</span></div>
+      <div class="d-flex justify-content-between gap-3"><span class="text-muted-pro"><span data-i18n="checkout.service_fee">${tr('checkout.service_fee', 'Service Fee')}</span> (${breakdown.percentage}%)</span><span>${u().formatMoney(breakdown.serviceFee, currency)}</span></div>
+      <div class="d-flex justify-content-between gap-3 fw-bold"><span data-i18n="checkout.total">${tr('checkout.total', 'Total')}</span><span>${u().formatMoney(breakdown.total, currency)}</span></div>
     </div>`;
   }
 
@@ -161,7 +162,7 @@
   <div class="col-md-6 col-xl-4">
     <article class="card-pro fade-up in">
       <div class="thumb">
-        <span class="badge-soft">${u().escapeHtml(cat)}</span>
+        <span class="badge-soft"${status.labelKey && (status.key === 'ended' || status.key === 'sold_out' || status.key === 'live') ? ` data-i18n="${status.labelKey}"` : ''}>${u().escapeHtml(cat)}</span>
         <span class="fav" data-fav="${favKey}" data-event-id="${event.id}"><i class="bi bi-heart"></i></span>
         <img loading="lazy" src="${u().escapeHtml(img)}" alt=""/>
       </div>
@@ -169,7 +170,7 @@
         <div class="meta"><i class="bi bi-calendar3"></i> ${u().escapeHtml(date)}</div>
         <h3 class="title"><a href="event-details.html?slug=${encodeURIComponent(slug)}" style="color:inherit">${u().escapeHtml(event.title)}</a></h3>
         <div class="venue"><i class="bi bi-geo-alt"></i> ${u().escapeHtml(event.venue_name || '')}${event.city ? `, ${u().escapeHtml(event.city)}` : ''}</div>
-        <div class="foot"><div class="price">${status.canBuy ? `From ${u().formatMoney(price.amount, price.currency)}` : status.priceLabel}</div><a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(slug)}">View</a></div>
+        <div class="foot"><div class="price">${status.canBuy ? `<span data-i18n="events.from">${tr('events.from', 'From')}</span> ${u().formatMoney(price.amount, price.currency)}` : `<span${status.priceKey ? ` data-i18n="${status.priceKey}"` : ''}>${u().escapeHtml(status.priceLabel)}</span>`}</div><a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(slug)}" data-i18n="buttons.view">${window.t?.('buttons.view') || 'View'}</a></div>
       </div>
     </article>
   </div>`;

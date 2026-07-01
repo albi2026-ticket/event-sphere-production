@@ -208,8 +208,8 @@
           </div>
           <div class="hero-countdown"><i class="bi bi-clock"></i><span>Starts In</span><strong data-hero-countdown="${u.escapeHtml(event.starts_at || '')}">${u.escapeHtml(countdownLabel(event.starts_at))}</strong></div>
           <div class="hero-actions">
-            <a class="btn btn-primary-grad btn-lg${buyDisabled ? ' disabled' : ''}" href="${detailsHref}" data-hero-buy="${u.escapeHtml(String(event.id))}" aria-disabled="${buyDisabled ? 'true' : 'false'}"><i class="bi bi-ticket-perforated"></i>Buy Tickets</a>
-            <a class="btn btn-glass btn-lg" href="${detailsHref}"><i class="bi bi-info-circle"></i>View Details</a>
+            <a class="btn btn-primary-grad btn-lg${buyDisabled ? ' disabled' : ''}" href="${detailsHref}" data-hero-buy="${u.escapeHtml(String(event.id))}" aria-disabled="${buyDisabled ? 'true' : 'false'}"><i class="bi bi-ticket-perforated"></i><span data-i18n="buttons.buy_tickets">${window.t?.('buttons.buy_tickets') || 'Buy Tickets'}</span></a>
+            <a class="btn btn-glass btn-lg" href="${detailsHref}"><i class="bi bi-info-circle"></i><span data-i18n="buttons.view_details">${window.t?.('buttons.view_details') || 'View Details'}</span></a>
           </div>
         </div>
       </div>
@@ -229,7 +229,7 @@
     const heroEvents = sortByHeroPriority(preferredEvents.length ? preferredEvents : events).slice(0, 5);
     if (loading) loading.hidden = true;
     if (!heroEvents.length) {
-      root.innerHTML = '<div class="hero-empty"><div><h1>No upcoming events yet</h1><p class="text-muted-pro mb-0">Published events will appear here as organizers add them.</p></div></div>';
+      root.innerHTML = `<div class="hero-empty"><div><h1 data-i18n="empty.no_upcoming_events">${window.t?.('empty.no_upcoming_events') || 'No upcoming events yet'}</h1><p class="text-muted-pro mb-0" data-i18n="empty.published_events_appear">${window.t?.('empty.published_events_appear') || 'Published events will appear here as organizers add them.'}</p></div></div>`;
       return;
     }
 
@@ -403,7 +403,7 @@
             body: { email, source: form.dataset.newsletterSource || 'homepage' },
           });
           form.reset();
-          setNewsletterMessage(form, 'success', 'You are subscribed. Watch your inbox for Event Sphere updates.');
+          setNewsletterMessage(form, 'success', 'You are subscribed. Watch your inbox for Tiketa updates.');
         } catch (err) {
           setNewsletterMessage(form, 'error', err.message || 'Subscription failed. Please try again.');
         } finally {

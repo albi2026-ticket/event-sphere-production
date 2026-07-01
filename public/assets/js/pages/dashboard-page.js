@@ -8,6 +8,7 @@
   const favApi = () => window.EventSphereFavorites;
   const eventsApi = () => window.EventSphereEvents;
   const u = () => window.EventSphereUtils;
+  const tr = (key, fallback, replacements) => window.t?.(key, replacements) || fallback;
 
   const state = {
     summary: null,
@@ -56,7 +57,21 @@
   function statusBadge(status) {
     const value = String(status || 'unknown').toLowerCase();
     const classKey = value.replace(/\s+/g, '_');
-    return `<span class="badge status-badge status-${escape(classKey)}">${escape(value.replace(/_/g, ' '))}</span>`;
+    const key = {
+      paid: 'orders.paid',
+      pending: 'orders.pending',
+      refunded: 'orders.refunded',
+      cancelled: 'orders.cancelled',
+      failed: 'orders.failed',
+      valid: 'tickets.valid',
+      checked_in: 'tickets.checked_in',
+      event_ended: 'events.event_ended',
+      sold_out: 'events.sold_out',
+      upcoming: 'events.upcoming',
+      ended: 'events.event_ended',
+    }[classKey];
+    const label = key ? tr(key, value.replace(/_/g, ' ')) : value.replace(/_/g, ' ');
+    return `<span class="badge status-badge status-${escape(classKey)}"${key ? ` data-i18n="${key}"` : ''}>${escape(label)}</span>`;
   }
 
   function dateLabel(value, timezone) {
@@ -92,7 +107,7 @@
     const date = value ? new Date(value) : null;
     if (!date || Number.isNaN(date.getTime())) return '-';
     const diff = date.getTime() - Date.now();
-    if (diff <= 0) return 'Live or ended';
+    if (diff <= 0) return tr('events.live_or_ended', 'Live or ended');
     const days = Math.floor(diff / 86400000);
     const hours = Math.floor((diff % 86400000) / 3600000);
     if (days > 0) return `${days}d ${hours}h`;
@@ -101,8 +116,9 @@
   }
 
   function ticketDisplayStatus(ticket) {
-    if (isEndedEvent(ticket.event) && ticket.status === 'valid') return 'event ended';
-    return String(ticket.status || 'valid').replace(/_/g, ' ');
+    if (isEndedEvent(ticket.event) && ticket.status === 'valid') return tr('events.event_ended', 'Event Ended');
+    const status = String(ticket.status || 'valid').replace(/_/g, ' ');
+    return tr(`tickets.${String(ticket.status || 'valid').toLowerCase()}`, status);
   }
 
   function emptyState(icon, title, detail, action = '') {
@@ -122,7 +138,7 @@
   }
 
   function errorState(message, retryAttr) {
-    return `<div class="dashboard-empty text-danger"><i class="bi bi-exclamation-triangle"></i><span>${escape(message)}</span><button class="btn btn-glass btn-sm" type="button" ${retryAttr}>Retry</button></div>`;
+    return `<div class="dashboard-empty text-danger"><i class="bi bi-exclamation-triangle"></i><span>${escape(message)}</span><button class="btn btn-glass btn-sm" type="button" ${retryAttr} data-i18n="buttons.retry">${window.t?.('buttons.retry') || 'Retry'}</button></div>`;
   }
 
   function pagination(meta, attr) {
@@ -331,10 +347,10 @@
     }
     const stats = state.summary?.stats || {};
     kpiRow.innerHTML = `
-      <div class="col-md-3"><div class="kpi"><div class="label">Upcoming events</div><div class="value">${stats.upcoming_events_count ?? 0}</div><div class="delta">From active tickets</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Active Tickets</div><div class="value">${stats.active_tickets_count ?? 0}</div><div class="delta">${stats.tickets_count ?? 0} total tickets</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Events Attended</div><div class="value">${stats.used_tickets_count ?? 0}</div><div class="delta">Checked-in tickets</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Total orders</div><div class="value">${stats.orders_count ?? 0}</div><div class="delta">${u().formatMoney(stats.total_spent || 0, 'USD')} spent</div></div></div>`;
+      <div class="col-md-3"><div class="kpi"><div class="label" data-i18n="dashboard.upcoming_events">${tr('dashboard.upcoming_events', 'Upcoming events')}</div><div class="value">${stats.upcoming_events_count ?? 0}</div><div class="delta" data-i18n="dashboard.from_active_tickets">${tr('dashboard.from_active_tickets', 'From active tickets')}</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label" data-i18n="dashboard.active_tickets">${tr('dashboard.active_tickets', 'Active Tickets')}</div><div class="value">${stats.active_tickets_count ?? 0}</div><div class="delta">${tr('dashboard.total_tickets_delta', '{count} total tickets', { count: stats.tickets_count ?? 0 })}</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label" data-i18n="dashboard.events_attended">${tr('dashboard.events_attended', 'Events Attended')}</div><div class="value">${stats.used_tickets_count ?? 0}</div><div class="delta" data-i18n="dashboard.checked_in_tickets">${tr('dashboard.checked_in_tickets', 'Checked-in tickets')}</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label" data-i18n="dashboard.total_orders">${tr('dashboard.total_orders', 'Total orders')}</div><div class="value">${stats.orders_count ?? 0}</div><div class="delta">${tr('dashboard.spent', '{amount} spent', { amount: u().formatMoney(stats.total_spent || 0, 'USD') })}</div></div></div>`;
   }
 
   function renderUpcomingEvents() {
@@ -342,8 +358,8 @@
     const detail = document.querySelector('[data-dashboard-upcoming-detail]');
     if (!el && !detail) return;
     if (state.loading.upcoming) {
-      if (el) el.innerHTML = loadingState('Loading upcoming events...');
-      if (detail) detail.innerHTML = loadingState('Loading upcoming events...');
+      if (el) el.innerHTML = loadingState(tr('dashboard.loading_upcoming_events', 'Loading upcoming events...'));
+      if (detail) detail.innerHTML = loadingState(tr('dashboard.loading_upcoming_events', 'Loading upcoming events...'));
       return;
     }
     if (state.errors.upcoming) {
@@ -353,7 +369,7 @@
     }
     const upcomingTickets = state.upcomingTickets.length ? state.upcomingTickets : state.tickets.filter((ticket) => isUpcomingEvent(ticket.event));
     const ticketByEvent = new Map(upcomingTickets.map((ticket) => [String(ticket.event?.id), ticket]));
-    const empty = emptyState('bi-calendar2-plus', 'No upcoming events', 'When you buy tickets for future events, they will appear here.', '<a class="btn btn-glass btn-sm mt-2" href="events.html">Browse events</a>');
+    const empty = emptyState('bi-calendar2-plus', tr('dashboard.no_upcoming_events', 'No upcoming events'), tr('dashboard.future_events_appear', 'When you buy tickets for future events, they will appear here.'), `<a class="btn btn-glass btn-sm mt-2" href="events.html" data-i18n="buttons.browse_events">${tr('buttons.browse_events', 'Browse events')}</a>`);
     const compact = state.upcomingEvents.slice(0, 4).map((event) => `
       <a class="dashboard-event-row" href="event-details.html?slug=${encodeURIComponent(event.slug)}">
         <img src="${escape(u().eventImage(event))}" alt=""/>
@@ -372,10 +388,10 @@
           <div class="dashboard-mini-row">
             <div class="d-flex gap-3 align-items-center">
               <img src="${escape(u().eventImage(event))}" alt="" class="rounded" style="width:76px;height:56px;object-fit:cover;background:var(--card-2)"/>
-              <span><span class="fw-semibold d-block">${escape(event.title)}</span><small>${escape(dateLabel(event.starts_at, event.timezone))} · ${escape(event.venue_name || '')}${event.city ? `, ${escape(event.city)}` : ''}</small><small class="d-block">Starts in ${escape(countdownLabel(event.starts_at))}</small></span>
+              <span><span class="fw-semibold d-block">${escape(event.title)}</span><small>${escape(dateLabel(event.starts_at, event.timezone))} · ${escape(event.venue_name || '')}${event.city ? `, ${escape(event.city)}` : ''}</small><small class="d-block"><span data-i18n="dashboard.starts_in">${tr('dashboard.starts_in', 'Starts in')}</span> ${escape(countdownLabel(event.starts_at))}</small></span>
             </div>
             <div class="dashboard-actions">
-              ${ticket ? `<button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}">View Ticket</button><button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}">View QR</button>` : `<a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(event.slug)}">View Event</a>`}
+              ${ticket ? `<button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}" data-i18n="tickets.view_ticket">${tr('tickets.view_ticket', 'View Ticket')}</button><button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}" data-i18n="tickets.view_qr">${tr('tickets.view_qr', 'View QR')}</button>` : `<a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(event.slug)}" data-i18n="dashboard.view_event">${tr('dashboard.view_event', 'View Event')}</a>`}
             </div>
           </div>`;
       }).join('') || empty;
@@ -387,7 +403,7 @@
     const pager = document.querySelector('[data-ticket-pagination]');
     if (!el) return;
     if (state.loading.tickets) {
-      el.innerHTML = `<div class="col-12">${loadingState('Loading tickets...')}</div>`;
+      el.innerHTML = `<div class="col-12">${loadingState(tr('loading.loading_tickets', 'Loading tickets...'))}</div>`;
       if (pager) pager.innerHTML = '';
       return;
     }
@@ -398,7 +414,7 @@
     }
     el.innerHTML = state.tickets.length
       ? state.tickets.map((ticket) => ticketsApi().renderTicketCard(ticket)).join('')
-      : `<div class="col-12">${emptyState('bi-ticket-perforated', 'No tickets found', 'Try another filter or browse events to buy tickets.', '<a class="btn btn-glass btn-sm mt-2" href="events.html">Find events</a>')}</div>`;
+      : `<div class="col-12">${emptyState('bi-ticket-perforated', tr('empty.no_tickets_found', 'No tickets found.'), tr('tickets.try_filter_or_browse', 'Try another filter or browse events to buy tickets.'), `<a class="btn btn-glass btn-sm mt-2" href="events.html" data-i18n="buttons.browse_events">${tr('buttons.browse_events', 'Browse Events')}</a>`)}</div>`;
     ticketsApi().hydrateQrImages(el);
     if (pager) pager.innerHTML = pagination(state.ticketMeta, 'data-ticket-page');
   }
@@ -408,7 +424,7 @@
     const pager = document.querySelector('[data-order-pagination]');
     if (!body) return;
     if (state.loading.orders) {
-      body.innerHTML = `<tr><td colspan="7">${loadingState('Loading orders...')}</td></tr>`;
+      body.innerHTML = `<tr><td colspan="7">${loadingState(tr('orders.loading_orders', 'Loading orders...'))}</td></tr>`;
       if (pager) pager.innerHTML = '';
       return;
     }
@@ -419,20 +435,20 @@
     }
     body.innerHTML = state.orders.map((order) => `
       <tr>
-        <td data-label="Order Number"><div class="fw-semibold order-code">${escape(order.order_number)}</div><small class="text-muted-pro">${escape(order.status || '')}</small></td>
-        <td data-label="Purchase Date">${escape(shortDate(order.created_at))}</td>
-        <td data-label="Event">${escape(rows(order.items)[0]?.event_title || rows(order.items)[0]?.event?.title || rows(order.tickets)[0]?.event?.title || 'Multiple events')}</td>
-        <td data-label="Quantity">${rows(order.tickets).length || rows(order.items).reduce((sum, item) => sum + Number(item.quantity || 0), 0)}</td>
-        <td data-label="Total Paid">${u().formatMoney(order.total, order.currency)}</td>
-        <td data-label="Payment Status">${statusBadge(order.payment_status)}</td>
+        <td data-label="${tr('orders.order_number', 'Order Number')}"><div class="fw-semibold order-code">${escape(order.order_number)}</div><small class="text-muted-pro">${escape(order.status || '')}</small></td>
+        <td data-label="${tr('orders.purchase_date', 'Purchase Date')}">${escape(shortDate(order.created_at))}</td>
+        <td data-label="${tr('tickets.event', 'Event')}">${escape(rows(order.items)[0]?.event_title || rows(order.items)[0]?.event?.title || rows(order.tickets)[0]?.event?.title || tr('events.multiple_events', 'Multiple events'))}</td>
+        <td data-label="${tr('events.quantity', 'Quantity')}">${rows(order.tickets).length || rows(order.items).reduce((sum, item) => sum + Number(item.quantity || 0), 0)}</td>
+        <td data-label="${tr('orders.total_paid', 'Total Paid')}">${u().formatMoney(order.total, order.currency)}</td>
+        <td data-label="${tr('orders.payment_status', 'Payment Status')}">${statusBadge(order.payment_status)}</td>
         <td data-label="Actions" class="text-end">
           <div class="dashboard-actions">
-            <button class="btn btn-glass btn-sm" type="button" data-order-details="${order.id}"><i class="bi bi-eye me-1"></i>View Order</button>
-            <button class="btn btn-glass btn-sm" type="button" data-order-receipt="${order.id}" data-order-number="${escape(order.order_number)}"><i class="bi bi-download me-1"></i>Receipt</button>
+            <button class="btn btn-glass btn-sm" type="button" data-order-details="${order.id}"><i class="bi bi-eye me-1"></i><span data-i18n="orders.view_order">${tr('orders.view_order', 'View Order')}</span></button>
+            <button class="btn btn-glass btn-sm" type="button" data-order-receipt="${order.id}" data-order-number="${escape(order.order_number)}"><i class="bi bi-download me-1"></i><span data-i18n="orders.receipt">${tr('orders.receipt', 'Receipt')}</span></button>
           </div>
         </td>
       </tr>
-    `).join('') || `<tr><td colspan="7">${emptyState('bi-receipt', 'No orders found', 'Completed orders will appear here after checkout.')}</td></tr>`;
+    `).join('') || `<tr><td colspan="7">${emptyState('bi-receipt', tr('orders.no_orders_found', 'No Orders Found'), tr('orders.completed_orders_appear', 'Completed orders will appear here after checkout.'))}</td></tr>`;
     if (pager) pager.innerHTML = pagination(state.orderMeta, 'data-order-page');
   }
 
@@ -447,7 +463,7 @@
     const img = u().eventImage(event);
     const price = event.base_price ?? event.ticket_types?.[0]?.price ?? 0;
     const pricing = eventsApi().priceBreakdownHtml(price, event.currency || 'USD', event, true);
-    const stateBadge = event.event_state?.label || (event.is_sold_out ? 'Sold Out' : (isUpcomingEvent(event) ? 'Upcoming' : 'Ended'));
+    const stateBadge = event.event_state?.label || (event.is_sold_out ? tr('events.sold_out', 'Sold Out') : (isUpcomingEvent(event) ? tr('events.upcoming', 'Upcoming') : tr('events.event_ended', 'Ended')));
     return `
       <div class="col-md-6 col-xl-4">
         <article class="card-pro dashboard-favorite-card">
@@ -462,7 +478,7 @@
             <div class="foot">
               <div class="price">${pricing}<div class="mt-1">${statusBadge(stateBadge)}</div></div>
               <div class="dashboard-actions">
-                <a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(event.slug)}">View Event</a>
+                <a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(event.slug)}" data-i18n="dashboard.view_event">${tr('dashboard.view_event', 'View Event')}</a>
                 <button class="btn btn-glass btn-sm" type="button" data-remove-favorite="${event.id}"><i class="bi bi-heartbreak"></i></button>
               </div>
             </div>
@@ -476,7 +492,7 @@
     const pager = document.querySelector('[data-favorite-pagination]');
     if (!el) return;
     if (state.loading.favorites) {
-      el.innerHTML = `<div class="col-12">${loadingState('Loading favorites...')}</div>`;
+      el.innerHTML = `<div class="col-12">${loadingState(tr('dashboard.loading_favorites', 'Loading favorites...'))}</div>`;
       if (pager) pager.innerHTML = '';
       return;
     }
@@ -487,7 +503,7 @@
     }
     el.innerHTML = state.favorites.length
       ? state.favorites.map(renderFavoriteCard).join('')
-      : `<div class="col-12">${emptyState('bi-heart', 'No favorites yet', 'Save events you like and they will appear here.', '<a class="btn btn-glass btn-sm mt-2" href="events.html">Browse events</a>')}</div>`;
+      : `<div class="col-12">${emptyState('bi-heart', tr('dashboard.no_favorites_yet', 'No favorites yet'), tr('dashboard.saved_events_appear', 'Save events you like and they will appear here.'), `<a class="btn btn-glass btn-sm mt-2" href="events.html" data-i18n="buttons.browse_events">${tr('buttons.browse_events', 'Browse events')}</a>`)}</div>`;
     if (pager) pager.innerHTML = pagination(state.favoriteMeta, 'data-favorite-page');
   }
 
@@ -495,7 +511,7 @@
     const activityEl = document.querySelector('[data-dashboard-activity]');
     if (!activityEl) return;
     if (state.loading.summary || state.loading.orders || state.loading.tickets || state.loading.favorites) {
-      activityEl.innerHTML = `<li>${loadingState('Loading activity...')}</li>`;
+      activityEl.innerHTML = `<li>${loadingState(tr('dashboard.loading_activity', 'Loading activity...'))}</li>`;
       return;
     }
 
@@ -503,19 +519,19 @@
       ...(state.summary?.recent?.orders || []).map((order) => ({
         at: order.created_at,
         icon: 'bi-receipt',
-        title: order.payment_status === 'paid' ? `Order Confirmed: ${order.order_number}` : `Order ${order.order_number}`,
+        title: order.payment_status === 'paid' ? `${tr('dashboard.order_confirmation', 'Order confirmation')}: ${order.order_number}` : `${tr('tickets.order_label', 'Order')} ${order.order_number}`,
         detail: `${order.payment_status || order.status} · ${u().formatMoney(order.total, order.currency)}`,
       })),
       ...state.tickets.slice(0, 3).map((ticket) => ({
         at: ticket.order?.created_at || ticket.created_at,
         icon: 'bi-ticket-perforated',
-        title: ticket.status === 'checked_in' ? `Ticket Checked In: ${ticket.event?.title || ticket.ticket_code}` : `Ticket Purchased: ${ticket.event?.title || ticket.ticket_code}`,
-        detail: `Ticket ${ticket.ticket_code} · ${ticketDisplayStatus(ticket)}`,
+        title: ticket.status === 'checked_in' ? `${tr('dashboard.ticket_checked_in', 'Ticket Checked In')}: ${ticket.event?.title || ticket.ticket_code}` : `${tr('dashboard.ticket_purchased', 'Ticket Purchased')}: ${ticket.event?.title || ticket.ticket_code}`,
+        detail: `${tr('tickets.ticket_label', 'Ticket')} ${ticket.ticket_code} · ${ticketDisplayStatus(ticket)}`,
       })),
       ...state.upcomingEvents.slice(0, 2).map((event) => ({
         at: event.starts_at,
         icon: 'bi-bell',
-        title: `Event Reminder Sent: ${event.title}`,
+        title: `${tr('dashboard.event_reminder', 'Event reminder')}: ${event.title}`,
         detail: `${dateLabel(event.starts_at, event.timezone)} · ${countdownLabel(event.starts_at)}`,
       })),
       ...state.favorites.slice(0, 3).map((favorite) => {
@@ -523,8 +539,8 @@
         return {
           at: favorite.created_at,
           icon: 'bi-heart',
-          title: event?.title || 'Saved event',
-          detail: 'Added to favorites',
+          title: event?.title || tr('dashboard.saved_event', 'Saved event'),
+          detail: tr('dashboard.added_to_favorites', 'Added to favorites'),
         };
       }),
     ].sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0)).slice(0, 8);
@@ -537,7 +553,7 @@
           <small class="text-muted-pro">${escape(item.detail)} · ${escape(shortDate(item.at))}</small>
         </div>
       </li>
-    `).join('') || `<li>${emptyState('bi-clock-history', 'No recent activity', 'Your purchases, tickets, and favorites will show here.')}</li>`;
+    `).join('') || `<li>${emptyState('bi-clock-history', tr('dashboard.no_recent_activity', 'No recent activity'), tr('dashboard.activity_appear', 'Your purchases, tickets, and favorites will show here.'))}</li>`;
   }
 
   function attendedTickets() {
@@ -558,14 +574,14 @@
 
     if (statsRow) {
       statsRow.innerHTML = `
-        <div class="col-md-4"><div class="kpi"><div class="label">Total Events Attended</div><div class="value">${attended.length}</div><div class="delta">Checked-in tickets</div></div></div>
-        <div class="col-md-4"><div class="kpi"><div class="label">Most Recent Event</div><div class="value" style="font-size:1.05rem">${escape(mostRecent?.event?.title || '-')}</div><div class="delta">${escape(dateTimeLabel(mostRecent?.checked_in_at || mostRecent?.event?.starts_at))}</div></div></div>
-        <div class="col-md-4"><div class="kpi"><div class="label">Favorite Category</div><div class="value" style="font-size:1.25rem">${escape(favoriteCategory)}</div><div class="delta">Based on attendance</div></div></div>`;
+        <div class="col-md-4"><div class="kpi"><div class="label" data-i18n="dashboard.total_events_attended">${tr('dashboard.total_events_attended', 'Total Events Attended')}</div><div class="value">${attended.length}</div><div class="delta" data-i18n="dashboard.checked_in_tickets">${tr('dashboard.checked_in_tickets', 'Checked-in tickets')}</div></div></div>
+        <div class="col-md-4"><div class="kpi"><div class="label" data-i18n="dashboard.most_recent_event">${tr('dashboard.most_recent_event', 'Most Recent Event')}</div><div class="value" style="font-size:1.05rem">${escape(mostRecent?.event?.title || '-')}</div><div class="delta">${escape(dateTimeLabel(mostRecent?.checked_in_at || mostRecent?.event?.starts_at))}</div></div></div>
+        <div class="col-md-4"><div class="kpi"><div class="label" data-i18n="dashboard.favorite_category">${tr('dashboard.favorite_category', 'Favorite Category')}</div><div class="value" style="font-size:1.25rem">${escape(favoriteCategory)}</div><div class="delta" data-i18n="dashboard.based_on_attendance">${tr('dashboard.based_on_attendance', 'Based on attendance')}</div></div></div>`;
     }
 
     if (!body) return;
     if (state.loading.history) {
-      body.innerHTML = `<tr><td colspan="4">${loadingState('Loading attendance history...')}</td></tr>`;
+      body.innerHTML = `<tr><td colspan="4">${loadingState(tr('dashboard.loading_attendance_history', 'Loading attendance history...'))}</td></tr>`;
       return;
     }
     if (state.errors.history) {
@@ -574,12 +590,12 @@
     }
     body.innerHTML = attended.map((ticket) => `
       <tr>
-        <td data-label="Event Name">${escape(ticket.event?.title || 'Event')}</td>
-        <td data-label="Event Date">${escape(dateLabel(ticket.event?.starts_at, ticket.event?.timezone))}</td>
-        <td data-label="Ticket Type">${escape(ticket.ticket_type?.name || 'Ticket')}</td>
-        <td data-label="Check-In Time">${escape(dateTimeLabel(ticket.checked_in_at))}</td>
+        <td data-label="${tr('dashboard.event_name', 'Event Name')}">${escape(ticket.event?.title || tr('events.event', 'Event'))}</td>
+        <td data-label="${tr('dashboard.event_date', 'Event Date')}">${escape(dateLabel(ticket.event?.starts_at, ticket.event?.timezone))}</td>
+        <td data-label="${tr('tickets.ticket_type', 'Ticket Type')}">${escape(ticket.ticket_type?.name || tr('forms.ticket', 'Ticket'))}</td>
+        <td data-label="${tr('dashboard.check_in_time', 'Check-In Time')}">${escape(dateTimeLabel(ticket.checked_in_at))}</td>
       </tr>
-    `).join('') || `<tr><td colspan="4">${emptyState('bi-clock-history', 'No attended events yet', 'Checked-in tickets will appear here after events.')}</td></tr>`;
+    `).join('') || `<tr><td colspan="4">${emptyState('bi-clock-history', tr('dashboard.no_attended_events', 'No attended events yet'), tr('dashboard.attended_events_appear', 'Checked-in tickets will appear here after events.'))}</td></tr>`;
   }
 
   function renderProfileSummary() {
@@ -930,35 +946,35 @@
 
   async function showTicketDetails(ticketId) {
     const ticket = await ticketsApi().getTicket(ticketId);
-    detailModal('Ticket details', `
+    detailModal(tr('tickets.ticket_details', 'Ticket Details'), `
       <div class="dashboard-detail-grid">
-        <div><dt>Event</dt><dd>${escape(ticket.event?.title || 'Event')}</dd></div>
-        <div><dt>Status</dt><dd>${statusBadge(ticket.status)}</dd></div>
-        <div><dt>Ticket code</dt><dd>${escape(ticket.ticket_code)}</dd></div>
-        <div><dt>Ticket type</dt><dd>${escape(ticket.ticket_type?.name || '-')}</dd></div>
-        <div><dt>Attendee</dt><dd>${escape(ticket.attendee?.name || 'Guest')}</dd></div>
-        <div><dt>Attendee email</dt><dd>${escape(ticket.attendee?.email || '-')}</dd></div>
-        <div><dt>Purchased by</dt><dd>${escape(ticket.purchaser?.name || ticket.order?.purchaser?.name || '-')}</dd></div>
-        <div><dt>Date</dt><dd>${escape(dateLabel(ticket.event?.starts_at, ticket.event?.timezone))}</dd></div>
-        <div><dt>Venue</dt><dd>${escape(ticket.event?.venue_name || '')}${ticket.event?.city ? `, ${escape(ticket.event.city)}` : ''}</dd></div>
-        <div><dt>Seat</dt><dd>${escape(ticket.seat_label || '-')}</dd></div>
-        <div><dt>Order</dt><dd>${escape(ticket.order?.order_number || '-')}</dd></div>
+        <div><dt data-i18n="tickets.event">${tr('tickets.event', 'Event')}</dt><dd>${escape(ticket.event?.title || tr('events.event', 'Event'))}</dd></div>
+        <div><dt data-i18n="common.status">${tr('common.status', 'Status')}</dt><dd>${statusBadge(ticket.status)}</dd></div>
+        <div><dt data-i18n="tickets.ticket_code">${tr('tickets.ticket_code', 'Ticket code')}</dt><dd>${escape(ticket.ticket_code)}</dd></div>
+        <div><dt data-i18n="tickets.ticket_type">${tr('tickets.ticket_type', 'Ticket type')}</dt><dd>${escape(ticket.ticket_type?.name || '-')}</dd></div>
+        <div><dt data-i18n="tickets.attendee">${tr('tickets.attendee', 'Attendee')}</dt><dd>${escape(ticket.attendee?.name || 'Guest')}</dd></div>
+        <div><dt data-i18n="tickets.attendee_email">${tr('tickets.attendee_email', 'Attendee email')}</dt><dd>${escape(ticket.attendee?.email || '-')}</dd></div>
+        <div><dt data-i18n="tickets.purchased_by">${tr('tickets.purchased_by', 'Purchased by')}</dt><dd>${escape(ticket.purchaser?.name || ticket.order?.purchaser?.name || '-')}</dd></div>
+        <div><dt data-i18n="common.date">${tr('common.date', 'Date')}</dt><dd>${escape(dateLabel(ticket.event?.starts_at, ticket.event?.timezone))}</dd></div>
+        <div><dt data-i18n="events.location">${tr('events.location', 'Location')}</dt><dd>${escape(ticket.event?.venue_name || '')}${ticket.event?.city ? `, ${escape(ticket.event.city)}` : ''}</dd></div>
+        <div><dt data-i18n="tickets.seat">${tr('tickets.seat', 'Seat')}</dt><dd>${escape(ticket.seat_label || '-')}</dd></div>
+        <div><dt data-i18n="tickets.order">${tr('tickets.order', 'Order')}</dt><dd>${escape(ticket.order?.order_number || '-')}</dd></div>
       </div>
       <div class="d-flex gap-2 mt-4 flex-wrap">
-        <button class="btn btn-primary-grad btn-sm" type="button" data-ticket-download="${ticket.id}" data-ticket-code="${escape(ticket.ticket_code)}"><i class="bi bi-download me-1"></i>Download PDF</button>
-        <button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}"><i class="bi bi-qr-code me-1"></i>View QR code</button>
+        <button class="btn btn-primary-grad btn-sm" type="button" data-ticket-download="${ticket.id}" data-ticket-code="${escape(ticket.ticket_code)}"><i class="bi bi-download me-1"></i><span data-i18n="tickets.download_pdf">${tr('tickets.download_pdf', 'Download PDF')}</span></button>
+        <button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}"><i class="bi bi-qr-code me-1"></i><span data-i18n="tickets.view_qr_code">${tr('tickets.view_qr_code', 'View QR code')}</span></button>
       </div>
     `);
   }
 
   async function showQr(ticketId) {
-    detailModal('Ticket QR code', `<div class="dashboard-qr-wrap">${loadingState('Loading QR code...')}</div>`);
+    detailModal(tr('tickets.ticket_qr_code', 'Ticket QR code'), `<div class="dashboard-qr-wrap">${loadingState(tr('tickets.loading_qr_code', 'Loading QR code...'))}</div>`);
     try {
       const blob = await ticketsApi().loadQrBlob(ticketId);
       const url = URL.createObjectURL(blob);
-      document.querySelector('[data-dashboard-detail-body]').innerHTML = `<div class="dashboard-qr-wrap"><img src="${url}" alt="Ticket QR code"/></div>`;
+      document.querySelector('[data-dashboard-detail-body]').innerHTML = `<div class="dashboard-qr-wrap"><img src="${url}" alt="${tr('tickets.ticket_qr_code', 'Ticket QR code')}"/></div>`;
     } catch (err) {
-      document.querySelector('[data-dashboard-detail-body]').innerHTML = errorState(err.message || 'QR code failed to load', 'data-retry-tickets');
+      document.querySelector('[data-dashboard-detail-body]').innerHTML = errorState(err.message || tr('tickets.qr_code_failed', 'QR code failed to load'), 'data-retry-tickets');
     }
   }
 
@@ -966,25 +982,25 @@
     const order = await ordersApi().getOrder(orderId);
     const items = rows(order.items);
     const tickets = rows(order.tickets);
-    detailModal('Order details', `
+    detailModal(tr('orders.order_details', 'Order Details'), `
       <div class="dashboard-detail-grid">
-        <div><dt>Order</dt><dd>${escape(order.order_number)}</dd></div>
-        <div><dt>Payment</dt><dd>${statusBadge(order.payment_status)}</dd></div>
-        <div><dt>Status</dt><dd>${statusBadge(order.status)}</dd></div>
-        <div><dt>Purchased</dt><dd>${escape(shortDate(order.created_at))}</dd></div>
-        <div><dt>Ticket Price</dt><dd>${u().formatMoney(order.subtotal, order.currency)}</dd></div>
-        <div><dt>Service Fee</dt><dd>${u().formatMoney(order.service_fee, order.currency)}</dd></div>
-        <div><dt>Total</dt><dd>${u().formatMoney(order.total, order.currency)}</dd></div>
-        <div><dt>Purchaser</dt><dd>${escape(order.purchaser?.name || '-')} · ${escape(order.purchaser?.email || '-')}</dd></div>
-        <div><dt>Attendees</dt><dd>${order.attendee_count ?? tickets.length}</dd></div>
+        <div><dt data-i18n="tickets.order">${tr('tickets.order', 'Order')}</dt><dd>${escape(order.order_number)}</dd></div>
+        <div><dt data-i18n="orders.payment">${tr('orders.payment', 'Payment')}</dt><dd>${statusBadge(order.payment_status)}</dd></div>
+        <div><dt data-i18n="orders.status">${tr('orders.status', 'Status')}</dt><dd>${statusBadge(order.status)}</dd></div>
+        <div><dt data-i18n="orders.purchased">${tr('orders.purchased', 'Purchased')}</dt><dd>${escape(shortDate(order.created_at))}</dd></div>
+        <div><dt data-i18n="tickets.ticket_price">${tr('tickets.ticket_price', 'Ticket Price')}</dt><dd>${u().formatMoney(order.subtotal, order.currency)}</dd></div>
+        <div><dt data-i18n="checkout.service_fee">${tr('checkout.service_fee', 'Service Fee')}</dt><dd>${u().formatMoney(order.service_fee, order.currency)}</dd></div>
+        <div><dt data-i18n="checkout.total">${tr('checkout.total', 'Total')}</dt><dd>${u().formatMoney(order.total, order.currency)}</dd></div>
+        <div><dt data-i18n="orders.purchaser">${tr('orders.purchaser', 'Purchaser')}</dt><dd>${escape(order.purchaser?.name || '-')} · ${escape(order.purchaser?.email || '-')}</dd></div>
+        <div><dt data-i18n="orders.attendees">${tr('orders.attendees', 'Attendees')}</dt><dd>${order.attendee_count ?? tickets.length}</dd></div>
       </div>
-      <h6 class="mt-4">Items</h6>
+      <h6 class="mt-4" data-i18n="orders.items">${tr('orders.items', 'Items')}</h6>
       <div class="table-responsive"><table class="table table-borderless dashboard-table mb-0"><tbody>
-        ${items.map((item) => `<tr><td data-label="Event">${escape(item.event_title || item.event?.title || 'Event')}</td><td data-label="Ticket">${escape(item.ticket_type_name || item.ticket_type?.name || 'Ticket')}</td><td data-label="Qty">x${item.quantity}</td><td data-label="Ticket Price">${u().formatMoney(Number(item.unit_price || 0) * Number(item.quantity || 0), order.currency)}</td><td data-label="Service Fee">${u().formatMoney(item.service_fee, order.currency)}</td><td data-label="Total">${u().formatMoney(item.total, order.currency)}</td></tr>`).join('') || '<tr><td colspan="6">No line items</td></tr>'}
+        ${items.map((item) => `<tr><td data-label="${tr('tickets.event', 'Event')}">${escape(item.event_title || item.event?.title || tr('events.event', 'Event'))}</td><td data-label="${tr('forms.ticket', 'Ticket')}">${escape(item.ticket_type_name || item.ticket_type?.name || tr('forms.ticket', 'Ticket'))}</td><td data-label="${tr('events.quantity', 'Qty')}">x${item.quantity}</td><td data-label="${tr('tickets.ticket_price', 'Ticket Price')}">${u().formatMoney(Number(item.unit_price || 0) * Number(item.quantity || 0), order.currency)}</td><td data-label="${tr('checkout.service_fee', 'Service Fee')}">${u().formatMoney(item.service_fee, order.currency)}</td><td data-label="${tr('checkout.total', 'Total')}">${u().formatMoney(item.total, order.currency)}</td></tr>`).join('') || `<tr><td colspan="6" data-i18n="orders.no_line_items">${tr('orders.no_line_items', 'No line items')}</td></tr>`}
       </tbody></table></div>
-      <h6 class="mt-4">Ticket access</h6>
+      <h6 class="mt-4" data-i18n="orders.ticket_access">${tr('orders.ticket_access', 'Ticket access')}</h6>
       <div class="dashboard-stack">
-        ${tickets.map((ticket) => `<div class="dashboard-mini-row"><div><div class="fw-semibold">${escape(ticket.attendee?.name || 'Guest')}</div><small><span class="ticket-code">${escape(ticket.ticket_code)}</span> · ${escape(ticket.ticket_type?.name || ticket.event?.title || '')}</small></div><button class="btn btn-glass btn-sm" type="button" data-ticket-download="${ticket.id}" data-ticket-code="${escape(ticket.ticket_code)}"><i class="bi bi-download me-1"></i>Download PDF</button></div>`).join('') || '<p class="text-muted-pro mb-0">No tickets attached to this order.</p>'}
+        ${tickets.map((ticket) => `<div class="dashboard-mini-row"><div><div class="fw-semibold">${escape(ticket.attendee?.name || 'Guest')}</div><small><span class="ticket-code">${escape(ticket.ticket_code)}</span> · ${escape(ticket.ticket_type?.name || ticket.event?.title || '')}</small></div><button class="btn btn-glass btn-sm" type="button" data-ticket-download="${ticket.id}" data-ticket-code="${escape(ticket.ticket_code)}"><i class="bi bi-download me-1"></i><span data-i18n="tickets.download_pdf">${tr('tickets.download_pdf', 'Download PDF')}</span></button></div>`).join('') || `<p class="text-muted-pro mb-0" data-i18n="tickets.no_tickets_attached">${tr('tickets.no_tickets_attached', 'No tickets attached to this order.')}</p>`}
       </div>
     `);
   }
@@ -1056,7 +1072,7 @@
         try {
           await ticketsApi().downloadTicket(ticketDownload.dataset.ticketDownload, ticketDownload.dataset.ticketCode);
         } catch (err) {
-          window.tkToast?.(err.message || 'Ticket download failed', 'error');
+          window.tkToast?.(err.message || tr('tickets.download_failed', 'Ticket download failed'), 'error');
         }
         return;
       }
@@ -1096,7 +1112,7 @@
         try {
           await ordersApi().downloadReceipt(receipt.dataset.orderReceipt, receipt.dataset.orderNumber);
         } catch (err) {
-          window.tkToast?.(err.message || 'Receipt download failed', 'error');
+          window.tkToast?.(err.message || tr('orders.receipt_download_failed', 'Receipt download failed'), 'error');
         }
         return;
       }
@@ -1106,7 +1122,7 @@
         event.preventDefault();
         try {
           await favApi().removeFavorite(Number(removeFavorite.dataset.removeFavorite));
-          window.tkToast?.('Removed from favorites', 'info');
+          window.tkToast?.(tr('toast.removed_from_favorites', 'Removed from favorites'), 'info');
           await Promise.all([
             loadData('summary', loadSummary, true),
             loadData('favorites', loadFavorites, true),
@@ -1115,7 +1131,7 @@
           renderFavorites();
           renderActivity();
         } catch (err) {
-          window.tkToast?.(err.message || 'Favorite removal failed', 'error');
+          window.tkToast?.(err.message || tr('toast.favorite_update_failed', 'Favorite update failed'), 'error');
         }
         return;
       }

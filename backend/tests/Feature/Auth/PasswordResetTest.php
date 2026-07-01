@@ -25,7 +25,7 @@ class PasswordResetTest extends TestCase
         Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use ($user) {
             $mail = $notification->toMail($user);
 
-            $this->assertSame('Reset your Event Sphere password', $mail->subject);
+            $this->assertSame('Reset your Tiketa password', $mail->subject);
             $this->assertSame([
                 'html' => 'emails.auth.reset-password',
                 'text' => 'emails.auth.reset-password-text',

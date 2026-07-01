@@ -14,4 +14,4 @@ Occasion: {{ $reservation->occasion }}
 Special Request: {{ $reservation->notes }}
 @endif
 
-Thank you for choosing Event Sphere. The venue has received your reservation details.
+Thank you for choosing Tiketa. The venue has received your reservation details.

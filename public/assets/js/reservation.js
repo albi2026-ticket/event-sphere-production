@@ -1,11 +1,12 @@
 /* =========================================================
-   Event Sphere - Reservations: public venue discovery
+   Tiketa - Reservations: public venue discovery
    ========================================================= */
 (function () {
   'use strict';
 
   const api = () => window.EventSphereApi;
   const $ = (selector) => document.querySelector(selector);
+  const tr = (key, fallback, replacements) => window.t?.(key, replacements) || fallback;
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
   const fallbackImage = 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=900&q=80';
 
@@ -38,7 +39,7 @@
   }
 
   function card(venue) {
-    const facilities = preview(venue.facilities, 'Facilities coming soon');
+    const facilities = preview(venue.facilities, tr('restaurants.facilities_coming_soon', 'Facilities coming soon'));
     const cuisines = preview(venue.cuisine_types, titleCase(venue.venue_type));
     const detailsUrl = `venue.html?venue=${encodeURIComponent(venue.slug)}`;
     return `
@@ -48,7 +49,7 @@
           <div class="img-wrap">
             <img src="${esc(venueImage(venue))}" alt="${esc(venue.name)}" loading="lazy" />
             <div class="badges">
-              ${venue.featured ? '<span class="chip-available"><i class="bi bi-stars"></i> Featured</span>' : '<span class="chip-available"><i class="bi bi-circle-fill" style="font-size:.4rem"></i> Reservations</span>'}
+              ${venue.featured ? `<span class="chip-available"><i class="bi bi-stars"></i> <span data-i18n="common.featured">${window.t?.('common.featured') || 'Featured'}</span></span>` : `<span class="chip-available"><i class="bi bi-circle-fill" style="font-size:.4rem"></i> <span data-i18n="header.reservations">${window.t?.('header.reservations') || 'Reservations'}</span></span>`}
             </div>
           </div>
           <div class="body">
@@ -60,7 +61,7 @@
             <div class="venue-preview-tags">${(venue.facilities || []).slice(0, 3).map((item) => `<span>${esc(item.name)}</span>`).join('')}</div>
             <div class="footer-row">
               <span class="small text-muted-pro"><i class="bi bi-egg-fried text-gold"></i> ${esc(facilities)}</span>
-              <span class="btn btn-gold btn-sm">View</span>
+              <span class="btn btn-gold btn-sm" data-i18n="restaurants.view_venue">${tr('restaurants.view_venue', 'View Venue')}</span>
             </div>
           </div>
         </article>
@@ -108,35 +109,41 @@
     const headings = {
       featured: {
         title: 'Featured <span class="grad-res-text">Restaurants & Bars</span>',
+        titleKey: 'restaurants.discovery_title_featured',
         subtitle: 'Discover our hand-picked restaurants and bars.',
+        subtitleKey: 'restaurants.discovery_subtitle_featured',
       },
       popular: {
         title: 'Popular <span class="grad-res-text">This Week</span>',
+        titleKey: 'restaurants.discovery_title_popular',
         subtitle: 'Explore places guests are discovering right now.',
+        subtitleKey: 'restaurants.discovery_subtitle_popular',
       },
       new: {
-        title: 'New on <span class="grad-res-text">Event Sphere</span>',
+        title: 'New on <span class="grad-res-text">Tiketa</span>',
+        titleKey: 'restaurants.discovery_title_new',
         subtitle: 'Freshly added restaurants, bars, lounges, and cafés.',
+        subtitleKey: 'restaurants.discovery_subtitle_new',
       },
     };
 
     const current = headings[state.discoveryView] || headings.featured;
-    if (title) title.innerHTML = current.title;
-    if (subtitle) subtitle.textContent = current.subtitle;
+    if (title) title.innerHTML = tr(current.titleKey, current.title);
+    if (subtitle) subtitle.textContent = tr(current.subtitleKey, current.subtitle);
 
     if (emptyTitle) {
       emptyTitle.textContent = state.filters.q
-        ? 'No matching places found for your search.'
-        : 'No Restaurants & Bars found.';
+        ? (window.t?.('empty.no_matching_places') || 'No matching places found for your search.')
+        : (window.t?.('empty.no_restaurants_found') || 'No Restaurants & Bars found.');
     }
     if (emptyCopy) {
       emptyCopy.textContent = state.filters.q
-        ? 'Try searching another restaurant, bar, café, lounge, or city.'
-        : 'Check back soon for new restaurants and bars.';
+        ? (window.t?.('empty.try_another_place') || 'Try searching another restaurant, bar, café, lounge, or city.')
+        : (window.t?.('empty.check_back_restaurants') || 'Check back soon for new restaurants and bars.');
     }
 
     $('[data-venue-count]')?.replaceChildren(document.createTextNode(
-      state.loading ? 'Loading restaurants & bars...' : `${count} restaurants & bars`
+      state.loading ? tr('loading.loading_restaurants', 'Loading restaurants & bars...') : tr('restaurants.count', `${count} restaurants & bars`, { count })
     ));
   }
 
@@ -174,7 +181,7 @@
       state.venues = Array.isArray(data) ? data : [];
     } catch (err) {
       state.venues = [];
-      window.tkToast?.(err?.message || 'Unable to load restaurants & bars.', 'error');
+      window.tkToast?.(err?.message || window.t?.('toast.unable_load_restaurants') || 'Unable to load restaurants & bars.', 'error');
     } finally {
       state.loading = false;
       render();
@@ -194,8 +201,8 @@
         api().fetch('/cuisine-types', { skipAuthRedirect: true }),
         api().fetch('/venue-facilities', { skipAuthRedirect: true }),
       ]);
-      setOptions('[data-venue-filter="cuisine"]', cuisines.data || [], 'All cuisines');
-      setOptions('[data-venue-filter="facility"]', facilities.data || [], 'All facilities');
+      setOptions('[data-venue-filter="cuisine"]', cuisines.data || [], tr('restaurants.all_cuisines', 'All cuisines'));
+      setOptions('[data-venue-filter="facility"]', facilities.data || [], tr('restaurants.all_facilities', 'All facilities'));
       state.lookupsLoaded = true;
     } catch {
       /* keep filters usable with base options */
@@ -256,5 +263,11 @@
     bindFilters();
     await loadLookups();
     await loadVenues();
+  });
+
+  document.addEventListener('tiketa:language-changed', async () => {
+    state.lookupsLoaded = false;
+    await loadLookups();
+    render();
   });
 })();

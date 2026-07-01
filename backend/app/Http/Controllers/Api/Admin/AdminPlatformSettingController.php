@@ -10,9 +10,9 @@ use Illuminate\Http\Request;
 class AdminPlatformSettingController extends Controller
 {
     private const KEYS = [
-        'platform_name' => 'Event Sphere',
+        'platform_name' => 'Tiketa',
         'support_email' => 'support@eventsphere.com',
-        'contact_information' => 'Event Sphere Support',
+        'contact_information' => 'Tiketa Support',
         'default_purchase_limit' => 10,
         'default_service_fee_percentage' => 10,
         'default_event_status' => 'draft',

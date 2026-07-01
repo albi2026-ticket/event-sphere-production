@@ -125,7 +125,7 @@ class EventDetailsPerformanceTest extends TestCase
             'slug' => fake()->unique()->slug(),
             'category' => 'Concerts',
             'description' => 'A performance test event.',
-            'venue_name' => 'Event Sphere Arena',
+            'venue_name' => 'Tiketa Arena',
             'city' => 'Prishtina',
             'country' => 'Kosovo',
             'starts_at' => now()->addWeek(),

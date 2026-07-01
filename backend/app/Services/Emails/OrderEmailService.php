@@ -165,7 +165,7 @@ class OrderEmailService
         $dashboardUrl = AppUrls::frontend('/site/dashboard.html#tickets');
 
         return [
-            'brand' => 'Event Sphere',
+            'brand' => 'Tiketa',
             'purchaser_name' => $this->purchaserName($order),
             'purchaser_email' => $order->billing_email,
             'purchase_date' => $this->dateTimeLabel($order->paid_at ?: $order->created_at),
@@ -210,7 +210,7 @@ class OrderEmailService
     {
         $name = trim($order->billing_first_name.' '.$order->billing_last_name);
 
-        return $name !== '' ? $name : (string) ($order->user?->name ?: 'Event Sphere customer');
+        return $name !== '' ? $name : (string) ($order->user?->name ?: 'Tiketa customer');
     }
 
     /**

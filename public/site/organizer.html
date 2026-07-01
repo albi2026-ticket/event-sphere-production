@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="api-base" content="" />
-<title>Organizer - Event Sphere</title>
+<title>Organizer - Tiketa</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -12,7 +12,7 @@
 <body>
 <div class="dash-shell">
   <aside class="dash-side">
-    <a class="brand mb-4" href="welcome.html"><span class="brand-logo"><i class="bi bi-bar-chart-fill"></i></span>Event Sphere</a>
+    <a class="brand mb-4" href="welcome.html"><span class="brand-logo"><i class="bi bi-bar-chart-fill"></i></span>Tiketa</a>
     <nav class="menu">
       <a class="active" href="#overview" data-organizer-nav="overview"><i class="bi bi-speedometer2"></i> Overview</a>
       <a href="#events" data-organizer-nav="events"><i class="bi bi-calendar-event"></i> Events</a>
@@ -57,7 +57,7 @@
           <div class="card-pro p-4 h-100">
             <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
               <h4 class="m-0">Recent activity</h4>
-              <button class="btn btn-glass btn-sm" type="button" data-retry-summary><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+              <button class="btn btn-glass btn-sm" type="button" data-retry-summary><i class="bi bi-arrow-clockwise me-1"></i data-i18n="buttons.refresh">Refresh</button>
             </div>
             <div class="dashboard-stack" data-organizer-activity>
               <div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading activity...</span></div>
@@ -86,7 +86,7 @@
       <div class="card-pro p-3 mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
           <div class="d-flex gap-2 flex-wrap">
-            <input class="form-control form-control-sm dashboard-search" data-organizer-event-search placeholder="Search events"/>
+            <input class="form-control form-control-sm dashboard-search" data-organizer-event-search placeholder="Search events" data-i18n-attr="placeholder:forms.search_events"/>
             <select class="form-select form-select-sm dashboard-select" data-organizer-event-status>
               <option value="">All statuses</option>
               <option value="draft">Draft</option>
@@ -97,7 +97,7 @@
               <option value="completed">Completed</option>
             </select>
           </div>
-          <button class="btn btn-glass btn-sm" type="button" data-retry-events><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+          <button class="btn btn-glass btn-sm" type="button" data-retry-events><i class="bi bi-arrow-clockwise me-1"></i data-i18n="buttons.refresh">Refresh</button>
         </div>
         <div class="table-responsive">
           <table class="table table-borderless align-middle mb-0 dashboard-table">
@@ -216,7 +216,7 @@
             <p class="text-muted-pro mb-0">Search purchasers, attendees, tickets, and check-in status.</p>
           </div>
           <div class="d-flex gap-2 flex-wrap">
-            <input class="form-control form-control-sm dashboard-search" data-attendee-search placeholder="Search attendees"/>
+            <input class="form-control form-control-sm dashboard-search" data-attendee-search placeholder="Search attendees" data-i18n-attr="placeholder:forms.search_attendees"/>
             <select class="form-select form-select-sm dashboard-select" data-attendee-event>
               <option value="">All events</option>
             </select>
@@ -309,9 +309,9 @@
 
     <section id="reports" class="organizer-section" data-organizer-section="reports">
       <div class="row g-3">
-        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h5>Ticket sales report</h5><p class="text-muted-pro">Sold tickets, inventory, and event performance.</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-glass btn-sm" data-report-export="ticket-sales" data-report-format="csv">Export CSV</button><button class="btn btn-glass btn-sm" data-report-export="ticket-sales" data-report-format="pdf">Export PDF</button></div></div></div>
-        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h5>Attendee report</h5><p class="text-muted-pro">Attendee details, ticket types, orders, and check-in state.</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-glass btn-sm" data-report-export="attendees" data-report-format="csv">Export CSV</button><button class="btn btn-glass btn-sm" data-report-export="attendees" data-report-format="pdf">Export PDF</button></div></div></div>
-        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h5>Revenue report</h5><p class="text-muted-pro">Revenue trend and event revenue comparison.</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-glass btn-sm" data-report-export="revenue" data-report-format="csv">Export CSV</button><button class="btn btn-glass btn-sm" data-report-export="revenue" data-report-format="pdf">Export PDF</button></div></div></div>
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h5>Ticket sales report</h5><p class="text-muted-pro">Sold tickets, inventory, and event performance.</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-glass btn-sm" data-report-export="ticket-sales" data-report-format="csv" data-i18n="buttons.export_csv">Export CSV</button><button class="btn btn-glass btn-sm" data-report-export="ticket-sales" data-report-format="pdf" data-i18n="buttons.export_pdf">Export PDF</button></div></div></div>
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h5>Attendee report</h5><p class="text-muted-pro">Attendee details, ticket types, orders, and check-in state.</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-glass btn-sm" data-report-export="attendees" data-report-format="csv" data-i18n="buttons.export_csv">Export CSV</button><button class="btn btn-glass btn-sm" data-report-export="attendees" data-report-format="pdf" data-i18n="buttons.export_pdf">Export PDF</button></div></div></div>
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h5>Revenue report</h5><p class="text-muted-pro">Revenue trend and event revenue comparison.</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-glass btn-sm" data-report-export="revenue" data-report-format="csv" data-i18n="buttons.export_csv">Export CSV</button><button class="btn btn-glass btn-sm" data-report-export="revenue" data-report-format="pdf" data-i18n="buttons.export_pdf">Export PDF</button></div></div></div>
       </div>
     </section>
 
@@ -347,7 +347,7 @@
     <div class="modal-content dashboard-modal">
       <div class="modal-header">
         <h5 class="modal-title" data-event-modal-title>Event</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>
       </div>
       <form data-organizer-event-form novalidate>
         <div class="modal-body">
@@ -385,7 +385,7 @@
           </div>
         </div>
         <div class="modal-footer border-pro">
-          <button type="button" class="btn btn-glass" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-glass" data-bs-dismiss="modal" data-i18n="buttons.cancel">Cancel</button>
           <button type="submit" class="btn btn-primary-grad" data-event-save>Save event</button>
         </div>
       </form>
@@ -398,7 +398,7 @@
     <div class="modal-content dashboard-modal">
       <div class="modal-header">
         <h5 class="modal-title" data-organizer-detail-title>Details</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>
       </div>
       <div class="modal-body" data-organizer-detail-body></div>
     </div>
@@ -411,6 +411,8 @@
 <script src="../assets/js/api/api-client.js"></script>
 <script src="../assets/js/api/auth.js"></script>
 <script src="../assets/js/api/utils.js"></script>
+<script src="../assets/js/i18n/dictionaries.js"></script>
+<script src="../assets/js/i18n/language-service.js"></script>
 <script src="../assets/js/main.js"></script>
 <script src="../assets/js/pages/organizer-page.js"></script>
 </body>

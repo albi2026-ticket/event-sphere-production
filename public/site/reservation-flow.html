@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Reserve a Table — Event Sphere</title>
+<title>Reserve a Table — Tiketa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
@@ -16,33 +16,33 @@
 
 <nav class="navbar navbar-expand-lg nav-blur nav-res">
   <div class="container-xxl">
-    <a class="brand" href="welcome.html"><span class="brand-logo" style="background:var(--grad-res)"><i class="bi bi-cup-hot-fill"></i></span>Event Sphere</a>
+    <a class="brand" href="welcome.html"><span class="brand-logo" style="background:var(--grad-res)"><i class="bi bi-cup-hot-fill"></i></span>Tiketa</a>
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#resNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
     <div class="collapse navbar-collapse" id="resNav">
       <ul class="navbar-nav mx-auto gap-1">
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="reservations.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="my-reservations.html" data-auth-role-nav="user" hidden>My Reservations</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="owner-venue.html" data-auth-role-nav="owner" hidden>Venue Reservations</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="reservations.html" data-i18n="header.home">Home</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="my-reservations.html" data-auth-role-nav="user" data-i18n="header.my_reservations" hidden>My Reservations</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="owner-venue.html" data-auth-role-nav="owner" data-i18n="header.venue_reservations" hidden>Venue Reservations</a></li>
       </ul>
       <div class="d-flex align-items-center gap-2">
-        <a class="btn btn-ghost" href="login.html" data-auth-guest>Login</a>
-        <a class="btn btn-gold" href="register.html" data-auth-guest>Register</a>
+        <a class="btn btn-ghost" href="login.html" data-auth-guest data-i18n="header.login">Login</a>
+        <a class="btn btn-gold" href="register.html" data-auth-guest data-i18n="header.register">Register</a>
         <div class="notification-root" data-notification-root data-auth-user hidden>
-          <button class="icon-btn notification-toggle" type="button" data-notification-toggle aria-label="Notifications" aria-expanded="false">
+          <button class="icon-btn notification-toggle" type="button" data-notification-toggle aria-label="Notifications" data-i18n-attr="aria-label:header.notifications" aria-expanded="false">
             <i class="bi bi-bell"></i>
             <span class="notification-badge" data-notification-count hidden>0</span>
           </button>
           <div class="notification-panel" data-notification-panel hidden>
             <div class="notification-head">
-              <div><strong>Notifications</strong><span>In-app updates</span></div>
-              <button type="button" data-notification-mark-all>Mark all read</button>
+              <div><strong data-i18n="header.notifications">Notifications</strong><span data-i18n="header.notifications_copy">In-app updates</span></div>
+              <button type="button" data-notification-mark-all data-i18n="header.mark_all_read">Mark all read</button>
             </div>
             <div class="notification-list" data-notification-list></div>
-            <div class="notification-empty" data-notification-empty hidden>No notifications yet.</div>
-            <a class="notification-view-all" href="notifications.html">View all notifications</a>
+            <div class="notification-empty" data-notification-empty data-i18n="header.no_notifications" hidden>No notifications yet.</div>
+            <a class="notification-view-all" href="notifications.html" data-i18n="header.view_all_notifications">View all notifications</a>
           </div>
         </div>
-        <a class="btn btn-gold" href="#" data-auth-user data-logout hidden>Logout</a>
+        <a class="btn btn-gold" href="#" data-auth-user data-logout data-i18n="header.logout" hidden>Logout</a>
       </div>
     </div>
   </div>
@@ -71,7 +71,7 @@
         <p class="text-muted-pro small">Select the day you'd like to dine with us.</p>
         <div class="chip-grid mt-3" id="dateGrid"></div>
         <div class="d-flex justify-content-end mt-4">
-          <button class="btn btn-gold next-step" data-next="2">Continue <i class="bi bi-arrow-right ms-1"></i></button>
+          <button class="btn btn-gold next-step" data-next="2"><span data-i18n="buttons.continue">Continue</span> <i class="bi bi-arrow-right ms-1"></i></button>
         </div>
       </div>
 
@@ -90,8 +90,8 @@
           <div class="chip-select">9:30<small>PM</small></div>
         </div>
         <div class="d-flex justify-content-between mt-4">
-          <button class="btn btn-ghost prev-step" data-prev="1"><i class="bi bi-arrow-left me-1"></i> Back</button>
-          <button class="btn btn-gold next-step" data-next="3">Continue <i class="bi bi-arrow-right ms-1"></i></button>
+          <button class="btn btn-ghost prev-step" data-prev="1"><i class="bi bi-arrow-left me-1"></i> <span data-i18n="buttons.back">Back</span></button>
+          <button class="btn btn-gold next-step" data-next="3"><span data-i18n="buttons.continue">Continue</span> <i class="bi bi-arrow-right ms-1"></i></button>
         </div>
       </div>
 
@@ -104,8 +104,8 @@
           <div class="chip-select">5</div><div class="chip-select">6</div><div class="chip-select">7</div><div class="chip-select">8</div>
         </div>
         <div class="d-flex justify-content-between mt-4">
-          <button class="btn btn-ghost prev-step" data-prev="2"><i class="bi bi-arrow-left me-1"></i> Back</button>
-          <button class="btn btn-gold next-step" data-next="4">Continue <i class="bi bi-arrow-right ms-1"></i></button>
+          <button class="btn btn-ghost prev-step" data-prev="2"><i class="bi bi-arrow-left me-1"></i> <span data-i18n="buttons.back">Back</span></button>
+          <button class="btn btn-gold next-step" data-next="4"><span data-i18n="buttons.continue">Continue</span> <i class="bi bi-arrow-right ms-1"></i></button>
         </div>
       </div>
 
@@ -138,8 +138,8 @@
           </div>
         </div>
         <div class="d-flex justify-content-between mt-4">
-          <button class="btn btn-ghost prev-step" data-prev="3"><i class="bi bi-arrow-left me-1"></i> Back</button>
-          <button class="btn btn-gold next-step" data-next="5"><i class="bi bi-check2-circle me-1"></i> Confirm reservation</button>
+          <button class="btn btn-ghost prev-step" data-prev="3"><i class="bi bi-arrow-left me-1"></i> <span data-i18n="buttons.back">Back</span></button>
+          <button class="btn btn-gold next-step" data-next="5"><i class="bi bi-check2-circle me-1"></i> <span data-i18n="buttons.confirm_reservation">Confirm reservation</span></button>
         </div>
       </div>
 
@@ -196,6 +196,8 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/i18n/dictionaries.js"></script>
+<script src="../assets/js/i18n/language-service.js"></script>
 <script src="../assets/js/main.js"></script>
 <script src="../assets/js/api/config.js"></script>
 <script src="../assets/js/api/api-client.js"></script>

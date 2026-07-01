@@ -4,6 +4,7 @@
   const eventsApi = () => window.EventSphereEvents;
   const u = () => window.EventSphereUtils;
   const cart = () => window.EventSphereCart;
+  const tr = (key, fallback, replacements) => window.t?.(key, replacements) || fallback;
 
   function eventApiImage(event) {
     if (event.banner_image_url) return event.banner_image_url;
@@ -104,7 +105,7 @@
     const params = new URLSearchParams(location.search);
     const slug = params.get('slug');
     if (!slug) {
-      window.tkToast?.('Event not specified', 'error');
+      window.tkToast?.(tr('events.event_not_specified', 'Event not specified'), 'error');
       return;
     }
 
@@ -142,12 +143,18 @@
       const salesStatus = eventsApi().salesStatus(event);
       if (els.title) els.title.textContent = event.title;
       if (els.breadcrumb) els.breadcrumb.textContent = event.title;
-      if (els.category) els.category.textContent = salesStatus.key === 'available' ? (event.category || 'Event').toUpperCase() : salesStatus.label.toUpperCase();
+      if (els.category) {
+        els.category.dataset.i18n = salesStatus.labelKey || '';
+        els.category.textContent = salesStatus.key === 'available' ? (event.category || tr('events.event', 'Event')).toUpperCase() : salesStatus.label.toUpperCase();
+      }
       if (els.date) els.date.innerHTML = `<i class="bi bi-calendar3 me-1"></i> ${u().escapeHtml(u().formatEventDate(event.starts_at, event.timezone))}`;
       if (els.venue) els.venue.innerHTML = `<i class="bi bi-geo-alt me-1"></i> ${u().escapeHtml(event.venue_name || '')}${event.city ? `, ${u().escapeHtml(event.city)}` : ''}`;
       if (els.description) renderDescription(els.description, event.description);
-      if (els.organizerName) els.organizerName.textContent = event.organizer?.name || 'Event organizer';
-      if (els.organizerMeta) els.organizerMeta.textContent = event.is_verified ? 'Verified organizer' : 'Organizer';
+      if (els.organizerName) els.organizerName.textContent = event.organizer?.name || tr('events.organizer', 'Event organizer');
+      if (els.organizerMeta) {
+        els.organizerMeta.dataset.i18n = event.is_verified ? 'events.verified_organizer' : 'events.organizer';
+        els.organizerMeta.textContent = event.is_verified ? tr('events.verified_organizer', 'Verified organizer') : tr('events.organizer', 'Organizer');
+      }
 
       setBannerImage(els.banner, els.bannerPlaceholder, img, event.title);
 
@@ -171,27 +178,28 @@
       const renderTicketControls = () => {
         if (els.select) {
           els.select.innerHTML = purchasingDisabled
-          ? `<option disabled>${salesStatus.priceLabel}</option>`
+          ? `<option disabled${salesStatus.priceKey ? ` data-i18n="${salesStatus.priceKey}"` : ''}>${salesStatus.priceLabel}</option>`
           : types.map((t) =>
-            `<option value="${t.id}" data-price="${t.price}" data-currency="${t.currency || event.currency || 'USD'}" data-min="${t.min_per_order || 1}" data-available="${Number(t.quantity_available ?? t.available_quantity ?? 0)}" ${Number(t.quantity_available ?? t.available_quantity ?? 0) <= 0 || t.status === 'sold_out' || t.status === 'inactive' ? 'disabled' : ''}>${u().escapeHtml(t.name)} · ${money(t.price, t.currency || event.currency)} · ${Number(t.quantity_available ?? t.available_quantity ?? 0)} left${t.status === 'sold_out' ? ' · Sold out' : ''}</option>`,
-          ).join('') || '<option disabled>No ticket tiers available</option>';
+            `<option value="${t.id}" data-price="${t.price}" data-currency="${t.currency || event.currency || 'USD'}" data-min="${t.min_per_order || 1}" data-available="${Number(t.quantity_available ?? t.available_quantity ?? 0)}" ${Number(t.quantity_available ?? t.available_quantity ?? 0) <= 0 || t.status === 'sold_out' || t.status === 'inactive' ? 'disabled' : ''}>${u().escapeHtml(t.name)} · ${money(t.price, t.currency || event.currency)} · ${Number(t.quantity_available ?? t.available_quantity ?? 0)} ${tr('events.left', 'left')}${t.status === 'sold_out' ? ` · ${tr('events.sold_out', 'Sold out')}` : ''}</option>`,
+          ).join('') || `<option disabled data-i18n="events.no_ticket_tiers_available">${tr('events.no_ticket_tiers_available', 'No ticket tiers available')}</option>`;
           els.select.disabled = !types.length;
           if (selectedType) els.select.value = String(selectedType.id);
         }
         if (!els.mobileSelect || !els.mobileSelectButton || !els.mobileSelectMenu) return;
         els.mobileSelect.hidden = false;
         els.mobileSelectButton.disabled = !types.length;
-        els.mobileSelectButton.textContent = purchasingDisabled ? salesStatus.priceLabel : 'Select ticket type';
+        els.mobileSelectButton.dataset.i18n = purchasingDisabled ? (salesStatus.priceKey || '') : 'events.select_ticket_type';
+        els.mobileSelectButton.textContent = purchasingDisabled ? salesStatus.priceLabel : tr('events.select_ticket_type', 'Select ticket type');
         els.mobileSelectMenu.innerHTML = purchasingDisabled
-          ? `<span class="dropdown-item-text text-muted-pro">${salesStatus.priceLabel}</span>`
+          ? `<span class="dropdown-item-text text-muted-pro"${salesStatus.priceKey ? ` data-i18n="${salesStatus.priceKey}"` : ''}>${salesStatus.priceLabel}</span>`
           : types.map((t) => {
             const available = Number(t.quantity_available ?? t.available_quantity ?? 0);
             const disabled = available <= 0 || t.status === 'sold_out' || t.status === 'inactive';
             return `<button class="dropdown-item mobile-ticket-option" type="button" data-mobile-ticket-type="${t.id}" ${disabled ? 'disabled' : ''}>
               <span>${u().escapeHtml(t.name)}</span>
-              <small>${money(t.price, t.currency || event.currency)} · ${available} left${t.status === 'sold_out' ? ' · Sold out' : ''}</small>
+              <small>${money(t.price, t.currency || event.currency)} · ${available} ${tr('events.left', 'left')}${t.status === 'sold_out' ? ` · ${tr('events.sold_out', 'Sold out')}` : ''}</small>
             </button>`;
-          }).join('') || '<span class="dropdown-item-text text-muted-pro">No ticket tiers available</span>';
+          }).join('') || `<span class="dropdown-item-text text-muted-pro" data-i18n="events.no_ticket_tiers_available">${tr('events.no_ticket_tiers_available', 'No ticket tiers available')}</span>`;
       };
 
       selectedType = purchasingDisabled ? null : (eventsApi().availableTicketTypes(event)[0] || null);
@@ -216,7 +224,8 @@
         }
         if (els.mobileSelectButton && selectedType) {
           const available = Number(selectedType.quantity_available ?? selectedType.available_quantity ?? 0);
-          els.mobileSelectButton.textContent = `${selectedType.name} · ${money(selectedType.price, selectedType.currency || event.currency)} · ${available} left`;
+          els.mobileSelectButton.removeAttribute('data-i18n');
+          els.mobileSelectButton.textContent = `${selectedType.name} · ${money(selectedType.price, selectedType.currency || event.currency)} · ${available} ${tr('events.left', 'left')}`;
         }
       };
 
@@ -274,9 +283,11 @@
         document.querySelectorAll('[data-event-buy]').forEach((btn) => {
           btn.classList.add('disabled');
           btn.setAttribute('aria-disabled', 'true');
-          btn.textContent = salesStatus.priceLabel || 'Buy tickets';
+          btn.dataset.i18n = salesStatus.priceKey || 'buttons.buy_tickets';
+          btn.textContent = salesStatus.priceLabel || tr('buttons.buy_tickets', 'Buy tickets');
         });
         if (els.availability) {
+          els.availability.dataset.i18n = salesStatus.labelKey || '';
           els.availability.textContent = salesStatus.label;
           els.availability.className = `badge status-badge ${salesClosed ? 'status-cancelled' : 'status-sold_out'}`;
         }
@@ -284,20 +295,24 @@
         document.querySelectorAll('[data-event-buy]').forEach((btn) => {
           btn.classList.remove('disabled');
           btn.removeAttribute('aria-disabled');
-          btn.textContent = 'Buy tickets';
+          btn.dataset.i18n = 'buttons.buy_tickets';
+          btn.textContent = tr('buttons.buy_tickets', 'Buy tickets');
         });
-        if (els.availability) els.availability.textContent = 'Available';
+        if (els.availability) {
+          els.availability.dataset.i18n = 'events.available';
+          els.availability.textContent = tr('events.available', 'Available');
+        }
       }
 
       document.querySelectorAll('[data-event-buy]').forEach((btn) => {
         btn.addEventListener('click', async (e) => {
           e.preventDefault();
           if (purchasingDisabled) {
-            window.tkToast?.(salesClosed ? 'Ticket sales are closed for this event.' : 'This event is sold out.', 'error');
+            window.tkToast?.(salesClosed ? tr('events.ticket_sales_closed', 'Ticket sales are closed for this event.') : tr('events.this_event_sold_out', 'This event is sold out.'), 'error');
             return;
           }
           if (!selectedType) {
-            window.tkToast?.('No tickets are currently available for this event.', 'error');
+            window.tkToast?.(tr('events.no_tickets_available', 'No tickets are currently available for this event.'), 'error');
             return;
           }
           if (!window.EventSphereAuth.isLoggedIn()) {
@@ -306,7 +321,7 @@
           }
           await refreshTicketAvailability();
           if (!selectedType || Number(selectedType.quantity_available ?? selectedType.available_quantity ?? selectedType.remaining ?? 0) <= 0) {
-            window.tkToast?.('No tickets are currently available for this event.', 'error');
+            window.tkToast?.(tr('events.no_tickets_available', 'No tickets are currently available for this event.'), 'error');
             return;
           }
           const qty = Number(els.qtyWrap?.querySelector('input')?.value || 1);
@@ -327,11 +342,11 @@
 
       els.organizerFollow?.addEventListener('click', (e) => {
         e.preventDefault();
-        window.tkToast?.('Organizer follow notifications will use your saved notification preferences.', 'info');
+        window.tkToast?.(tr('events.organizer_follow_notice', 'Organizer follow notifications will use your saved notification preferences.'), 'info');
       });
     } catch (err) {
-      if (els.alert) els.alert.innerHTML = `<div class="alert border-pro dashboard-note text-danger"><i class="bi bi-exclamation-triangle me-2"></i>${u().escapeHtml(err.message || 'Failed to load event')}</div>`;
-      window.tkToast?.(err.message || 'Failed to load event', 'error');
+      if (els.alert) els.alert.innerHTML = `<div class="alert border-pro dashboard-note text-danger"><i class="bi bi-exclamation-triangle me-2"></i>${u().escapeHtml(err.message || tr('events.failed_to_load_event', 'Failed to load event'))}</div>`;
+      window.tkToast?.(err.message || tr('events.failed_to_load_event', 'Failed to load event'), 'error');
     }
   });
 })();

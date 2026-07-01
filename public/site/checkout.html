@@ -16,14 +16,14 @@
 
 <section class="section-sm" style="padding-top:2.5rem">
   <div class="container-xxl">
-    <h1 style="font-size:2rem">Checkout</h1>
+    <h1 style="font-size:2rem" data-i18n="checkout.checkout">Checkout</h1>
 
     <!-- Stepper -->
     <div class="stepper mt-4">
-      <div class="step done"><div class="num"><i class="bi bi-check"></i></div><span>Tickets</span></div>
-      <div class="step active"><div class="num">2</div><span>Details</span></div>
-      <div class="step"><div class="num">3</div><span>Payment</span></div>
-      <div class="step"><div class="num">4</div><span>Confirm</span></div>
+      <div class="step done"><div class="num"><i class="bi bi-check"></i></div><span data-i18n="checkout.tickets">Tickets</span></div>
+      <div class="step active"><div class="num">2</div><span data-i18n="checkout.details">Details</span></div>
+      <div class="step"><div class="num">3</div><span data-i18n="checkout.payment">Payment</span></div>
+      <div class="step"><div class="num">4</div><span data-i18n="checkout.confirm">Confirm</span></div>
     </div>
 
     <div class="row g-4">
@@ -31,29 +31,29 @@
         <form data-checkout-form>
         <!-- Contact -->
         <div class="card-pro p-4 mb-3">
-          <h5 class="mb-3">Purchaser information</h5>
+          <h5 class="mb-3" data-i18n="checkout.purchaser_information">Purchaser information</h5>
           <div class="row g-3">
-            <div class="col-md-6"><label class="form-label">First name</label><input class="form-control" name="billing_first_name" required readonly placeholder="Alex"/></div>
-            <div class="col-md-6"><label class="form-label">Last name</label><input class="form-control" name="billing_last_name" required readonly placeholder="Morgan"/></div>
-            <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="billing_email" required readonly placeholder="you@email.com"/></div>
-            <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="billing_phone" readonly placeholder="+1 (555) 000-0000"/></div>
+            <div class="col-md-6"><label class="form-label" data-i18n="forms.first_name">First name</label><input class="form-control" name="billing_first_name" required readonly placeholder="Alex"/></div>
+            <div class="col-md-6"><label class="form-label" data-i18n="forms.last_name">Last name</label><input class="form-control" name="billing_last_name" required readonly placeholder="Morgan"/></div>
+            <div class="col-md-6"><label class="form-label" data-i18n="forms.email">Email</label><input class="form-control" type="email" name="billing_email" required readonly placeholder="you@email.com"/></div>
+            <div class="col-md-6"><label class="form-label" data-i18n="forms.phone">Phone</label><input class="form-control" name="billing_phone" readonly placeholder="+1 (555) 000-0000"/></div>
           </div>
         </div>
 
         <div class="card-pro p-4 mb-3">
-          <h5 class="mb-3">Attendee information</h5>
+          <h5 class="mb-3" data-i18n="checkout.attendee_information">Attendee information</h5>
           <div data-attendee-fields></div>
         </div>
 
         <!-- Billing -->
         <div class="card-pro p-4 mb-3">
-          <h5 class="mb-3">Billing address</h5>
+          <h5 class="mb-3" data-i18n="checkout.billing_address">Billing address</h5>
           <div class="row g-3">
-            <div class="col-12"><label class="form-label">Street address</label><input class="form-control" name="billing_address" placeholder="123 Sunset Blvd"/></div>
-            <div class="col-md-5"><label class="form-label">City</label><input class="form-control" name="billing_city" placeholder="Los Angeles"/></div>
-            <div class="col-md-4"><label class="form-label">State</label><input class="form-control" name="billing_state" placeholder="CA"/></div>
-            <div class="col-md-3"><label class="form-label">ZIP</label><input class="form-control" name="billing_zip" placeholder="90028"/></div>
-            <div class="col-12"><label class="form-label">Country</label>
+            <div class="col-12"><label class="form-label" data-i18n="checkout.street_address">Street address</label><input class="form-control" name="billing_address" placeholder="123 Sunset Blvd"/></div>
+            <div class="col-md-5"><label class="form-label" data-i18n="events.city">City</label><input class="form-control" name="billing_city" placeholder="Los Angeles"/></div>
+            <div class="col-md-4"><label class="form-label" data-i18n="checkout.state">State</label><input class="form-control" name="billing_state" placeholder="CA"/></div>
+            <div class="col-md-3"><label class="form-label" data-i18n="checkout.zip">ZIP</label><input class="form-control" name="billing_zip" placeholder="90028"/></div>
+            <div class="col-12"><label class="form-label" data-i18n="checkout.country">Country</label>
               <input class="form-control" name="billing_country" placeholder="United States"/>
             </div>
           </div>
@@ -61,26 +61,26 @@
 
         <!-- Payment -->
         <div class="card-pro p-4 mb-3">
-          <h5 class="mb-3">Payment</h5>
+          <h5 class="mb-3" data-i18n="checkout.payment_method">Payment Method</h5>
           <div class="d-flex gap-2 mb-3 flex-wrap">
             <button class="btn btn-glass flex-grow-1" type="button" data-alt-pay="Apple Pay"><i class="bi bi-apple me-1"></i> Apple Pay</button>
             <button class="btn btn-glass flex-grow-1" type="button" data-alt-pay="Google Pay"><i class="bi bi-google me-1"></i> Google Pay</button>
             <button class="btn btn-glass flex-grow-1" type="button" data-alt-pay="PayPal"><i class="bi bi-paypal me-1"></i> PayPal</button>
           </div>
-          <div class="text-center text-muted-pro small my-2">or pay with card</div>
+          <div class="text-center text-muted-pro small my-2" data-i18n="checkout.or_pay_with_card">or pay with card</div>
           <div class="row g-3">
-            <div class="col-12"><label class="form-label">Card number</label>
+            <div class="col-12"><label class="form-label" data-i18n="checkout.card_number">Card number</label>
               <div class="position-relative"><input class="form-control" placeholder="1234 5678 9012 3456"/><i class="bi bi-credit-card-2-front position-absolute" style="right:14px;top:14px;color:var(--muted)"></i></div>
             </div>
-            <div class="col-md-4"><label class="form-label">Expiry</label><input class="form-control" placeholder="MM/YY"/></div>
-            <div class="col-md-4"><label class="form-label">CVC</label><input class="form-control" placeholder="123"/></div>
-            <div class="col-md-4"><label class="form-label">Postal</label><input class="form-control" placeholder="90028"/></div>
+            <div class="col-md-4"><label class="form-label" data-i18n="checkout.expiry">Expiry</label><input class="form-control" placeholder="MM/YY"/></div>
+            <div class="col-md-4"><label class="form-label" data-i18n="checkout.cvc">CVC</label><input class="form-control" placeholder="123"/></div>
+            <div class="col-md-4"><label class="form-label" data-i18n="checkout.postal">Postal</label><input class="form-control" placeholder="90028"/></div>
           </div>
         </div>
 
         <div class="d-flex justify-content-between mt-4">
-          <a class="btn btn-ghost" href="events.html" data-checkout-back><i class="bi bi-arrow-left me-1"></i> Back</a>
-          <button type="button" class="btn btn-primary-grad btn-lg" data-checkout-pay>Pay <i class="bi bi-lock-fill ms-1"></i></button>
+          <a class="btn btn-ghost" href="events.html" data-checkout-back><i class="bi bi-arrow-left me-1"></i> <span data-i18n="buttons.back">Back</span></a>
+          <button type="button" class="btn btn-primary-grad btn-lg" data-checkout-pay><span data-i18n="checkout.pay">Pay</span> <i class="bi bi-lock-fill ms-1"></i></button>
         </div>
         </form>
       </div>
@@ -89,8 +89,8 @@
       <div class="col-lg-4">
         <div class="sticky-checkout">
           <div class="card-pro p-4" data-checkout-summary>
-            <h6 class="mb-3">Order summary</h6>
-            <p class="text-muted-pro small">Loading cart…</p>
+            <h6 class="mb-3" data-i18n="checkout.order_summary">Order summary</h6>
+            <p class="text-muted-pro small" data-i18n="loading.loading_cart">Loading cart...</p>
           </div>
         </div>
       </div>
@@ -106,6 +106,8 @@
 <script src="../assets/js/api/utils.js"></script>
 <script src="../assets/js/api/cart.js"></script>
 <script src="../assets/js/api/orders.js"></script>
+<script src="../assets/js/i18n/dictionaries.js"></script>
+<script src="../assets/js/i18n/language-service.js"></script>
 <script src="../assets/js/main.js"></script>
 <script src="../assets/js/pages/checkout-page.js"></script>
 </body>

@@ -56,7 +56,7 @@ class StripePaymentService
                     'currency' => strtolower($order->currency ?: config('services.stripe.currency', 'USD')),
                     'unit_amount' => $this->decimalToMinorUnits((string) $order->total, (string) $order->currency),
                     'product_data' => [
-                        'name' => "Event Sphere order {$order->order_number}",
+                        'name' => "Tiketa order {$order->order_number}",
                         'description' => $this->checkoutDescription($order),
                     ],
                 ],

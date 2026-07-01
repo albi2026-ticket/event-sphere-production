@@ -165,7 +165,7 @@ class EventCancellationNotificationService
     {
         $name = trim($order->billing_first_name.' '.$order->billing_last_name);
 
-        return $name !== '' ? $name : (string) ($order->user?->name ?: 'Event Sphere customer');
+        return $name !== '' ? $name : (string) ($order->user?->name ?: 'Tiketa customer');
     }
 
     protected function eventDateLabel(Event $event): string

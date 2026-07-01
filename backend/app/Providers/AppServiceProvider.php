@@ -59,7 +59,7 @@ class AppServiceProvider extends ServiceProvider
 
         ResetPassword::toMailUsing(function (object $notifiable, string $token) use ($resetPasswordUrl): MailMessage {
             return (new MailMessage)
-                ->subject('Reset your Event Sphere password')
+                ->subject('Reset your Tiketa password')
                 ->view([
                     'html' => 'emails.auth.reset-password',
                     'text' => 'emails.auth.reset-password-text',

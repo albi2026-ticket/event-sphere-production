@@ -200,9 +200,8 @@
   }
 
   function syncSortChips() {
-    const labelBySort = { trending: 'Trending', newest: 'Newest', soonest: 'Soonest', lowest_price: 'Lowest price' };
     document.querySelectorAll('[data-events-sort]').forEach((chip) => {
-      chip.classList.toggle('active', chip.textContent.trim() === (labelBySort[state.sort] || 'Trending'));
+      chip.classList.toggle('active', (chip.dataset.sortKey || 'trending') === state.sort);
     });
   }
 
@@ -223,7 +222,7 @@
               </div>
               <div class="text-end">
                 <div class="price mb-2">${status.canBuy ? `From ${u().formatMoney(price.amount, price.currency)}` : status.priceLabel}</div>
-                <a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(event.slug)}">View</a>
+                <a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(event.slug)}" data-i18n="buttons.view">${window.t?.('buttons.view') || 'View'}</a>
               </div>
               <span class="fav" data-fav="event-${event.id}" data-event-id="${event.id}" style="position:static"><i class="bi bi-heart"></i></span>
             </article>
@@ -276,7 +275,7 @@
 
   function renderPage(events, meta, grid, pagination) {
     if (!events.length) {
-      grid.innerHTML = '<div class="col-12 text-center text-muted-pro py-5">No events found.</div>';
+      grid.innerHTML = `<div class="col-12 text-center text-muted-pro py-5" data-i18n="empty.no_events_found">${window.t?.('empty.no_events_found') || 'No events found.'}</div>`;
     } else {
       grid.innerHTML = renderEvents(events);
     }
@@ -365,8 +364,7 @@
       chip.addEventListener('click', () => {
         els.sortChips.forEach((c) => c.classList.remove('active'));
         chip.classList.add('active');
-        const map = { Trending: 'trending', Newest: 'newest', Soonest: 'soonest', 'Lowest price': 'lowest_price' };
-        state.sort = map[chip.textContent.trim()] || 'trending';
+        state.sort = chip.dataset.sortKey || 'trending';
         state.page = 1;
         load();
       });

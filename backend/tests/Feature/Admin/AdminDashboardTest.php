@@ -51,7 +51,7 @@ class AdminDashboardTest extends TestCase
             'title' => 'Admin Reservation Stats Event',
             'slug' => 'admin-reservation-stats-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'status' => 'published',
@@ -519,7 +519,7 @@ class AdminDashboardTest extends TestCase
             'title' => 'Moderated Event',
             'slug' => 'moderated-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'status' => 'published',
@@ -558,7 +558,7 @@ class AdminDashboardTest extends TestCase
             'title' => 'Inventory Totals Event',
             'slug' => 'inventory-totals-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'status' => 'published',
@@ -664,7 +664,7 @@ class AdminDashboardTest extends TestCase
             'title' => 'Admin Refund Event',
             'slug' => 'admin-refund-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'status' => 'published',
@@ -756,7 +756,7 @@ class AdminDashboardTest extends TestCase
             'title' => 'Fee Controlled Event',
             'slug' => 'fee-controlled-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'status' => 'published',
@@ -809,7 +809,7 @@ class AdminDashboardTest extends TestCase
             ->postJson('/api/organizer/events', [
                 'title' => 'Default Fee Event',
                 'category' => 'Concerts',
-                'venue_name' => 'Event Sphere Hall',
+                'venue_name' => 'Tiketa Hall',
                 'city' => 'New York',
                 'starts_at' => now()->addMonth()->toIso8601String(),
                 'status' => 'draft',
@@ -879,22 +879,22 @@ class AdminDashboardTest extends TestCase
 
         $this->actingAs($admin, 'sanctum')
             ->patchJson('/api/admin/settings', [
-                'platform_name' => 'Event Sphere Pro',
+                'platform_name' => 'Tiketa Pro',
                 'support_email' => 'help@example.test',
                 'default_purchase_limit' => 8,
                 'maintenance_mode' => false,
             ])
             ->assertOk()
-            ->assertJsonPath('data.platform_name', 'Event Sphere Pro')
+            ->assertJsonPath('data.platform_name', 'Tiketa Pro')
             ->assertJsonPath('data.default_purchase_limit', 8);
 
-        $this->assertSame('Event Sphere Pro', PlatformSetting::getValue('platform_name'));
+        $this->assertSame('Tiketa Pro', PlatformSetting::getValue('platform_name'));
 
         $this->actingAs($admin, 'sanctum')
             ->patchJson("/api/admin/email-templates/{$template->id}", [
                 'subject' => 'Tickets for {{ $order->order_number }}',
-                'html_template' => '<h1>{{ $platform_name ?? "Event Sphere" }}</h1>',
-                'text_template' => '{{ $platform_name ?? "Event Sphere" }}',
+                'html_template' => '<h1>{{ $platform_name ?? "Tiketa" }}</h1>',
+                'text_template' => '{{ $platform_name ?? "Tiketa" }}',
             ])
             ->assertOk()
             ->assertJsonPath('data.subject', 'Tickets for {{ $order->order_number }}');
@@ -902,14 +902,14 @@ class AdminDashboardTest extends TestCase
         $this->actingAs($admin, 'sanctum')
             ->getJson("/api/admin/email-templates/{$template->id}/preview")
             ->assertOk()
-            ->assertJsonPath('data.rendered', '<h1>Event Sphere</h1>');
+            ->assertJsonPath('data.rendered', '<h1>Tiketa</h1>');
 
         EmailLog::query()->create([
             'recipient_name' => 'Ticket Buyer',
             'recipient_email' => 'buyer@example.test',
             'email_type' => 'Ticket Purchased',
             'module' => EmailLog::MODULE_EVENTS,
-            'subject' => 'Your Event Sphere tickets',
+            'subject' => 'Your Tiketa tickets',
             'status' => EmailLog::STATUS_SUCCESS,
             'sent_at' => now(),
         ]);
@@ -1033,7 +1033,7 @@ class AdminDashboardTest extends TestCase
             'recipient_email' => 'success@example.test',
             'email_type' => 'Verify Email',
             'module' => EmailLog::MODULE_SYSTEM,
-            'subject' => 'Verify your Event Sphere email address',
+            'subject' => 'Verify your Tiketa email address',
             'status' => EmailLog::STATUS_SUCCESS,
             'sent_at' => now(),
             'html_body' => '<h1>Verify</h1>',
@@ -1085,7 +1085,7 @@ class AdminDashboardTest extends TestCase
             'title' => $title,
             'slug' => $slug,
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => $startsAt,
             'ends_at' => $endsAt,

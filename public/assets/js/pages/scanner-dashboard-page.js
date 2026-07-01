@@ -36,7 +36,7 @@
             <span class="fw-semibold d-block">${esc(event.title)}</span>
             <small>${dateTime(event.starts_at)} · ${esc(event.venue_name || '-')}</small>
           </span>
-          <a class="btn btn-glass btn-sm" href="check-in.html?event_id=${encodeURIComponent(event.id)}">Open</a>
+          <a class="btn btn-glass btn-sm" href="check-in.html?event_id=${encodeURIComponent(event.id)}" data-i18n="buttons.open">${window.t?.('buttons.open') || 'Open'}</a>
         </div>
       </div>`;
   }
@@ -51,7 +51,7 @@
         <div class="col-12">
           <div class="dashboard-empty">
             <i class="bi bi-calendar-x"></i>
-            <span>No event has been assigned to this scanner account.</span>
+            <span data-i18n="empty.no_scanner_event">${window.t?.('empty.no_scanner_event') || 'No event has been assigned to this scanner account.'}</span>
           </div>
         </div>`;
       scanLink?.classList.add('disabled');

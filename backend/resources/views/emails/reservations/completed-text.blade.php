@@ -8,4 +8,4 @@ Date: {{ $reservation->reservation_date->format('M j, Y') }}
 Time: {{ $reservation->reservation_time }}
 Party size: {{ $reservation->party_size }}
 
-Thank you for choosing Event Sphere.
+Thank you for choosing Tiketa.

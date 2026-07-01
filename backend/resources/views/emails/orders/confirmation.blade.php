@@ -21,7 +21,7 @@
                 <table role="presentation" class="shell" width="640" cellspacing="0" cellpadding="0" style="width:640px;max-width:640px;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #dbe3ef;">
                     <tr>
                         <td style="background:#111827;padding:28px 32px;color:#ffffff;">
-                            <div style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#93c5fd;">Event Sphere</div>
+                            <div style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#93c5fd;">Tiketa</div>
                             <h1 style="margin:10px 0 0;font-size:26px;line-height:1.25;">Your tickets are confirmed</h1>
                             <p style="margin:10px 0 0;color:#d1d5db;">Order {{ $order->order_number }} is paid and ready in your ticket dashboard.</p>
                         </td>
@@ -55,7 +55,7 @@
                                 <tr>
                                     <td style="padding:18px;">
                                         <div style="font-weight:700;color:#1e3a8a;">Access your tickets</div>
-                                        <p style="margin:8px 0 16px;color:#334155;line-height:1.5;">Your tickets and QR codes are available in your Event Sphere dashboard.</p>
+                                        <p style="margin:8px 0 16px;color:#334155;line-height:1.5;">Your tickets and QR codes are available in your Tiketa dashboard.</p>
                                         <a class="button" href="{{ $emailData['my_tickets_url'] }}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:8px;">View Tickets</a>
                                         <p style="margin:12px 0 0;font-size:13px;color:#64748b;">My Tickets: <a href="{{ $emailData['my_tickets_url'] }}" style="color:#2563eb;">{{ $emailData['my_tickets_url'] }}</a></p>
                                     </td>
@@ -126,7 +126,7 @@
                                 @endforeach
                             @endif
 
-                            <p style="margin:26px 0 0;color:#64748b;font-size:13px;line-height:1.5;">This confirmation was sent by Event Sphere after successful payment. Keep it for your records and bring your QR ticket to event check-in.</p>
+                            <p style="margin:26px 0 0;color:#64748b;font-size:13px;line-height:1.5;">This confirmation was sent by Tiketa after successful payment. Keep it for your records and bring your QR ticket to event check-in.</p>
                         </td>
                     </tr>
                 </table>

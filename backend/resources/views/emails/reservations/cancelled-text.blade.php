@@ -9,4 +9,4 @@ Time: {{ $reservation->reservation_time }}
 Party size: {{ $reservation->party_size }}
 Reason: {{ $reservation->owner_cancellation_reason ?: ($reservation->cancellation_reason ?: 'No reason provided.') }}
 
-Thank you for choosing Event Sphere.
+Thank you for choosing Tiketa.
