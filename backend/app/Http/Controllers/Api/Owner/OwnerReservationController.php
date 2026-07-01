@@ -110,7 +110,7 @@ class OwnerReservationController extends Controller
         $reservation = $reservation->fresh(['venue', 'user']);
 
         Mail::to($reservation->user->email, $reservation->guest_name)
-            ->send(new ReservationConfirmedMail($reservation));
+            ->queue(new ReservationConfirmedMail($reservation));
 
         if ($reservation->user) {
             app(NotificationService::class)->create(
@@ -142,7 +142,7 @@ class OwnerReservationController extends Controller
         $reservation = $reservation->fresh(['venue', 'user']);
 
         Mail::to($reservation->user->email, $reservation->guest_name)
-            ->send(new ReservationCancelledMail($reservation));
+            ->queue(new ReservationCancelledMail($reservation));
 
         if ($reservation->user) {
             app(NotificationService::class)->create(
@@ -167,7 +167,7 @@ class OwnerReservationController extends Controller
         $reservation = $reservation->fresh(['venue', 'user']);
 
         Mail::to($reservation->user->email, $reservation->guest_name)
-            ->send(new ReservationCompletedMail($reservation));
+            ->queue(new ReservationCompletedMail($reservation));
 
         if ($reservation->user) {
             app(NotificationService::class)->create(
@@ -192,7 +192,7 @@ class OwnerReservationController extends Controller
         $reservation = $reservation->fresh(['venue', 'user']);
 
         Mail::to($reservation->user->email, $reservation->guest_name)
-            ->send(new ReservationNoShowMail($reservation));
+            ->queue(new ReservationNoShowMail($reservation));
 
         if ($reservation->user) {
             app(NotificationService::class)->create(

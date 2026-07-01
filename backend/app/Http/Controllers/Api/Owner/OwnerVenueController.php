@@ -50,9 +50,9 @@ class OwnerVenueController extends Controller
         abort_unless($request->user()->canManageVenue($venue), 403);
         $this->ensureVerifiedOwner($request);
 
-        $venue->delete();
+        $venue->update(['status' => Venue::STATUS_INACTIVE]);
 
-        return response()->json(['message' => 'Venue deleted.']);
+        return response()->json(['message' => 'Venue deactivated.']);
     }
 
     /**

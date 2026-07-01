@@ -11,6 +11,7 @@ use App\Models\Reservation;
 use App\Models\User;
 use App\Models\Venue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -245,6 +246,9 @@ class OwnerReservationManagementTest extends TestCase
 
     public function test_owner_analytics_returns_reservation_metrics_for_owned_venues(): void
     {
+        Cache::flush();
+        $this->travelTo(today()->startOfMonth()->addDays(6));
+
         $owner = $this->organizer();
         $otherOwner = $this->organizer();
         $venue = $this->venue($owner);
@@ -280,6 +284,8 @@ class OwnerReservationManagementTest extends TestCase
             ->assertJsonCount(7, 'data.trend')
             ->assertJsonPath('data.status_breakdown.4.status', Reservation::STATUS_NO_SHOW)
             ->assertJsonPath('data.top_time_slots.0.time', '19:00');
+
+        $this->travelBack();
     }
 
     public function test_owner_analytics_rejects_another_owners_venue(): void
@@ -310,7 +316,7 @@ class OwnerReservationManagementTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.status', Reservation::STATUS_CONFIRMED);
 
-        Mail::assertSent(ReservationConfirmedMail::class, fn ($mail) => $mail->hasTo('guest@example.test'));
+        Mail::assertQueued(ReservationConfirmedMail::class, fn ($mail) => $mail->hasTo('guest@example.test'));
 
         $this->actingAs($owner, 'sanctum')
             ->patchJson("/api/owner/reservations/{$confirmed->id}/cancel", [
@@ -320,7 +326,7 @@ class OwnerReservationManagementTest extends TestCase
             ->assertJsonPath('data.status', Reservation::STATUS_CANCELLED)
             ->assertJsonPath('data.owner_cancellation_reason', 'Private event');
 
-        Mail::assertSent(ReservationCancelledMail::class, fn ($mail) => $mail->hasTo('guest@example.test'));
+        Mail::assertQueued(ReservationCancelledMail::class, fn ($mail) => $mail->hasTo('guest@example.test'));
         $this->assertDatabaseHas('notifications', [
             'user_id' => $user->id,
             'type' => Notification::TYPE_RESERVATION_CANCELLED,
@@ -332,7 +338,7 @@ class OwnerReservationManagementTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.status', Reservation::STATUS_COMPLETED);
 
-        Mail::assertSent(ReservationCompletedMail::class, fn ($mail) => $mail->hasTo('guest@example.test'));
+        Mail::assertQueued(ReservationCompletedMail::class, fn ($mail) => $mail->hasTo('guest@example.test'));
         $this->assertDatabaseHas('notifications', [
             'user_id' => $user->id,
             'type' => Notification::TYPE_RESERVATION_COMPLETED,
@@ -344,7 +350,7 @@ class OwnerReservationManagementTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.status', Reservation::STATUS_NO_SHOW);
 
-        Mail::assertSent(ReservationNoShowMail::class, fn ($mail) => $mail->hasTo('guest@example.test'));
+        Mail::assertQueued(ReservationNoShowMail::class, fn ($mail) => $mail->hasTo('guest@example.test'));
         $this->assertDatabaseHas('notifications', [
             'user_id' => $user->id,
             'type' => Notification::TYPE_RESERVATION_NO_SHOW,
@@ -388,8 +394,8 @@ class OwnerReservationManagementTest extends TestCase
             ->patchJson("/api/owner/reservations/{$noShow->id}/complete")
             ->assertUnprocessable();
 
-        Mail::assertNotSent(ReservationCompletedMail::class);
-        Mail::assertNotSent(ReservationNoShowMail::class);
+        Mail::assertNotQueued(ReservationCompletedMail::class);
+        Mail::assertNotQueued(ReservationNoShowMail::class);
     }
 
     public function test_unverified_owner_cannot_manage_reservations(): void

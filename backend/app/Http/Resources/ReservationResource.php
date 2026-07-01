@@ -49,6 +49,7 @@ class ReservationResource extends JsonResource
             'email_history' => [],
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'archived_at' => $this->deleted_at?->toIso8601String(),
         ];
     }
 }

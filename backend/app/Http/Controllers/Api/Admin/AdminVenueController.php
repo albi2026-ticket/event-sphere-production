@@ -73,10 +73,10 @@ class AdminVenueController extends Controller
 
     public function destroy(Request $request, Venue $venue): JsonResponse
     {
-        AuditLog::record($request->user(), 'venue.deleted', $venue, ['name' => $venue->name], $request->ip());
-        $venue->delete();
+        $venue->update(['status' => Venue::STATUS_INACTIVE]);
+        AuditLog::record($request->user(), 'venue.deactivated', $venue, ['name' => $venue->name], $request->ip());
 
-        return response()->json(['message' => 'Venue deleted.']);
+        return response()->json(['message' => 'Venue deactivated.']);
     }
 
     /**

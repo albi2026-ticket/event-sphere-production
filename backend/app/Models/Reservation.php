@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'venue_id',
@@ -24,7 +25,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class Reservation extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     public const STATUS_PENDING = 'pending';
     public const STATUS_CONFIRMED = 'confirmed';

@@ -33,11 +33,19 @@ class AdminReservationController extends Controller
             'date_from' => ['sometimes', 'date_format:Y-m-d'],
             'date_to' => ['sometimes', 'date_format:Y-m-d'],
             'q' => ['sometimes', 'string', 'max:255'],
+            'with_archived' => ['sometimes', 'boolean'],
+            'only_archived' => ['sometimes', 'boolean'],
         ]);
 
         $query = Reservation::query()
             ->with(['venue.owner', 'user'])
             ->latest();
+
+        if ($request->boolean('only_archived')) {
+            $query->onlyTrashed();
+        } elseif ($request->boolean('with_archived')) {
+            $query->withTrashed();
+        }
 
         $this->applyFilters($query, $validated);
 
@@ -116,10 +124,20 @@ class AdminReservationController extends Controller
 
     public function destroy(Request $request, Reservation $reservation): JsonResponse
     {
-        AuditLog::record($request->user(), 'reservation.deleted', $reservation, ['guest_name' => $reservation->guest_name], $request->ip());
+        AuditLog::record($request->user(), 'reservation.archived', $reservation, ['guest_name' => $reservation->guest_name], $request->ip());
         $reservation->delete();
 
-        return response()->json(['message' => 'Reservation deleted.']);
+        return response()->json(['message' => 'Reservation archived.']);
+    }
+
+    public function restore(Request $request, int $reservation): ReservationResource
+    {
+        $reservation = Reservation::withTrashed()->findOrFail($reservation);
+        $reservation->restore();
+
+        AuditLog::record($request->user(), 'reservation.restored', $reservation, ['guest_name' => $reservation->guest_name], $request->ip());
+
+        return new ReservationResource($reservation->fresh(['venue.owner', 'user']));
     }
 
     /**

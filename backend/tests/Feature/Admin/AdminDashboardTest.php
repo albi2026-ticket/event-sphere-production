@@ -161,9 +161,13 @@ class AdminDashboardTest extends TestCase
 
         $this->actingAs($admin, 'sanctum')
             ->deleteJson("/api/admin/venues/{$venue->fresh()->slug}")
-            ->assertOk();
+            ->assertOk()
+            ->assertJsonPath('message', 'Venue deactivated.');
 
-        $this->assertDatabaseMissing('venues', ['id' => $venue->id]);
+        $this->assertDatabaseHas('venues', [
+            'id' => $venue->id,
+            'status' => Venue::STATUS_INACTIVE,
+        ]);
     }
 
     public function test_admin_can_manage_reservations_without_owner_scope(): void
@@ -192,20 +196,21 @@ class AdminDashboardTest extends TestCase
             'city' => 'Boston',
             'status' => Venue::STATUS_ACTIVE,
         ]);
+        $reservationDate = today()->addMonth()->startOfMonth()->addDay()->toDateString();
         $reservation = Reservation::query()->create([
             'venue_id' => $venue->id,
             'user_id' => $guest->id,
             'guest_name' => 'Reservation Guest',
             'phone' => '555-0100',
             'party_size' => 2,
-            'reservation_date' => '2026-07-02',
+            'reservation_date' => $reservationDate,
             'reservation_time' => '18:00',
             'status' => Reservation::STATUS_PENDING,
             'notes' => 'Window table',
         ]);
 
         $this->actingAs($admin, 'sanctum')
-            ->getJson("/api/admin/reservations?status=pending&venue_id={$venue->id}&owner_id={$owner->id}&city=Bos&date_from=2026-07-01&date_to=2026-07-03&q={$reservation->id}")
+            ->getJson("/api/admin/reservations?status=pending&venue_id={$venue->id}&owner_id={$owner->id}&city=Bos&date_from={$reservationDate}&date_to={$reservationDate}&q={$reservation->id}")
             ->assertOk()
             ->assertJsonPath('meta.stats.total', 1)
             ->assertJsonPath('meta.stats.pending', 1)
@@ -241,9 +246,10 @@ class AdminDashboardTest extends TestCase
 
         $this->actingAs($admin, 'sanctum')
             ->deleteJson("/api/admin/reservations/{$reservation->id}")
-            ->assertOk();
+            ->assertOk()
+            ->assertJsonPath('message', 'Reservation archived.');
 
-        $this->assertDatabaseMissing('reservations', ['id' => $reservation->id]);
+        $this->assertSoftDeleted('reservations', ['id' => $reservation->id]);
     }
 
     public function test_admin_can_complete_and_mark_no_show_with_owner_transition_rules(): void

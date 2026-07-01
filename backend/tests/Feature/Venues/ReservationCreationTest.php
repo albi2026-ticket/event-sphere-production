@@ -59,9 +59,9 @@ class ReservationCreationTest extends TestCase
             'status' => Reservation::STATUS_PENDING,
         ]);
 
-        Mail::assertSent(ReservationRequestReceivedMail::class, fn ($mail) => $mail->hasTo('guest@example.test'));
-        Mail::assertSent(NewReservationReceivedMail::class, fn ($mail) => $mail->hasTo('owner@example.test'));
-        Mail::assertNotSent(ReservationConfirmedMail::class);
+        Mail::assertQueued(ReservationRequestReceivedMail::class, fn ($mail) => $mail->hasTo('guest@example.test'));
+        Mail::assertQueued(NewReservationReceivedMail::class, fn ($mail) => $mail->hasTo('owner@example.test'));
+        Mail::assertNotQueued(ReservationConfirmedMail::class);
     }
 
     public function test_unverified_user_cannot_create_reservation(): void
@@ -186,8 +186,8 @@ class ReservationCreationTest extends TestCase
             'id' => $pending->id,
             'status' => Reservation::STATUS_CANCELLED,
         ]);
-        Mail::assertSent(ReservationCancelledMail::class, fn ($mail) => $mail->hasTo($user->email));
-        Mail::assertSent(ReservationCancelledByGuestMail::class, fn ($mail) => $mail->hasTo($owner->email));
+        Mail::assertQueued(ReservationCancelledMail::class, fn ($mail) => $mail->hasTo($user->email));
+        Mail::assertQueued(ReservationCancelledByGuestMail::class, fn ($mail) => $mail->hasTo($owner->email));
     }
 
     public function test_user_cannot_cancel_past_or_already_cancelled_reservation(): void
@@ -531,8 +531,8 @@ class ReservationCreationTest extends TestCase
             ->whereDate('reservation_date', $date)
             ->where('reservation_time', '19:30')
             ->count());
-        Mail::assertSent(ReservationRequestReceivedMail::class, 1);
-        Mail::assertSent(NewReservationReceivedMail::class, 1);
+        Mail::assertQueued(ReservationRequestReceivedMail::class, 1);
+        Mail::assertQueued(NewReservationReceivedMail::class, 1);
         $this->assertSame(2, Notification::query()->count());
 
         $this->actingAs($owner, 'sanctum')
@@ -582,8 +582,8 @@ class ReservationCreationTest extends TestCase
             ->whereDate('reservation_date', $date)
             ->where('reservation_time', '19:30')
             ->count());
-        Mail::assertSent(ReservationRequestReceivedMail::class, 1);
-        Mail::assertSent(NewReservationReceivedMail::class, 1);
+        Mail::assertQueued(ReservationRequestReceivedMail::class, 1);
+        Mail::assertQueued(NewReservationReceivedMail::class, 1);
     }
 
     public function test_atomic_creation_rechecks_capacity_after_stale_precheck(): void

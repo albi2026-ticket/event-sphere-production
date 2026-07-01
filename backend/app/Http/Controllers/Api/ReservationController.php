@@ -30,11 +30,11 @@ class ReservationController extends Controller
         $venue = $reservation->venue;
 
         Mail::to($user->email, $reservation->guest_name)
-            ->send(new ReservationRequestReceivedMail($reservation));
+            ->queue(new ReservationRequestReceivedMail($reservation));
 
         if ($reservation->venue->owner?->email) {
             Mail::to($reservation->venue->owner->email, $reservation->venue->owner->name)
-                ->send(new NewReservationReceivedMail($reservation));
+                ->queue(new NewReservationReceivedMail($reservation));
         }
 
         $notifications = app(NotificationService::class);
@@ -111,12 +111,12 @@ class ReservationController extends Controller
 
         if ($reservation->user?->email) {
             Mail::to($reservation->user->email, $reservation->guest_name)
-                ->send(new ReservationCancelledMail($reservation));
+                ->queue(new ReservationCancelledMail($reservation));
         }
 
         if ($reservation->venue->owner?->email) {
             Mail::to($reservation->venue->owner->email, $reservation->venue->owner->name)
-                ->send(new ReservationCancelledByGuestMail($reservation));
+                ->queue(new ReservationCancelledByGuestMail($reservation));
         }
 
         $notifications = app(NotificationService::class);

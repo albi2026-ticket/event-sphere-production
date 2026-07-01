@@ -12,15 +12,23 @@ class RegistrationTest extends TestCase
 
     public function test_new_users_can_register(): void
     {
-        $response = $this->post('/register', [
+        $this->postJson('/api/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
-        ]);
+        ])
+            ->assertCreated()
+            ->assertJsonPath('token_type', 'Bearer')
+            ->assertJsonPath('user.email', 'test@example.com')
+            ->assertJsonPath('user.role', User::ROLE_USER);
 
-        $this->assertAuthenticated();
-        $response->assertNoContent();
+        $user = User::query()->where('email', 'test@example.com')->firstOrFail();
+
+        $this->assertDatabaseHas('personal_access_tokens', [
+            'tokenable_type' => User::class,
+            'tokenable_id' => $user->id,
+        ]);
     }
 
     public function test_owner_role_can_register_through_api(): void

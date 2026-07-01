@@ -4,6 +4,7 @@ namespace Tests\Feature\Venues;
 
 use App\Models\CuisineType;
 use App\Models\PaymentOption;
+use App\Models\Reservation;
 use App\Models\User;
 use App\Models\Venue;
 use App\Models\VenueBlackoutDate;
@@ -519,6 +520,106 @@ class VenueFoundationTest extends TestCase
         $this->getJson('/api/venue-facilities')->assertOk()->assertJsonPath('data.0.slug', 'parking');
         $this->getJson('/api/cuisine-types')->assertOk()->assertJsonPath('data.0.slug', 'sushi');
         $this->getJson('/api/payment-options')->assertOk()->assertJsonPath('data.0.slug', 'apple-pay');
+    }
+
+    public function test_owner_delete_deactivates_venue_and_preserves_reservation_history(): void
+    {
+        $owner = $this->organizer();
+        $guest = User::factory()->create([
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+        $venue = Venue::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Archive Bistro',
+            'slug' => 'archive-bistro',
+            'venue_type' => Venue::TYPE_RESTAURANT,
+            'city' => 'Pristina',
+            'status' => Venue::STATUS_ACTIVE,
+        ]);
+        $reservation = Reservation::query()->create([
+            'venue_id' => $venue->id,
+            'user_id' => $guest->id,
+            'guest_name' => $guest->name,
+            'party_size' => 2,
+            'reservation_date' => now()->addDay()->format('Y-m-d'),
+            'reservation_time' => '19:00',
+            'status' => Reservation::STATUS_CONFIRMED,
+        ]);
+
+        $this->actingAs($owner, 'sanctum')
+            ->deleteJson("/api/owner/venues/{$venue->slug}")
+            ->assertOk()
+            ->assertJsonPath('message', 'Venue deactivated.');
+
+        $this->assertDatabaseHas('venues', [
+            'id' => $venue->id,
+            'status' => Venue::STATUS_INACTIVE,
+        ]);
+        $this->assertDatabaseHas('reservations', [
+            'id' => $reservation->id,
+            'venue_id' => $venue->id,
+        ]);
+
+        $this->getJson('/api/venues')
+            ->assertOk()
+            ->assertJsonMissing(['slug' => 'archive-bistro']);
+
+        $this->getJson('/api/venues/archive-bistro')->assertNotFound();
+    }
+
+    public function test_admin_reservation_delete_archives_and_restore_recovers_it(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+        $owner = $this->organizer();
+        $guest = User::factory()->create([
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+        $venue = Venue::query()->create([
+            'user_id' => $owner->id,
+            'name' => 'Archive Reservation Venue',
+            'slug' => 'archive-reservation-venue',
+            'venue_type' => Venue::TYPE_RESTAURANT,
+            'city' => 'Pristina',
+            'status' => Venue::STATUS_ACTIVE,
+        ]);
+        $reservation = Reservation::query()->create([
+            'venue_id' => $venue->id,
+            'user_id' => $guest->id,
+            'guest_name' => 'Archived Guest',
+            'party_size' => 2,
+            'reservation_date' => now()->addDay()->format('Y-m-d'),
+            'reservation_time' => '19:00',
+            'status' => Reservation::STATUS_CONFIRMED,
+        ]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->deleteJson("/api/admin/reservations/{$reservation->id}")
+            ->assertOk()
+            ->assertJsonPath('message', 'Reservation archived.');
+
+        $this->assertSoftDeleted('reservations', ['id' => $reservation->id]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/reservations?only_archived=1')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $reservation->id)
+            ->assertJsonPath('data.0.archived_at', fn (?string $archivedAt) => $archivedAt !== null);
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/admin/reservations/{$reservation->id}/restore")
+            ->assertOk()
+            ->assertJsonPath('data.id', $reservation->id)
+            ->assertJsonPath('data.archived_at', null);
+
+        $this->assertDatabaseHas('reservations', [
+            'id' => $reservation->id,
+            'deleted_at' => null,
+        ]);
     }
 
     private function organizer(): User

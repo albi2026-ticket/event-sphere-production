@@ -277,6 +277,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::patch('/reservations/{reservation}/cancel', [AdminReservationController::class, 'cancel']);
         Route::patch('/reservations/{reservation}/complete', [AdminReservationController::class, 'complete']);
         Route::patch('/reservations/{reservation}/no-show', [AdminReservationController::class, 'noShow']);
+        Route::post('/reservations/{reservation}/restore', [AdminReservationController::class, 'restore']);
         Route::delete('/reservations/{reservation}', [AdminReservationController::class, 'destroy']);
     });
 });

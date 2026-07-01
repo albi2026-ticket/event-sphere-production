@@ -159,8 +159,8 @@ class NotificationCenterTest extends TestCase
             ->assertOk()
             ->json('data.id');
 
-        Mail::assertSent(ReservationRequestReceivedMail::class, fn ($mail) => $mail->hasTo($user->email));
-        Mail::assertSent(NewReservationReceivedMail::class, fn ($mail) => $mail->hasTo($owner->email));
+        Mail::assertQueued(ReservationRequestReceivedMail::class, fn ($mail) => $mail->hasTo($user->email));
+        Mail::assertQueued(NewReservationReceivedMail::class, fn ($mail) => $mail->hasTo($owner->email));
         $this->assertDatabaseHas('notifications', [
             'user_id' => $user->id,
             'type' => Notification::TYPE_RESERVATION_CREATED,
@@ -176,7 +176,7 @@ class NotificationCenterTest extends TestCase
             ->patchJson("/api/owner/reservations/{$reservationId}/confirm")
             ->assertOk();
 
-        Mail::assertSent(ReservationConfirmedMail::class, fn ($mail) => $mail->hasTo($user->email));
+        Mail::assertQueued(ReservationConfirmedMail::class, fn ($mail) => $mail->hasTo($user->email));
         $this->assertDatabaseHas('notifications', [
             'user_id' => $user->id,
             'type' => Notification::TYPE_RESERVATION_CONFIRMED,
@@ -184,10 +184,12 @@ class NotificationCenterTest extends TestCase
         ]);
 
         $this->actingAs($owner, 'sanctum')
-            ->patchJson("/api/owner/reservations/{$reservationId}/cancel")
+            ->patchJson("/api/owner/reservations/{$reservationId}/cancel", [
+                'owner_cancellation_reason' => 'Schedule changed',
+            ])
             ->assertOk();
 
-        Mail::assertSent(ReservationCancelledMail::class, fn ($mail) => $mail->hasTo($user->email));
+        Mail::assertQueued(ReservationCancelledMail::class, fn ($mail) => $mail->hasTo($user->email));
         $this->assertDatabaseHas('notifications', [
             'user_id' => $user->id,
             'type' => Notification::TYPE_RESERVATION_CANCELLED,
@@ -223,8 +225,8 @@ class NotificationCenterTest extends TestCase
             ])
             ->assertOk();
 
-        Mail::assertSent(ReservationCancelledMail::class, fn ($mail) => $mail->hasTo($user->email));
-        Mail::assertSent(ReservationCancelledByGuestMail::class, fn ($mail) => $mail->hasTo($owner->email));
+        Mail::assertQueued(ReservationCancelledMail::class, fn ($mail) => $mail->hasTo($user->email));
+        Mail::assertQueued(ReservationCancelledByGuestMail::class, fn ($mail) => $mail->hasTo($owner->email));
         $this->assertDatabaseHas('notifications', [
             'user_id' => $user->id,
             'type' => Notification::TYPE_RESERVATION_CANCELLED_BY_USER,
@@ -240,9 +242,9 @@ class NotificationCenterTest extends TestCase
     private function organizer(array $attributes = []): User
     {
         return User::factory()->create(array_merge([
-            'role' => User::ROLE_ORGANIZER,
+            'role' => User::ROLE_OWNER,
             'status' => User::STATUS_ACTIVE,
-            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+            'organizer_status' => User::ORGANIZER_STATUS_NONE,
         ], $attributes));
     }
 
