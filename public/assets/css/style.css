@@ -1,5 +1,5 @@
 /* =========================================================
-   TicketHub — Premium Ticket Marketplace
+   Tiketa — Premium Experience Platform
    Design tokens, components, utilities
    ========================================================= */
 
@@ -1597,7 +1597,30 @@ a:hover { color: var(--secondary); }
 .auth-split .visual::before { content: ""; position: absolute; inset: 0; background: radial-gradient(800px 400px at 20% 80%, rgba(255,255,255,0.25), transparent 60%); }
 .auth-split .form-side { display: grid; place-items: center; padding: 3rem 1.5rem; }
 .auth-form { max-width: 420px; width: 100%; }
-@media (max-width: 992px) { .auth-split { grid-template-columns: 1fr; } .auth-split .visual { display: none; } }
+@media (max-width: 992px) {
+  .auth-split { grid-template-columns: 1fr; }
+  .auth-split .visual {
+    display: block;
+    background: transparent;
+    padding: 1.5rem 1rem 0;
+    color: var(--text);
+  }
+  .auth-split .visual::before,
+  .auth-split .visual h1,
+  .auth-split .visual p,
+  .auth-split .visual .d-flex {
+    display: none;
+  }
+  .auth-split .visual > div {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .auth-split .form-side {
+    align-content: start;
+    justify-items: center;
+  }
+}
 
 /* ---------- Dashboard ---------- */
 .dash-shell { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
