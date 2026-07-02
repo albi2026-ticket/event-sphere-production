@@ -11,7 +11,7 @@
     },
     href(value) {
       const slug = this.slug(value);
-      return slug ? `events.html?category=${encodeURIComponent(slug)}` : 'events.html';
+      return slug ? `/events/list?category=${encodeURIComponent(slug)}` : '/events/list';
     },
   };
   window.EventSphereCategories = CategoryRoutes;
@@ -19,12 +19,12 @@
   const headerHTML = `
 <nav class="navbar navbar-expand-lg nav-blur">
   <div class="container-xxl">
-    <a class="brand" href="welcome.html"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Tiketa</a>
+    <a class="brand" href="/welcome"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Tiketa</a>
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
     <div class="collapse navbar-collapse" id="mainNav">
       <ul class="navbar-nav mx-auto gap-1">
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="index.html" data-i18n="header.home">Home</a></li>
-        <li class="nav-item" data-auth-hide-role="owner"><a class="nav-link nav-link-pro" href="events.html" data-i18n="header.events">Events</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="/events" data-i18n="header.home">Home</a></li>
+        <li class="nav-item" data-auth-hide-role="owner"><a class="nav-link nav-link-pro" href="/events/list" data-i18n="header.events">Events</a></li>
         <li class="nav-item dropdown" data-auth-hide-role="owner">
           <a class="nav-link nav-link-pro dropdown-toggle" data-bs-toggle="dropdown" href="#" data-i18n="header.categories">Categories</a>
           <ul class="dropdown-menu mt-2" data-nav-categories style="background:var(--card);border:1px solid var(--border);border-radius:14px">
@@ -49,12 +49,12 @@
             </div>
             <div class="notification-list" data-notification-list></div>
             <div class="notification-empty" data-notification-empty data-i18n="header.no_notifications" hidden>No notifications yet.</div>
-            <a class="notification-view-all" href="notifications.html" data-i18n="header.view_all_notifications">View all notifications</a>
+            <a class="notification-view-all" href="/notifications" data-i18n="header.view_all_notifications">View all notifications</a>
           </div>
         </div>
-        <a class="btn btn-ghost" href="login.html" data-auth-guest data-i18n="header.sign_in">Sign In</a>
-        <a class="btn btn-primary-grad" href="register.html" data-auth-guest data-i18n="header.register">Register</a>
-        <a class="btn btn-ghost" href="dashboard.html" data-auth-user data-auth-dashboard-link data-i18n="header.my_tickets" hidden>My Tickets</a>
+        <a class="btn btn-ghost" href="/login" data-auth-guest data-i18n="header.sign_in">Sign In</a>
+        <a class="btn btn-primary-grad" href="/register" data-auth-guest data-i18n="header.register">Register</a>
+        <a class="btn btn-ghost" href="/dashboard" data-auth-user data-auth-dashboard-link data-i18n="header.my_tickets" hidden>My Tickets</a>
         <a class="btn btn-primary-grad" href="#" data-auth-user data-logout data-i18n="header.sign_out" hidden>Sign Out</a>
       </div>
     </div>
@@ -65,7 +65,7 @@
   <div class="container-xxl">
     <div class="footer-top">
       <div class="footer-brand">
-        <a class="brand mb-3" href="welcome.html"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Tiketa</a>
+        <a class="brand mb-3" href="/welcome"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Tiketa</a>
         <p data-i18n="footer.tagline">The premium marketplace to discover, buy, and manage tickets for live events with confidence.</p>
         <div class="footer-social" aria-label="Social links">
           <a href="https://www.facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
@@ -79,29 +79,29 @@
     <div class="footer-links-grid">
       <div>
         <h6 data-i18n="footer.company">Company</h6>
-        <a href="about.html" data-i18n="footer.about">About Tiketa</a>
-        <a href="contact.html" data-i18n="footer.contact">Contact Us</a>
-        <a href="careers.html" data-i18n="footer.careers">Careers</a>
-        <a href="blog.html" data-i18n="footer.blog">Blog</a>
+        <a href="/about" data-i18n="footer.about">About Tiketa</a>
+        <a href="/contact" data-i18n="footer.contact">Contact Us</a>
+        <a href="/careers" data-i18n="footer.careers">Careers</a>
+        <a href="/blog" data-i18n="footer.blog">Blog</a>
       </div>
       <div>
         <h6 data-i18n="footer.support">Support</h6>
-        <a href="help-center.html" data-i18n="footer.help_center">Help Center</a>
-        <a href="faqs.html" data-i18n="footer.faqs">FAQs</a>
-        <a href="ticket-support.html" data-i18n="footer.ticket_support">Ticket Support</a>
-        <a href="refund-policy.html" data-i18n="footer.refund_policy">Refund Policy</a>
+        <a href="/help-center" data-i18n="footer.help_center">Help Center</a>
+        <a href="/faqs" data-i18n="footer.faqs">FAQs</a>
+        <a href="/ticket-support" data-i18n="footer.ticket_support">Ticket Support</a>
+        <a href="/refund-policy" data-i18n="footer.refund_policy">Refund Policy</a>
       </div>
       <div>
         <h6 data-i18n="footer.organizers">Organizers</h6>
-        <a href="become-organizer.html" data-i18n="footer.become_organizer">Become an Organizer</a>
-        <a href="organizer-guide.html" data-i18n="footer.organizer_guide">Organizer Guide</a>
-        <a href="create-event.html" data-i18n="footer.create_event">Create Event</a>
+        <a href="/become-organizer" data-i18n="footer.become_organizer">Become an Organizer</a>
+        <a href="/organizer-guide" data-i18n="footer.organizer_guide">Organizer Guide</a>
+        <a href="/create-event" data-i18n="footer.create_event">Create Event</a>
       </div>
       <div>
         <h6 data-i18n="footer.legal">Legal</h6>
-        <a href="terms-of-service.html" data-i18n="footer.terms">Terms of Service</a>
-        <a href="privacy-policy.html" data-i18n="footer.privacy">Privacy Policy</a>
-        <a href="cookie-policy.html" data-i18n="footer.cookies">Cookie Policy</a>
+        <a href="/terms-of-service" data-i18n="footer.terms">Terms of Service</a>
+        <a href="/privacy-policy" data-i18n="footer.privacy">Privacy Policy</a>
+        <a href="/cookie-policy" data-i18n="footer.cookies">Cookie Policy</a>
       </div>
     </div>
 

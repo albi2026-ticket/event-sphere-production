@@ -25,7 +25,7 @@
 
   function slugFromLocation() {
     const params = new URLSearchParams(location.search);
-    return params.get('venue') || params.get('slug') || '';
+    return params.get('id') || params.get('venue') || params.get('slug') || '';
   }
 
   function titleCase(value) {
@@ -881,7 +881,7 @@
       button.addEventListener('click', () => {
         if (!window.EventSphereAuth?.isLoggedIn?.()) {
           const next = encodeURIComponent(location.pathname.split('/').pop() + location.search);
-          location.href = `login.html?next=${next}`;
+          location.href = `/login?next=${next}`;
           return;
         }
         if (!userHasVerifiedEmail()) {

@@ -923,7 +923,7 @@
     $('[data-owner-description]').textContent = venue.description || tr('venue.complete_profile_details', 'Complete your profile details below.');
     const publicLink = $('[data-owner-public-link]');
     if (publicLink) {
-      publicLink.href = venue.slug ? `venue.html?venue=${encodeURIComponent(venue.slug)}` : '#';
+      publicLink.href = venue.slug ? `/restaurant?id=${encodeURIComponent(venue.slug)}` : '#';
       publicLink.toggleAttribute('aria-disabled', !venue.slug);
     }
     const publicNote = $('[data-owner-public-note]');

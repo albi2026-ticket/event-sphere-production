@@ -37,7 +37,7 @@
             <span class="fw-semibold d-block">${esc(event.title)}</span>
             <small>${dateTime(event.starts_at)} · ${esc(event.venue_name || '-')}</small>
           </span>
-          <a class="btn btn-glass btn-sm" href="check-in.html?event_id=${encodeURIComponent(event.id)}" data-i18n="buttons.open">${window.t?.('buttons.open') || 'Open'}</a>
+          <a class="btn btn-glass btn-sm" href="/check-in?event_id=${encodeURIComponent(event.id)}" data-i18n="buttons.open">${window.t?.('buttons.open') || 'Open'}</a>
         </div>
       </div>`;
   }
@@ -76,7 +76,7 @@
     const image = event.banner_image_url || event.images?.[0]?.url || '../assets/img/concert-hero.svg';
     scanLink?.classList.remove('disabled');
     scanLink?.removeAttribute('aria-disabled');
-    scanLink?.setAttribute('href', `check-in.html?event_id=${encodeURIComponent(event.id)}`);
+    scanLink?.setAttribute('href', `/check-in?event_id=${encodeURIComponent(event.id)}`);
     wrap.innerHTML = `
       <div class="col-md-5">
         <img class="img-fluid rounded-3 w-100" style="aspect-ratio:16/10;object-fit:cover" src="${esc(image)}" alt="${esc(event.title)}">

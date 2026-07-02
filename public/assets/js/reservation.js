@@ -41,7 +41,7 @@
   function card(venue) {
     const facilities = preview(venue.facilities, tr('restaurants.facilities_coming_soon', 'Facilities coming soon'));
     const cuisines = preview(venue.cuisine_types, titleCase(venue.venue_type));
-    const detailsUrl = `venue.html?venue=${encodeURIComponent(venue.slug)}`;
+    const detailsUrl = `/restaurant?id=${encodeURIComponent(venue.slug)}`;
     return `
     <div class="col-lg-3 col-md-6">
       <a class="text-decoration-none" href="${detailsUrl}">

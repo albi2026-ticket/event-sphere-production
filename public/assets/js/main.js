@@ -302,7 +302,7 @@
     const eventId = b.dataset.eventId;
     if (eventId && !window.EventSphereAuth?.isLoggedIn?.()) {
       const next = encodeURIComponent(location.pathname.split('/').pop() + location.search);
-      location.href = `login.html?next=${next}`;
+      location.href = `/login?next=${next}`;
       return;
     }
     if (eventId && window.EventSphereFavorites) {
@@ -586,7 +586,7 @@
     document.querySelectorAll('[data-year]').forEach(el => el.textContent = new Date().getFullYear());
 
     // Active nav link by filename
-    const path = location.pathname.split('/').pop() || 'index.html';
+    const path = location.pathname.split('/').pop() || '/';
     document.querySelectorAll('.nav-link-pro').forEach(a => {
       const h = a.getAttribute('href') || '';
       if (h.endsWith(path)) a.classList.add('active');

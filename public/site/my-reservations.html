@@ -17,17 +17,17 @@
 
 <nav class="navbar navbar-expand-lg nav-blur nav-res">
   <div class="container-xxl">
-    <a class="brand" href="welcome.html"><span class="brand-logo" style="background:var(--grad-res)"><i class="bi bi-cup-hot-fill"></i></span>Tiketa <span class="text-gold ms-1 d-none d-sm-inline" style="font-weight:500;font-size:.95rem">· Reservations</span></a>
+    <a class="brand" href="/welcome"><span class="brand-logo" style="background:var(--grad-res)"><i class="bi bi-cup-hot-fill"></i></span>Tiketa <span class="text-gold ms-1 d-none d-sm-inline" style="font-weight:500;font-size:.95rem">· Reservations</span></a>
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#resNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
     <div class="collapse navbar-collapse" id="resNav">
       <ul class="navbar-nav mx-auto gap-1">
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="reservations.html" data-i18n="header.home">Home</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro active" href="my-reservations.html" data-auth-role-nav="user" data-i18n="header.my_reservations" hidden>My Reservations</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="owner-venue.html" data-auth-role-nav="owner" data-i18n="header.venue_reservations" hidden>Restaurant & Bar Reservations</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="/restaurants" data-i18n="header.home">Home</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro active" href="/my-reservations" data-auth-role-nav="user" data-i18n="header.my_reservations" hidden>My Reservations</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="/owner-venue" data-auth-role-nav="owner" data-i18n="header.venue_reservations" hidden>Restaurant & Bar Reservations</a></li>
       </ul>
       <div class="d-flex align-items-center gap-2">
-        <a class="btn btn-ghost" href="login.html" data-auth-guest data-i18n="header.login">Login</a>
-        <a class="btn btn-gold" href="register.html" data-auth-guest data-i18n="header.register">Register</a>
+        <a class="btn btn-ghost" href="/login" data-auth-guest data-i18n="header.login">Login</a>
+        <a class="btn btn-gold" href="/register" data-auth-guest data-i18n="header.register">Register</a>
         <div class="notification-root" data-notification-root data-auth-user hidden>
           <button class="icon-btn notification-toggle" type="button" data-notification-toggle aria-label="Notifications" data-i18n-attr="aria-label:header.notifications" aria-expanded="false">
             <i class="bi bi-bell"></i>
@@ -40,7 +40,7 @@
             </div>
             <div class="notification-list" data-notification-list></div>
             <div class="notification-empty" data-notification-empty data-i18n="header.no_notifications" hidden>No notifications yet.</div>
-            <a class="notification-view-all" href="notifications.html" data-i18n="header.view_all_notifications">View all notifications</a>
+            <a class="notification-view-all" href="/notifications" data-i18n="header.view_all_notifications">View all notifications</a>
           </div>
         </div>
         <a class="btn btn-gold" href="#" data-auth-user data-logout data-i18n="header.logout" hidden>Logout</a>
@@ -58,7 +58,7 @@
           <h1 data-i18n="reservation.my_reservations">My Reservations</h1>
           <p class="text-muted-pro mb-0" data-i18n="reservation.track_copy">Track your table requests, confirmed visits, and reservation history.</p>
         </div>
-        <a class="btn btn-gold" href="reservations.html"><i class="bi bi-search me-1"></i><span data-i18n="buttons.discover_restaurants">Discover restaurants & bars</span></a>
+        <a class="btn btn-gold" href="/restaurants"><i class="bi bi-search me-1"></i><span data-i18n="buttons.discover_restaurants">Discover restaurants & bars</span></a>
       </div>
     </div>
   </section>

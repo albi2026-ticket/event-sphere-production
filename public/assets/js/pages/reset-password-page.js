@@ -5,7 +5,7 @@
     const rawSearch = String(location.search || '').replace(/&amp;/g, '&');
     const params = new URLSearchParams(rawSearch);
     const pathParts = location.pathname.split('/').filter(Boolean);
-    const pathToken = pathParts[pathParts.length - 1] !== 'reset-password.html' ? pathParts[pathParts.length - 1] : '';
+    const pathToken = pathParts[pathParts.length - 1] !== '/reset-password' ? pathParts[pathParts.length - 1] : '';
 
     return {
       token: params.get('token') || pathToken || '',
@@ -63,7 +63,7 @@
         });
         window.tkToast?.('Your password has been updated successfully.', 'success');
         window.setTimeout(() => {
-          location.href = 'login.html?reset=1';
+          location.href = '/login?reset=1';
         }, 700);
       } catch (err) {
         error.textContent = err.message || 'Unable to reset password. Please request a new reset link.';

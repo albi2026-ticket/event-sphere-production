@@ -28,7 +28,7 @@
     setCart({
       event_slug: event.slug,
       event_id: event.id,
-      source_url: `event-details.html?slug=${encodeURIComponent(event.slug)}`,
+      source_url: `/event?id=${encodeURIComponent(event.slug)}`,
       event_title: event.title,
       event_image: window.EventSphereUtils.eventImage(event),
       venue_name: event.venue_name,

@@ -23,7 +23,7 @@
         const data = await orders().getPaymentStatus(orderId);
         if (data.payment_status === 'paid' || data.status === 'paid') {
           if (statusEl) statusEl.textContent = `Order ${data.order_number || ''} confirmed. Your tickets are ready.`;
-          if (link) link.href = 'dashboard.html';
+          if (link) link.href = '/dashboard';
           const notificationKey = `order-confirmed-${data.id || orderId}`;
           const exists = window.EventSphereNotifications?.list?.().some((item) => item.id === notificationKey);
           if (!exists) {

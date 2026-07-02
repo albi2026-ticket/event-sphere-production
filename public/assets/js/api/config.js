@@ -14,6 +14,6 @@
     TOKEN_KEY: 'event_sphere_token',
     USER_KEY: 'event_sphere_user',
     CART_KEY: 'event_sphere_cart',
-    LOGIN_URL: 'login.html',
+    LOGIN_URL: '/login',
   };
 })();

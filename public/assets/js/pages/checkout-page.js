@@ -30,13 +30,13 @@
 
     if (!c || !c.items?.length) {
       window.tkToast?.(tr('checkout.cart_empty', 'Your cart is empty'), 'info');
-      setTimeout(() => { location.href = 'events.html'; }, 800);
+      setTimeout(() => { location.href = '/events/list'; }, 800);
       return;
     }
 
     const item = c.items[0];
     if (els.backLink) {
-      els.backLink.href = c.source_url || (c.event_slug ? `event-details.html?slug=${encodeURIComponent(c.event_slug)}` : 'events.html');
+      els.backLink.href = c.source_url || (c.event_slug ? `/event?id=${encodeURIComponent(c.event_slug)}` : '/events/list');
     }
     const feePercentage = Number(c.service_fee_percentage ?? 10);
     const subtotal = Number(item.unit_price) * Number(item.quantity);
@@ -220,7 +220,7 @@
         const checkout = await orders().completeMockPayment(createdOrder.id);
         cart().clearCart();
         if (checkout.checkout_url) location.href = checkout.checkout_url;
-        else location.href = `checkout-success.html?order_id=${encodeURIComponent(createdOrder.id)}&mock=1`;
+        else location.href = `/checkout-success?order_id=${encodeURIComponent(createdOrder.id)}&mock=1`;
       } catch (err) {
         if (createdOrder?.id) {
           try {

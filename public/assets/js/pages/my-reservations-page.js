@@ -106,7 +106,7 @@
 
   function venueUrl(reservation) {
     const slug = reservation.venue?.slug;
-    return slug ? `venue.html?venue=${encodeURIComponent(slug)}` : 'venue.html';
+    return slug ? `/restaurant?id=${encodeURIComponent(slug)}` : '/restaurant';
   }
 
   function reservationCard(reservation) {

@@ -111,7 +111,7 @@
     },
     href(value) {
       const slug = this.slug(value);
-      return slug ? `events.html?category=${encodeURIComponent(slug)}` : 'events.html';
+      return slug ? `/events/list?category=${encodeURIComponent(slug)}` : '/events/list';
     },
   };
   window.EventSphereCategories = categoryRoutes;

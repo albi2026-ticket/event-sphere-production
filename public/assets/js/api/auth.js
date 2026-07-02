@@ -113,11 +113,11 @@
   }
 
   function roleHome(role) {
-    if (role === 'admin') return 'admin.html';
-    if (role === 'organizer') return 'organizer.html';
-    if (role === 'owner') return 'owner-venue.html';
-    if (role === 'scanner') return 'scanner-dashboard.html';
-    return 'dashboard.html';
+    if (role === 'admin') return '/admin';
+    if (role === 'organizer') return '/organizer';
+    if (role === 'owner') return '/owner-venue';
+    if (role === 'scanner') return '/scanner-dashboard';
+    return '/dashboard';
   }
 
   function redirectByRole(user) {
@@ -126,7 +126,7 @@
       location.href = cfg().LOGIN_URL;
       return;
     }
-    location.href = u.role === 'scanner' ? roleHome(u.role) : 'welcome.html';
+    location.href = u.role === 'scanner' ? roleHome(u.role) : '/welcome';
   }
 
   function requireAuth(roles, options = {}) {
@@ -145,7 +145,7 @@
       const onOrganizer = location.pathname.includes('organizer');
       if (onOrganizer) {
         window.tkToast?.('Organizer account pending approval.', 'info');
-        location.href = 'dashboard.html';
+        location.href = '/dashboard';
         return null;
       }
     }
@@ -161,11 +161,11 @@
     const user = getUser();
     const role = user?.role || null;
     const roleConfig = {
-      admin: { label: 'Dashboard', href: 'admin.html' },
-      organizer: { label: 'Manage Events', href: 'organizer.html' },
-      owner: { label: 'Manage Venues', href: 'owner-venue.html' },
-      scanner: { label: 'Scanner', href: 'scanner-dashboard.html' },
-      user: { label: 'My Tickets', href: 'dashboard.html' },
+      admin: { label: 'Dashboard', href: '/admin' },
+      organizer: { label: 'Manage Events', href: '/organizer' },
+      owner: { label: 'Manage Venues', href: '/owner-venue' },
+      scanner: { label: 'Scanner', href: '/scanner-dashboard' },
+      user: { label: 'My Tickets', href: '/dashboard' },
     };
     const current = roleConfig[role] || roleConfig.user;
 

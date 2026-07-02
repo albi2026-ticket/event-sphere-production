@@ -196,7 +196,7 @@
   function renderHeroSlide(event, index) {
     const u = window.EventSphereUtils;
     const img = u.eventImage(event);
-    const detailsHref = `event-details.html?slug=${encodeURIComponent(event.slug)}`;
+    const detailsHref = `/event?id=${encodeURIComponent(event.slug)}`;
     const status = window.EventSphereEvents.salesStatus(event);
     const ticketType = window.EventSphereEvents.availableTicketTypes(event)[0];
     const buyDisabled = !status.canBuy || (!ticketType && event.price_from === undefined && event.base_price === undefined);
@@ -315,8 +315,8 @@
       try {
         window.EventSphereCart.setFromEvent(featuredEvent, Number(ticketType.id), Number(ticketType.min_per_order || 1));
         location.href = window.EventSphereAuth?.isLoggedIn?.()
-          ? 'checkout.html'
-          : `login.html?next=${encodeURIComponent('checkout.html')}`;
+          ? '/checkout'
+          : `/login?next=${encodeURIComponent('/checkout')}`;
       } catch (err) {
         window.tkToast?.(err.message || 'Unable to start checkout.', 'error');
       }

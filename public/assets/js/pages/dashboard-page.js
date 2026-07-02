@@ -369,9 +369,9 @@
     }
     const upcomingTickets = state.upcomingTickets.length ? state.upcomingTickets : state.tickets.filter((ticket) => isUpcomingEvent(ticket.event));
     const ticketByEvent = new Map(upcomingTickets.map((ticket) => [String(ticket.event?.id), ticket]));
-    const empty = emptyState('bi-calendar2-plus', tr('dashboard.no_upcoming_events', 'No upcoming events'), tr('dashboard.future_events_appear', 'When you buy tickets for future events, they will appear here.'), `<a class="btn btn-glass btn-sm mt-2" href="events.html" data-i18n="buttons.browse_events">${tr('buttons.browse_events', 'Browse events')}</a>`);
+    const empty = emptyState('bi-calendar2-plus', tr('dashboard.no_upcoming_events', 'No upcoming events'), tr('dashboard.future_events_appear', 'When you buy tickets for future events, they will appear here.'), `<a class="btn btn-glass btn-sm mt-2" href="/events/list" data-i18n="buttons.browse_events">${tr('buttons.browse_events', 'Browse events')}</a>`);
     const compact = state.upcomingEvents.slice(0, 4).map((event) => `
-      <a class="dashboard-event-row" href="event-details.html?slug=${encodeURIComponent(event.slug)}">
+      <a class="dashboard-event-row" href="/event?id=${encodeURIComponent(event.slug)}">
         <img src="${escape(u().eventImage(event))}" alt=""/>
         <div class="flex-grow-1">
           <div class="fw-semibold">${escape(event.title)}</div>
@@ -391,7 +391,7 @@
               <span><span class="fw-semibold d-block">${escape(event.title)}</span><small>${escape(dateLabel(event.starts_at, event.timezone))} · ${escape(event.venue_name || '')}${event.city ? `, ${escape(event.city)}` : ''}</small><small class="d-block"><span data-i18n="dashboard.starts_in">${tr('dashboard.starts_in', 'Starts in')}</span> ${escape(countdownLabel(event.starts_at))}</small></span>
             </div>
             <div class="dashboard-actions">
-              ${ticket ? `<button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}" data-i18n="tickets.view_ticket">${tr('tickets.view_ticket', 'View Ticket')}</button><button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}" data-i18n="tickets.view_qr">${tr('tickets.view_qr', 'View QR')}</button>` : `<a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(event.slug)}" data-i18n="dashboard.view_event">${tr('dashboard.view_event', 'View Event')}</a>`}
+              ${ticket ? `<button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}" data-i18n="tickets.view_ticket">${tr('tickets.view_ticket', 'View Ticket')}</button><button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}" data-i18n="tickets.view_qr">${tr('tickets.view_qr', 'View QR')}</button>` : `<a class="btn btn-glass btn-sm" href="/event?id=${encodeURIComponent(event.slug)}" data-i18n="dashboard.view_event">${tr('dashboard.view_event', 'View Event')}</a>`}
             </div>
           </div>`;
       }).join('') || empty;
@@ -414,7 +414,7 @@
     }
     el.innerHTML = state.tickets.length
       ? state.tickets.map((ticket) => ticketsApi().renderTicketCard(ticket)).join('')
-      : `<div class="col-12">${emptyState('bi-ticket-perforated', tr('empty.no_tickets_found', 'No tickets found.'), tr('tickets.try_filter_or_browse', 'Try another filter or browse events to buy tickets.'), `<a class="btn btn-glass btn-sm mt-2" href="events.html" data-i18n="buttons.browse_events">${tr('buttons.browse_events', 'Browse Events')}</a>`)}</div>`;
+      : `<div class="col-12">${emptyState('bi-ticket-perforated', tr('empty.no_tickets_found', 'No tickets found.'), tr('tickets.try_filter_or_browse', 'Try another filter or browse events to buy tickets.'), `<a class="btn btn-glass btn-sm mt-2" href="/events/list" data-i18n="buttons.browse_events">${tr('buttons.browse_events', 'Browse Events')}</a>`)}</div>`;
     ticketsApi().hydrateQrImages(el);
     if (pager) pager.innerHTML = pagination(state.ticketMeta, 'data-ticket-page');
   }
@@ -478,7 +478,7 @@
             <div class="foot">
               <div class="price">${pricing}<div class="mt-1">${statusBadge(stateBadge)}</div></div>
               <div class="dashboard-actions">
-                <a class="btn btn-glass btn-sm" href="event-details.html?slug=${encodeURIComponent(event.slug)}" data-i18n="dashboard.view_event">${tr('dashboard.view_event', 'View Event')}</a>
+                <a class="btn btn-glass btn-sm" href="/event?id=${encodeURIComponent(event.slug)}" data-i18n="dashboard.view_event">${tr('dashboard.view_event', 'View Event')}</a>
                 <button class="btn btn-glass btn-sm" type="button" data-remove-favorite="${event.id}"><i class="bi bi-heartbreak"></i></button>
               </div>
             </div>
@@ -503,7 +503,7 @@
     }
     el.innerHTML = state.favorites.length
       ? state.favorites.map(renderFavoriteCard).join('')
-      : `<div class="col-12">${emptyState('bi-heart', tr('dashboard.no_favorites_yet', 'No favorites yet'), tr('dashboard.saved_events_appear', 'Save events you like and they will appear here.'), `<a class="btn btn-glass btn-sm mt-2" href="events.html" data-i18n="buttons.browse_events">${tr('buttons.browse_events', 'Browse events')}</a>`)}</div>`;
+      : `<div class="col-12">${emptyState('bi-heart', tr('dashboard.no_favorites_yet', 'No favorites yet'), tr('dashboard.saved_events_appear', 'Save events you like and they will appear here.'), `<a class="btn btn-glass btn-sm mt-2" href="/events/list" data-i18n="buttons.browse_events">${tr('buttons.browse_events', 'Browse events')}</a>`)}</div>`;
     if (pager) pager.innerHTML = pagination(state.favoriteMeta, 'data-favorite-page');
   }
 
@@ -612,7 +612,7 @@
     if (security) {
       security.innerHTML = `
         <div class="dashboard-mini-row"><span><span class="fw-semibold d-block">Email verification</span><small>${auth().hasVerifiedEmail(profile) ? 'Your email is verified.' : 'Verification is still pending.'}</small></span>${auth().hasVerifiedEmail(profile) ? statusBadge('Verified') : '<button class="btn btn-glass btn-sm" type="button" data-profile-resend-verification>Resend</button>'}</div>
-        <div class="dashboard-mini-row"><span><span class="fw-semibold d-block">Password reset</span><small>Use reset links for secure password changes.</small></span><a class="btn btn-glass btn-sm" href="forgot-password.html">Manage</a></div>
+        <div class="dashboard-mini-row"><span><span class="fw-semibold d-block">Password reset</span><small>Use reset links for secure password changes.</small></span><a class="btn btn-glass btn-sm" href="/forgot-password">Manage</a></div>
         <div class="dashboard-mini-row"><span><span class="fw-semibold d-block">Account role</span><small>${escape(profile.role || 'user')}</small></span>${statusBadge(profile.status || 'active')}</div>`;
     }
   }

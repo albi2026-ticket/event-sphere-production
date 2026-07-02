@@ -103,7 +103,7 @@
 
   document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(location.search);
-    const slug = params.get('slug');
+    const slug = params.get('id') || params.get('slug');
     if (!slug) {
       window.tkToast?.(tr('events.event_not_specified', 'Event not specified'), 'error');
       return;
@@ -316,7 +316,7 @@
             return;
           }
           if (!window.EventSphereAuth.isLoggedIn()) {
-            location.href = `login.html?next=${encodeURIComponent(location.pathname + location.search)}`;
+            location.href = `/login?next=${encodeURIComponent(location.pathname + location.search)}`;
             return;
           }
           await refreshTicketAvailability();
@@ -328,7 +328,7 @@
           const typeId = Number(els.select?.value || selectedType?.id);
           try {
             cart().setFromEvent(event, typeId, qty);
-            location.href = 'checkout.html';
+            location.href = '/checkout';
           } catch (err) {
             window.tkToast?.(err.message, 'error');
           }

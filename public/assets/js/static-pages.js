@@ -42,7 +42,7 @@
         { title: 'Our mission', body: ['We believe buying a ticket should feel simple, transparent, and reliable from the first search to the venue door.', 'Tiketa is built for concerts, sports, festivals, conferences, theater, workshops, and community events where accurate information and dependable access matter.'] },
         { title: 'How we work', body: ['We keep the customer journey structured: clear listings, protected checkout, immediate ticket access, and support paths when plans change.', 'For organizers, Tiketa focuses on practical operations: publishing, inventory, attendee visibility, QR validation, and clear communication with ticket holders.'] },
       ],
-      cta: { title: 'Ready to discover your next event?', body: 'Browse upcoming events or start building your organizer presence on Tiketa.', primary: ['Browse Events', 'events.html'], secondary: ['Become an Organizer', 'organizer.html'] },
+      cta: { title: 'Ready to discover your next event?', body: 'Browse upcoming events or start building your organizer presence on Tiketa.', primary: ['Browse Events', '/events/list'], secondary: ['Become an Organizer', '/organizer'] },
     },
     'event.contact': {
       title: 'Contact Us',
@@ -54,7 +54,7 @@
         { title: 'Customer support', body: ['Use Tiketa support for ticket access, checkout questions, account updates, QR code issues, and refund review guidance.', 'For an event taking place within 24 hours, include “event-day” in your message subject so the team can triage the request quickly.'] },
         { title: 'Organizer support', body: ['Organizers can contact us for publishing guidance, ticket setup, attendee management, scanner access, and operational questions before event day.'] },
       ],
-      cta: { title: 'Need help with a ticket?', body: 'Open ticket support for the checklist we use to resolve common access issues.', primary: ['Open Ticket Support', 'ticket-support.html'] },
+      cta: { title: 'Need help with a ticket?', body: 'Open ticket support for the checklist we use to resolve common access issues.', primary: ['Open Ticket Support', '/ticket-support'] },
     },
     'event.careers': {
       title: 'Careers at Tiketa',
@@ -84,7 +84,7 @@
       sections: [
         { title: 'Editorial standard', body: ['Blog content should help customers and organizers make better decisions. We avoid filler and focus on clear, actionable information.', 'Featured posts will appear here as Tiketa publishes platform updates and event-marketplace resources.'] },
       ],
-      cta: { title: 'Looking for help instead?', body: 'Visit the Help Center for support topics and contact options.', primary: ['Go to Help Center', 'help-center.html'] },
+      cta: { title: 'Looking for help instead?', body: 'Visit the Help Center for support topics and contact options.', primary: ['Go to Help Center', '/help-center'] },
     },
     'event.help': {
       title: 'Help Center',
@@ -102,7 +102,7 @@
       sections: [
         { title: 'Before contacting support', body: ['Check the event page for date, venue, entry rules, age restrictions, and organizer updates.', 'Open your dashboard and confirm ticket quantity, order status, and QR availability.', 'Save screenshots or receipt details if something looks incorrect.'] },
       ],
-      cta: { title: 'Still need help?', body: 'Contact Tiketa with the event name, order email, and a short description of the issue.', primary: ['Contact Us', 'contact.html'] },
+      cta: { title: 'Still need help?', body: 'Contact Tiketa with the event name, order email, and a short description of the issue.', primary: ['Contact Us', '/contact'] },
     },
     'event.faq': {
       title: 'FAQs',
@@ -117,7 +117,7 @@
         ['Are service fees refundable?', 'Some service, processing, or payment fees may be non-refundable unless required by law or included in the event policy.'],
         ['How do organizers publish an event?', 'Create an account, complete organizer setup, add event details and ticket tiers, then publish according to platform permissions.'],
       ],
-      cta: { title: 'Need a deeper answer?', body: 'Send support the event name and your account email so we can review the right record.', primary: ['Contact Support', 'contact.html'] },
+      cta: { title: 'Need a deeper answer?', body: 'Send support the event name and your account email so we can review the right record.', primary: ['Contact Support', '/contact'] },
     },
     'event.ticketSupport': {
       title: 'Ticket Support',
@@ -129,7 +129,7 @@
         { title: 'Common fixes', body: ['Refresh your dashboard after payment confirmation.', 'Confirm you are signed in with the same email used at checkout.', 'Check organizer updates for venue, date, or entry-rule changes.', 'Keep your QR code visible and your phone charged before arriving.'] },
       ],
       contacts: sharedContacts.event,
-      cta: { title: 'Open a support request', body: 'Use the contact page and include the checklist above.', primary: ['Contact Us', 'contact.html'] },
+      cta: { title: 'Open a support request', body: 'Use the contact page and include the checklist above.', primary: ['Contact Us', '/contact'] },
     },
     'event.refund': {
       title: 'Refund Policy',
@@ -142,7 +142,7 @@
         { title: 'Fees and timing', body: ['Service, processing, payment, or delivery fees may be non-refundable unless required by law. Approved refunds are generally returned to the original payment method, and bank timelines may vary.'] },
         { title: 'Disputes', body: ['Opening a bank dispute may pause standard refund review until the dispute is resolved. Keeping communication in one support thread helps avoid delays.'] },
       ],
-      cta: { title: 'Have a refund question?', body: 'Contact support with your order details and the event status.', primary: ['Contact Support', 'contact.html'] },
+      cta: { title: 'Have a refund question?', body: 'Contact support with your order details and the event status.', primary: ['Contact Support', '/contact'] },
     },
     'event.organizer': {
       title: 'Become an Organizer',
@@ -154,7 +154,7 @@
         { icon: 'bi-tags', title: 'Configure ticket tiers', body: 'Set names, pricing, capacity, sale windows, and availability for each ticket type.' },
         { icon: 'bi-qr-code', title: 'Manage entry', body: 'Use QR tickets and scanner workflows to support faster, cleaner check-in.' },
       ],
-      cta: { title: 'Start organizing on Tiketa', body: 'Create an account or open your organizer workspace to begin.', primary: ['Create an Event', 'organizer.html'], secondary: ['Read the Guide', 'organizer-guide.html'] },
+      cta: { title: 'Start organizing on Tiketa', body: 'Create an account or open your organizer workspace to begin.', primary: ['Create an Event', '/organizer'], secondary: ['Read the Guide', '/organizer-guide'] },
     },
     'event.organizerGuide': {
       title: 'Organizer Guide',
@@ -167,7 +167,7 @@
         { title: 'Communicate changes', body: ['If the date, venue, lineup, entry rule, or refund status changes, update the listing and notify ticket holders as early as possible.'] },
         { title: 'Plan check-in', body: ['Assign scanner access, test QR validation, prepare staff instructions, and keep a fallback plan for poor connectivity.'] },
       ],
-      cta: { title: 'Ready to publish?', body: 'Open organizer tools and create your next event.', primary: ['Create an Event', 'organizer.html'] },
+      cta: { title: 'Ready to publish?', body: 'Open organizer tools and create your next event.', primary: ['Create an Event', '/organizer'] },
     },
     'event.createEvent': {
       title: 'Create an Event',
@@ -178,7 +178,7 @@
         { title: 'What you need', body: ['Event title, description, category, date, venue, images, ticket types, capacity, refund terms, and organizer contact details.'] },
         { title: 'Publishing checklist', body: ['Confirm all customer-facing details, preview the event page, test ticket quantities, and make sure your team understands event-day scanning.'] },
       ],
-      cta: { title: 'Build your event', body: 'Go to organizer tools to create or manage event listings.', primary: ['Open Organizer Tools', 'organizer.html'] },
+      cta: { title: 'Build your event', body: 'Go to organizer tools to create or manage event listings.', primary: ['Open Organizer Tools', '/organizer'] },
     },
     'event.terms': {
       title: 'Terms of Service',
@@ -229,7 +229,7 @@
       sections: [
         { title: 'Hospitality focus', body: ['Tiketa Dining is built for venues that care about reliable booking, accurate information, and a polished guest experience.', 'The platform supports restaurants, bars, lounges, cafes, and destination venues that want to be easier to discover and easier to manage.'] },
       ],
-      cta: { title: 'Find your next table', body: 'Browse restaurants and bars available through Tiketa Dining.', primary: ['Discover Restaurants', 'reservations.html'], secondary: ['Become a Partner', 'become-restaurant-partner.html'] },
+      cta: { title: 'Find your next table', body: 'Browse restaurants and bars available through Tiketa Dining.', primary: ['Discover Restaurants', '/restaurants'], secondary: ['Become a Partner', '/become-restaurant-partner'] },
     },
     'dining.contact': {
       title: 'Contact Tiketa Dining',
@@ -241,7 +241,7 @@
         { title: 'For guests', body: ['Contact us for reservation questions, confirmation issues, cancellation guidance, account access, or venue communication concerns.'] },
         { title: 'For restaurant owners', body: ['Partner support can help with venue setup, profile quality, availability, reservation workflows, and owner dashboard questions.'] },
       ],
-      cta: { title: 'Need reservation help?', body: 'Open reservation support for the details to include.', primary: ['Reservation Support', 'reservation-support.html'] },
+      cta: { title: 'Need reservation help?', body: 'Open reservation support for the details to include.', primary: ['Reservation Support', '/reservation-support'] },
     },
     'dining.partner': {
       title: 'Become a Restaurant Partner',
@@ -253,7 +253,7 @@
         { icon: 'bi-calendar2-week', title: 'Availability controls', body: 'Manage opening hours, booking horizon, guest limits, reservation intervals, blackout dates, and special hours.' },
         { icon: 'bi-clipboard2-check', title: 'Reservation management', body: 'Review requests, confirm bookings, handle cancellations, and monitor upcoming guest arrivals.' },
       ],
-      cta: { title: 'List your venue', body: 'Create or manage your restaurant and bar profile from the owner workspace.', primary: ['List Your Restaurant', 'owner-venue.html'], secondary: ['Read Owner Guide', 'restaurant-owner-guide.html'] },
+      cta: { title: 'List your venue', body: 'Create or manage your restaurant and bar profile from the owner workspace.', primary: ['List Your Restaurant', '/owner-venue'], secondary: ['Read Owner Guide', '/restaurant-owner-guide'] },
     },
     'dining.ownerGuide': {
       title: 'Restaurant Owner Guide',
@@ -266,7 +266,7 @@
         { title: 'Manage requests', body: ['Review pending reservations promptly, confirm accepted bookings, and add clear cancellation reasons when you cannot host a request.'] },
         { title: 'Keep communication clean', body: ['Use guest notes and contact information responsibly. Update venue details whenever policies, hours, or availability change.'] },
       ],
-      cta: { title: 'Open owner tools', body: 'Manage your restaurant or bar profile and reservations.', primary: ['Owner Workspace', 'owner-venue.html'] },
+      cta: { title: 'Open owner tools', body: 'Manage your restaurant or bar profile and reservations.', primary: ['Owner Workspace', '/owner-venue'] },
     },
     'dining.list': {
       title: 'List Your Restaurant',
@@ -277,7 +277,7 @@
         { title: 'Listing requirements', body: ['Prepare your venue name, type, description, contact information, address, photos, cuisine types, facilities, payment options, and opening hours.'] },
         { title: 'Before going live', body: ['Preview your public page, check booking rules, test reservation limits, and confirm your team knows how to review incoming requests.'] },
       ],
-      cta: { title: 'Create your listing', body: 'Open the owner workspace to add or update your venue.', primary: ['List Your Restaurant', 'owner-venue.html'] },
+      cta: { title: 'Create your listing', body: 'Open the owner workspace to add or update your venue.', primary: ['List Your Restaurant', '/owner-venue'] },
     },
     'dining.how': {
       title: 'How Reservations Work',
@@ -290,7 +290,7 @@
         { title: '3. Send the request', body: ['Submit your reservation request with accurate contact information so the venue can respond.'] },
         { title: '4. Receive confirmation', body: ['The restaurant or bar reviews the request and confirms, updates, or cancels it based on availability and policy.'] },
       ],
-      cta: { title: 'Ready to book?', body: 'Explore restaurants and bars accepting reservation requests.', primary: ['Find a Table', 'reservations.html'] },
+      cta: { title: 'Ready to book?', body: 'Explore restaurants and bars accepting reservation requests.', primary: ['Find a Table', '/restaurants'] },
     },
     'dining.support': {
       title: 'Reservation Support',
@@ -303,7 +303,7 @@
         { title: 'Urgent timing', body: ['For same-day reservations, contact the venue directly when possible and send Tiketa Dining the reservation details for platform support.'] },
       ],
       contacts: sharedContacts.dining,
-      cta: { title: 'Review the policy', body: 'Understand how reservation changes and cancellations are handled.', primary: ['Reservation Policy', 'reservation-policy.html'] },
+      cta: { title: 'Review the policy', body: 'Understand how reservation changes and cancellations are handled.', primary: ['Reservation Policy', '/reservation-policy'] },
     },
     'dining.policy': {
       title: 'Reservation Policy',
@@ -316,7 +316,7 @@
         { title: 'Guest responsibilities', body: ['Use accurate contact information, arrive on time, respect venue rules, and contact the venue if your party size or arrival time changes.'] },
         { title: 'Venue responsibilities', body: ['Venues should keep availability accurate, respond to requests promptly, and provide clear cancellation reasons when a booking cannot be honored.'] },
       ],
-      cta: { title: 'Need help with a reservation?', body: 'Contact support with your venue name and reservation details.', primary: ['Reservation Support', 'reservation-support.html'] },
+      cta: { title: 'Need help with a reservation?', body: 'Contact support with your venue name and reservation details.', primary: ['Reservation Support', '/reservation-support'] },
     },
   };
 
@@ -335,7 +335,7 @@
         { title: 'Misioni yne', body: ['Blerja e nje bilete duhet te jete e thjeshte, transparente dhe e besueshme nga kerkimi i pare deri te hyrja ne venue.', 'Tiketa eshte ndertuar per koncerte, sport, festivale, konferenca, teater, workshop-e dhe evente komunitare ku informacioni i sakte ka rendesi.'] },
         { title: 'Si punojme', body: ['Udhetimi i klientit eshte i strukturuar: lista te qarta, pagese e mbrojtur, akses i menjehershem ne bileta dhe kanale mbeshtetjeje.', 'Per organizatoret, Tiketa fokusohet te publikimi, inventari, pjesemarresit, validimi QR dhe komunikimi i qarte me bleresit.'] },
       ],
-      cta: { title: 'Gati per eventin e radhes?', body: 'Shfletoni eventet e ardhshme ose filloni prezencen tuaj si organizator ne Tiketa.', primary: ['Shfleto Eventet', 'events.html'], secondary: ['Bëhu Organizator', 'organizer.html'] },
+      cta: { title: 'Gati per eventin e radhes?', body: 'Shfletoni eventet e ardhshme ose filloni prezencen tuaj si organizator ne Tiketa.', primary: ['Shfleto Eventet', '/events/list'], secondary: ['Bëhu Organizator', '/organizer'] },
     },
     'event.contact': {
       title: 'Na Kontaktoni',
@@ -347,7 +347,7 @@
         { title: 'Mbeshtetje per kliente', body: ['Na kontaktoni per akses ne bileta, pyetje rreth pageses, llogarise, kodeve QR dhe orientim per rimbursime.', 'Per evente brenda 24 oreve, vendosni “dita e eventit” ne subjekt qe kerkesa te trajtohet me shpejt.'] },
         { title: 'Mbeshtetje per organizatore', body: ['Organizatoret mund te na kontaktojne per publikim, konfigurim biletash, menaxhim pjesemarresish, akses skaneri dhe pyetje operacionale.'] },
       ],
-      cta: { title: 'Keni nevoje per ndihme me bileten?', body: 'Hapni mbeshtetjen e biletave per listen e kontrollit qe perdorim per zgjidhje.', primary: ['Mbeshtetje Biletash', 'ticket-support.html'] },
+      cta: { title: 'Keni nevoje per ndihme me bileten?', body: 'Hapni mbeshtetjen e biletave per listen e kontrollit qe perdorim per zgjidhje.', primary: ['Mbeshtetje Biletash', '/ticket-support'] },
     },
     'event.careers': {
       title: 'Karriera te Tiketa',
@@ -377,7 +377,7 @@
       sections: [
         { title: 'Standard editorial', body: ['Permbajtja duhet te ndihmoje klientet dhe organizatoret te marrin vendime me te mira. Shmangim tekstin bosh dhe fokusohemi te informacioni i dobishem.', 'Postimet e zgjedhura do te shfaqen ketu kur Tiketa te publikoje burime dhe perditesime.'] },
       ],
-      cta: { title: 'Po kerkoni ndihme?', body: 'Vizitoni Qendren e Ndihmes per tema mbeshtetjeje dhe kontakte.', primary: ['Qendra e Ndihmes', 'help-center.html'] },
+      cta: { title: 'Po kerkoni ndihme?', body: 'Vizitoni Qendren e Ndihmes per tema mbeshtetjeje dhe kontakte.', primary: ['Qendra e Ndihmes', '/help-center'] },
     },
     'event.help': {
       title: 'Qendra e Ndihmes',
@@ -395,7 +395,7 @@
       sections: [
         { title: 'Para se te kontaktoni mbeshtetjen', body: ['Kontrolloni faqen e eventit per daten, venue, rregullat e hyrjes dhe perditesimet.', 'Hapni dashboard-in dhe konfirmoni sasine e biletave, statusin e porosise dhe disponueshmerine QR.', 'Ruani screenshot-e ose detaje fature nese dicka duket gabim.'] },
       ],
-      cta: { title: 'Ende keni nevoje per ndihme?', body: 'Kontaktoni Tiketa me emrin e eventit, emailin e porosise dhe nje pershkrim te shkurter.', primary: ['Na Kontaktoni', 'contact.html'] },
+      cta: { title: 'Ende keni nevoje per ndihme?', body: 'Kontaktoni Tiketa me emrin e eventit, emailin e porosise dhe nje pershkrim te shkurter.', primary: ['Na Kontaktoni', '/contact'] },
     },
     'event.faq': {
       title: 'Pyetje te Shpeshta',
@@ -410,7 +410,7 @@
         ['A rimbursohen tarifat e sherbimit?', 'Disa tarifa sherbimi, procesimi ose pagese mund te mos rimbursohen pervec rasteve kur kerkohet nga ligji ose politika e eventit.'],
         ['Si publikon nje event organizatori?', 'Krijoni llogari, perfundoni konfigurimin e organizatorit, shtoni detaje dhe bileta, pastaj publikoni sipas lejeve te platformes.'],
       ],
-      cta: { title: 'Keni nevoje per pergjigje me te thelle?', body: 'Dergojini mbeshtetjes emrin e eventit dhe emailin e llogarise.', primary: ['Kontakto Mbeshtetjen', 'contact.html'] },
+      cta: { title: 'Keni nevoje per pergjigje me te thelle?', body: 'Dergojini mbeshtetjes emrin e eventit dhe emailin e llogarise.', primary: ['Kontakto Mbeshtetjen', '/contact'] },
     },
     'event.ticketSupport': {
       title: 'Mbeshtetje per Bileta',
@@ -422,7 +422,7 @@
         { title: 'Zgjidhje te zakonshme', body: ['Rifreskoni dashboard-in pas konfirmimit te pageses.', 'Sigurohuni qe jeni futur me te njejtin email te checkout.', 'Kontrolloni perditesimet e organizatorit per vendin, daten ose rregullat e hyrjes.', 'Mbani kodin QR te dukshem dhe telefonin te karikuar.'] },
       ],
       contacts: sqContacts.event,
-      cta: { title: 'Hapni kerkese mbeshtetjeje', body: 'Perdorni faqen e kontaktit dhe perfshini listen me siper.', primary: ['Na Kontaktoni', 'contact.html'] },
+      cta: { title: 'Hapni kerkese mbeshtetjeje', body: 'Perdorni faqen e kontaktit dhe perfshini listen me siper.', primary: ['Na Kontaktoni', '/contact'] },
     },
     'event.refund': {
       title: 'Politika e Rimbursimit',
@@ -435,7 +435,7 @@
         { title: 'Tarifat dhe afatet', body: ['Tarifat e sherbimit, procesimit, pageses ose dorezimit mund te mos rimbursohen. Rimbursimet e miratuara kthehen zakonisht ne metoden origjinale te pageses.'] },
         { title: 'Mosmarreveshjet', body: ['Hapja e nje dispute bankare mund te ndaloje shqyrtimin standard deri ne zgjidhje. Nje komunikim i vetem ndihmon te shmangen vonesat.'] },
       ],
-      cta: { title: 'Keni pyetje per rimbursim?', body: 'Kontaktoni mbeshtetjen me detajet e porosise dhe statusin e eventit.', primary: ['Kontakto Mbeshtetjen', 'contact.html'] },
+      cta: { title: 'Keni pyetje per rimbursim?', body: 'Kontaktoni mbeshtetjen me detajet e porosise dhe statusin e eventit.', primary: ['Kontakto Mbeshtetjen', '/contact'] },
     },
     'event.organizer': {
       title: 'Bëhu Organizator',
@@ -447,7 +447,7 @@
         { icon: 'bi-tags', title: 'Konfiguroni nivele biletash', body: 'Vendosni emra, cmime, kapacitet, afate shitjeje dhe disponueshmeri.' },
         { icon: 'bi-qr-code', title: 'Menaxhoni hyrjen', body: 'Perdorni bileta QR dhe rrjedha skanimi per check-in me te paster.' },
       ],
-      cta: { title: 'Filloni organizimin ne Tiketa', body: 'Krijoni llogari ose hapni hapesiren e organizatorit.', primary: ['Krijo Event', 'organizer.html'], secondary: ['Lexo Udhezuesin', 'organizer-guide.html'] },
+      cta: { title: 'Filloni organizimin ne Tiketa', body: 'Krijoni llogari ose hapni hapesiren e organizatorit.', primary: ['Krijo Event', '/organizer'], secondary: ['Lexo Udhezuesin', '/organizer-guide'] },
     },
     'event.organizerGuide': {
       title: 'Udhezues per Organizatore',
@@ -460,7 +460,7 @@
         { title: 'Komunikoni ndryshimet', body: ['Nese ndryshon data, vendi, programi, rregullat e hyrjes ose rimbursimi, perditesoni listen dhe njoftoni bleresit sa me heret.'] },
         { title: 'Planifikoni check-in', body: ['Caktoni akses skaneri, testoni validimin QR, pergatitni stafin dhe mbani nje plan rezerve.'] },
       ],
-      cta: { title: 'Gati per publikim?', body: 'Hapni mjetet e organizatorit dhe krijoni eventin tuaj.', primary: ['Krijo Event', 'organizer.html'] },
+      cta: { title: 'Gati per publikim?', body: 'Hapni mjetet e organizatorit dhe krijoni eventin tuaj.', primary: ['Krijo Event', '/organizer'] },
     },
     'event.createEvent': {
       title: 'Krijo Event',
@@ -471,7 +471,7 @@
         { title: 'Cfare ju duhet', body: ['Titulli, pershkrimi, kategoria, data, venue, imazhet, llojet e biletave, kapaciteti, kushtet e rimbursimit dhe kontaktet e organizatorit.'] },
         { title: 'Lista para publikimit', body: ['Konfirmoni detajet publike, shikoni parapamjen, testoni sasite e biletave dhe sigurohuni qe ekipi njeh skanimin.'] },
       ],
-      cta: { title: 'Ndertoni eventin', body: 'Shkoni te mjetet e organizatorit per te krijuar ose menaxhuar evente.', primary: ['Hap Mjetet e Organizatorit', 'organizer.html'] },
+      cta: { title: 'Ndertoni eventin', body: 'Shkoni te mjetet e organizatorit per te krijuar ose menaxhuar evente.', primary: ['Hap Mjetet e Organizatorit', '/organizer'] },
     },
     'event.terms': {
       title: 'Kushtet e Sherbimit',
@@ -522,7 +522,7 @@
       sections: [
         { title: 'Fokus te mikpritja', body: ['Tiketa Dining eshte ndertuar per venue qe vleresojne rezervim te besueshem, informacion te sakte dhe eksperience te kuruar per mysafiret.', 'Platforma mbeshtet restorante, bare, lounge, kafene dhe venue destinacioni qe duan te zbulohen dhe menaxhohen me lehte.'] },
       ],
-      cta: { title: 'Gjeni tavolinen e radhes', body: 'Shfletoni restorantet dhe baret ne Tiketa Dining.', primary: ['Zbulo Restorante', 'reservations.html'], secondary: ['Bëhu Partner', 'become-restaurant-partner.html'] },
+      cta: { title: 'Gjeni tavolinen e radhes', body: 'Shfletoni restorantet dhe baret ne Tiketa Dining.', primary: ['Zbulo Restorante', '/restaurants'], secondary: ['Bëhu Partner', '/become-restaurant-partner'] },
     },
     'dining.contact': {
       title: 'Kontakto Tiketa Dining',
@@ -534,7 +534,7 @@
         { title: 'Per mysafiret', body: ['Na kontaktoni per pyetje rezervimi, probleme konfirmimi, udhezim anulimi, akses llogarie ose komunikim me venue.'] },
         { title: 'Per pronaret', body: ['Mbeshtetja e partnereve ndihmon me konfigurim venue, cilesi profili, disponueshmeri, rrjedha rezervimi dhe dashboard.'] },
       ],
-      cta: { title: 'Keni nevoje per ndihme me rezervim?', body: 'Hapni mbeshtetjen e rezervimeve per detajet qe duhen perfshire.', primary: ['Mbeshtetje Rezervimesh', 'reservation-support.html'] },
+      cta: { title: 'Keni nevoje per ndihme me rezervim?', body: 'Hapni mbeshtetjen e rezervimeve per detajet qe duhen perfshire.', primary: ['Mbeshtetje Rezervimesh', '/reservation-support'] },
     },
     'dining.partner': {
       title: 'Bëhu Partner Restoranti',
@@ -546,7 +546,7 @@
         { icon: 'bi-calendar2-week', title: 'Kontrolle disponueshmerie', body: 'Menaxhoni oraret, horizontin e rezervimit, limitet e mysafireve, intervalet, blackout dhe oraret speciale.' },
         { icon: 'bi-clipboard2-check', title: 'Menaxhim rezervimesh', body: 'Rishikoni kerkesa, konfirmoni rezervime, trajtoni anulime dhe monitoroni ardhjet.' },
       ],
-      cta: { title: 'Listoni venue-n', body: 'Krijoni ose menaxhoni profilin nga hapesira e pronarit.', primary: ['Listo Restorantin', 'owner-venue.html'], secondary: ['Lexo Udhezuesin', 'restaurant-owner-guide.html'] },
+      cta: { title: 'Listoni venue-n', body: 'Krijoni ose menaxhoni profilin nga hapesira e pronarit.', primary: ['Listo Restorantin', '/owner-venue'], secondary: ['Lexo Udhezuesin', '/restaurant-owner-guide'] },
     },
     'dining.ownerGuide': {
       title: 'Udhezues per Pronaret e Restoranteve',
@@ -559,7 +559,7 @@
         { title: 'Menaxhoni kerkesat', body: ['Rishikoni shpejt rezervimet ne pritje, konfirmoni ato te pranuara dhe shtoni arsye anulimi kur nuk mund t’i prisni.'] },
         { title: 'Mbani komunikim te qarte', body: ['Perdorini shenimet dhe kontaktet me pergjegjesi. Perditesoni detajet kur politikat, oraret ose disponueshmeria ndryshojne.'] },
       ],
-      cta: { title: 'Hap mjetet e pronarit', body: 'Menaxhoni profilin dhe rezervimet e restorantit ose barit.', primary: ['Hapesira e Pronarit', 'owner-venue.html'] },
+      cta: { title: 'Hap mjetet e pronarit', body: 'Menaxhoni profilin dhe rezervimet e restorantit ose barit.', primary: ['Hapesira e Pronarit', '/owner-venue'] },
     },
     'dining.list': {
       title: 'Listo Restorantin',
@@ -570,7 +570,7 @@
         { title: 'Kerkesat e listes', body: ['Pergatitni emrin, tipin, pershkrimin, kontaktet, adresen, fotot, llojet e kuzhines, facilitetet, opsionet e pageses dhe oraret.'] },
         { title: 'Para publikimit', body: ['Shikoni faqen publike, kontrolloni rregullat e rezervimit, testoni limitet dhe sigurohuni qe ekipi di si te rishikoje kerkesat.'] },
       ],
-      cta: { title: 'Krijoni listen', body: 'Hapni hapesiren e pronarit per te shtuar ose perditesuar venue-n.', primary: ['Listo Restorantin', 'owner-venue.html'] },
+      cta: { title: 'Krijoni listen', body: 'Hapni hapesiren e pronarit per te shtuar ose perditesuar venue-n.', primary: ['Listo Restorantin', '/owner-venue'] },
     },
     'dining.how': {
       title: 'Si Funksionojne Rezervimet',
@@ -583,7 +583,7 @@
         { title: '3. Dergoni kerkesen', body: ['Dergo kerkesen me kontakte te sakta qe venue te mund te pergjigjet.'] },
         { title: '4. Merrni konfirmim', body: ['Restoranti ose bari e rishikon kerkesen dhe e konfirmon, perditeson ose anulon sipas disponueshmerise dhe politikes.'] },
       ],
-      cta: { title: 'Gati per rezervim?', body: 'Eksploroni restorante dhe bare qe pranojne kerkesa rezervimi.', primary: ['Gjej Tavoline', 'reservations.html'] },
+      cta: { title: 'Gati per rezervim?', body: 'Eksploroni restorante dhe bare qe pranojne kerkesa rezervimi.', primary: ['Gjej Tavoline', '/restaurants'] },
     },
     'dining.support': {
       title: 'Mbeshtetje per Rezervime',
@@ -596,7 +596,7 @@
         { title: 'Kohe urgjente', body: ['Per rezervime te se njejtes dite, kontaktoni venue-n direkt kur eshte e mundur dhe dergoni Tiketa Dining detajet.'] },
       ],
       contacts: sqContacts.dining,
-      cta: { title: 'Rishikoni politiken', body: 'Kuptoni si trajtohen ndryshimet dhe anulimet.', primary: ['Politika e Rezervimeve', 'reservation-policy.html'] },
+      cta: { title: 'Rishikoni politiken', body: 'Kuptoni si trajtohen ndryshimet dhe anulimet.', primary: ['Politika e Rezervimeve', '/reservation-policy'] },
     },
     'dining.policy': {
       title: 'Politika e Rezervimeve',
@@ -609,7 +609,7 @@
         { title: 'Pergjegjesite e mysafirit', body: ['Perdorni kontakte te sakta, ejani ne kohe, respektoni rregullat dhe kontaktoni venue-n nese ndryshon numri i personave ose ora.'] },
         { title: 'Pergjegjesite e venue', body: ['Venue-t duhet te mbajne disponueshmerine te sakte, te pergjigjen shpejt dhe te japin arsye te qarta anulimi kur nuk mund te presin rezervimin.'] },
       ],
-      cta: { title: 'Keni nevoje per ndihme?', body: 'Kontaktoni mbeshtetjen me emrin e venue dhe detajet e rezervimit.', primary: ['Mbeshtetje Rezervimesh', 'reservation-support.html'] },
+      cta: { title: 'Keni nevoje per ndihme?', body: 'Kontaktoni mbeshtetjen me emrin e venue dhe detajet e rezervimit.', primary: ['Mbeshtetje Rezervimesh', '/reservation-support'] },
     },
   };
 

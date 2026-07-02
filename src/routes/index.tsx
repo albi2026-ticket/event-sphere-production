@@ -11,15 +11,16 @@ export const Route = createFileRoute("/")({
 });
 
 const pages = [
-  { href: "/site/index.html", title: "Home", desc: "Hero, search, categories, trending, festivals, cities, testimonials" },
-  { href: "/site/events.html", title: "Events", desc: "Filters, sorting, grid/list, pagination, autocomplete" },
-  { href: "/site/event-details.html", title: "Event Details", desc: "Banner, seat map, countdown, sticky checkout, reviews" },
-  { href: "/site/checkout.html", title: "Checkout", desc: "Multi-step UI, Apple/Google Pay, promo code, success modal" },
-  { href: "/site/login.html", title: "Sign in", desc: "Split auth layout, social login" },
-  { href: "/site/register.html", title: "Register", desc: "Split auth layout, password rules" },
-  { href: "/site/dashboard.html", title: "User Dashboard", desc: "QR tickets, favorites, notifications, settings" },
-  { href: "/site/organizer.html", title: "Organizer", desc: "Create event, inventory, charts, attendees, QR scan" },
-  { href: "/site/admin.html", title: "Admin Panel", desc: "Users, refunds, fraud detection, sales charts" },
+  { href: "/", title: "Landing", desc: "Experience chooser for event tickets and table reservations" },
+  { href: "/events", title: "Events Home", desc: "Hero, search, categories, trending, festivals, cities, testimonials" },
+  { href: "/events/list", title: "Events Listing", desc: "Filters, sorting, grid/list, pagination, autocomplete" },
+  { href: "/event", title: "Event Details", desc: "Banner, seat map, countdown, sticky checkout, reviews" },
+  { href: "/checkout", title: "Checkout", desc: "Multi-step UI, Apple/Google Pay, promo code, success modal" },
+  { href: "/login", title: "Sign in", desc: "Split auth layout, social login" },
+  { href: "/register", title: "Register", desc: "Split auth layout, password rules" },
+  { href: "/dashboard", title: "User Dashboard", desc: "QR tickets, favorites, notifications, settings" },
+  { href: "/organizer", title: "Organizer", desc: "Create event, inventory, charts, attendees, QR scan" },
+  { href: "/admin", title: "Admin Panel", desc: "Users, refunds, fraud detection, sales charts" },
 ];
 
 function Index() {
@@ -64,9 +65,9 @@ function Index() {
 │  ├─ header.html         Reusable nav (Laravel @include-ready)
 │  └─ footer.html         Reusable footer
 └─ site/
-   ├─ index.html · events.html · event-details.html
-   ├─ checkout.html · login.html · register.html
-   └─ dashboard.html · organizer.html · admin.html`}</pre>
+   ├─ / · /events · /events/list · /event
+   ├─ /checkout · /login · /register
+   └─ /dashboard · /organizer · /admin`}</pre>
         </div>
       </div>
     </div>
