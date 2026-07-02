@@ -80,28 +80,28 @@
       <div>
         <h6 data-i18n="footer.company">Company</h6>
         <a href="about.html" data-i18n="footer.about">About Tiketa</a>
-        <a href="help-center.html#contact" data-i18n="footer.contact">Contact Us</a>
+        <a href="contact.html" data-i18n="footer.contact">Contact Us</a>
         <a href="careers.html" data-i18n="footer.careers">Careers</a>
-        <span data-i18n="footer.blog">Blog</span>
+        <a href="blog.html" data-i18n="footer.blog">Blog</a>
       </div>
       <div>
         <h6 data-i18n="footer.support">Support</h6>
         <a href="help-center.html" data-i18n="footer.help_center">Help Center</a>
         <a href="faqs.html" data-i18n="footer.faqs">FAQs</a>
-        <a href="help-center.html#ticket-support" data-i18n="footer.ticket_support">Ticket Support</a>
+        <a href="ticket-support.html" data-i18n="footer.ticket_support">Ticket Support</a>
         <a href="refund-policy.html" data-i18n="footer.refund_policy">Refund Policy</a>
       </div>
       <div>
         <h6 data-i18n="footer.organizers">Organizers</h6>
-        <a href="organizer.html" data-i18n="footer.become_organizer">Become an Organizer</a>
+        <a href="become-organizer.html" data-i18n="footer.become_organizer">Become an Organizer</a>
         <a href="organizer-guide.html" data-i18n="footer.organizer_guide">Organizer Guide</a>
-        <a href="organizer.html" data-i18n="footer.create_event">Create Event</a>
+        <a href="create-event.html" data-i18n="footer.create_event">Create Event</a>
       </div>
       <div>
         <h6 data-i18n="footer.legal">Legal</h6>
         <a href="terms-of-service.html" data-i18n="footer.terms">Terms of Service</a>
         <a href="privacy-policy.html" data-i18n="footer.privacy">Privacy Policy</a>
-        <a href="privacy-policy.html#cookies" data-i18n="footer.cookies">Cookie Policy</a>
+        <a href="cookie-policy.html" data-i18n="footer.cookies">Cookie Policy</a>
       </div>
     </div>
 
