@@ -58,6 +58,10 @@
     return u().escapeHtml(value ?? '');
   }
 
+  function tr(key, fallback) {
+    return window.t?.(key) || fallback || key;
+  }
+
   function qs(params) {
     const clean = {};
     Object.entries(params).forEach(([key, value]) => {
@@ -299,12 +303,12 @@
     const cards = state.summary?.cards || {};
     const liveNow = state.events.filter((event) => organizerEventState(event).key === 'live').length;
     kpiRow.innerHTML = `
-      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">Total Events</div><div class="value">${cards.events_count ?? 0}</div><div class="delta">${cards.past_events_count ?? 0} past</div></div></div>
-      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">Active Events</div><div class="value">${cards.published_events_count ?? 0}</div><div class="delta">${cards.sold_out_ticket_types_count ?? 0} sold-out tiers</div></div></div>
-      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">Tickets Sold</div><div class="value">${cards.tickets_sold ?? 0}</div><div class="delta">${cards.active_tickets_count ?? 0} valid tickets</div></div></div>
-      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">Revenue</div><div class="value">${u().formatMoney(cards.total_revenue || 0, 'USD')}</div><div class="delta">${cards.paid_orders_count ?? 0} paid orders</div></div></div>
-      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">Upcoming Events</div><div class="value">${cards.upcoming_events_count ?? 0}</div><div class="delta">${cards.attendees_count ?? 0} attendees</div></div></div>
-      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">Events Live Now</div><div class="value">${liveNow}</div><div class="delta">${cards.checked_in_count ?? 0} checked in</div></div></div>`;
+      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">${esc(tr('events.total_events', 'Total Events'))}</div><div class="value">${cards.events_count ?? 0}</div><div class="delta">${cards.past_events_count ?? 0} past</div></div></div>
+      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">${esc(tr('roles.active', 'Active'))} ${esc(tr('admin.events', 'Events'))}</div><div class="value">${cards.published_events_count ?? 0}</div><div class="delta">${cards.sold_out_ticket_types_count ?? 0} sold-out tiers</div></div></div>
+      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">${esc(tr('events.tickets_sold', 'Tickets Sold'))}</div><div class="value">${cards.tickets_sold ?? 0}</div><div class="delta">${cards.active_tickets_count ?? 0} valid tickets</div></div></div>
+      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">${esc(tr('admin.revenue', 'Revenue'))}</div><div class="value">${u().formatMoney(cards.total_revenue || 0, 'USD')}</div><div class="delta">${cards.paid_orders_count ?? 0} paid orders</div></div></div>
+      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">${esc(tr('organizer.upcoming_events', 'Upcoming Events'))}</div><div class="value">${cards.upcoming_events_count ?? 0}</div><div class="delta">${cards.attendees_count ?? 0} ${esc(tr('events.attendees', 'attendees'))}</div></div></div>
+      <div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">${esc(tr('events.live', 'Live'))}</div><div class="value">${liveNow}</div><div class="delta">${cards.checked_in_count ?? 0} ${esc(tr('events.checked_in', 'checked in'))}</div></div></div>`;
 
     const subtitle = $('[data-organizer-subtitle]');
     if (subtitle) subtitle.textContent = `${cards.upcoming_events_count ?? 0} upcoming events · ${cards.sold_out_ticket_types_count ?? 0} sold-out ticket tiers`;
@@ -419,10 +423,10 @@
     const total = Number(state.revenue?.total_revenue || 0);
     const today = state.salesDayTrends.find((item) => String(item.period).slice(0, 10) === todayKey);
     row.innerHTML = `
-      <div class="col-md-3"><div class="kpi"><div class="label">Total Revenue</div><div class="value">${u().formatMoney(total, 'USD')}</div><div class="delta">${rows(state.revenue?.by_event).length} events selling</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">This Month</div><div class="value">${u().formatMoney(revenueFor((date) => date >= startOfMonth), 'USD')}</div><div class="delta">Month to date</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">This Week</div><div class="value">${u().formatMoney(revenueFor((date) => date >= startOfWeek), 'USD')}</div><div class="delta">Week to date</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Today</div><div class="value">${u().formatMoney(today?.revenue || 0, 'USD')}</div><div class="delta">${today?.orders_count || 0} orders</div></div></div>`;
+      <div class="col-md-3"><div class="kpi"><div class="label">${esc(tr('admin.revenue', 'Revenue'))}</div><div class="value">${u().formatMoney(total, 'USD')}</div><div class="delta">${rows(state.revenue?.by_event).length} events selling</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">${esc(tr('events.this_month', 'This Month'))}</div><div class="value">${u().formatMoney(revenueFor((date) => date >= startOfMonth), 'USD')}</div><div class="delta">Month to date</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">${esc(tr('events.this_week', 'This Week'))}</div><div class="value">${u().formatMoney(revenueFor((date) => date >= startOfWeek), 'USD')}</div><div class="delta">Week to date</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">${esc(tr('events.today', 'Today'))}</div><div class="value">${u().formatMoney(today?.revenue || 0, 'USD')}</div><div class="delta">${today?.orders_count || 0} ${esc(tr('admin.orders', 'orders'))}</div></div></div>`;
   }
 
   function performanceFor(eventId) {
@@ -448,9 +452,9 @@
       const hasSoldTickets = Number(inventory.sold || 0) > 0;
       const statusAction = event.status === 'published'
         ? (hasSoldTickets
-            ? `<button class="btn btn-glass btn-sm" type="button" data-event-cancel="${event.id}">Cancel Event</button>`
+            ? `<button class="btn btn-glass btn-sm" type="button" data-event-cancel="${event.id}">${esc(tr('events.cancel_event', 'Cancel Event'))}</button>`
             : `<button class="btn btn-glass btn-sm" type="button" data-event-unpublish="${event.id}">Unpublish</button>`)
-        : `<button class="btn btn-glass btn-sm" type="button" data-event-publish="${event.id}">Publish</button>`;
+        : `<button class="btn btn-glass btn-sm" type="button" data-event-publish="${event.id}">${esc(tr('events.publish', 'Publish'))}</button>`;
       return `<tr>
         <td data-label="Event"><div class="fw-semibold">${esc(event.title)}</div><small class="text-muted-pro">${esc(event.city || '')}${event.venue_name ? ` · ${esc(event.venue_name)}` : ''}</small></td>
         <td data-label="Status">${statusBadge(displayState.key, displayState.label)}</td>
@@ -461,7 +465,7 @@
         <td data-label="Available">${inventory.available} remaining</td>
         <td data-label="Actions" class="text-end">
           <div class="dashboard-actions">
-            <button class="btn btn-glass btn-sm" type="button" data-event-edit="${event.id}"><i class="bi bi-pencil me-1"></i>Edit</button>
+            <button class="btn btn-glass btn-sm" type="button" data-event-edit="${event.id}"><i class="bi bi-pencil me-1"></i>${esc(tr('buttons.edit', 'Edit'))}</button>
             ${statusAction}
             <button class="btn btn-glass btn-sm" type="button" data-event-analytics="${event.id}"><i class="bi bi-graph-up"></i></button>
           </div>
@@ -720,6 +724,8 @@
     renderSettings();
   }
 
+  document.addEventListener('tiketa:language-changed', renderAll);
+
   async function refreshAll() {
     renderAll();
     await loadSection(state.currentSection || 'overview', true);
@@ -962,7 +968,7 @@
   async function lookupTickets(search) {
     const wrap = $('[data-checkin-lookup-results]');
     if (!wrap) return;
-    wrap.innerHTML = `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Looking up tickets...</span></div>`;
+    wrap.innerHTML = `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>${esc(tr('loading.looking_up_tickets', 'Looking up tickets...'))}</span></div>`;
     const query = qs({ q: search, event_id: selectedCheckInEventId() });
     const res = await api().fetch(`/organizer/tickets/lookup${query ? `?${query}` : ''}`);
     const tickets = rows(res.data);
@@ -974,7 +980,7 @@
         </div>
         ${statusBadge(ticket.status)}
       </button>
-    `).join('') || emptyBlock('bi-search', 'No tickets found', 'Try a ticket code, attendee name, email, or order number.');
+    `).join('') || emptyBlock('bi-search', tr('empty.no_tickets_found', 'No tickets found.'), 'Try a ticket code, attendee name, email, or order number.');
   }
 
   async function startScanner() {

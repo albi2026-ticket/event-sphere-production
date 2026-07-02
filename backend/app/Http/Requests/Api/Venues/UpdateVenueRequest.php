@@ -23,7 +23,7 @@ class UpdateVenueRequest extends FormRequest
         }
 
         if (! $user->hasVerifiedEmail()) {
-            throw new AuthorizationException('Please verify your email address before managing restaurant or bar reservations.');
+            throw new AuthorizationException(__('validation.custom.verify_email_venue'));
         }
 
         return true;

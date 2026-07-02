@@ -57,7 +57,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => 'Your account has been suspended. Please contact support.',
+                'email' => __('validation.custom.account_suspended'),
             ]);
         }
 

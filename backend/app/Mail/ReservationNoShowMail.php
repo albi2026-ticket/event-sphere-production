@@ -18,7 +18,7 @@ class ReservationNoShowMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Reservation Marked As No Show',
+            subject: __('emails.reservation_no_show'),
         );
     }
 

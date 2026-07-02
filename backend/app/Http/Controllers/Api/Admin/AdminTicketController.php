@@ -43,11 +43,11 @@ class AdminTicketController extends Controller
         try {
             $ticket = $this->tickets->findByScannerPayload($request->input('token'), $request->input('ticket_code'), $request->input('ticket_uuid'));
         } catch (ValidationException) {
-            $this->logInvalidScan($request, 'Ticket could not be found.');
+            $this->logInvalidScan($request, __('validation.custom.ticket_not_found'));
 
             return response()->json([
                 'data' => [
-                    'validation' => $this->invalidValidation('Ticket could not be found.'),
+                    'validation' => $this->invalidValidation(__('validation.custom.ticket_not_found')),
                     'ticket' => null,
                 ],
             ]);
@@ -73,12 +73,12 @@ class AdminTicketController extends Controller
         try {
             $ticket = $this->tickets->findByScannerPayload($request->input('token'), $request->input('ticket_code'), $request->input('ticket_uuid'));
         } catch (ValidationException) {
-            $this->logInvalidScan($request, 'Ticket could not be found.');
+            $this->logInvalidScan($request, __('validation.custom.ticket_not_found'));
 
             return response()->json([
-                'message' => 'Invalid ticket.',
+                'message' => __('validation.custom.invalid_ticket'),
                 'data' => [
-                    'validation' => $this->invalidValidation('Ticket could not be found.'),
+                    'validation' => $this->invalidValidation(__('validation.custom.ticket_not_found')),
                     'ticket' => null,
                 ],
             ], 422);
@@ -192,7 +192,7 @@ class AdminTicketController extends Controller
 
     protected function ensureEventMatchesRequest(Request $request, Ticket $ticket): void
     {
-        abort_if($request->filled('event_id') && (int) $request->input('event_id') !== $ticket->event_id, 422, 'Ticket does not belong to the selected event.');
+        abort_if($request->filled('event_id') && (int) $request->input('event_id') !== $ticket->event_id, 422, __('validation.custom.ticket_selected_event_mismatch'));
     }
 
     /**
@@ -227,7 +227,7 @@ class AdminTicketController extends Controller
     {
         return [
             'result' => TicketValidationLog::RESULT_INVALID,
-            'title' => 'INVALID TICKET',
+            'title' => __('validation.custom.invalid_ticket'),
             'is_valid' => false,
             'can_check_in' => false,
             'reason' => $message,

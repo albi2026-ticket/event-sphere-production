@@ -55,6 +55,7 @@ class OrderEmailService
 
         try {
             Mail::to($order->billing_email, $this->purchaserName($order))
+                ->locale($order->user?->preferred_language ?: 'en')
                 ->send(new OrderConfirmationMail($order, $this->emailData($order)));
             $this->sendOrganizerTicketSaleEmails($order);
         } catch (Throwable $exception) {
@@ -93,6 +94,7 @@ class OrderEmailService
 
                 try {
                     Mail::to($event->organizer->email, $event->organizer->name)
+                        ->locale($event->organizer->preferred_language ?: 'en')
                         ->send(new OrganizerTicketSaleMail($event, $order, $this->organizerSaleEmailData($order, $event, $items)));
                 } catch (Throwable $exception) {
                     Log::warning('Organizer ticket sale email failed.', [

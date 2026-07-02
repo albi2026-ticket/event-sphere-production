@@ -12,16 +12,16 @@
 <body>
 <div class="dash-shell">
   <aside class="dash-side">
-    <a class="brand mb-4" href="welcome.html"><span class="brand-logo"><i class="bi bi-qr-code-scan"></i></span>Check-In</a>
+    <a class="brand mb-4" href="welcome.html"><span class="brand-logo"><i class="bi bi-qr-code-scan"></i></span><span data-i18n="organizer.check_in_alerts">Check-In</span></a>
     <nav class="menu">
-      <a class="active" href="#scanner"><i class="bi bi-qr-code-scan"></i> QR Scanner</a>
-      <a href="#manual"><i class="bi bi-search"></i> Manual Lookup</a>
-      <a href="#history"><i class="bi bi-clock-history"></i> Scan History</a>
+      <a class="active" href="#scanner"><i class="bi bi-qr-code-scan"></i> <span data-i18n="scanner.qr_scanner">QR Scanner</span></a>
+      <a href="#manual"><i class="bi bi-search"></i> <span data-i18n="scanner.manual_lookup">Manual Lookup</span></a>
+      <a href="#history"><i class="bi bi-clock-history"></i> <span data-i18n="scanner.scan_history">Scan History</span></a>
       <hr class="divider"/>
-      <a href="scanner-dashboard.html" data-scanner-back hidden><i class="bi bi-arrow-left"></i> Scanner dashboard</a>
-      <a href="organizer.html" data-organizer-back><i class="bi bi-arrow-left"></i> Organizer dashboard</a>
-      <a href="admin.html" data-admin-back hidden><i class="bi bi-arrow-left"></i> Admin dashboard</a>
-      <a href="#" data-logout><i class="bi bi-box-arrow-right"></i> Sign out</a>
+      <a href="scanner-dashboard.html" data-scanner-back hidden><i class="bi bi-arrow-left"></i> <span data-i18n="scanner.dashboard">Scanner dashboard</span></a>
+      <a href="organizer.html" data-organizer-back><i class="bi bi-arrow-left"></i> <span data-i18n="organizer.dashboard">Organizer dashboard</span></a>
+      <a href="admin.html" data-admin-back hidden><i class="bi bi-arrow-left"></i> <span data-i18n="admin.dashboard">Admin dashboard</span></a>
+      <a href="#" data-logout><i class="bi bi-box-arrow-right"></i> <span data-i18n="header.sign_out">Sign out</span></a>
     </nav>
   </aside>
 
@@ -29,8 +29,8 @@
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
       <div>
         <button class="btn btn-glass d-lg-none" data-toggle-side><i class="bi bi-list"></i></button>
-        <h1 class="d-inline-block mb-0" style="font-size:1.8rem">QR Ticket Check-In</h1>
-        <p class="mb-0 text-muted-pro">Scan QR tickets, validate server-side, and check attendees in.</p>
+        <h1 class="d-inline-block mb-0" style="font-size:1.8rem" data-i18n="scanner.scan_ticket">QR Ticket Check-In</h1>
+        <p class="mb-0 text-muted-pro" data-i18n="organizer.check_in_copy">Scan QR tickets, validate server-side, and check attendees in.</p>
       </div>
       <div class="d-flex gap-2 flex-wrap">
         <button class="icon-btn" data-theme-toggle title="Toggle theme"><i class="bi bi-sun" data-theme-icon></i></button>
@@ -39,28 +39,28 @@
     </div>
 
     <div class="row g-3 mb-4" data-scanner-stats>
-      <div class="col-md-4"><div class="kpi"><div class="label">Tickets Sold</div><div class="value">0</div></div></div>
-      <div class="col-md-4"><div class="kpi"><div class="label">Checked In</div><div class="value">0</div></div></div>
-      <div class="col-md-4"><div class="kpi"><div class="label">Remaining</div><div class="value">0</div></div></div>
+      <div class="col-md-4"><div class="kpi"><div class="label" data-i18n="events.tickets_sold">Tickets Sold</div><div class="value">0</div></div></div>
+      <div class="col-md-4"><div class="kpi"><div class="label" data-i18n="events.checked_in">Checked In</div><div class="value">0</div></div></div>
+      <div class="col-md-4"><div class="kpi"><div class="label" data-i18n="events.remaining">Remaining</div><div class="value">0</div></div></div>
     </div>
 
     <div class="row g-3">
       <div class="col-lg-5">
         <div class="card-pro p-3">
-          <h4 class="mb-3">Camera Scanner</h4>
+          <h4 class="mb-3" data-i18n="scanner.camera_scanner">Camera Scanner</h4>
           <div class="qr-scanner-panel">
             <video data-scanner-video playsinline muted></video>
-            <div class="qr-scanner-empty" data-scanner-empty><i class="bi bi-camera-video"></i><span>Start the camera or use manual lookup.</span></div>
+            <div class="qr-scanner-empty" data-scanner-empty><i class="bi bi-camera-video"></i><span data-i18n="scanner.start_camera_or_manual">Start the camera or use manual lookup.</span></div>
           </div>
           <div class="d-flex gap-2 mt-3 flex-wrap">
-            <button class="btn btn-primary-grad" type="button" data-scanner-start><i class="bi bi-camera-video me-1"></i>Start Scanner</button>
-            <button class="btn btn-glass" type="button" data-scanner-stop><i class="bi bi-stop-circle me-1"></i>Stop</button>
+            <button class="btn btn-primary-grad" type="button" data-scanner-start><i class="bi bi-camera-video me-1"></i><span data-i18n="scanner.start_scan">Start Scanner</span></button>
+            <button class="btn btn-glass" type="button" data-scanner-stop><i class="bi bi-stop-circle me-1"></i><span data-i18n="scanner.stop_scan">Stop</span></button>
           </div>
           <form id="manual" class="mt-4" data-scanner-manual-form>
-            <label class="form-label">Manual ticket or attendee lookup</label>
+            <label class="form-label" data-i18n="scanner.manual_lookup_label">Manual ticket or attendee lookup</label>
             <div class="d-flex gap-2">
-              <input class="form-control" name="q" placeholder="Ticket code, attendee, email, or order number"/>
-              <button class="btn btn-glass" type="submit">Lookup</button>
+              <input class="form-control" name="q" data-i18n-attr="placeholder:scanner.search_ticket" placeholder="Ticket code, attendee, email, or order number"/>
+              <button class="btn btn-glass" type="submit" data-i18n="scanner.lookup">Lookup</button>
             </div>
           </form>
           <div class="dashboard-stack mt-3" data-scanner-lookup-results></div>
@@ -69,16 +69,16 @@
 
       <div class="col-lg-7">
         <div class="card-pro p-3">
-          <h4 class="mb-3">Validation Result</h4>
+          <h4 class="mb-3" data-i18n="scanner.validation_result">Validation Result</h4>
           <div data-scanner-result class="checkin-result is-empty">
             <i class="bi bi-qr-code-scan"></i>
-            <div><h5>Ready to scan</h5><p>Validation happens on the server. A ticket cannot be checked in twice.</p></div>
+            <div><h5 data-i18n="scanner.ready_to_scan">Ready to scan</h5><p data-i18n="scanner.validation_copy">Validation happens on the server. A ticket cannot be checked in twice.</p></div>
           </div>
-          <h6 id="history" class="mt-4">Recent scan history</h6>
+          <h6 id="history" class="mt-4" data-i18n="scanner.recent_scan_history">Recent scan history</h6>
           <div class="table-responsive">
             <table class="table table-borderless align-middle mb-0 dashboard-table">
-              <thead><tr><th>Result</th><th>Attendee</th><th>Ticket</th><th>Time</th></tr></thead>
-              <tbody data-scanner-logs><tr><td colspan="4" class="text-muted-pro">Loading scan history...</td></tr></tbody>
+              <thead><tr><th data-i18n="admin.result">Result</th><th data-i18n="scanner.attendee">Attendee</th><th data-i18n="scanner.ticket">Ticket</th><th data-i18n="admin.time">Time</th></tr></thead>
+              <tbody data-scanner-logs><tr><td colspan="4" class="text-muted-pro" data-i18n="loading.loading">Loading scan history...</td></tr></tbody>
             </table>
           </div>
         </div>

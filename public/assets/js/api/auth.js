@@ -40,6 +40,18 @@
     return data;
   }
 
+  async function syncLanguage(language = window.TiketaLanguage?.getLanguage?.()) {
+    if (!getToken() || !['en', 'sq'].includes(language)) return null;
+    const { data } = await api().fetch('/user/language', {
+      method: 'PATCH',
+      body: { preferred_language: language },
+      skipAuthRedirect: true,
+    });
+    sessionStorage.setItem(cfg().USER_KEY, JSON.stringify(data));
+    document.dispatchEvent(new CustomEvent('event-sphere:auth-changed', { detail: { user: data } }));
+    return data;
+  }
+
   async function login(email, password, deviceName) {
     const { raw } = await api().fetch('/login', {
       method: 'POST',
@@ -47,13 +59,14 @@
       skipAuthRedirect: true,
     });
     setSession(raw.token, raw.user);
+    await syncLanguage().catch(() => {});
     return raw.user;
   }
 
   async function register(payload) {
     const { raw } = await api().fetch('/register', {
       method: 'POST',
-      body: payload,
+      body: { ...payload, preferred_language: window.TiketaLanguage?.getLanguage?.() || 'en' },
       skipAuthRedirect: true,
     });
     setSession(raw.token, raw.user);
@@ -274,6 +287,9 @@
 
   document.addEventListener('DOMContentLoaded', syncAuthNav);
   document.addEventListener('event-sphere:partials-loaded', syncAuthNav);
+  document.addEventListener('tiketa:language-changed', (event) => {
+    syncLanguage(event.detail?.language).catch(() => {});
+  });
 
   window.EventSphereAuth = {
     getToken,
@@ -281,6 +297,7 @@
     setSession,
     clearSession,
     refreshUser,
+    syncLanguage,
     login,
     register,
     resendVerificationEmail,

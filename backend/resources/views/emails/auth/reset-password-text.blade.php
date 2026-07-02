@@ -1,14 +1,14 @@
 Tiketa
 
-Hello {{ $user->name ?: 'there' }},
+{{ __('emails.hello', ['name' => $user->name ?: __('emails.there')]) }}
 
-We received a request to reset your Tiketa password.
+{{ __('emails.reset_password_text_copy') }}
 
-Reset Password:
+{{ __('emails.reset_password_button') }}:
 {{ $resetUrl }}
 
-This password reset link expires in {{ $expirationMinutes }} minutes and can only be used once.
+{{ __('emails.reset_password_expiry', ['minutes' => $expirationMinutes]) }}
 
-If you did not request a password reset, you can safely ignore this email.
+{{ __('emails.reset_password_ignore') }}
 
-Tiketa Team
+{{ __('emails.tiketa_team') }}

@@ -56,6 +56,7 @@ class EventCancellationNotificationService
         foreach ($orders as $order) {
             try {
                 Mail::to($order->billing_email, $this->purchaserName($order))
+                    ->locale($order->user?->preferred_language ?: 'en')
                     ->send(new EventCancelledUserMail($event, $order, $this->eventData($event)));
                 $userNotifications++;
             } catch (Throwable $exception) {
@@ -68,7 +69,9 @@ class EventCancellationNotificationService
         $adminData = $this->adminData($event, $ticketsSold, $revenue, $cancelledAt);
         foreach ($this->admins() as $admin) {
             try {
-                Mail::to($admin->email, $admin->name)->send(new EventCancelledAdminMail($event, $adminData));
+                Mail::to($admin->email, $admin->name)
+                    ->locale($admin->preferred_language ?: 'en')
+                    ->send(new EventCancelledAdminMail($event, $adminData));
                 $adminNotifications++;
             } catch (Throwable $exception) {
                 $this->logFailure('Event cancellation admin email failed.', $event, $exception, ['admin_id' => $admin->id]);
@@ -79,6 +82,7 @@ class EventCancellationNotificationService
         if ($event->organizer?->email) {
             try {
                 Mail::to($event->organizer->email, $event->organizer->name)
+                    ->locale($event->organizer->preferred_language ?: 'en')
                     ->send(new EventCancelledOrganizerMail($event, [
                         'ticket_holders_notified' => $userNotifications,
                         'cancelled_at' => $this->dateTimeLabel($cancelledAt),

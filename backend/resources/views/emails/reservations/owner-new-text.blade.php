@@ -1,17 +1,17 @@
-New Reservation Request
+{{ __('emails.owner_new_reservation') }}
 
-A new reservation request has been created for {{ $reservation->venue->name }}.
+{{ __('emails.owner_new_copy', ['venue' => $reservation->venue->name]) }}
 
-Guest: {{ $reservation->guest_name }}
-Date: {{ $reservation->reservation_date->format('M j, Y') }}
-Time: {{ $reservation->reservation_time }}
-Party size: {{ $reservation->party_size }}
+{{ __('emails.guest') }}: {{ $reservation->guest_name }}
+{{ __('emails.date') }}: {{ $reservation->reservation_date->format('M j, Y') }}
+{{ __('emails.time') }}: {{ $reservation->reservation_time }}
+{{ __('emails.party_size') }}: {{ $reservation->party_size }}
 @if ($reservation->phone)
-Phone: {{ $reservation->phone }}
+{{ __('emails.phone') }}: {{ $reservation->phone }}
 @endif
 @if ($reservation->occasion)
-Occasion: {{ $reservation->occasion }}
+{{ __('emails.occasion') }}: {{ $reservation->occasion }}
 @endif
 @if ($reservation->notes)
-Special Request: {{ $reservation->notes }}
+{{ __('emails.special_request') }}: {{ $reservation->notes }}
 @endif

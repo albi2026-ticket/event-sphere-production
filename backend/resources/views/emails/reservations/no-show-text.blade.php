@@ -1,11 +1,11 @@
-Reservation Marked As No Show
+{{ __('emails.reservation_no_show') }}
 
-Hello {{ $reservation->guest_name }},
+{{ __('emails.hello', ['name' => $reservation->guest_name]) }}
 
-Your reservation at {{ $reservation->venue->name }} has been marked as no show.
+{{ __('emails.no_show_copy', ['venue' => $reservation->venue->name]) }}
 
-Date: {{ $reservation->reservation_date->format('M j, Y') }}
-Time: {{ $reservation->reservation_time }}
-Party size: {{ $reservation->party_size }}
+{{ __('emails.date') }}: {{ $reservation->reservation_date->format('M j, Y') }}
+{{ __('emails.time') }}: {{ $reservation->reservation_time }}
+{{ __('emails.party_size') }}: {{ $reservation->party_size }}
 
-If you believe this was marked incorrectly, please contact the venue directly.
+{{ __('emails.no_show_help_copy') }}

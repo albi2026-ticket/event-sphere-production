@@ -1,11 +1,11 @@
-Reservation Completed
+{{ __('emails.reservation_completed') }}
 
-Hello {{ $reservation->guest_name }},
+{{ __('emails.hello', ['name' => $reservation->guest_name]) }}
 
-Your reservation at {{ $reservation->venue->name }} has been marked as completed.
+{{ __('emails.completed_copy', ['venue' => $reservation->venue->name]) }}
 
-Date: {{ $reservation->reservation_date->format('M j, Y') }}
-Time: {{ $reservation->reservation_time }}
-Party size: {{ $reservation->party_size }}
+{{ __('emails.date') }}: {{ $reservation->reservation_date->format('M j, Y') }}
+{{ __('emails.time') }}: {{ $reservation->reservation_time }}
+{{ __('emails.party_size') }}: {{ $reservation->party_size }}
 
-Thank you for choosing Tiketa.
+{{ __('emails.thank_you') }}

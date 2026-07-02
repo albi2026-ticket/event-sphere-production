@@ -25,6 +25,7 @@ use Laravel\Sanctum\HasApiTokens;
     'phone',
     'avatar_url',
     'default_city',
+    'preferred_language',
     'email_notifications',
     'sms_reminders',
     'marketing_emails',

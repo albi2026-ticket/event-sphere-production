@@ -85,7 +85,7 @@ class TicketService
 
         if (! $ticket) {
             throw ValidationException::withMessages([
-                'ticket' => 'Ticket could not be found.',
+                'ticket' => __('validation.custom.ticket_not_found'),
             ]);
         }
 
@@ -114,18 +114,18 @@ class TicketService
         return [
             'result' => $result,
             'title' => match ($result) {
-                TicketValidationLog::RESULT_VALID => 'Ticket Valid',
-                TicketValidationLog::RESULT_ALREADY_USED => 'Already Checked In',
-                default => 'Invalid Ticket',
+                TicketValidationLog::RESULT_VALID => __('validation.custom.ticket_valid'),
+                TicketValidationLog::RESULT_ALREADY_USED => __('validation.custom.already_checked_in'),
+                default => __('validation.custom.invalid_ticket'),
             },
             'is_valid' => $ticket->status === Ticket::STATUS_VALID,
             'can_check_in' => $ticket->status === Ticket::STATUS_VALID,
             'reason' => match ($ticket->status) {
-                Ticket::STATUS_VALID => 'Ticket is valid and ready for check-in.',
-                Ticket::STATUS_CHECKED_IN => 'Ticket has already been checked in.',
-                Ticket::STATUS_CANCELLED => 'Ticket was cancelled.',
-                Ticket::STATUS_REFUNDED => 'Ticket was refunded.',
-                default => 'Ticket is not valid for check-in.',
+                Ticket::STATUS_VALID => __('validation.custom.ticket_ready_check_in'),
+                Ticket::STATUS_CHECKED_IN => __('validation.custom.ticket_already_checked_in'),
+                Ticket::STATUS_CANCELLED => __('validation.custom.ticket_cancelled'),
+                Ticket::STATUS_REFUNDED => __('validation.custom.ticket_refunded'),
+                default => __('validation.custom.ticket_not_valid_check_in'),
             },
             'ticket_status' => $ticket->status,
             'event_status' => $ticket->event?->status,
@@ -167,7 +167,7 @@ class TicketService
             $this->logValidation($locked, $checker, [
                 'result' => TicketValidationLog::RESULT_VALID,
                 'method' => $method ?: 'manual',
-                'message' => 'Ticket checked in successfully.',
+                'message' => __('validation.custom.ticket_checked_in_successfully'),
             ]);
 
             return $locked->fresh(['user', 'event.organizer', 'ticketType', 'order.user']);
@@ -193,24 +193,24 @@ class TicketService
             'published' => null,
             'cancelled' => [
                 'result' => TicketValidationLog::RESULT_INVALID,
-                'title' => 'EVENT CANCELLED',
+                'title' => __('validation.custom.event_cancelled_title'),
                 'is_valid' => false,
                 'can_check_in' => false,
-                'reason' => 'Event cancelled.',
+                'reason' => __('validation.custom.event_cancelled_reason'),
             ],
             'completed', 'ended' => [
                 'result' => TicketValidationLog::RESULT_INVALID,
-                'title' => 'INVALID EVENT',
+                'title' => __('validation.custom.invalid_event_title'),
                 'is_valid' => false,
                 'can_check_in' => false,
-                'reason' => 'Event has ended.',
+                'reason' => __('validation.custom.event_ended_reason'),
             ],
             default => [
                 'result' => TicketValidationLog::RESULT_INVALID,
-                'title' => 'EVENT NOT PUBLISHED',
+                'title' => __('validation.custom.event_not_published_title'),
                 'is_valid' => false,
                 'can_check_in' => false,
-                'reason' => 'Event is not published.',
+                'reason' => __('validation.custom.event_not_published_reason'),
             ],
         };
     }

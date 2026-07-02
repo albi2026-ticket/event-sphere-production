@@ -18,7 +18,7 @@ class ReservationConfirmedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Reservation Confirmed',
+            subject: __('emails.reservation_confirmed'),
         );
     }
 

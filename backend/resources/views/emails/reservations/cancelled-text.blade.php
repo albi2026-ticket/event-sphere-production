@@ -1,12 +1,12 @@
-Reservation Cancelled
+{{ __('emails.reservation_cancelled') }}
 
-Hello {{ $reservation->guest_name }},
+{{ __('emails.hello', ['name' => $reservation->guest_name]) }}
 
-Your reservation at {{ $reservation->venue->name }} has been cancelled.
+{{ __('emails.cancelled_copy', ['venue' => $reservation->venue->name]) }}
 
-Date: {{ $reservation->reservation_date->format('M j, Y') }}
-Time: {{ $reservation->reservation_time }}
-Party size: {{ $reservation->party_size }}
-Reason: {{ $reservation->owner_cancellation_reason ?: ($reservation->cancellation_reason ?: 'No reason provided.') }}
+{{ __('emails.date') }}: {{ $reservation->reservation_date->format('M j, Y') }}
+{{ __('emails.time') }}: {{ $reservation->reservation_time }}
+{{ __('emails.party_size') }}: {{ $reservation->party_size }}
+{{ __('emails.reason') }}: {{ $reservation->owner_cancellation_reason ?: ($reservation->cancellation_reason ?: '-') }}
 
-Thank you for choosing Tiketa.
+{{ __('emails.thank_you') }}

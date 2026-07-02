@@ -1,7 +1,7 @@
-Event Successfully Cancelled
+{{ __('emails.event_successfully_cancelled') }}
 
-Your event cancellation has been recorded.
+{{ __('emails.event_cancel_recorded') }}
 
-Event Name: {{ $event->title }}
-Number of Ticket Holders Notified: {{ $emailData['ticket_holders_notified'] }}
-Cancellation Timestamp: {{ $emailData['cancelled_at'] }}
+{{ __('emails.event_name') }}: {{ $event->title }}
+{{ __('emails.ticket_holders_notified_label') }}: {{ $emailData['ticket_holders_notified'] }}
+{{ __('emails.cancellation_timestamp') }}: {{ $emailData['cancelled_at'] }}

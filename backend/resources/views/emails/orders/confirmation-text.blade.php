@@ -1,56 +1,56 @@
-Tiketa order confirmation
+{{ __('emails.ticket_order_subject', ['order' => $order->order_number]) }}
 
-Your tickets are confirmed.
+{{ __('emails.tickets_confirmed') }}
 
-Order information
-Order Number: {{ $order->order_number }}
-Purchase Date: {{ $emailData['purchase_date'] }}
-Payment Status: {{ $order->payment_status }}
+{{ __('emails.order_information') }}
+{{ __('emails.order_number') }}: {{ $order->order_number }}
+{{ __('emails.purchase_date') }}: {{ $emailData['purchase_date'] }}
+{{ __('emails.payment_status') }}: {{ $order->payment_status }}
 
-Purchaser
-Name: {{ $emailData['purchaser_name'] }}
-Email: {{ $emailData['purchaser_email'] }}
+{{ __('emails.purchaser') }}
+{{ __('emails.name') }}: {{ $emailData['purchaser_name'] }}
+{{ __('emails.email') }}: {{ $emailData['purchaser_email'] }}
 
 @foreach ($emailData['items'] as $item)
-Event
-Name: {{ $item['event_name'] }}
-Date: {{ $item['event_date'] }}
-Time: {{ $item['event_time'] }}
-Timezone: {{ $item['timezone_label'] }}
-Venue: {{ $item['venue'] }}
+{{ __('emails.event') }}
+{{ __('emails.name') }}: {{ $item['event_name'] }}
+{{ __('emails.date') }}: {{ $item['event_date'] }}
+{{ __('emails.time') }}: {{ $item['event_time'] }}
+{{ __('emails.timezone') }}: {{ $item['timezone_label'] }}
+{{ __('emails.venue') }}: {{ $item['venue'] }}
 
-Tickets
-Ticket Type: {{ $item['ticket_type'] }}
-Quantity: {{ $item['quantity'] }}
-Price Per Ticket: {{ $item['price_per_ticket'] }}
-Service Fee: {{ $item['service_fee'] }}
-Total Paid: {{ $item['total_paid'] }}
+{{ __('emails.tickets') }}
+{{ __('emails.ticket_type') }}: {{ $item['ticket_type'] }}
+{{ __('emails.quantity') }}: {{ $item['quantity'] }}
+{{ __('emails.price_per_ticket') }}: {{ $item['price_per_ticket'] }}
+{{ __('emails.service_fee') }}: {{ $item['service_fee'] }}
+{{ __('emails.total_paid') }}: {{ $item['total_paid'] }}
 
-Attendees
+{{ __('emails.attendees') }}
 @forelse ($item['attendees'] as $attendee)
 - {{ $attendee['name'] }}@if (! empty($attendee['email'])) ({{ $attendee['email'] }})@endif
 @empty
-- No attendee details were provided.
+- {{ __('emails.no_attendee_details') }}
 @endforelse
 
 @endforeach
-Order total
-Subtotal: {{ strtoupper($order->currency) }} {{ number_format((float) $order->subtotal, 2) }}
-Service Fee: {{ strtoupper($order->currency) }} {{ number_format((float) $order->service_fee, 2) }}
-Total Paid: {{ strtoupper($order->currency) }} {{ number_format((float) $order->total, 2) }}
+{{ __('emails.order_total') }}
+{{ __('emails.subtotal') }}: {{ strtoupper($order->currency) }} {{ number_format((float) $order->subtotal, 2) }}
+{{ __('emails.service_fee') }}: {{ strtoupper($order->currency) }} {{ number_format((float) $order->service_fee, 2) }}
+{{ __('emails.total_paid') }}: {{ strtoupper($order->currency) }} {{ number_format((float) $order->total, 2) }}
 
-Ticket access
-My Tickets: {{ $emailData['my_tickets_url'] }}
-View Tickets: {{ $emailData['my_tickets_url'] }}
+{{ __('emails.ticket_access') }}
+{{ __('emails.my_tickets') }}: {{ $emailData['my_tickets_url'] }}
+{{ __('emails.view_tickets') }}: {{ $emailData['my_tickets_url'] }}
 
 @if ($emailData['has_qr_tickets'])
-QR tickets
-Each issued ticket includes QR access for check-in.
+{{ __('emails.qr_tickets') }}
+{{ __('emails.qr_ticket_text_copy') }}
 @foreach ($emailData['tickets'] as $ticket)
 - {{ $ticket['code'] }} - {{ $ticket['attendee_name'] }}
-  Download/View: {{ $ticket['download_url'] }}
-  QR code: {{ $ticket['qr_url'] }}
+  {{ __('emails.download_view') }}: {{ $ticket['download_url'] }}
+  {{ __('emails.qr_code') }}: {{ $ticket['qr_url'] }}
 @endforeach
 @endif
 
-This confirmation was sent by Tiketa after successful payment.
+{{ __('emails.order_confirmation_footer') }}

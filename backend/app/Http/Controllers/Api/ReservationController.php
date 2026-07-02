@@ -30,10 +30,12 @@ class ReservationController extends Controller
         $venue = $reservation->venue;
 
         Mail::to($user->email, $reservation->guest_name)
+            ->locale($user->preferred_language ?: 'en')
             ->queue(new ReservationRequestReceivedMail($reservation));
 
         if ($reservation->venue->owner?->email) {
             Mail::to($reservation->venue->owner->email, $reservation->venue->owner->name)
+                ->locale($reservation->venue->owner->preferred_language ?: 'en')
                 ->queue(new NewReservationReceivedMail($reservation));
         }
 
@@ -41,8 +43,8 @@ class ReservationController extends Controller
         $notifications->create(
             $user,
             Notification::TYPE_RESERVATION_CREATED,
-            'Reservation Request Created',
-            "Your reservation request for {$venue->name} has been created.",
+            __('notifications.reservation_request_created', [], $user->preferred_language ?: 'en'),
+            __('notifications.reservation_request_created_message', ['venue' => $venue->name], $user->preferred_language ?: 'en'),
             '/site/my-reservations.html',
         );
 
@@ -50,8 +52,11 @@ class ReservationController extends Controller
             $notifications->create(
                 $reservation->venue->owner,
                 Notification::TYPE_RESERVATION_CREATED,
-                'New Reservation',
-                "{$reservation->guest_name} requested a reservation at {$venue->name}.",
+                __('notifications.new_reservation', [], $reservation->venue->owner->preferred_language ?: 'en'),
+                __('notifications.new_reservation_message', [
+                    'guest' => $reservation->guest_name,
+                    'venue' => $venue->name,
+                ], $reservation->venue->owner->preferred_language ?: 'en'),
                 '/site/owner-venue.html',
             );
         }
@@ -86,11 +91,11 @@ class ReservationController extends Controller
         ]);
 
         if ($reservation->status === Reservation::STATUS_CANCELLED) {
-            abort(422, 'This reservation has already been cancelled.');
+            abort(422, __('validation.custom.reservation_already_cancelled'));
         }
 
         if (! in_array($reservation->status, [Reservation::STATUS_PENDING, Reservation::STATUS_CONFIRMED], true)) {
-            abort(422, 'This reservation can no longer be cancelled.');
+            abort(422, __('validation.custom.reservation_cannot_cancel'));
         }
 
         $reservationTime = explode('.', (string) $reservation->reservation_time)[0];
@@ -98,7 +103,7 @@ class ReservationController extends Controller
 
         if ($reservationDateTime->lte(now())) {
             throw ValidationException::withMessages([
-                'reservation' => ['This reservation can no longer be cancelled.'],
+                'reservation' => [__('validation.custom.reservation_cannot_cancel')],
             ]);
         }
 
@@ -111,11 +116,13 @@ class ReservationController extends Controller
 
         if ($reservation->user?->email) {
             Mail::to($reservation->user->email, $reservation->guest_name)
+                ->locale($reservation->user->preferred_language ?: 'en')
                 ->queue(new ReservationCancelledMail($reservation));
         }
 
         if ($reservation->venue->owner?->email) {
             Mail::to($reservation->venue->owner->email, $reservation->venue->owner->name)
+                ->locale($reservation->venue->owner->preferred_language ?: 'en')
                 ->queue(new ReservationCancelledByGuestMail($reservation));
         }
 
@@ -124,8 +131,8 @@ class ReservationController extends Controller
             $notifications->create(
                 $reservation->user,
                 Notification::TYPE_RESERVATION_CANCELLED_BY_USER,
-                'Reservation Cancelled Successfully',
-                "Your reservation at {$reservation->venue->name} was cancelled successfully.",
+                __('notifications.reservation_cancelled_successfully', [], $reservation->user->preferred_language ?: 'en'),
+                __('notifications.reservation_cancelled_successfully_message', ['venue' => $reservation->venue->name], $reservation->user->preferred_language ?: 'en'),
                 '/site/my-reservations.html',
             );
         }
@@ -134,8 +141,11 @@ class ReservationController extends Controller
             $notifications->create(
                 $reservation->venue->owner,
                 Notification::TYPE_RESERVATION_CANCELLED_BY_USER,
-                'Reservation Cancelled By Guest',
-                "{$reservation->guest_name} cancelled their reservation at {$reservation->venue->name}.",
+                __('notifications.reservation_cancelled_by_guest', [], $reservation->venue->owner->preferred_language ?: 'en'),
+                __('notifications.reservation_cancelled_by_guest_message', [
+                    'guest' => $reservation->guest_name,
+                    'venue' => $reservation->venue->name,
+                ], $reservation->venue->owner->preferred_language ?: 'en'),
                 '/site/owner-venue.html',
             );
         }

@@ -4,7 +4,6 @@ namespace App\Http\Requests\Api\Reservations;
 
 use App\Models\Venue;
 use App\Services\Reservations\ReservationAvailabilityService;
-use App\Services\Reservations\ReservationCreationService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -23,7 +22,7 @@ class StoreReservationRequest extends FormRequest
         }
 
         if (! $user->hasVerifiedEmail()) {
-            throw new AuthorizationException('Please verify your email address before creating a reservation.');
+            throw new AuthorizationException(__('validation.custom.verify_email_reservation'));
         }
 
         return true;
@@ -57,15 +56,15 @@ class StoreReservationRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'venue_id.required' => 'This venue is not available for reservations.',
-            'venue_id.exists' => 'This venue is not available for reservations.',
-            'party_size.required' => 'Please select number of guests.',
-            'party_size.integer' => 'Please select number of guests.',
-            'party_size.min' => 'Please select number of guests.',
-            'reservation_date.required' => 'Please select date and time.',
-            'reservation_date.date_format' => 'Please select date and time.',
-            'reservation_time.required' => 'Please select date and time.',
-            'reservation_time.date_format' => 'Please select date and time.',
+            'venue_id.required' => __('validation.custom.venue_unavailable'),
+            'venue_id.exists' => __('validation.custom.venue_unavailable'),
+            'party_size.required' => __('validation.custom.select_guests'),
+            'party_size.integer' => __('validation.custom.select_guests'),
+            'party_size.min' => __('validation.custom.select_guests'),
+            'reservation_date.required' => __('validation.custom.select_date_time'),
+            'reservation_date.date_format' => __('validation.custom.select_date_time'),
+            'reservation_time.required' => __('validation.custom.select_date_time'),
+            'reservation_time.date_format' => __('validation.custom.select_date_time'),
         ];
     }
 
@@ -76,18 +75,18 @@ class StoreReservationRequest extends FormRequest
                 $venue = Venue::query()->find($this->input('venue_id'));
 
                 if (! $venue || $venue->status !== Venue::STATUS_ACTIVE) {
-                    $validator->errors()->add('venue_id', 'This venue is not available for reservations.');
+                    $validator->errors()->add('venue_id', __('validation.custom.venue_unavailable'));
 
                     return;
                 }
 
                 $partySize = (int) $this->input('party_size');
                 if ($partySize < $venue->min_guests) {
-                    $validator->errors()->add('party_size', "Minimum guests allowed is {$venue->min_guests}.");
+                    $validator->errors()->add('party_size', __('validation.custom.min_guests_allowed', ['min' => $venue->min_guests]));
                 }
 
                 if ($partySize > $venue->max_guests) {
-                    $validator->errors()->add('party_size', "Maximum guests allowed is {$venue->max_guests}.");
+                    $validator->errors()->add('party_size', __('validation.custom.max_guests_allowed', ['max' => $venue->max_guests]));
                 }
 
                 if (! $this->filled('reservation_date') || ! $this->filled('reservation_time')) {
@@ -101,13 +100,13 @@ class StoreReservationRequest extends FormRequest
                         config('app.timezone'),
                     );
                 } catch (\Throwable) {
-                    $validator->errors()->add('reservation_date', 'Please select date and time.');
+                    $validator->errors()->add('reservation_date', __('validation.custom.select_date_time'));
 
                     return;
                 }
 
                 if ($reservationAt->isPast()) {
-                    $validator->errors()->add('reservation_date', 'Please select a future date and time.');
+                    $validator->errors()->add('reservation_date', __('validation.custom.future_date_time'));
 
                     return;
                 }
@@ -136,7 +135,7 @@ class StoreReservationRequest extends FormRequest
         $time = (string) $this->input('reservation_time');
 
         if (app(ReservationAvailabilityService::class)->slotIsFull($venue, $date, $time)) {
-            $validator->errors()->add('reservation_time', ReservationCreationService::SLOT_FULL_MESSAGE);
+            $validator->errors()->add('reservation_time', __('validation.custom.slot_full'));
         }
     }
 

@@ -60,6 +60,12 @@
       { Accept: 'application/json' },
       options.headers || {},
     );
+    try {
+      const language = window.TiketaLanguage?.getLanguage?.() || localStorage.getItem('preferred_language') || 'en';
+      headers['X-Tiketa-Language'] = ['en', 'sq'].includes(language) ? language : 'en';
+    } catch {
+      headers['X-Tiketa-Language'] = 'en';
+    }
 
     if (!(options.body instanceof FormData)) {
       headers['Content-Type'] = headers['Content-Type'] || 'application/json';

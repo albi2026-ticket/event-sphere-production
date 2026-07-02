@@ -21,16 +21,25 @@
     })[char]);
   }
 
+  function tr(key, fallback, params = {}) {
+    const value = window.t?.(key, params);
+    if (value && value !== key) return value;
+    return Object.entries(params).reduce(
+      (text, [param, replacement]) => text.replaceAll(`{${param}}`, replacement),
+      fallback,
+    );
+  }
+
   function relativeTime(value) {
     const date = value ? new Date(value) : null;
-    if (!date || Number.isNaN(date.getTime())) return 'Just now';
+    if (!date || Number.isNaN(date.getTime())) return tr('notifications.just_now', 'Just now');
     const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
-    if (seconds < 60) return 'Just now';
+    if (seconds < 60) return tr('notifications.just_now', 'Just now');
     const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
+    if (minutes < 60) return tr('notifications.minutes_ago', '{count}m ago', { count: minutes });
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return `${Math.floor(hours / 24)}d ago`;
+    if (hours < 24) return tr('notifications.hours_ago', '{count}h ago', { count: hours });
+    return tr('notifications.days_ago', '{count}d ago', { count: Math.floor(hours / 24) });
   }
 
   function icon(type) {
@@ -78,15 +87,15 @@
           <span class="notification-time">${relativeTime(item.created_at)}</span>
         </span>
         <span class="dashboard-actions ms-auto">
-          ${item.is_read ? '' : `<button class="btn btn-glass btn-sm" type="button" data-mark-notification-read="${item.id}" data-i18n="header.mark_as_read">${window.t?.('header.mark_as_read') || 'Mark as read'}</button>`}
-          ${item.link ? `<button class="btn btn-primary-grad btn-sm" type="button" data-open-notification="${item.id}" data-i18n="buttons.open">${window.t?.('buttons.open') || 'Open'}</button>` : ''}
+          ${item.is_read ? '' : `<button class="btn btn-glass btn-sm" type="button" data-mark-notification-read="${item.id}" data-i18n="notifications.mark_as_read">${tr('notifications.mark_as_read', 'Mark as read')}</button>`}
+          ${item.link ? `<button class="btn btn-primary-grad btn-sm" type="button" data-open-notification="${item.id}" data-i18n="notifications.view">${tr('notifications.view', 'View')}</button>` : ''}
         </span>
       </div>
-    `).join('') : `<div class="dashboard-empty"><i class="bi bi-bell"></i><span data-i18n="empty.no_notifications">${window.t?.('empty.no_notifications') || 'No notifications yet.'}</span></div>`;
+    `).join('') : `<div class="dashboard-empty"><i class="bi bi-bell"></i><span data-i18n="notifications.no_notifications">${tr('notifications.no_notifications', 'No notifications')}</span></div>`;
 
     if (pager && state.meta?.last_page > 1) {
       const current = Number(state.meta.current_page || state.page);
-      pager.innerHTML = `<div class="dashboard-pagination"><button class="btn btn-glass btn-sm" type="button" data-notifications-page="${current - 1}" ${current <= 1 ? 'disabled' : ''} data-i18n="buttons.previous">${window.t?.('buttons.previous') || 'Previous'}</button><span class="text-muted-pro small">Page ${current} of ${state.meta.last_page}</span><button class="btn btn-glass btn-sm" type="button" data-notifications-page="${current + 1}" ${current >= state.meta.last_page ? 'disabled' : ''} data-i18n="buttons.next">${window.t?.('buttons.next') || 'Next'}</button></div>`;
+      pager.innerHTML = `<div class="dashboard-pagination"><button class="btn btn-glass btn-sm" type="button" data-notifications-page="${current - 1}" ${current <= 1 ? 'disabled' : ''} data-i18n="buttons.previous">${window.t?.('buttons.previous') || 'Previous'}</button><span class="text-muted-pro small">${tr('notifications.page_of', 'Page {current} of {total}', { current, total: state.meta.last_page })}</span><button class="btn btn-glass btn-sm" type="button" data-notifications-page="${current + 1}" ${current >= state.meta.last_page ? 'disabled' : ''} data-i18n="buttons.next">${window.t?.('buttons.next') || 'Next'}</button></div>`;
     } else if (pager) {
       pager.innerHTML = '';
     }
@@ -102,7 +111,7 @@
       state.meta = res.meta || res.raw?.meta || null;
       state.page = page;
     } catch (err) {
-      state.error = err.message || 'Failed to load notifications';
+      state.error = err.message || tr('notifications.load_failed', 'Failed to load notifications');
     } finally {
       state.loading = false;
       render();
@@ -137,7 +146,7 @@
           await markRead(read.dataset.markNotificationRead);
         } catch (err) {
           read.disabled = false;
-          window.tkToast?.(err.message || 'Notification update failed', 'error');
+          window.tkToast?.(err.message || tr('notifications.update_failed', 'Notification update failed'), 'error');
         }
         return;
       }
@@ -151,7 +160,7 @@
           if (item?.link) location.href = item.link;
         } catch (err) {
           open.disabled = false;
-          window.tkToast?.(err.message || 'Notification update failed', 'error');
+          window.tkToast?.(err.message || tr('notifications.update_failed', 'Notification update failed'), 'error');
         }
         return;
       }
@@ -165,7 +174,7 @@
           window.EventSphereNotifications?.refresh?.(true);
           render();
         } catch (err) {
-          window.tkToast?.(err.message || 'Notification update failed', 'error');
+          window.tkToast?.(err.message || tr('notifications.update_failed', 'Notification update failed'), 'error');
         } finally {
           readAll.disabled = false;
         }
@@ -176,6 +185,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     if (!auth().requireAuth(['user', 'organizer', 'owner', 'admin'], { requireApprovedOrganizer: false })) return;
     bindActions();
+    document.addEventListener('tiketa:language-changed', render);
     await load(1);
   });
 })();

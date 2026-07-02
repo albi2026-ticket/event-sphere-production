@@ -38,11 +38,11 @@ class OrganizerTicketController extends Controller
         try {
             $ticket = $this->tickets->findByScannerPayload($request->input('token'), $request->input('ticket_code'), $request->input('ticket_uuid'));
         } catch (ValidationException) {
-            $this->logInvalidScan($request, 'Ticket could not be found.');
+            $this->logInvalidScan($request, __('validation.custom.ticket_not_found'));
 
             return response()->json([
                 'data' => [
-                    'validation' => $this->invalidValidation('Ticket could not be found.'),
+                    'validation' => $this->invalidValidation(__('validation.custom.ticket_not_found')),
                     'ticket' => null,
                 ],
             ]);
@@ -69,12 +69,12 @@ class OrganizerTicketController extends Controller
         try {
             $ticket = $this->tickets->findByScannerPayload($request->input('token'), $request->input('ticket_code'), $request->input('ticket_uuid'));
         } catch (ValidationException) {
-            $this->logInvalidScan($request, 'Ticket could not be found.');
+            $this->logInvalidScan($request, __('validation.custom.ticket_not_found'));
 
             return response()->json([
-                'message' => 'Invalid ticket.',
+                'message' => __('validation.custom.invalid_ticket'),
                 'data' => [
-                    'validation' => $this->invalidValidation('Ticket could not be found.'),
+                    'validation' => $this->invalidValidation(__('validation.custom.ticket_not_found')),
                     'ticket' => null,
                 ],
             ], 422);
@@ -190,7 +190,7 @@ class OrganizerTicketController extends Controller
             return;
         }
 
-        $message = 'This ticket belongs to another event.';
+        $message = __('validation.custom.ticket_wrong_event');
         if ($request->user()->isScanner()) {
             $this->tickets->logValidation($ticket, $request->user(), $this->logContext($request, [
                 'event_id' => $ticket->event_id,
@@ -209,7 +209,7 @@ class OrganizerTicketController extends Controller
         }
 
         if ($request->user()->isScanner()) {
-            $message = 'This ticket belongs to another event.';
+            $message = __('validation.custom.ticket_wrong_event');
             $this->tickets->logValidation($ticket, $request->user(), $this->logContext($request, [
                 'event_id' => $ticket->event_id,
                 'result' => TicketValidationLog::RESULT_INVALID,
@@ -219,7 +219,7 @@ class OrganizerTicketController extends Controller
             abort(403, $message);
         }
 
-        abort(403, 'Your account is not allowed to scan this ticket.');
+        abort(403, __('validation.custom.scan_not_allowed'));
     }
 
     /**
@@ -254,7 +254,7 @@ class OrganizerTicketController extends Controller
     {
         return [
             'result' => TicketValidationLog::RESULT_INVALID,
-            'title' => 'INVALID TICKET',
+            'title' => __('validation.custom.invalid_ticket'),
             'is_valid' => false,
             'can_check_in' => false,
             'reason' => $message,

@@ -49,7 +49,7 @@ class StoreOrderRequest extends FormRequest
             $actual = count($this->input('attendees', []));
 
             if ($expected > 0 && $actual !== $expected) {
-                $validator->errors()->add('attendees', "Attendee information is required for each ticket ({$expected} total).");
+                $validator->errors()->add('attendees', __('validation.custom.attendee_required_each_ticket', ['total' => $expected]));
             }
         });
     }

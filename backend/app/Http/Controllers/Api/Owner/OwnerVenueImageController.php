@@ -73,7 +73,7 @@ class OwnerVenueImageController extends Controller
         abort_unless(
             $request->user()?->hasVerifiedEmail(),
             403,
-            'Please verify your email address before managing restaurant or bar reservations.',
+            __('validation.custom.verify_email_venue'),
         );
     }
 }

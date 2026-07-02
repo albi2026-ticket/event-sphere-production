@@ -58,8 +58,10 @@ class AppServiceProvider extends ServiceProvider
         ResetPassword::createUrlUsing($resetPasswordUrl);
 
         ResetPassword::toMailUsing(function (object $notifiable, string $token) use ($resetPasswordUrl): MailMessage {
+            app()->setLocale($notifiable->preferred_language ?? 'en');
+
             return (new MailMessage)
-                ->subject('Reset your Tiketa password')
+                ->subject(__('emails.reset_password_title'))
                 ->view([
                     'html' => 'emails.auth.reset-password',
                     'text' => 'emails.auth.reset-password-text',

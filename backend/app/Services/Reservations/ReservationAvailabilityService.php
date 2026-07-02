@@ -78,7 +78,7 @@ class ReservationAvailabilityService
         if ($venue->blackoutDates()->whereDate('date', $date)->exists()) {
             return [
                 'field' => 'reservation_date',
-                'message' => 'This restaurant or bar is not accepting reservations on this date.',
+                'message' => __('validation.custom.reservations_closed_date'),
             ];
         }
 
@@ -89,8 +89,8 @@ class ReservationAvailabilityService
                 $specialHour->is_closed,
                 $specialHour->opens_at,
                 $specialHour->closes_at,
-                'This venue is closed on the selected day.',
-                'This venue is closed at the selected time.',
+                __('validation.custom.venue_closed_day'),
+                __('validation.custom.venue_closed_time'),
             );
 
             return $error
@@ -105,7 +105,7 @@ class ReservationAvailabilityService
         if (! $openingHour) {
             return [
                 'field' => 'reservation_time',
-                'message' => 'Please select a valid reservation time.',
+                'message' => __('validation.custom.valid_reservation_time'),
             ];
         }
 
@@ -114,8 +114,8 @@ class ReservationAvailabilityService
             $openingHour->is_closed,
             $openingHour->opens_at,
             $openingHour->closes_at,
-            'This venue is closed on the selected day.',
-            'This venue is closed at the selected time.',
+            __('validation.custom.venue_closed_day'),
+            __('validation.custom.venue_closed_time'),
         );
 
         return $error
@@ -148,7 +148,7 @@ class ReservationAvailabilityService
         if ($selectedDate->gt($maxDate)) {
             return [
                 'field' => $field,
-                'message' => "Reservations may only be made up to {$this->bookingHorizonDays($venue)} days in advance.",
+                'message' => __('validation.custom.booking_horizon', ['days' => $this->bookingHorizonDays($venue)]),
             ];
         }
 
@@ -320,7 +320,7 @@ class ReservationAvailabilityService
         if (! in_array($reservationMinutes, $this->slotMinutes($opensAtMinutes, $closingBoundaryMinutes, $interval), true)) {
             return [
                 'field' => 'reservation_time',
-                'message' => 'Please select a valid reservation time.',
+                'message' => __('validation.custom.valid_reservation_time'),
             ];
         }
 
@@ -360,7 +360,7 @@ class ReservationAvailabilityService
         if ($reservationMinutes > $lastReservationMinutes) {
             return [
                 'field' => 'reservation_time',
-                'message' => 'This venue is closed at the selected time.',
+                'message' => __('validation.custom.venue_closed_time'),
             ];
         }
 

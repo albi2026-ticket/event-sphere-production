@@ -27,10 +27,10 @@
         <li class="nav-item dropdown" data-auth-hide-role="owner,scanner">
           <a class="nav-link nav-link-pro dropdown-toggle" data-bs-toggle="dropdown" href="#" data-i18n="header.categories">Categories</a>
           <ul class="dropdown-menu mt-2" data-nav-categories style="background:var(--card);border:1px solid var(--border);border-radius:14px">
-            <li><a class="dropdown-item text-white-50" href="events.html?category=concerts"><i class="bi bi-music-note-beamed me-2"></i>Concerts</a></li>
-            <li><a class="dropdown-item text-white-50" href="events.html?category=sports"><i class="bi bi-trophy me-2"></i>Sports</a></li>
-            <li><a class="dropdown-item text-white-50" href="events.html?category=festivals"><i class="bi bi-stars me-2"></i>Festivals</a></li>
-            <li><a class="dropdown-item text-white-50" href="events.html?category=conferences"><i class="bi bi-mic me-2"></i>Conferences</a></li>
+            <li><a class="dropdown-item text-white-50" href="events.html?category=concerts"><i class="bi bi-music-note-beamed me-2"></i><span data-i18n="homepage.newsletter_concerts">Concerts</span></a></li>
+            <li><a class="dropdown-item text-white-50" href="events.html?category=sports"><i class="bi bi-trophy me-2"></i><span data-i18n="homepage.newsletter_sports">Sports</span></a></li>
+            <li><a class="dropdown-item text-white-50" href="events.html?category=festivals"><i class="bi bi-stars me-2"></i><span data-i18n="homepage.newsletter_festivals">Festivals</span></a></li>
+            <li><a class="dropdown-item text-white-50" href="events.html?category=conferences"><i class="bi bi-mic me-2"></i><span data-i18n="homepage.newsletter_conferences">Conferences</span></a></li>
           </ul>
         </li>
       </ul>
@@ -76,10 +76,10 @@
   <div class="container-xxl">
     <div class="section-title fade-up">
       <div>
-        <div class="eyebrow">Trending now</div>
-        <h2 class="mt-2">Events fans are watching</h2>
+        <div class="eyebrow" data-i18n="homepage.trending_eyebrow">Trending Now</div>
+        <h2 class="mt-2" data-i18n="homepage.trending_title">Events fans are watching</h2>
       </div>
-      <a class="btn btn-ghost" href="events.html?sort=trending">Browse trending <i class="bi bi-arrow-right ms-1"></i></a>
+      <a class="btn btn-ghost" href="events.html?sort=trending"><span data-i18n="homepage.browse_trending">Browse trending</span> <i class="bi bi-arrow-right ms-1"></i></a>
     </div>
     <div class="row g-4 fade-up" data-home-trending>
     </div>
@@ -91,10 +91,10 @@
   <div class="container-xxl">
     <div class="section-title fade-up">
       <div>
-        <div class="eyebrow">Upcoming this week</div>
-        <h2 class="mt-2">Happening in the next 7 days</h2>
+        <div class="eyebrow" data-i18n="homepage.upcoming_eyebrow">Upcoming This Week</div>
+        <h2 class="mt-2" data-i18n="homepage.upcoming_title">Happening in the next 7 days</h2>
       </div>
-      <a class="btn btn-ghost" href="events.html?sort=soonest">See all upcoming <i class="bi bi-arrow-right ms-1"></i></a>
+      <a class="btn btn-ghost" href="events.html?sort=soonest"><span data-i18n="homepage.see_all_upcoming">See all upcoming</span> <i class="bi bi-arrow-right ms-1"></i></a>
     </div>
     <div class="row g-4 fade-up" data-home-week></div>
   </div>
@@ -107,37 +107,37 @@
   <div class="container-xxl">
     <div class="section-title fade-up">
       <div>
-        <div class="eyebrow">Why choose Tiketa</div>
-        <h2 class="mt-2">A safer way to book live events</h2>
+        <div class="eyebrow" data-i18n="homepage.why_eyebrow">Why Choose Tiketa</div>
+        <h2 class="mt-2" data-i18n="homepage.why_title">A safer way to book live events</h2>
       </div>
     </div>
     <div class="row g-4 fade-up">
       <div class="col-md-6 col-xl-3">
         <article class="trust-card">
           <div class="trust-icon"><i class="bi bi-shield-lock"></i></div>
-          <h3>Secure Ticket Purchases</h3>
-          <p>Safe checkout flow with protected transactions from ticket selection through payment.</p>
+          <h3 data-i18n="homepage.secure_title">Secure Ticket Purchases</h3>
+          <p data-i18n="homepage.secure_copy">Safe checkout flow with protected transactions from ticket selection through payment.</p>
         </article>
       </div>
       <div class="col-md-6 col-xl-3">
         <article class="trust-card">
           <div class="trust-icon"><i class="bi bi-qr-code"></i></div>
-          <h3>Instant Ticket Delivery</h3>
-          <p>Receive tickets immediately after checkout with QR code access ready for entry.</p>
+          <h3 data-i18n="homepage.instant_title">Instant Ticket Delivery</h3>
+          <p data-i18n="homepage.instant_copy">Receive tickets immediately after checkout with QR code access ready for entry.</p>
         </article>
       </div>
       <div class="col-md-6 col-xl-3">
         <article class="trust-card">
           <div class="trust-icon"><i class="bi bi-patch-check"></i></div>
-          <h3>Verified Organizers</h3>
-          <p>Browse events from trusted organizers with clear event, venue, and ticket details.</p>
+          <h3 data-i18n="homepage.verified_title">Verified Organizers</h3>
+          <p data-i18n="homepage.verified_copy">Browse events from trusted organizers with clear event, venue, and ticket details.</p>
         </article>
       </div>
       <div class="col-md-6 col-xl-3">
         <article class="trust-card">
           <div class="trust-icon"><i class="bi bi-compass"></i></div>
-          <h3>Easy Event Discovery</h3>
-          <p>Find events quickly by category, city, date, price, and trending status.</p>
+          <h3 data-i18n="homepage.discovery_title">Easy Event Discovery</h3>
+          <p data-i18n="homepage.discovery_copy">Find events quickly by category, city, date, price, and trending status.</p>
         </article>
       </div>
     </div>
@@ -149,30 +149,30 @@
   <div class="container-xxl">
     <div class="section-title fade-up">
       <div>
-        <div class="eyebrow">How it works</div>
-        <h2 class="mt-2">From discovery to the door</h2>
+        <div class="eyebrow" data-i18n="homepage.how_eyebrow">How It Works</div>
+        <h2 class="mt-2" data-i18n="homepage.how_title">From discovery to the door</h2>
       </div>
     </div>
     <div class="how-steps fade-up">
       <article class="how-step">
         <span>1</span>
-        <h3>Find an Event</h3>
-        <p>Explore trending, weekly, and category-based event listings.</p>
+        <h3 data-i18n="homepage.step_1_title">Find an Event</h3>
+        <p data-i18n="homepage.step_1_copy">Explore trending, weekly, and category-based event listings.</p>
       </article>
       <article class="how-step">
         <span>2</span>
-        <h3>Choose Your Tickets</h3>
-        <p>Select the ticket tier and quantity that fit your plan.</p>
+        <h3 data-i18n="homepage.step_2_title">Choose Your Tickets</h3>
+        <p data-i18n="homepage.step_2_copy">Select the ticket tier and quantity that fit your plan.</p>
       </article>
       <article class="how-step">
         <span>3</span>
-        <h3>Complete Checkout</h3>
-        <p>Confirm attendee details and complete payment securely.</p>
+        <h3 data-i18n="homepage.step_3_title">Complete Checkout</h3>
+        <p data-i18n="homepage.step_3_copy">Confirm attendee details and complete payment securely.</p>
       </article>
       <article class="how-step">
         <span>4</span>
-        <h3>Receive QR Ticket</h3>
-        <p>Access your ticket instantly from your dashboard.</p>
+        <h3 data-i18n="homepage.step_4_title">Receive QR Ticket</h3>
+        <p data-i18n="homepage.step_4_copy">Access your ticket instantly from your dashboard.</p>
       </article>
     </div>
   </div>
@@ -184,15 +184,15 @@
     <div class="newsletter fade-up">
       <div class="row align-items-center g-4 position-relative" style="z-index:2">
         <div class="col-md-7">
-          <h2>Never Miss an Event</h2>
-          <p class="mb-2" style="color:rgba(255,255,255,.85)">Subscribe for concerts, sports, festivals, and special event updates.</p>
-          <div class="newsletter-tags"><span>Concerts</span><span>Sports</span><span>Festivals</span><span>Special events</span></div>
+          <h2 data-i18n="homepage.newsletter_title">Never Miss an Event</h2>
+          <p class="mb-2" style="color:rgba(255,255,255,.85)" data-i18n="homepage.newsletter_copy">Subscribe for concerts, sports, festivals, and special event updates.</p>
+          <div class="newsletter-tags"><span data-i18n="homepage.newsletter_concerts">Concerts</span><span data-i18n="homepage.newsletter_sports">Sports</span><span data-i18n="homepage.newsletter_festivals">Festivals</span><span data-i18n="homepage.newsletter_special">Special events</span></div>
         </div>
         <div class="col-md-5">
           <form class="newsletter-form" data-newsletter-form novalidate>
             <div class="d-flex gap-2">
-              <input class="form-control" type="email" placeholder="you@email.com" required data-newsletter-email/>
-              <button class="btn btn-light" type="submit" data-newsletter-submit>Subscribe</button>
+              <input class="form-control" type="email" placeholder="you@email.com" required data-newsletter-email data-i18n-attr="placeholder:homepage.email_placeholder"/>
+              <button class="btn btn-light" type="submit" data-newsletter-submit data-i18n="footer.subscribe">Subscribe</button>
             </div>
             <div class="newsletter-message" data-newsletter-message role="status" aria-live="polite"></div>
           </form>
@@ -208,8 +208,8 @@
     <div class="footer-top">
       <div class="footer-brand">
         <a class="brand mb-3" href="welcome.html"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Tiketa</a>
-        <p>The premium marketplace to discover, buy, and manage tickets for live events with confidence.</p>
-        <div class="footer-social" aria-label="Social links">
+        <p data-i18n="footer.tagline">The premium marketplace to discover, buy, and manage tickets for live events with confidence.</p>
+        <div class="footer-social" aria-label="Social links" data-i18n-attr="aria-label:footer.social_links">
           <a href="https://www.facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
           <a href="https://www.instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
           <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="X Twitter"><i class="bi bi-twitter-x"></i></a>
@@ -220,39 +220,39 @@
 
     <div class="footer-links-grid">
       <div>
-        <h6>Company</h6>
-        <a href="about.html">About Tiketa</a>
-        <a href="help-center.html#contact">Contact Us</a>
-        <a href="careers.html">Careers</a>
-        <span>Blog</span>
+        <h6 data-i18n="footer.company">Company</h6>
+        <a href="about.html" data-i18n="footer.about">About Tiketa</a>
+        <a href="help-center.html#contact" data-i18n="footer.contact">Contact Us</a>
+        <a href="careers.html" data-i18n="footer.careers">Careers</a>
+        <span data-i18n="footer.blog">Blog</span>
       </div>
       <div>
-        <h6>Support</h6>
-        <a href="help-center.html">Help Center</a>
-        <a href="faqs.html">FAQs</a>
-        <a href="help-center.html#ticket-support">Ticket Support</a>
-        <a href="refund-policy.html">Refund Policy</a>
+        <h6 data-i18n="footer.support">Support</h6>
+        <a href="help-center.html" data-i18n="footer.help_center">Help Center</a>
+        <a href="faqs.html" data-i18n="footer.faqs">FAQs</a>
+        <a href="help-center.html#ticket-support" data-i18n="footer.ticket_support">Ticket Support</a>
+        <a href="refund-policy.html" data-i18n="footer.refund_policy">Refund Policy</a>
       </div>
       <div>
-        <h6>Organizers</h6>
-        <a href="organizer.html">Become an Organizer</a>
-        <a href="organizer-guide.html">Organizer Guide</a>
-        <a href="organizer.html">Create Event</a>
+        <h6 data-i18n="footer.organizers">Organizers</h6>
+        <a href="organizer.html" data-i18n="footer.become_organizer">Become an Organizer</a>
+        <a href="organizer-guide.html" data-i18n="footer.organizer_guide">Organizer Guide</a>
+        <a href="organizer.html" data-i18n="footer.create_event">Create Event</a>
       </div>
       <div>
-        <h6>Legal</h6>
-        <a href="terms-of-service.html">Terms of Service</a>
-        <a href="privacy-policy.html">Privacy Policy</a>
-        <a href="privacy-policy.html#cookies">Cookie Policy</a>
+        <h6 data-i18n="footer.legal">Legal</h6>
+        <a href="terms-of-service.html" data-i18n="footer.terms">Terms of Service</a>
+        <a href="privacy-policy.html" data-i18n="footer.privacy">Privacy Policy</a>
+        <a href="privacy-policy.html#cookies" data-i18n="footer.cookies">Cookie Policy</a>
       </div>
     </div>
 
     <div class="legal">
       <div>© Tiketa <span data-year></span></div>
       <div class="footer-badges">
-        <span><i class="bi bi-shield-check"></i> Secure Ticket Purchases</span>
-        <span><i class="bi bi-qr-code"></i> QR Ticket Entry</span>
-        <span><i class="bi bi-patch-check"></i> Verified Organizers</span>
+        <span><i class="bi bi-shield-check"></i> <span data-i18n="footer.secure_purchases">Secure Ticket Purchases</span></span>
+        <span><i class="bi bi-qr-code"></i> <span data-i18n="footer.qr_entry">QR Ticket Entry</span></span>
+        <span><i class="bi bi-patch-check"></i> <span data-i18n="footer.verified_organizers">Verified Organizers</span></span>
       </div>
     </div>
   </div>

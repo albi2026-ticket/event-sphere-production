@@ -1,10 +1,10 @@
-Event Cancelled - Admin Notification
+{{ __('emails.admin_event_cancelled_subject') }}
 
-An event has been cancelled and may require refund review.
+{{ __('emails.admin_event_cancelled_copy') }}
 
-Event Name: {{ $event->title }}
-Organizer Name: {{ $emailData['organizer_name'] }}
-Event Date: {{ $emailData['event_date'] }}
-Tickets Sold: {{ $emailData['tickets_sold'] }}
-Revenue Generated: {{ $emailData['revenue_generated'] }}
-Cancellation Timestamp: {{ $emailData['cancelled_at'] }}
+{{ __('emails.event_name') }}: {{ $event->title }}
+{{ __('emails.organizer_name') }}: {{ $emailData['organizer_name'] }}
+{{ __('emails.event_date') }}: {{ $emailData['event_date'] }}
+{{ __('emails.tickets_sold') }}: {{ $emailData['tickets_sold'] }}
+{{ __('emails.revenue_generated') }}: {{ $emailData['revenue_generated'] }}
+{{ __('emails.cancellation_timestamp') }}: {{ $emailData['cancelled_at'] }}

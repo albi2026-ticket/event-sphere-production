@@ -24,7 +24,7 @@ class EventCancelledAdminMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Event Cancelled - Admin Notification',
+            subject: __('emails.admin_event_cancelled_subject'),
         );
     }
 

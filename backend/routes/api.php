@@ -89,6 +89,7 @@ Route::post('/stripe/webhook', WebhookController::class);
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/user', [AuthUserController::class, 'show']);
+    Route::patch('/user/language', [AuthUserController::class, 'updateLanguage']);
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy']);
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);

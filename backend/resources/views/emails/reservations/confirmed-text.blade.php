@@ -1,17 +1,17 @@
-Reservation Confirmed
+{{ __('emails.reservation_confirmed') }}
 
-Hello {{ $reservation->guest_name }},
+{{ __('emails.hello', ['name' => $reservation->guest_name]) }}
 
-Your reservation at {{ $reservation->venue->name }} has been confirmed.
+{{ __('emails.confirmed_copy', ['venue' => $reservation->venue->name]) }}
 
-Date: {{ $reservation->reservation_date->format('M j, Y') }}
-Time: {{ $reservation->reservation_time }}
-Party size: {{ $reservation->party_size }}
+{{ __('emails.date') }}: {{ $reservation->reservation_date->format('M j, Y') }}
+{{ __('emails.time') }}: {{ $reservation->reservation_time }}
+{{ __('emails.party_size') }}: {{ $reservation->party_size }}
 @if ($reservation->occasion)
-Occasion: {{ $reservation->occasion }}
+{{ __('emails.occasion') }}: {{ $reservation->occasion }}
 @endif
 @if ($reservation->notes)
-Special Request: {{ $reservation->notes }}
+{{ __('emails.special_request') }}: {{ $reservation->notes }}
 @endif
 
-Thank you for choosing Tiketa. The venue has received your reservation details.
+{{ __('emails.thank_you') }}

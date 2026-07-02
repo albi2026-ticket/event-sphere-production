@@ -1,34 +1,34 @@
-New Ticket Sold
+{{ __('emails.new_ticket_sold') }}
 
-{{ $emailData['event_name'] }} received a new paid ticket order.
+{{ __('emails.organizer_sale_copy', ['event' => $emailData['event_name']]) }}
 
-Event
-Event Name: {{ $emailData['event_name'] }}
-Event Date: {{ $emailData['event_date'] }}
-Venue: {{ $emailData['venue'] }}
+{{ __('emails.event') }}
+{{ __('emails.event_name') }}: {{ $emailData['event_name'] }}
+{{ __('emails.event_date') }}: {{ $emailData['event_date'] }}
+{{ __('emails.venue') }}: {{ $emailData['venue'] }}
 
-Buyer
-Buyer Name: {{ $emailData['buyer_name'] }}
-Buyer Email: {{ $emailData['buyer_email'] }}
+{{ __('emails.buyer') }}
+{{ __('emails.buyer_name') }}: {{ $emailData['buyer_name'] }}
+{{ __('emails.buyer_email') }}: {{ $emailData['buyer_email'] }}
 
-Order
-Order ID: {{ $emailData['order_id'] }}
-Purchase Date: {{ $emailData['purchase_date'] }}
+{{ __('emails.order') }}
+{{ __('emails.order_id') }}: {{ $emailData['order_id'] }}
+{{ __('emails.purchase_date') }}: {{ $emailData['purchase_date'] }}
 
-Event Performance
-Tickets Sold: {{ number_format($emailData['tickets_sold']) }}
-Tickets Remaining: {{ number_format($emailData['tickets_remaining']) }}
-Gross Revenue: {{ $emailData['gross_revenue'] }}
+{{ __('emails.event_performance') }}
+{{ __('emails.tickets_sold') }}: {{ number_format($emailData['tickets_sold']) }}
+{{ __('emails.tickets_remaining') }}: {{ number_format($emailData['tickets_remaining']) }}
+{{ __('emails.gross_revenue') }}: {{ $emailData['gross_revenue'] }}
 
-Ticket Summary
+{{ __('emails.ticket_summary') }}
 @foreach ($emailData['tickets'] as $ticket)
-- {{ $ticket['name'] }} | Quantity: {{ $ticket['quantity'] }} | Price: {{ $ticket['price'] }} | Subtotal: {{ $ticket['subtotal'] }}
+- {{ $ticket['name'] }} | {{ __('emails.quantity') }}: {{ $ticket['quantity'] }} | {{ __('emails.price') }}: {{ $ticket['price'] }} | {{ __('emails.subtotal') }}: {{ $ticket['subtotal'] }}
 @endforeach
 
-Order Total: {{ $emailData['order_total'] }}
-Currency: {{ $emailData['currency'] }}
+{{ __('emails.order_total') }}: {{ $emailData['order_total'] }}
+{{ __('emails.currency') }}: {{ $emailData['currency'] }}
 
-View Orders: {{ $emailData['view_orders_url'] }}
+{{ __('emails.view_orders') }}: {{ $emailData['view_orders_url'] }}
 
-View full event analytics
-Go to Organizer Dashboard: {{ $emailData['view_analytics_url'] }}
+{{ __('emails.view_analytics') }}
+{{ __('emails.organizer_dashboard') }}: {{ $emailData['view_analytics_url'] }}

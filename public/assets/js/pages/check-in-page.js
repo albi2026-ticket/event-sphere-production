@@ -20,6 +20,7 @@
   const $ = (sel) => document.querySelector(sel);
   const rows = (value) => Array.isArray(value) ? value : Array.isArray(value?.data) ? value.data : [];
   const esc = (value) => u().escapeHtml(value ?? '');
+  const tr = (key, fallback) => window.t?.(key) || fallback || key;
   const qs = (params) => new URLSearchParams(Object.entries(params).filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== '')).toString();
 
   function badge(value) {
@@ -59,7 +60,7 @@
     state.events = rows(res.data);
     const select = $('[data-scanner-event]');
     if (select) {
-      select.innerHTML = '<option value="">Select event</option>' + state.events.map((event) => `<option value="${event.id}">${esc(event.title)}</option>`).join('');
+      select.innerHTML = `<option value="">${esc(tr('availability.select_event', 'Select event'))}</option>` + state.events.map((event) => `<option value="${event.id}">${esc(event.title)}</option>`).join('');
       const requestedEventId = new URLSearchParams(location.search).get('event_id');
       const hasRequestedEvent = state.events.some((event) => String(event.id) === String(requestedEventId));
       if (hasRequestedEvent) select.value = String(requestedEventId);
@@ -98,9 +99,9 @@
     const stats = state.stats || { tickets_sold: 0, checked_in: 0, remaining: 0 };
     if (!row) return;
     row.innerHTML = `
-      <div class="col-md-4"><div class="kpi"><div class="label">Tickets Sold</div><div class="value">${stats.tickets_sold ?? 0}</div></div></div>
-      <div class="col-md-4"><div class="kpi"><div class="label">Checked In</div><div class="value">${stats.checked_in ?? 0}</div></div></div>
-      <div class="col-md-4"><div class="kpi"><div class="label">Remaining</div><div class="value">${stats.remaining ?? 0}</div></div></div>`;
+      <div class="col-md-4"><div class="kpi"><div class="label">${esc(tr('events.tickets_sold', 'Tickets Sold'))}</div><div class="value">${stats.tickets_sold ?? 0}</div></div></div>
+      <div class="col-md-4"><div class="kpi"><div class="label">${esc(tr('events.checked_in', 'Checked In'))}</div><div class="value">${stats.checked_in ?? 0}</div></div></div>
+      <div class="col-md-4"><div class="kpi"><div class="label">${esc(tr('events.remaining', 'Remaining'))}</div><div class="value">${stats.remaining ?? 0}</div></div></div>`;
   }
 
   function renderLogs() {
@@ -113,7 +114,7 @@
         <td data-label="Ticket">${esc(log.ticket_code || log.ticket_uuid || '-')}</td>
         <td data-label="Time">${dateTime(log.scanned_at)}</td>
       </tr>
-    `).join('') || '<tr><td colspan="4" class="text-muted-pro">No scan history yet.</td></tr>';
+    `).join('') || `<tr><td colspan="4" class="text-muted-pro">${esc(tr('empty.no_scan_history', 'No scan history yet.'))}</td></tr>`;
   }
 
   function renderResult(data) {
@@ -134,12 +135,12 @@
         ${badge(result)}
       </div>
       <div class="dashboard-detail-grid mt-3">
-        <div><dt>Guest Name</dt><dd>${esc(ticket?.attendee?.name || '-')}</dd></div>
-        <div><dt>Ticket type</dt><dd>${esc(ticket?.ticket_type?.name || '-')}</dd></div>
-        <div><dt>Seat</dt><dd>${esc(ticket?.seat_label || '-')}</dd></div>
-        <div><dt>Check-In Time</dt><dd>${ticket?.checked_in_at ? dateTime(ticket.checked_in_at) : '-'}</dd></div>
+        <div><dt>${esc(tr('scanner.attendee', 'Attendee'))}</dt><dd>${esc(ticket?.attendee?.name || '-')}</dd></div>
+        <div><dt>${esc(tr('scanner.ticket', 'Ticket'))}</dt><dd>${esc(ticket?.ticket_type?.name || '-')}</dd></div>
+        <div><dt>${esc(tr('scanner.seat', 'Seat'))}</dt><dd>${esc(ticket?.seat_label || '-')}</dd></div>
+        <div><dt>${esc(tr('events.checked_in', 'Checked In'))}</dt><dd>${ticket?.checked_in_at ? dateTime(ticket.checked_in_at) : '-'}</dd></div>
       </div>
-      ${validation.can_check_in ? '<button class="btn btn-primary-grad mt-3" type="button" data-scanner-checkin><i class="bi bi-check2-circle me-1"></i>Check In</button>' : ''}`;
+      ${validation.can_check_in ? `<button class="btn btn-primary-grad mt-3" type="button" data-scanner-checkin><i class="bi bi-check2-circle me-1"></i>${esc(tr('scanner.check_in', 'Check In'))}</button>` : ''}`;
   }
 
   async function validateTicket(payload, method = 'qr') {
@@ -218,7 +219,7 @@
     const empty = $('[data-scanner-empty]');
     if (!video) return;
     if (!('BarcodeDetector' in window)) {
-      if (empty) empty.innerHTML = '<i class="bi bi-camera-video-off"></i><span>Camera QR scanning is not supported in this browser. Use manual lookup.</span>';
+      if (empty) empty.innerHTML = `<i class="bi bi-camera-video-off"></i><span>${esc(tr('scanner.camera_not_supported', 'Camera QR scanning is not supported in this browser. Use manual lookup.'))}</span>`;
       return;
     }
     state.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -247,7 +248,7 @@
     const empty = $('[data-scanner-empty]');
     if (empty) {
       empty.hidden = false;
-      empty.innerHTML = '<i class="bi bi-camera-video"></i><span>Start the camera or use manual lookup.</span>';
+      empty.innerHTML = `<i class="bi bi-camera-video"></i><span>${esc(tr('scanner.start_camera_or_manual', 'Start the camera or use manual lookup.'))}</span>`;
     }
   }
 
@@ -269,6 +270,12 @@
       if (event.target.closest('[data-scanner-checkin]')) await checkIn();
     });
     window.addEventListener('beforeunload', stopCamera);
+    document.addEventListener('tiketa:language-changed', () => {
+      loadEvents().catch(() => {});
+      renderStats();
+      renderLogs();
+      if (state.result) renderResult(state.result);
+    });
   }
 
   document.addEventListener('DOMContentLoaded', async () => {

@@ -63,7 +63,7 @@ class OwnerReservationController extends Controller
         abort_if(
             Carbon::parse($startDate)->diffInDays(Carbon::parse($endDate)) > 62,
             422,
-            'Calendar date range cannot exceed 62 days.',
+            __('validation.custom.calendar_range_limit'),
         );
 
         $query = $this->ownedReservations($request)
@@ -104,20 +104,21 @@ class OwnerReservationController extends Controller
     {
         $this->ensureVerifiedOwner($request);
         $this->authorizeOwner($request, $reservation);
-        $this->ensureTransition($reservation, [Reservation::STATUS_PENDING], 'Only pending reservations can be confirmed.');
+        $this->ensureTransition($reservation, [Reservation::STATUS_PENDING], __('validation.custom.only_pending_confirmed'));
 
         $reservation->update(['status' => Reservation::STATUS_CONFIRMED]);
         $reservation = $reservation->fresh(['venue', 'user']);
 
         Mail::to($reservation->user->email, $reservation->guest_name)
+            ->locale($reservation->user->preferred_language ?: 'en')
             ->queue(new ReservationConfirmedMail($reservation));
 
         if ($reservation->user) {
             app(NotificationService::class)->create(
                 $reservation->user,
                 Notification::TYPE_RESERVATION_CONFIRMED,
-                'Reservation Confirmed',
-                "Your reservation at {$reservation->venue->name} has been confirmed.",
+                __('notifications.reservation_confirmed', [], $reservation->user->preferred_language ?: 'en'),
+                __('notifications.reservation_confirmed_message', ['venue' => $reservation->venue->name], $reservation->user->preferred_language ?: 'en'),
                 '/site/my-reservations.html',
             );
         }
@@ -129,7 +130,7 @@ class OwnerReservationController extends Controller
     {
         $this->ensureVerifiedOwner($request);
         $this->authorizeOwner($request, $reservation);
-        $this->ensureTransition($reservation, [Reservation::STATUS_PENDING, Reservation::STATUS_CONFIRMED], 'Only pending or confirmed reservations can be cancelled.');
+        $this->ensureTransition($reservation, [Reservation::STATUS_PENDING, Reservation::STATUS_CONFIRMED], __('validation.custom.only_pending_confirmed_cancelled'));
         $payload = $request->validate([
             'owner_cancellation_reason' => ['required', 'string', 'max:1000'],
         ]);
@@ -142,14 +143,18 @@ class OwnerReservationController extends Controller
         $reservation = $reservation->fresh(['venue', 'user']);
 
         Mail::to($reservation->user->email, $reservation->guest_name)
+            ->locale($reservation->user->preferred_language ?: 'en')
             ->queue(new ReservationCancelledMail($reservation));
 
         if ($reservation->user) {
             app(NotificationService::class)->create(
                 $reservation->user,
                 Notification::TYPE_RESERVATION_CANCELLED,
-                'Reservation Cancelled',
-                "Your reservation at {$reservation->venue->name} was cancelled. Reason: {$reservation->owner_cancellation_reason}",
+                __('notifications.reservation_cancelled', [], $reservation->user->preferred_language ?: 'en'),
+                __('notifications.reservation_cancelled_reason_message', [
+                    'venue' => $reservation->venue->name,
+                    'reason' => $reservation->owner_cancellation_reason,
+                ], $reservation->user->preferred_language ?: 'en'),
                 '/site/my-reservations.html',
             );
         }
@@ -161,20 +166,21 @@ class OwnerReservationController extends Controller
     {
         $this->ensureVerifiedOwner($request);
         $this->authorizeOwner($request, $reservation);
-        $this->ensureTransition($reservation, [Reservation::STATUS_CONFIRMED], 'Only confirmed reservations can be marked completed.');
+        $this->ensureTransition($reservation, [Reservation::STATUS_CONFIRMED], __('validation.custom.only_confirmed_completed'));
 
         $reservation->update(['status' => Reservation::STATUS_COMPLETED]);
         $reservation = $reservation->fresh(['venue', 'user']);
 
         Mail::to($reservation->user->email, $reservation->guest_name)
+            ->locale($reservation->user->preferred_language ?: 'en')
             ->queue(new ReservationCompletedMail($reservation));
 
         if ($reservation->user) {
             app(NotificationService::class)->create(
                 $reservation->user,
                 Notification::TYPE_RESERVATION_COMPLETED,
-                'Reservation Completed',
-                "Your reservation at {$reservation->venue->name} has been completed.",
+                __('notifications.reservation_completed', [], $reservation->user->preferred_language ?: 'en'),
+                __('notifications.reservation_completed_message', ['venue' => $reservation->venue->name], $reservation->user->preferred_language ?: 'en'),
                 '/site/my-reservations.html',
             );
         }
@@ -186,20 +192,21 @@ class OwnerReservationController extends Controller
     {
         $this->ensureVerifiedOwner($request);
         $this->authorizeOwner($request, $reservation);
-        $this->ensureTransition($reservation, [Reservation::STATUS_CONFIRMED], 'Only confirmed reservations can be marked no show.');
+        $this->ensureTransition($reservation, [Reservation::STATUS_CONFIRMED], __('validation.custom.only_confirmed_no_show'));
 
         $reservation->update(['status' => Reservation::STATUS_NO_SHOW]);
         $reservation = $reservation->fresh(['venue', 'user']);
 
         Mail::to($reservation->user->email, $reservation->guest_name)
+            ->locale($reservation->user->preferred_language ?: 'en')
             ->queue(new ReservationNoShowMail($reservation));
 
         if ($reservation->user) {
             app(NotificationService::class)->create(
                 $reservation->user,
                 Notification::TYPE_RESERVATION_NO_SHOW,
-                'Reservation Marked As No Show',
-                "Your reservation at {$reservation->venue->name} was marked as no show.",
+                __('notifications.reservation_no_show', [], $reservation->user->preferred_language ?: 'en'),
+                __('notifications.reservation_no_show_message', ['venue' => $reservation->venue->name], $reservation->user->preferred_language ?: 'en'),
                 '/site/my-reservations.html',
             );
         }
@@ -230,7 +237,7 @@ class OwnerReservationController extends Controller
         abort_unless(
             $request->user()?->hasVerifiedEmail(),
             403,
-            'Please verify your email address before managing restaurant or bar reservations.',
+            __('validation.custom.verify_email_venue'),
         );
     }
 

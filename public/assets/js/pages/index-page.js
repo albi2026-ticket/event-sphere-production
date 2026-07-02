@@ -19,6 +19,16 @@
   };
 
   const categoryPriority = ['sports', 'concerts', 'festivals', 'comedy', 'theater', 'conferences', 'family', 'nightlife'];
+  let homepageData = null;
+
+  function tr(key, fallback, params = {}) {
+    const value = window.t?.(key, params);
+    if (value && value !== key) return value;
+    return Object.entries(params).reduce(
+      (text, [param, replacement]) => text.replaceAll(`{${param}}`, replacement),
+      fallback,
+    );
+  }
 
   async function hydrateNavCategories() {
     const menus = document.querySelectorAll('[data-nav-categories]');
@@ -356,8 +366,8 @@
       return `<section class="section-sm" data-home-category-section="${window.EventSphereUtils.escapeHtml(category.key)}">
         <div class="container-xxl">
           <div class="section-title fade-up in">
-            <div><div class="eyebrow">${window.EventSphereUtils.escapeHtml(category.label)}</div><h2 class="mt-2">${category.key === 'sports' ? 'Game day, every day' : `Newest ${window.EventSphereUtils.escapeHtml(category.label)} events`}</h2></div>
-            <a class="btn btn-ghost" href="${window.EventSphereCategories.href(category.key)}">Browse ${window.EventSphereUtils.escapeHtml(category.label)} <i class="bi bi-arrow-right ms-1"></i></a>
+            <div><div class="eyebrow">${window.EventSphereUtils.escapeHtml(category.label)}</div><h2 class="mt-2">${window.EventSphereUtils.escapeHtml(category.key === 'sports' ? tr('homepage.game_day_title', 'Game day, every day') : tr('homepage.newest_category_events', 'Newest {category} events', { category: category.label }))}</h2></div>
+            <a class="btn btn-ghost" href="${window.EventSphereCategories.href(category.key)}">${window.EventSphereUtils.escapeHtml(tr('homepage.browse_category', 'Browse {category}', { category: category.label }))} <i class="bi bi-arrow-right ms-1"></i></a>
           </div>
           <div class="row g-4 fade-up in">${cards}</div>
         </div>
@@ -390,22 +400,22 @@
         event.preventDefault();
         const email = input.value.trim();
         if (!email || !input.checkValidity()) {
-          setNewsletterMessage(form, 'error', 'Enter a valid email address.');
+          setNewsletterMessage(form, 'error', tr('homepage.newsletter_invalid', 'Enter a valid email address.'));
           input.focus();
           return;
         }
 
         submit.disabled = true;
-        setNewsletterMessage(form, '', 'Subscribing...');
+        setNewsletterMessage(form, '', tr('homepage.newsletter_subscribing', 'Subscribing...'));
         try {
           await window.EventSphereApi.fetch('/newsletter-subscriptions', {
             method: 'POST',
             body: { email, source: form.dataset.newsletterSource || 'homepage' },
           });
           form.reset();
-          setNewsletterMessage(form, 'success', 'You are subscribed. Watch your inbox for Tiketa updates.');
+          setNewsletterMessage(form, 'success', tr('homepage.newsletter_success', 'You are subscribed. Watch your inbox for Tiketa updates.'));
         } catch (err) {
-          setNewsletterMessage(form, 'error', err.message || 'Subscription failed. Please try again.');
+          setNewsletterMessage(form, 'error', err.message || tr('homepage.newsletter_failed', 'Subscription failed. Please try again.'));
         } finally {
           submit.disabled = false;
         }
@@ -419,12 +429,19 @@
 
     try {
       const data = await fetchHomepageData();
+      homepageData = data;
       setupHeroSlider(uniqueEvents(data.featured, data.trending, data.upcoming));
       renderTrending(data.trending);
       renderUpcomingWeek(data.upcoming);
       renderCategorySections(data.categories);
       window.EventSphereFavorites?.syncFavoriteButtons();
       startHeroCountdowns();
+      document.addEventListener('tiketa:language-changed', () => {
+        if (homepageData?.categories) {
+          renderCategorySections(homepageData.categories);
+          window.EventSphereFavorites?.syncFavoriteButtons();
+        }
+      });
     } catch {
       document.querySelector('[data-hero-loading]')?.replaceChildren();
       document.querySelector('[data-home-trending-section]')?.setAttribute('hidden', '');

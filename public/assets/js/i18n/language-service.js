@@ -53,6 +53,10 @@
   function applyText(el) {
     const key = el.dataset.i18n;
     if (!key) return;
+    if (el.hasAttribute('data-i18n-html')) {
+      el.innerHTML = translate(key);
+      return;
+    }
     el.textContent = translate(key);
   }
 

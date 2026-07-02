@@ -18,7 +18,7 @@ class ReservationRequestReceivedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Reservation Request Received',
+            subject: __('emails.reservation_request_received'),
         );
     }
 

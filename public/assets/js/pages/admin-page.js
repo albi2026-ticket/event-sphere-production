@@ -58,6 +58,10 @@
     return u().formatMoney(amount || 0, currency || 'USD');
   }
 
+  function tr(key, fallback) {
+    return window.t?.(key) || fallback || key;
+  }
+
   function cssVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
@@ -1282,6 +1286,8 @@
     renderActivity();
     renderTopLists();
   }
+
+  document.addEventListener('tiketa:language-changed', renderAll);
 
   async function refreshAll() {
     renderAll();

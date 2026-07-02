@@ -1,17 +1,17 @@
-Event Cancelled - {{ $event->title }}
+{{ __('emails.event_cancelled') }} - {{ $event->title }}
 
-We regret to inform you that the event "{{ $event->title }}" has been cancelled.
+{{ __('emails.user_event_cancelled_copy', ['event' => $event->title]) }}
 
-Your ticket(s) are no longer valid for entry.
+{{ __('emails.ticket_no_longer_valid') }}
 
-Our team will contact you regarding the refund process or any next steps that apply.
+{{ __('emails.refund_followup') }}
 
-We apologize for the inconvenience and appreciate your understanding.
+{{ __('emails.apology') }}
 
-Event Details:
-- Event Name: {{ $event->title }}
-- Date: {{ $emailData['event_date'] }}
-- Location: {{ $emailData['location'] }}
-- Order Number: {{ $order->order_number }}
+{{ __('emails.event_details') }}:
+- {{ __('emails.event_name') }}: {{ $event->title }}
+- {{ __('emails.date') }}: {{ $emailData['event_date'] }}
+- {{ __('emails.location') }}: {{ $emailData['location'] }}
+- {{ __('emails.order_number') }}: {{ $order->order_number }}
 
-Tiketa Team
+{{ __('emails.tiketa_team') }}

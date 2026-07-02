@@ -24,7 +24,7 @@ class EventCancelledOrganizerMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Event Successfully Cancelled',
+            subject: __('emails.event_successfully_cancelled'),
         );
     }
 

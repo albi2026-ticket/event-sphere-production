@@ -26,7 +26,7 @@ class OrganizerTicketSaleMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "New Ticket Sold • {$this->event->title}",
+            subject: __('emails.organizer_sale_subject', ['event' => $this->event->title]),
         );
     }
 

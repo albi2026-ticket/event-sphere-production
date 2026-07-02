@@ -6,6 +6,7 @@
   const u = () => window.EventSphereUtils;
   const $ = (sel) => document.querySelector(sel);
   const esc = (value) => u().escapeHtml(value ?? '');
+  const tr = (key, fallback) => window.t?.(key) || fallback || key;
 
   function dateTime(value) {
     if (!value) return '-';
@@ -62,8 +63,8 @@
     if (events.length > 1) {
       wrap.innerHTML = `
         <div class="col-12">
-          <div class="eyebrow mb-2">Assigned Events</div>
-          <h2 class="mb-3" style="font-size:1.55rem">Select an event to scan</h2>
+          <div class="eyebrow mb-2">${esc(tr('scanner.assigned_events', 'Assigned Events'))}</div>
+          <h2 class="mb-3" style="font-size:1.55rem">${esc(tr('scanner.select_event_to_scan', 'Select an event to scan'))}</h2>
         </div>
         ${events.map(eventCard).join('')}`;
       scanLink?.classList.add('disabled');
@@ -81,13 +82,13 @@
         <img class="img-fluid rounded-3 w-100" style="aspect-ratio:16/10;object-fit:cover" src="${esc(image)}" alt="${esc(event.title)}">
       </div>
       <div class="col-md-7">
-        <div class="eyebrow mb-2">Assigned Event</div>
+        <div class="eyebrow mb-2">${esc(tr('scanner.assigned_event', 'Assigned Event'))}</div>
         <h2 class="mb-3" style="font-size:1.55rem">${esc(event.title)}</h2>
         <div class="dashboard-detail-grid">
-          <div><dt>Date</dt><dd>${dateTime(event.starts_at)}</dd></div>
-          <div><dt>Venue</dt><dd>${esc(event.venue_name || '-')}</dd></div>
-          <div><dt>Location</dt><dd>${esc([event.city, event.country].filter(Boolean).join(', ') || '-')}</dd></div>
-          <div><dt>Status</dt><dd>${badge(event.status)}</dd></div>
+          <div><dt>${esc(tr('common.date', 'Date'))}</dt><dd>${dateTime(event.starts_at)}</dd></div>
+          <div><dt>${esc(tr('venue.name', 'Venue'))}</dt><dd>${esc(event.venue_name || '-')}</dd></div>
+          <div><dt>${esc(tr('common.location', 'Location'))}</dt><dd>${esc([event.city, event.country].filter(Boolean).join(', ') || '-')}</dd></div>
+          <div><dt>${esc(tr('admin.status', 'Status'))}</dt><dd>${badge(event.status)}</dd></div>
         </div>
       </div>`;
   }
@@ -103,8 +104,13 @@
         <td data-label="Ticket">${esc(scan.ticket_code || scan.ticket_uuid || '-')}</td>
         <td data-label="Time">${dateTime(scan.scanned_at)}</td>
       </tr>
-    `).join('') || '<tr><td colspan="5" class="text-muted-pro">No scans yet.</td></tr>';
+    `).join('') || `<tr><td colspan="5" class="text-muted-pro">${esc(tr('scanner.no_scans_yet', 'No scans yet.'))}</td></tr>`;
   }
+
+  document.addEventListener('tiketa:language-changed', () => {
+    renderEvents(window.__scannerDashboardEvents || []);
+    renderScans(window.__scannerDashboardScans || []);
+  });
 
   document.addEventListener('DOMContentLoaded', async () => {
     const user = auth().requireAuth(['scanner']);
@@ -112,10 +118,12 @@
 
     try {
       const { data } = await api().fetch('/scanner/dashboard');
-      renderEvents(data.assigned_events || (data.assigned_event ? [data.assigned_event] : []));
+      window.__scannerDashboardEvents = data.assigned_events || (data.assigned_event ? [data.assigned_event] : []);
+      renderEvents(window.__scannerDashboardEvents);
       const total = $('[data-scanner-total-today]');
       if (total) total.textContent = data.total_scanned_today ?? 0;
-      renderScans(data.recent_scans || []);
+      window.__scannerDashboardScans = data.recent_scans || [];
+      renderScans(window.__scannerDashboardScans);
     } catch (err) {
       window.tkToast?.(err.message || 'Failed to load scanner dashboard', 'error');
     }

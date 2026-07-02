@@ -38,8 +38,8 @@ class NotificationService
                 $this->create(
                     $order->user,
                     Notification::TYPE_TICKET_PURCHASED,
-                    'Ticket Purchased',
-                    sprintf('Your ticket for "%s" has been successfully purchased.', $event->title),
+                    $this->tr($order->user, 'notifications.ticket_purchased'),
+                    $this->tr($order->user, 'notifications.ticket_purchased_message', ['event' => $event->title]),
                     $this->eventLink($event),
                 );
             });
@@ -56,8 +56,8 @@ class NotificationService
                 $this->create(
                     $ticket->user,
                     Notification::TYPE_TICKET_REFUNDED,
-                    'Ticket Refunded',
-                    sprintf('Your ticket for "%s" has been refunded.', $ticket->event->title),
+                    $this->tr($ticket->user, 'notifications.ticket_refunded'),
+                    $this->tr($ticket->user, 'notifications.ticket_refunded_message', ['event' => $ticket->event->title]),
                     $this->eventLink($ticket->event),
                 );
             });
@@ -74,8 +74,8 @@ class NotificationService
         $this->create(
             $event->organizer,
             Notification::TYPE_EVENT_APPROVED,
-            'Event Approved',
-            sprintf('Your event "%s" has been approved and is now publicly visible.', $event->title),
+            $this->tr($event->organizer, 'notifications.event_approved'),
+            $this->tr($event->organizer, 'notifications.event_approved_message', ['event' => $event->title]),
             'organizer.html',
         );
     }
@@ -88,15 +88,15 @@ class NotificationService
             return;
         }
 
-        $message = sprintf('Your event "%s" has been rejected.', $event->title);
+        $message = $this->tr($event->organizer, 'notifications.event_rejected_message', ['event' => $event->title]);
         if ($reason) {
-            $message .= ' Reason: '.$reason;
+            $message .= ' '.$this->tr($event->organizer, 'notifications.event_rejected_reason', ['reason' => $reason]);
         }
 
         $this->create(
             $event->organizer,
             Notification::TYPE_EVENT_REJECTED,
-            'Event Rejected',
+            $this->tr($event->organizer, 'notifications.event_rejected'),
             $message,
             'organizer.html',
         );
@@ -108,8 +108,8 @@ class NotificationService
             $this->create(
                 $user,
                 Notification::TYPE_EVENT_UPDATED,
-                'Event Updated',
-                sprintf('"%s" has been updated.', $event->title),
+                $this->tr($user, 'notifications.event_updated'),
+                $this->tr($user, 'notifications.event_updated_message', ['event' => $event->title]),
                 $this->eventLink($event),
             );
         });
@@ -121,8 +121,8 @@ class NotificationService
             $this->create(
                 $user,
                 Notification::TYPE_EVENT_CANCELLED,
-                'Event Cancelled',
-                sprintf('"%s" has been cancelled.', $event->title),
+                $this->tr($user, 'notifications.event_cancelled'),
+                $this->tr($user, 'notifications.event_cancelled_message', ['event' => $event->title]),
                 $this->eventLink($event),
             );
         });
@@ -141,5 +141,13 @@ class NotificationService
     protected function eventLink(Event $event): string
     {
         return "event-details.html?id={$event->id}";
+    }
+
+    /**
+     * @param array<string, mixed> $replace
+     */
+    protected function tr(User $user, string $key, array $replace = []): string
+    {
+        return __($key, $replace, $user->preferred_language ?: 'en');
     }
 }
