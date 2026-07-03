@@ -25,6 +25,7 @@
       <a href="#analytics" data-admin-nav="analytics"><i class="bi bi-graph-up-arrow"></i> <span data-i18n="admin.analytics">Analytics</span></a>
       <a href="#checkins" data-admin-nav="checkins"><i class="bi bi-qr-code-scan"></i> <span data-i18n="admin.check_in_monitoring">Check-In Monitoring</span></a>
       <a href="#email-center" data-admin-nav="email-center"><i class="bi bi-envelope-paper"></i> <span data-i18n="admin.email_center">Email Center</span></a>
+      <a href="#subscribers" data-admin-nav="subscribers"><i class="bi bi-envelope-heart"></i> <span>Subscribers</span></a>
       <a href="#categories" data-admin-nav="categories"><i class="bi bi-tags"></i> Categories</a>
       <a href="#platform-settings" data-admin-nav="platform-settings"><i class="bi bi-sliders"></i> Platform Settings</a>
       <a href="#reports" data-admin-nav="reports"><i class="bi bi-file-earmark-bar-graph"></i> <span data-i18n="admin.reports">Reports</span></a>
@@ -233,6 +234,38 @@
           </table>
         </div>
         <div data-admin-email-pagination></div>
+      </div>
+    </section>
+
+    <section id="subscribers" class="admin-section" data-admin-section="subscribers">
+      <div class="row g-3 mb-3" data-admin-subscriber-summary>
+        <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Total Subscribers</div><div class="value">0</div></div></div>
+        <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Active</div><div class="value">0</div></div></div>
+        <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Unsubscribed</div><div class="value">0</div></div></div>
+        <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Restaurant Source</div><div class="value">0</div></div></div>
+      </div>
+      <div class="card-pro p-3">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
+          <div>
+            <h4 class="mb-1">Subscribers</h4>
+            <p class="text-muted-pro mb-0">View and export newsletter subscribers. Newsletter sending is not enabled yet.</p>
+          </div>
+          <button class="btn btn-glass btn-sm" type="button" data-export-subscribers><i class="bi bi-filetype-csv me-1"></i>Export CSV</button>
+        </div>
+        <form class="row g-2 mb-3" data-admin-subscriber-filters>
+          <div class="col-md-4"><input class="form-control" name="q" placeholder="Search email"/></div>
+          <div class="col-md-2"><select class="form-select" name="source"><option value="">All sources</option><option value="events">Events</option><option value="restaurants">Restaurants</option></select></div>
+          <div class="col-md-2"><select class="form-select" name="status"><option value="">All statuses</option><option value="active">Active</option><option value="unsubscribed">Unsubscribed</option></select></div>
+          <div class="col-md-2"><button class="btn btn-glass w-100" type="submit"><i class="bi bi-search me-1"></i>Search</button></div>
+          <div class="col-md-2"><button class="btn btn-glass w-100" type="button" data-reset-admin-subscribers><i class="bi bi-x-circle me-1"></i>Clear</button></div>
+        </form>
+        <div class="table-responsive">
+          <table class="table table-borderless align-middle mb-0 dashboard-table">
+            <thead><tr><th>Email</th><th>Source</th><th>Language</th><th>Status</th><th>Subscribed</th><th>Unsubscribed</th></tr></thead>
+            <tbody data-admin-subscribers><tr><td colspan="6" class="text-muted-pro">Loading subscribers...</td></tr></tbody>
+          </table>
+        </div>
+        <div data-admin-subscriber-pagination></div>
       </div>
     </section>
 

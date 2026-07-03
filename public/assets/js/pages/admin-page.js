@@ -14,6 +14,9 @@
     tickets: [],
     categories: [],
     emailCenter: null,
+    subscribers: [],
+    subscriberSummary: null,
+    subscriberMeta: null,
     auditLogs: [],
     auditMeta: null,
     checkInLogs: [],
@@ -28,6 +31,7 @@
     paymentFilters: {},
     ticketFilters: {},
     emailFilters: {},
+    subscriberFilters: {},
     emailMeta: null,
     auditFilters: {},
     checkInFilters: {},
@@ -36,8 +40,8 @@
     sectionRequests: {},
     dataLoaded: {},
     dataRequests: {},
-    loading: { users: false, events: false, venues: false, reservations: false, payments: false, tickets: false, categories: false, emailCenter: false, auditLogs: false, checkIns: false, settings: false },
-    errors: { users: null, events: null, venues: null, reservations: null, payments: null, tickets: null, categories: null, emailCenter: null, auditLogs: null, checkIns: null, settings: null },
+    loading: { users: false, events: false, venues: false, reservations: false, payments: false, tickets: false, categories: false, emailCenter: false, subscribers: false, auditLogs: false, checkIns: false, settings: false },
+    errors: { users: null, events: null, venues: null, reservations: null, payments: null, tickets: null, categories: null, emailCenter: null, subscribers: null, auditLogs: null, checkIns: null, settings: null },
   };
 
   function rows(payload) {
@@ -246,6 +250,24 @@
     } finally {
       state.loading.emailCenter = false;
       renderEmailCenter();
+    }
+  }
+
+  async function loadSubscribers() {
+    state.loading.subscribers = true;
+    state.errors.subscribers = null;
+    renderSubscribers();
+    try {
+      const query = qs({ page: state.subscriberFilters.page || 1, per_page: 25, ...state.subscriberFilters });
+      const { data } = await api().fetch(`/admin/subscribers${query ? `?${query}` : ''}`);
+      state.subscribers = data.subscribers || [];
+      state.subscriberSummary = data.summary || null;
+      state.subscriberMeta = data.meta || null;
+    } catch (err) {
+      state.errors.subscribers = err.message || 'Failed to load subscribers';
+    } finally {
+      state.loading.subscribers = false;
+      renderSubscribers();
     }
   }
 
@@ -1008,6 +1030,55 @@
     `;
   }
 
+  function renderSubscribers() {
+    renderSubscriberSummary();
+    const body = document.querySelector('[data-admin-subscribers]');
+    const pager = document.querySelector('[data-admin-subscriber-pagination]');
+    if (!body) return;
+
+    if (state.loading.subscribers) {
+      body.innerHTML = loadingRow(6, 'Loading subscribers...');
+      if (pager) pager.innerHTML = '';
+      return;
+    }
+    if (state.errors.subscribers) {
+      body.innerHTML = errorRow(6, state.errors.subscribers, 'data-retry-subscribers');
+      if (pager) pager.innerHTML = '';
+      return;
+    }
+
+    body.innerHTML = state.subscribers.map((subscriber) => `
+      <tr>
+        <td data-label="Email"><div class="fw-semibold">${u().escapeHtml(subscriber.email || '-')}</div><small class="text-muted-pro">#${subscriber.id}</small></td>
+        <td data-label="Source">${badge(subscriber.source || 'events')}</td>
+        <td data-label="Language">${u().escapeHtml((subscriber.language || 'en').toUpperCase())}</td>
+        <td data-label="Status">${badge(subscriber.status || 'active')}</td>
+        <td data-label="Subscribed">${dateTimeLabel(subscriber.subscribed_at)}</td>
+        <td data-label="Unsubscribed">${dateTimeLabel(subscriber.unsubscribed_at)}</td>
+      </tr>
+    `).join('') || emptyRow(6, 'bi-envelope-heart', 'No subscribers found');
+
+    if (pager && state.subscriberMeta?.last_page > 1) {
+      const current = Number(state.subscriberMeta.current_page || 1);
+      pager.innerHTML = `<div class="dashboard-pagination"><button class="btn btn-glass btn-sm" data-subscriber-page="${current - 1}" ${current <= 1 ? 'disabled' : ''}>Previous</button><span class="text-muted-pro small">Page ${current} of ${state.subscriberMeta.last_page}</span><button class="btn btn-glass btn-sm" data-subscriber-page="${current + 1}" ${current >= state.subscriberMeta.last_page ? 'disabled' : ''}>Next</button></div>`;
+    } else if (pager) {
+      pager.innerHTML = '';
+    }
+  }
+
+  function renderSubscriberSummary() {
+    const row = document.querySelector('[data-admin-subscriber-summary]');
+    if (!row) return;
+    const summary = state.subscriberSummary || { total: 0, active: 0, unsubscribed: 0, by_source: {} };
+    const bySource = summary.by_source || {};
+    row.innerHTML = `
+      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Total Subscribers</div><div class="value">${summary.total ?? 0}</div></div></div>
+      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Active</div><div class="value">${summary.active ?? 0}</div></div></div>
+      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Unsubscribed</div><div class="value">${summary.unsubscribed ?? 0}</div></div></div>
+      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">By Source</div><div class="value">${Number(bySource.events || 0)} / ${Number(bySource.restaurants || 0)}</div><div class="delta">Events / Restaurants</div></div></div>
+    `;
+  }
+
   function selectedEmailTemplate() {
     const id = document.querySelector('[data-email-template-select]')?.value;
     return (state.emailCenter?.templates || []).find((template) => String(template.id) === String(id));
@@ -1212,6 +1283,19 @@
     URL.revokeObjectURL(url);
   }
 
+  async function exportSubscribers() {
+    const params = Object.assign({}, state.subscriberFilters);
+    delete params.page;
+    const query = qs(params);
+    const blob = await api().fetchBlob(`/admin/subscribers/export${query ? `?${query}` : ''}`);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'tiketa-subscribers.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   function renderCheckIns() {
     const statsRow = document.querySelector('[data-admin-checkin-stats]');
     const body = document.querySelector('[data-admin-checkin-logs]');
@@ -1282,6 +1366,7 @@
     renderCheckIns();
     renderCategories();
     renderEmailCenter();
+    renderSubscribers();
     renderAuditLogs();
     renderActivity();
     renderTopLists();
@@ -1353,6 +1438,7 @@
         loadData('checkIns', loadCheckIns, force),
       ]),
       'email-center': () => loadData('emailCenter', loadEmailCenter, force),
+      subscribers: () => loadData('subscribers', loadSubscribers, force),
       categories: () => loadData('categories', loadCategories, force),
       'platform-settings': () => loadData('settings', loadSettings, force),
       reports: () => Promise.all([
@@ -1405,6 +1491,11 @@
   async function refreshEmailCenterPage(page = 1) {
     state.emailFilters.page = page;
     await loadData('emailCenter', loadEmailCenter, true);
+  }
+
+  async function refreshSubscribers(page = 1) {
+    state.subscriberFilters.page = page;
+    await loadData('subscribers', loadSubscribers, true);
   }
 
   async function refreshAuditLogs(page = 1) {
@@ -1935,6 +2026,24 @@
       await refreshReservations();
     });
 
+    const subscriberForm = document.querySelector('[data-admin-subscriber-filters]');
+    subscriberForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const fd = new FormData(subscriberForm);
+      state.subscriberFilters = {
+        q: fd.get('q'),
+        source: fd.get('source'),
+        status: fd.get('status'),
+      };
+      await refreshSubscribers(1);
+    });
+
+    document.querySelector('[data-reset-admin-subscribers]')?.addEventListener('click', async () => {
+      subscriberForm?.reset();
+      state.subscriberFilters = {};
+      await refreshSubscribers(1);
+    });
+
     const paymentForm = document.querySelector('[data-admin-payment-filters]');
     paymentForm?.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -2160,6 +2269,7 @@
         if (button.dataset.retryCheckins !== undefined) await refreshCheckIns();
         if (button.dataset.retryCategories !== undefined) await refreshCategories();
         if (button.dataset.retryEmailCenter !== undefined) await refreshEmailCenter();
+        if (button.dataset.retrySubscribers !== undefined) await refreshSubscribers();
         if (button.dataset.retryAuditLogs !== undefined) await refreshAuditLogs();
 
         if (button.dataset.adminReport) {
@@ -2177,9 +2287,19 @@
           await refreshEmailCenterPage(button.dataset.emailPage);
         }
 
+        if (button.dataset.subscriberPage) {
+          button.disabled = true;
+          await refreshSubscribers(button.dataset.subscriberPage);
+        }
+
         if (button.dataset.exportEmailLogs) {
           button.disabled = true;
           await exportEmailLogs(button.dataset.exportEmailLogs);
+        }
+
+        if (button.dataset.exportSubscribers !== undefined) {
+          button.disabled = true;
+          await exportSubscribers();
         }
 
         if (button.dataset.emailRetry) {

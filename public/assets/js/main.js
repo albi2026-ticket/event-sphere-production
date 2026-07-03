@@ -301,7 +301,7 @@
     e.preventDefault();
     const eventId = b.dataset.eventId;
     if (eventId && !window.EventSphereAuth?.isLoggedIn?.()) {
-      const next = encodeURIComponent(location.pathname.split('/').pop() + location.search);
+      const next = encodeURIComponent(location.pathname + location.search);
       location.href = `/login?next=${next}`;
       return;
     }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Admin\AdminOrganizerDashboardController;
 use App\Http\Controllers\Api\Admin\AdminPaymentController;
 use App\Http\Controllers\Api\Admin\AdminPlatformSettingController;
 use App\Http\Controllers\Api\Admin\AdminReservationController;
+use App\Http\Controllers\Api\Admin\AdminSubscriberController;
 use App\Http\Controllers\Api\Admin\AdminTicketController;
 use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\Admin\AdminVenueController;
@@ -85,6 +86,9 @@ Route::get('/tickets/{ticket}/email-download', [TicketController::class, 'emailD
     ->middleware('signed')
     ->name('tickets.email.download');
 Route::post('/newsletter-subscriptions', [NewsletterSubscriptionController::class, 'store']);
+Route::get('/newsletter-subscriptions/{newsletterSubscription}/unsubscribe', [NewsletterSubscriptionController::class, 'unsubscribe'])
+    ->middleware('signed')
+    ->name('newsletter-subscriptions.unsubscribe');
 Route::post('/stripe/webhook', WebhookController::class);
 
 Route::middleware('auth:sanctum')->group(function (): void {
@@ -222,6 +226,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/email-center/{emailLog}/retry', [AdminEmailCenterController::class, 'retry']);
         Route::patch('/email-templates/{template}', [AdminEmailCenterController::class, 'updateTemplate']);
         Route::get('/email-templates/{template}/preview', [AdminEmailCenterController::class, 'preview']);
+        Route::get('/subscribers', [AdminSubscriberController::class, 'index']);
+        Route::get('/subscribers/export', [AdminSubscriberController::class, 'export']);
         Route::get('/audit-logs', [AdminAuditLogController::class, 'index']);
         Route::get('/organizers/{organizer}/dashboard/summary', [AdminOrganizerDashboardController::class, 'summary']);
         Route::get('/organizers/{organizer}/analytics', [AdminOrganizerDashboardController::class, 'analytics']);

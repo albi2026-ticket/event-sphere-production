@@ -156,6 +156,7 @@
       ? status.label.toUpperCase()
       : (event.category || 'EVENT').toUpperCase();
     const slug = event.slug;
+    const detailsHref = window.EventSphereRoutes?.eventUrl?.(slug) || `/event/${encodeURIComponent(slug)}`;
     const favKey = `event-${event.id}`;
 
     return `
@@ -168,9 +169,9 @@
       </div>
       <div class="body">
         <div class="meta"><i class="bi bi-calendar3"></i> ${u().escapeHtml(date)}</div>
-        <h3 class="title"><a href="/event?id=${encodeURIComponent(slug)}" style="color:inherit">${u().escapeHtml(event.title)}</a></h3>
+        <h3 class="title"><a href="${detailsHref}" style="color:inherit">${u().escapeHtml(event.title)}</a></h3>
         <div class="venue"><i class="bi bi-geo-alt"></i> ${u().escapeHtml(event.venue_name || '')}${event.city ? `, ${u().escapeHtml(event.city)}` : ''}</div>
-        <div class="foot"><div class="price">${status.canBuy ? `<span data-i18n="events.from">${tr('events.from', 'From')}</span> ${u().formatMoney(price.amount, price.currency)}` : `<span${status.priceKey ? ` data-i18n="${status.priceKey}"` : ''}>${u().escapeHtml(status.priceLabel)}</span>`}</div><a class="btn btn-glass btn-sm" href="/event?id=${encodeURIComponent(slug)}" data-i18n="buttons.view">${window.t?.('buttons.view') || 'View'}</a></div>
+        <div class="foot"><div class="price">${status.canBuy ? `<span data-i18n="events.from">${tr('events.from', 'From')}</span> ${u().formatMoney(price.amount, price.currency)}` : `<span${status.priceKey ? ` data-i18n="${status.priceKey}"` : ''}>${u().escapeHtml(status.priceLabel)}</span>`}</div><a class="btn btn-glass btn-sm" href="${detailsHref}" data-i18n="buttons.view">${window.t?.('buttons.view') || 'View'}</a></div>
       </div>
     </article>
   </div>`;

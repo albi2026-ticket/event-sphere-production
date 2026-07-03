@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreNewsletterSubscriptionRequest extends FormRequest
 {
@@ -15,7 +16,8 @@ class StoreNewsletterSubscriptionRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email:rfc', 'max:255'],
-            'source' => ['nullable', 'string', 'max:80'],
+            'source' => ['nullable', Rule::in(['events', 'restaurants', 'homepage'])],
+            'language' => ['nullable', Rule::in(['en', 'sq'])],
         ];
     }
 }

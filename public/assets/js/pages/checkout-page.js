@@ -36,7 +36,7 @@
 
     const item = c.items[0];
     if (els.backLink) {
-      els.backLink.href = c.source_url || (c.event_slug ? `/event?id=${encodeURIComponent(c.event_slug)}` : '/events/list');
+      els.backLink.href = c.source_url || (c.event_slug ? (window.EventSphereRoutes?.eventUrl?.(c.event_slug) || `/event/${encodeURIComponent(c.event_slug)}`) : '/events/list');
     }
     const feePercentage = Number(c.service_fee_percentage ?? 10);
     const subtotal = Number(item.unit_price) * Number(item.quantity);

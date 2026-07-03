@@ -102,8 +102,8 @@
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
-    const params = new URLSearchParams(location.search);
-    const slug = params.get('id') || params.get('slug');
+    window.EventSphereRoutes?.redirectLegacyEvent?.();
+    const slug = window.EventSphereRoutes?.eventSlug?.() || '';
     if (!slug) {
       window.tkToast?.(tr('events.event_not_specified', 'Event not specified'), 'error');
       return;

@@ -106,7 +106,7 @@
 
   function venueUrl(reservation) {
     const slug = reservation.venue?.slug;
-    return slug ? `/restaurant?id=${encodeURIComponent(slug)}` : '/restaurant';
+    return slug ? (window.EventSphereRoutes?.restaurantUrl?.(slug) || `/restaurant/${encodeURIComponent(slug)}`) : '/restaurant';
   }
 
   function reservationCard(reservation) {

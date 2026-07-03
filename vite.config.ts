@@ -6,7 +6,9 @@
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { existsSync } from "node:fs";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import path from "node:path";
+import type { ViteDevServer } from "vite";
 
 const cleanUrlAliases: Record<string, string> = {
   events: "index",
@@ -14,6 +16,8 @@ const cleanUrlAliases: Record<string, string> = {
   event: "event-details",
   restaurant: "venue",
   restaurants: "reservations",
+  "checkout-success": "checkout-success",
+  "checkout-cancelled": "checkout-cancelled",
   "my-tickets": "dashboard",
 };
 
@@ -23,8 +27,8 @@ function cleanStaticHtmlUrls() {
   return {
     name: "clean-static-html-urls",
     apply: "serve" as const,
-    configureServer(server) {
-      server.middlewares.use((req, _res, next) => {
+    configureServer(server: ViteDevServer) {
+      server.middlewares.use((req: IncomingMessage, _res: ServerResponse, next: () => void) => {
         if (!req.url || (req.method !== "GET" && req.method !== "HEAD")) {
           return next();
         }
@@ -36,7 +40,13 @@ function cleanStaticHtmlUrls() {
           return next();
         }
 
-        const pageName = slug ? (cleanUrlAliases[slug] ?? slug) : "welcome";
+        const pageName = slug.startsWith("event/")
+          ? "event-details"
+          : slug.startsWith("restaurant/")
+            ? "venue"
+            : slug
+              ? (cleanUrlAliases[slug] ?? slug)
+              : "welcome";
         const htmlPath = path.join(siteRoot, `${pageName}.html`);
 
         if (!existsSync(htmlPath)) {

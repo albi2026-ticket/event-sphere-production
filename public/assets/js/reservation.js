@@ -41,7 +41,7 @@
   function card(venue) {
     const facilities = preview(venue.facilities, tr('restaurants.facilities_coming_soon', 'Facilities coming soon'));
     const cuisines = preview(venue.cuisine_types, titleCase(venue.venue_type));
-    const detailsUrl = `/restaurant?id=${encodeURIComponent(venue.slug)}`;
+    const detailsUrl = window.EventSphereRoutes?.restaurantUrl?.(venue.slug) || `/restaurant/${encodeURIComponent(venue.slug)}`;
     return `
     <div class="col-lg-3 col-md-6">
       <a class="text-decoration-none" href="${detailsUrl}">
@@ -259,8 +259,53 @@
     });
   }
 
+  function setNewsletterMessage(form, type, message) {
+    const el = form?.querySelector('[data-restaurant-newsletter-message]');
+    if (!el) return;
+    el.className = `newsletter-message ${type ? `is-${type}` : ''}`;
+    el.textContent = message || '';
+  }
+
+  function bindNewsletter() {
+    document.querySelectorAll('[data-restaurant-newsletter-form]').forEach((form) => {
+      const input = form.querySelector('[data-restaurant-newsletter-email]');
+      const submit = form.querySelector('[data-restaurant-newsletter-submit]');
+      if (!input || !submit) return;
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const email = input.value.trim();
+        if (!email || !input.checkValidity()) {
+          setNewsletterMessage(form, 'error', window.t?.('homepage.newsletter_invalid') || 'Enter a valid email address.');
+          input.focus();
+          return;
+        }
+
+        submit.disabled = true;
+        setNewsletterMessage(form, '', window.t?.('homepage.newsletter_subscribing') || 'Subscribing...');
+        try {
+          await api().fetch('/newsletter-subscriptions', {
+            method: 'POST',
+            body: {
+              email,
+              source: form.dataset.newsletterSource || 'restaurants',
+              language: window.TiketaLanguage?.getLanguage?.() || 'en',
+            },
+          });
+          form.reset();
+          setNewsletterMessage(form, 'success', window.t?.('homepage.newsletter_success') || 'You are subscribed. Watch your inbox for Tiketa updates.');
+        } catch (err) {
+          setNewsletterMessage(form, 'error', err.message || window.t?.('homepage.newsletter_failed') || 'Subscription failed. Please try again.');
+        } finally {
+          submit.disabled = false;
+        }
+      });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     bindFilters();
+    bindNewsletter();
     await loadLookups();
     await loadVenues();
   });

@@ -132,7 +132,7 @@
   function requireAuth(roles, options = {}) {
     const user = getUser();
     if (!getToken() || !user) {
-      const next = encodeURIComponent(location.pathname.split('/').pop() + location.search);
+      const next = encodeURIComponent(location.pathname + location.search);
       location.href = `${cfg().LOGIN_URL}?next=${next}`;
       return null;
     }

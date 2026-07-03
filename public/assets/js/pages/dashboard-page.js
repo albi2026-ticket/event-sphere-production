@@ -371,7 +371,7 @@
     const ticketByEvent = new Map(upcomingTickets.map((ticket) => [String(ticket.event?.id), ticket]));
     const empty = emptyState('bi-calendar2-plus', tr('dashboard.no_upcoming_events', 'No upcoming events'), tr('dashboard.future_events_appear', 'When you buy tickets for future events, they will appear here.'), `<a class="btn btn-glass btn-sm mt-2" href="/events/list" data-i18n="buttons.browse_events">${tr('buttons.browse_events', 'Browse events')}</a>`);
     const compact = state.upcomingEvents.slice(0, 4).map((event) => `
-      <a class="dashboard-event-row" href="/event?id=${encodeURIComponent(event.slug)}">
+      <a class="dashboard-event-row" href="${window.EventSphereRoutes?.eventUrl?.(event.slug) || `/event/${encodeURIComponent(event.slug)}`}">
         <img src="${escape(u().eventImage(event))}" alt=""/>
         <div class="flex-grow-1">
           <div class="fw-semibold">${escape(event.title)}</div>
@@ -391,7 +391,7 @@
               <span><span class="fw-semibold d-block">${escape(event.title)}</span><small>${escape(dateLabel(event.starts_at, event.timezone))} · ${escape(event.venue_name || '')}${event.city ? `, ${escape(event.city)}` : ''}</small><small class="d-block"><span data-i18n="dashboard.starts_in">${tr('dashboard.starts_in', 'Starts in')}</span> ${escape(countdownLabel(event.starts_at))}</small></span>
             </div>
             <div class="dashboard-actions">
-              ${ticket ? `<button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}" data-i18n="tickets.view_ticket">${tr('tickets.view_ticket', 'View Ticket')}</button><button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}" data-i18n="tickets.view_qr">${tr('tickets.view_qr', 'View QR')}</button>` : `<a class="btn btn-glass btn-sm" href="/event?id=${encodeURIComponent(event.slug)}" data-i18n="dashboard.view_event">${tr('dashboard.view_event', 'View Event')}</a>`}
+              ${ticket ? `<button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}" data-i18n="tickets.view_ticket">${tr('tickets.view_ticket', 'View Ticket')}</button><button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}" data-i18n="tickets.view_qr">${tr('tickets.view_qr', 'View QR')}</button>` : `<a class="btn btn-glass btn-sm" href="${window.EventSphereRoutes?.eventUrl?.(event.slug) || `/event/${encodeURIComponent(event.slug)}`}" data-i18n="dashboard.view_event">${tr('dashboard.view_event', 'View Event')}</a>`}
             </div>
           </div>`;
       }).join('') || empty;
@@ -478,7 +478,7 @@
             <div class="foot">
               <div class="price">${pricing}<div class="mt-1">${statusBadge(stateBadge)}</div></div>
               <div class="dashboard-actions">
-                <a class="btn btn-glass btn-sm" href="/event?id=${encodeURIComponent(event.slug)}" data-i18n="dashboard.view_event">${tr('dashboard.view_event', 'View Event')}</a>
+                <a class="btn btn-glass btn-sm" href="${window.EventSphereRoutes?.eventUrl?.(event.slug) || `/event/${encodeURIComponent(event.slug)}`}" data-i18n="dashboard.view_event">${tr('dashboard.view_event', 'View Event')}</a>
                 <button class="btn btn-glass btn-sm" type="button" data-remove-favorite="${event.id}"><i class="bi bi-heartbreak"></i></button>
               </div>
             </div>

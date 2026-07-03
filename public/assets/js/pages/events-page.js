@@ -211,18 +211,19 @@
         const date = u().formatEventDate(event.starts_at, event.timezone);
         const price = eventsApi().lowestAvailablePrice(event);
         const status = eventsApi().salesStatus(event);
+        const detailsHref = window.EventSphereRoutes?.eventUrl?.(event.slug) || `/event/${encodeURIComponent(event.slug)}`;
         return `
           <div class="col-12">
             <article class="card-pro p-3 d-flex gap-3 align-items-center flex-wrap">
               <img loading="lazy" decoding="async" src="${u().escapeHtml(u().eventImage(event))}" alt="" style="width:120px;height:86px;object-fit:cover;border-radius:10px"/>
               <div class="flex-grow-1">
                 <div class="meta"><i class="bi bi-calendar3"></i> ${u().escapeHtml(date)}</div>
-                <h3 class="title mb-1"><a href="/event?id=${encodeURIComponent(event.slug)}" style="color:inherit">${u().escapeHtml(event.title)}</a></h3>
+                <h3 class="title mb-1"><a href="${detailsHref}" style="color:inherit">${u().escapeHtml(event.title)}</a></h3>
                 <div class="venue"><i class="bi bi-geo-alt"></i> ${u().escapeHtml(event.venue_name || '')}${event.city ? `, ${u().escapeHtml(event.city)}` : ''}</div>
               </div>
               <div class="text-end">
                 <div class="price mb-2">${status.canBuy ? `From ${u().formatMoney(price.amount, price.currency)}` : status.priceLabel}</div>
-                <a class="btn btn-glass btn-sm" href="/event?id=${encodeURIComponent(event.slug)}" data-i18n="buttons.view">${window.t?.('buttons.view') || 'View'}</a>
+                <a class="btn btn-glass btn-sm" href="${detailsHref}" data-i18n="buttons.view">${window.t?.('buttons.view') || 'View'}</a>
               </div>
               <span class="fav" data-fav="event-${event.id}" data-event-id="${event.id}" style="position:static"><i class="bi bi-heart"></i></span>
             </article>

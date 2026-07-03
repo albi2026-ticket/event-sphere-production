@@ -196,7 +196,7 @@
   function renderHeroSlide(event, index) {
     const u = window.EventSphereUtils;
     const img = u.eventImage(event);
-    const detailsHref = `/event?id=${encodeURIComponent(event.slug)}`;
+    const detailsHref = window.EventSphereRoutes?.eventUrl?.(event.slug) || `/event/${encodeURIComponent(event.slug)}`;
     const status = window.EventSphereEvents.salesStatus(event);
     const ticketType = window.EventSphereEvents.availableTicketTypes(event)[0];
     const buyDisabled = !status.canBuy || (!ticketType && event.price_from === undefined && event.base_price === undefined);
@@ -410,7 +410,11 @@
         try {
           await window.EventSphereApi.fetch('/newsletter-subscriptions', {
             method: 'POST',
-            body: { email, source: form.dataset.newsletterSource || 'homepage' },
+            body: {
+              email,
+              source: form.dataset.newsletterSource || 'events',
+              language: window.TiketaLanguage?.getLanguage?.() || 'en',
+            },
           });
           form.reset();
           setNewsletterMessage(form, 'success', tr('homepage.newsletter_success', 'You are subscribed. Watch your inbox for Tiketa updates.'));

@@ -86,7 +86,7 @@ class MockPaymentController extends Controller
                 'payment_status' => $order->payment_status,
                 'payment_provider' => $order->payment_provider,
                 'paid_at' => $order->paid_at,
-                'checkout_url' => "checkout-success.html?order_id={$order->id}&mock=1",
+                'checkout_url' => "/checkout-success?order_id={$order->id}&mock=1",
                 'tickets_count' => $order->tickets->count(),
             ],
         ]);

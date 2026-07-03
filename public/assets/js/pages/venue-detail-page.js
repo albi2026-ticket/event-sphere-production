@@ -24,8 +24,8 @@
   const availabilityCacheTtlMs = 30000;
 
   function slugFromLocation() {
-    const params = new URLSearchParams(location.search);
-    return params.get('id') || params.get('venue') || params.get('slug') || '';
+    window.EventSphereRoutes?.redirectLegacyRestaurant?.();
+    return window.EventSphereRoutes?.restaurantSlug?.() || '';
   }
 
   function titleCase(value) {
@@ -880,7 +880,7 @@
     document.querySelectorAll('[data-reserve-button]').forEach((button) => {
       button.addEventListener('click', () => {
         if (!window.EventSphereAuth?.isLoggedIn?.()) {
-          const next = encodeURIComponent(location.pathname.split('/').pop() + location.search);
+          const next = encodeURIComponent(location.pathname + location.search);
           location.href = `/login?next=${next}`;
           return;
         }
