@@ -1573,8 +1573,6 @@
   async function showEmailLogDetail(id) {
     setModal('Email Details', loadingPanel('Loading email...'));
     const { data } = await api().fetch(`/admin/email-center/${id}`);
-    const hasHtml = Boolean(data.html_body);
-    const fallbackText = data.text_body || 'No rendered email body was captured for this log.';
 
     setModal('Email Details', `
       <div class="dashboard-stack">
@@ -1587,19 +1585,14 @@
           <div class="col-12"><div class="dashboard-mini-row"><span><small>Subject</small><span class="fw-semibold d-block">${u().escapeHtml(data.subject || '-')}</span></span></div></div>
           <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Created At</small><span class="fw-semibold d-block">${dateTimeLabel(data.created_at)}</span></span></div></div>
           <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Sent At</small><span class="fw-semibold d-block">${dateTimeLabel(data.sent_at)}</span></span></div></div>
+          <div class="col-12"><div class="dashboard-mini-row"><span><small>Mail Class</small><span class="fw-semibold d-block">${u().escapeHtml(data.mailable_class || '-')}</span></span></div></div>
         </div>
-        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-          <h5 class="mb-0">Rendered Email Body</h5>
-          ${data.can_retry ? `<button class="btn btn-primary-grad btn-sm" type="button" data-email-retry="${data.id}"><i class="bi bi-arrow-clockwise me-1"></i>Retry Email</button>` : ''}
+        <div class="admin-empty">
+          <i class="bi bi-shield-lock"></i>
+          <span>Rendered email content is not stored. Password reset links, verification links, QR tokens, ticket download links, and reservation details are intentionally excluded from logs.</span>
         </div>
-        ${hasHtml
-          ? '<iframe title="Email preview" data-email-preview-frame sandbox="" style="width:100%;min-height:420px;border:1px solid var(--border);border-radius:8px;background:#fff;"></iframe>'
-          : `<pre class="border-pro rounded-pro p-3 mb-0" style="white-space:pre-wrap;overflow-wrap:anywhere;">${u().escapeHtml(fallbackText)}</pre>`}
       </div>
     `);
-
-    const frame = document.querySelector('[data-email-preview-frame]');
-    if (frame) frame.srcdoc = data.html_body;
   }
 
   function showSection(section) {

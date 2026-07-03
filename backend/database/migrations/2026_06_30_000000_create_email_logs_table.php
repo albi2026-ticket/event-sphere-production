@@ -17,8 +17,6 @@ return new class extends Migration
             $table->string('subject');
             $table->string('status')->index();
             $table->string('mailable_class')->nullable();
-            $table->longText('html_body')->nullable();
-            $table->longText('text_body')->nullable();
             $table->timestamp('sent_at')->nullable()->index();
             $table->foreignId('related_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('related_event_id')->nullable()->constrained('events')->nullOnDelete();

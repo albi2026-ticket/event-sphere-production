@@ -86,6 +86,12 @@ class TicketCheckInTest extends TestCase
             'event_id' => $ticket->event_id,
             'scanned_by' => $organizer->id,
             'result' => TicketValidationLog::RESULT_VALID,
+            'ticket_uuid' => $this->maskQrIdentifier($ticket->ticket_uuid),
+            'token_hash' => hash('sha256', $ticket->qr_token),
+        ]);
+        $this->assertDatabaseMissing('ticket_validation_logs', [
+            'ticket_id' => $ticket->id,
+            'ticket_uuid' => $ticket->ticket_uuid,
         ]);
         $this->assertDatabaseHas('ticket_validation_logs', [
             'ticket_id' => $ticket->id,
@@ -215,11 +221,13 @@ class TicketCheckInTest extends TestCase
     public function test_invalid_qr_scan_returns_invalid_result_and_creates_log(): void
     {
         [, $organizer, $event] = $this->createOrder(quantity: 1);
+        $invalidToken = 'not-a-real-token';
+        $invalidUuid = (string) Str::uuid();
 
         $this->actingAs($organizer, 'sanctum')
             ->postJson('/api/organizer/tickets/validate', [
-                'token' => 'not-a-real-token',
-                'ticket_uuid' => (string) Str::uuid(),
+                'token' => $invalidToken,
+                'ticket_uuid' => $invalidUuid,
                 'event_id' => $event->id,
                 'method' => 'mobile_scanner',
             ])
@@ -233,6 +241,11 @@ class TicketCheckInTest extends TestCase
             'scanned_by' => $organizer->id,
             'result' => TicketValidationLog::RESULT_INVALID,
             'method' => 'mobile_scanner',
+            'ticket_uuid' => $this->maskQrIdentifier($invalidUuid),
+            'token_hash' => hash('sha256', $invalidToken),
+        ]);
+        $this->assertDatabaseMissing('ticket_validation_logs', [
+            'ticket_uuid' => $invalidUuid,
         ]);
     }
 
@@ -316,6 +329,8 @@ class TicketCheckInTest extends TestCase
             'event_id' => $event->id,
             'scanned_by' => $scanner->id,
             'result' => TicketValidationLog::RESULT_VALID,
+            'ticket_uuid' => $this->maskQrIdentifier($ticket->ticket_uuid),
+            'token_hash' => hash('sha256', $ticket->qr_token),
         ]);
     }
 
@@ -346,6 +361,8 @@ class TicketCheckInTest extends TestCase
             'scanned_by' => $scanner->id,
             'result' => TicketValidationLog::RESULT_INVALID,
             'message' => 'This ticket belongs to another event.',
+            'ticket_uuid' => $this->maskQrIdentifier($ticket->ticket_uuid),
+            'token_hash' => hash('sha256', $ticket->qr_token),
         ]);
 
         $this->actingAs($scanner, 'sanctum')
@@ -435,5 +452,14 @@ class TicketCheckInTest extends TestCase
         ]);
 
         return [$user, $organizer, $event, $ticketType, $order];
+    }
+
+    private function maskQrIdentifier(string $value): string
+    {
+        if (strlen($value) <= 10) {
+            return str_repeat('*', strlen($value));
+        }
+
+        return substr($value, 0, 6).'...'.substr($value, -4);
     }
 }

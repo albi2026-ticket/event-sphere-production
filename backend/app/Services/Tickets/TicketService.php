@@ -291,6 +291,7 @@ class TicketService
     public function logValidation(?Ticket $ticket, ?User $scanner, array $context = []): TicketValidationLog
     {
         $token = $context['token'] ?? $ticket?->qr_token;
+        $ticketUuid = $context['ticket_uuid'] ?? $ticket?->ticket_uuid;
 
         return TicketValidationLog::query()->create([
             'event_id' => $context['event_id'] ?? $ticket?->event_id,
@@ -302,7 +303,7 @@ class TicketService
             'attendee_name' => $context['attendee_name'] ?? $ticket?->attendee_name ?? $ticket?->user?->name,
             'attendee_email' => $context['attendee_email'] ?? $ticket?->attendee_email ?? $ticket?->user?->email,
             'ticket_code' => $context['ticket_code'] ?? $ticket?->ticket_code,
-            'ticket_uuid' => $context['ticket_uuid'] ?? $ticket?->ticket_uuid,
+            'ticket_uuid' => $this->maskQrIdentifier($ticketUuid),
             'token_hash' => $token ? hash('sha256', (string) $token) : null,
             'ip_address' => $context['ip_address'] ?? null,
             'user_agent' => $context['user_agent'] ?? null,
@@ -326,5 +327,20 @@ class TicketService
         } while (Ticket::query()->where('qr_token', $token)->exists());
 
         return $token;
+    }
+
+    public function maskQrIdentifier(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = (string) $value;
+
+        if (strlen($value) <= 10) {
+            return str_repeat('*', strlen($value));
+        }
+
+        return substr($value, 0, 6).'...'.substr($value, -4);
     }
 }

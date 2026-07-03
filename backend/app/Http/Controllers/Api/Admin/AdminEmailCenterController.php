@@ -3,14 +3,12 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Mail\AdminRetriedEmail;
 use App\Models\AuditLog;
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -85,32 +83,9 @@ class AdminEmailCenterController extends Controller
 
     public function retry(Request $request, EmailLog $emailLog): JsonResponse
     {
-        if ($emailLog->status !== EmailLog::STATUS_FAILED) {
-            return response()->json([
-                'message' => 'Only failed emails can be retried.',
-            ], 422);
-        }
-
-        if (! $emailLog->html_body && ! $emailLog->text_body) {
-            return response()->json([
-                'message' => 'This email cannot be retried because no rendered body was captured.',
-            ], 422);
-        }
-
-        Mail::to($emailLog->recipient_email, $emailLog->recipient_name)
-            ->send(new AdminRetriedEmail($emailLog));
-
-        AuditLog::record($request->user(), 'email_log.retried', $emailLog, [
-            'recipient_email' => $emailLog->recipient_email,
-            'email_type' => $emailLog->email_type,
-            'module' => $emailLog->module,
-        ], $request->ip());
-
         return response()->json([
-            'data' => [
-                'message' => 'Retry email sent.',
-            ],
-        ]);
+            'message' => 'Email retry is unavailable because rendered email bodies are no longer stored.',
+        ], 422);
     }
 
     public function export(Request $request): StreamedResponse
@@ -266,9 +241,8 @@ class AdminEmailCenterController extends Controller
             'status' => $log->status,
             'created_at' => $log->created_at,
             'sent_at' => $log->sent_at,
-            'html_body' => $log->html_body,
-            'text_body' => $log->text_body,
-            'can_retry' => $log->status === EmailLog::STATUS_FAILED && ($log->html_body || $log->text_body),
+            'mailable_class' => $log->mailable_class,
+            'can_retry' => false,
         ];
     }
 

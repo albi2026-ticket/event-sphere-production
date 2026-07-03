@@ -1024,8 +1024,6 @@ class AdminDashboardTest extends TestCase
             'module' => EmailLog::MODULE_SYSTEM,
             'subject' => 'System Notice',
             'status' => EmailLog::STATUS_FAILED,
-            'html_body' => '<h1>System Notice</h1>',
-            'text_body' => 'System Notice',
         ]);
 
         $successLog = EmailLog::query()->create([
@@ -1036,16 +1034,15 @@ class AdminDashboardTest extends TestCase
             'subject' => 'Verify your Tiketa email address',
             'status' => EmailLog::STATUS_SUCCESS,
             'sent_at' => now(),
-            'html_body' => '<h1>Verify</h1>',
-            'text_body' => 'Verify',
         ]);
 
         $this->actingAs($admin, 'sanctum')
             ->getJson("/api/admin/email-center/{$failedLog->id}")
             ->assertOk()
             ->assertJsonPath('data.recipient_email', 'failed@example.test')
-            ->assertJsonPath('data.html_body', '<h1>System Notice</h1>')
-            ->assertJsonPath('data.can_retry', true);
+            ->assertJsonMissingPath('data.html_body')
+            ->assertJsonMissingPath('data.text_body')
+            ->assertJsonPath('data.can_retry', false);
 
         $this->actingAs($admin, 'sanctum')
             ->postJson("/api/admin/email-center/{$successLog->id}/retry")
@@ -1053,20 +1050,12 @@ class AdminDashboardTest extends TestCase
 
         $this->actingAs($admin, 'sanctum')
             ->postJson("/api/admin/email-center/{$failedLog->id}/retry")
-            ->assertOk();
+            ->assertStatus(422);
 
         $this->assertDatabaseHas('email_logs', [
             'id' => $failedLog->id,
             'status' => EmailLog::STATUS_FAILED,
         ]);
-        $this->assertDatabaseHas('email_logs', [
-            'recipient_email' => 'failed@example.test',
-            'email_type' => 'System Announcement',
-            'module' => EmailLog::MODULE_SYSTEM,
-            'subject' => 'System Notice',
-            'status' => EmailLog::STATUS_SUCCESS,
-        ]);
-
         $this->actingAs($admin, 'sanctum')
             ->get('/api/admin/email-center/export?format=csv')
             ->assertOk()

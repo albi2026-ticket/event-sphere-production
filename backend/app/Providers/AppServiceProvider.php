@@ -29,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->assertProductionEnvironmentIsSafe();
     }
 
     /**
@@ -71,5 +71,20 @@ class AppServiceProvider extends ServiceProvider
                     'expirationMinutes' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire', 60),
                 ]);
         });
+    }
+
+    private function assertProductionEnvironmentIsSafe(): void
+    {
+        if (! $this->app->environment('production')) {
+            return;
+        }
+
+        if ((bool) config('app.debug')) {
+            throw new \RuntimeException('Production cannot boot with APP_DEBUG enabled.');
+        }
+
+        if (! (bool) config('session.secure')) {
+            throw new \RuntimeException('Production cannot boot without SESSION_SECURE_COOKIE enabled.');
+        }
     }
 }

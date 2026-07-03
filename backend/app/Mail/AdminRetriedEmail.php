@@ -28,8 +28,8 @@ class AdminRetriedEmail extends Mailable
             view: 'emails.dynamic-html',
             text: 'emails.dynamic-text',
             with: [
-                'html' => $this->originalLog->html_body ?: nl2br(e($this->originalLog->text_body ?: '')),
-                'text' => $this->originalLog->text_body ?: strip_tags($this->originalLog->html_body ?: ''),
+                'html' => '<p>This email log stores metadata only. Rendered email bodies are not retained for security.</p>',
+                'text' => 'This email log stores metadata only. Rendered email bodies are not retained for security.',
             ],
         );
     }

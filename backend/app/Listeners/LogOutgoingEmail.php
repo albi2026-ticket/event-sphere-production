@@ -55,8 +55,6 @@ class LogOutgoingEmail
                 'recipient_email' => $recipient->getAddress(),
                 'subject' => $subject,
                 'status' => EmailLog::STATUS_PENDING,
-                'html_body' => $event->message->getHtmlBody(),
-                'text_body' => $event->message->getTextBody(),
             ]));
 
             $ids[] = $log->id;

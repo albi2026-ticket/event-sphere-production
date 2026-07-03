@@ -14,8 +14,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'subject',
     'status',
     'mailable_class',
-    'html_body',
-    'text_body',
     'sent_at',
     'related_user_id',
     'related_event_id',
