@@ -73,7 +73,7 @@
     const el = document.getElementById(id);
     if (!el) return;
     if (state.loading) {
-      el.innerHTML = Array.from({ length: 4 }).map(() => `
+      el.innerHTML = window.EventSphereSkeleton?.venueCards?.(4) || Array.from({ length: 4 }).map(() => `
         <div class="col-lg-3 col-md-6">
           <article class="venue-card"><div class="img-wrap reservation-skeleton"></div><div class="body"><div class="reservation-skeleton-line"></div><div class="reservation-skeleton-line short"></div><div class="reservation-skeleton-line"></div></div></article>
         </div>

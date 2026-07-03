@@ -121,7 +121,12 @@
   }
 
   function loadingRow(cols, label) {
-    return `<tr><td colspan="${cols}"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>${esc(label)}</span></div></td></tr>`;
+    return window.EventSphereSkeleton?.tableRows?.(cols, 5)
+      || `<tr><td colspan="${cols}"><div class="dashboard-empty"><span>${esc(label)}</span></div></td></tr>`;
+  }
+
+  function loadingBlock(label, rows = 3) {
+    return `<div class="dashboard-empty" role="status" aria-label="${esc(label)}">${window.EventSphereSkeleton?.dashboardBlock?.(rows) || `<span>${esc(label)}</span>`}</div>`;
   }
 
   function errorRow(cols, message, retryAttr) {
@@ -327,7 +332,7 @@
     const wrap = $('[data-organizer-activity]');
     if (!wrap) return;
     if (state.loading.summary || state.loading.events) {
-      wrap.innerHTML = `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading activity...</span></div>`;
+      wrap.innerHTML = loadingBlock('Loading activity...');
       return;
     }
 
@@ -384,7 +389,7 @@
     const wrap = $('[data-organizer-upcoming]');
     if (!wrap) return;
     if (state.loading.events) {
-      wrap.innerHTML = `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading events...</span></div>`;
+      wrap.innerHTML = window.EventSphereSkeleton?.eventCards?.(3, 'col-md-6 col-xl-4') || loadingBlock('Loading events...');
       return;
     }
     const events = state.events
@@ -503,7 +508,7 @@
     const wrap = $('[data-organizer-inventory]');
     if (!wrap) return;
     if (state.loading.inventory) {
-      wrap.innerHTML = `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading inventory...</span></div>`;
+      wrap.innerHTML = loadingBlock('Loading inventory...', 4);
       return;
     }
     if (state.errors.inventory) {
@@ -674,7 +679,7 @@
     const wrap = $('[data-organizer-top-events]');
     if (!wrap) return;
     if (state.loading.performance) {
-      wrap.innerHTML = `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading top events...</span></div>`;
+      wrap.innerHTML = loadingBlock('Loading top events...', 4);
       return;
     }
     const top = [...state.performance]
@@ -968,7 +973,7 @@
   async function lookupTickets(search) {
     const wrap = $('[data-checkin-lookup-results]');
     if (!wrap) return;
-    wrap.innerHTML = `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>${esc(tr('loading.looking_up_tickets', 'Looking up tickets...'))}</span></div>`;
+    wrap.innerHTML = loadingBlock(tr('loading.looking_up_tickets', 'Looking up tickets...'), 3);
     const query = qs({ q: search, event_id: selectedCheckInEventId() });
     const res = await api().fetch(`/organizer/tickets/lookup${query ? `?${query}` : ''}`);
     const tickets = rows(res.data);

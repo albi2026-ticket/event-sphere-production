@@ -90,7 +90,13 @@
         <div class="sticky-checkout">
           <div class="card-pro p-4" data-checkout-summary>
             <h6 class="mb-3" data-i18n="checkout.order_summary">Order summary</h6>
-            <p class="text-muted-pro small" data-i18n="loading.loading_cart">Loading cart...</p>
+            <div class="dashboard-loading-skeleton" role="status" aria-label="Loading checkout summary">
+              <span class="skeleton-line" style="width:72%"></span>
+              <span class="skeleton-line" style="width:54%"></span>
+              <span class="skeleton-block"></span>
+              <span class="skeleton-line" style="width:88%"></span>
+              <span class="skeleton-line" style="width:64%"></span>
+            </div>
           </div>
         </div>
       </div>

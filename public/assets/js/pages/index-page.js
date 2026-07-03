@@ -430,6 +430,8 @@
   document.addEventListener('DOMContentLoaded', async () => {
     setupNewsletter();
     hydrateNavCategories();
+    document.querySelector('[data-home-trending]')?.insertAdjacentHTML('beforeend', window.EventSphereSkeleton?.eventCards?.(4, 'col-md-6 col-xl-3') || '');
+    document.querySelector('[data-home-week]')?.insertAdjacentHTML('beforeend', window.EventSphereSkeleton?.eventCards?.(4, 'col-md-6 col-xl-3') || '');
 
     try {
       const data = await fetchHomepageData();

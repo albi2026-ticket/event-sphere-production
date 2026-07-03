@@ -714,7 +714,7 @@
         <div class="reservation-time-grid" aria-hidden="true">
           ${Array.from({ length: 6 }, () => '<div class="reservation-time-skeleton"></div>').join('')}
         </div>
-        <div class="reservation-picker-loading"><span class="spinner-border spinner-border-sm"></span>${tr('availability.loading_available_times', 'Loading available times...')}</div>
+        <div class="reservation-picker-loading">${tr('availability.loading_available_times', 'Loading available times...')}</div>
       `;
       selectPickerValue('time', '', tr('common.time', 'Time'));
     }

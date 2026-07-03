@@ -45,7 +45,11 @@
 
         <!-- About -->
         <h3 class="event-description-heading" data-i18n="events.about_this_event">About this event</h3>
-        <div data-event-description class="event-description text-muted-pro"><span class="spinner-border spinner-border-sm me-2"></span><span data-i18n="events.loading_event_information">Loading event information...</span></div>
+        <div data-event-description class="event-description text-muted-pro" role="status" aria-label="Loading event information">
+          <span class="skeleton-line mb-2" style="width:92%"></span>
+          <span class="skeleton-line mb-2" style="width:84%"></span>
+          <span class="skeleton-line" style="width:58%"></span>
+        </div>
 
         <!-- Organizer -->
         <h4 class="mt-5" data-i18n="events.organizer">Organizer</h4>

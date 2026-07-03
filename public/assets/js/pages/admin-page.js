@@ -147,7 +147,12 @@
   }
 
   function loadingRow(cols, label) {
-    return `<tr><td colspan="${cols}" class="py-4 text-muted-pro"><span class="spinner-border spinner-border-sm me-2"></span>${u().escapeHtml(label)}</td></tr>`;
+    return window.EventSphereSkeleton?.tableRows?.(cols, 5)
+      || `<tr><td colspan="${cols}" class="py-4 text-muted-pro">${u().escapeHtml(label)}</td></tr>`;
+  }
+
+  function loadingPanel(label) {
+    return `<div class="py-3" role="status" aria-label="${u().escapeHtml(label)}">${window.EventSphereSkeleton?.dashboardBlock?.(4) || u().escapeHtml(label)}</div>`;
   }
 
   function errorRow(cols, label, retryAttr) {
@@ -1566,7 +1571,7 @@
   }
 
   async function showEmailLogDetail(id) {
-    setModal('Email Details', '<div class="py-4 text-muted-pro"><span class="spinner-border spinner-border-sm me-2"></span>Loading email...</div>');
+    setModal('Email Details', loadingPanel('Loading email...'));
     const { data } = await api().fetch(`/admin/email-center/${id}`);
     const hasHtml = Boolean(data.html_body);
     const fallbackText = data.text_body || 'No rendered email body was captured for this log.';
@@ -1633,7 +1638,7 @@
   }
 
   async function showUser(userId) {
-    setModal('User profile', '<div class="py-4 text-muted-pro"><span class="spinner-border spinner-border-sm me-2"></span>Loading profile...</div>');
+    setModal('User profile', loadingPanel('Loading profile...'));
     const res = await api().fetch(`/admin/users/${userId}`);
     const user = res.data;
     const orders = user.orders || [];
@@ -1680,7 +1685,7 @@
 
   async function showScannerAssignment(eventId) {
     const eventRecord = state.events.find((item) => String(item.id) === String(eventId));
-    setModal('Assign Scanner', '<div class="py-4 text-muted-pro"><span class="spinner-border spinner-border-sm me-2"></span>Loading scanners...</div>');
+    setModal('Assign Scanner', loadingPanel('Loading scanners...'));
 
     const [scannerUsers, assignedScanners] = await Promise.all([
       api().fetch('/admin/users?role=scanner&status=active&per_page=100'),
@@ -1723,7 +1728,7 @@
   }
 
   async function showVenue(slug) {
-    setModal('Venue details', '<div class="py-4 text-muted-pro"><span class="spinner-border spinner-border-sm me-2"></span>Loading venue...</div>');
+    setModal('Venue details', loadingPanel('Loading venue...'));
     const { data: venue } = await api().fetch(`/admin/venues/${slug}`);
     const hours = venue.opening_hours || [];
     setModal(venue.name, `
@@ -1751,7 +1756,7 @@
   }
 
   async function showReservation(reservationId) {
-    setModal('Reservation details', '<div class="py-4 text-muted-pro"><span class="spinner-border spinner-border-sm me-2"></span>Loading reservation...</div>');
+    setModal('Reservation details', loadingPanel('Loading reservation...'));
     const { data: reservation } = await api().fetch(`/admin/reservations/${reservationId}`);
     const history = reservation.email_history || [];
     const auditHistory = reservation.audit_history || [];
@@ -1789,7 +1794,7 @@
   }
 
   async function showTicket(ticketId) {
-    setModal('Ticket details', '<div class="py-4 text-muted-pro"><span class="spinner-border spinner-border-sm me-2"></span>Loading ticket...</div>');
+    setModal('Ticket details', loadingPanel('Loading ticket...'));
     const { data: ticket } = await api().fetch(`/admin/tickets/${ticketId}`);
     setModal(`Ticket ${ticket.ticket_code}`, `
       ${detailList([
@@ -1857,7 +1862,7 @@
   }
 
   async function showPayment(orderId) {
-    setModal('Payment details', '<div class="py-4 text-muted-pro"><span class="spinner-border spinner-border-sm me-2"></span>Loading payment...</div>');
+    setModal('Payment details', loadingPanel('Loading payment...'));
     const res = await api().fetch(`/admin/payments/${orderId}`);
     const order = res.data;
     const items = order.items || [];

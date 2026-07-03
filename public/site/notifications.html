@@ -33,7 +33,11 @@
           <button class="btn btn-glass" type="button" data-notifications-read-all><i class="bi bi-check2-all me-1"></i> <span data-i18n="notifications.mark_all_as_read">Mark all as read</span></button>
         </div>
         <div data-notifications-list>
-          <div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span data-i18n="loading.loading_notifications">Loading notifications...</span></div>
+          <div class="notification-skeleton-list" role="status" aria-label="Loading notifications">
+            <div class="notification-item skeleton-notification"><span class="notification-icon skeleton-avatar"></span><span class="notification-copy"><span class="skeleton-line" style="width:42%"></span><span class="skeleton-line" style="width:86%"></span><span class="skeleton-line" style="width:24%"></span></span></div>
+            <div class="notification-item skeleton-notification"><span class="notification-icon skeleton-avatar"></span><span class="notification-copy"><span class="skeleton-line" style="width:48%"></span><span class="skeleton-line" style="width:78%"></span><span class="skeleton-line" style="width:22%"></span></span></div>
+            <div class="notification-item skeleton-notification"><span class="notification-icon skeleton-avatar"></span><span class="notification-copy"><span class="skeleton-line" style="width:38%"></span><span class="skeleton-line" style="width:82%"></span><span class="skeleton-line" style="width:26%"></span></span></div>
+          </div>
         </div>
         <div class="mt-3" data-notifications-pagination></div>
       </div>

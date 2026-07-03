@@ -591,6 +591,126 @@ a:hover { color: var(--secondary); }
   padding: 6rem 1rem;
 }
 
+/* ---------- Enterprise skeleton loading ---------- */
+.skeleton-line,
+.skeleton-block,
+.skeleton-media,
+.skeleton-avatar,
+.skeleton-row td::before {
+  display: block;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255,255,255,.045), rgba(255,255,255,.13), rgba(255,255,255,.045));
+  background-size: 220% 100%;
+  animation: dashboard-shimmer 1.2s linear infinite;
+}
+[data-theme="light"] .skeleton-line,
+[data-theme="light"] .skeleton-block,
+[data-theme="light"] .skeleton-media,
+[data-theme="light"] .skeleton-avatar,
+[data-theme="light"] .skeleton-row td::before {
+  background: linear-gradient(90deg, rgba(15,23,42,.06), rgba(15,23,42,.12), rgba(15,23,42,.06));
+  background-size: 220% 100%;
+}
+.skeleton-line {
+  height: 13px;
+  max-width: 100%;
+}
+.skeleton-title {
+  height: 20px;
+  border-radius: 12px;
+}
+.skeleton-block {
+  min-height: 42px;
+  border-radius: 14px;
+}
+.skeleton-media {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 18px 18px 0 0;
+}
+.skeleton-avatar {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+}
+.skeleton-card {
+  overflow: hidden;
+}
+.skeleton-card .body,
+.skeleton-card-body {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+.skeleton-card-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding-top: 8px;
+}
+.dashboard-loading-skeleton {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+.skeleton-row td {
+  padding-block: 14px;
+}
+.skeleton-row td::before {
+  content: "";
+  height: 14px;
+}
+.notification-skeleton-list {
+  display: grid;
+  gap: 10px;
+}
+.skeleton-notification {
+  pointer-events: none;
+}
+.skeleton-hero-panel {
+  width: min(760px, calc(100vw - 2rem));
+  display: grid;
+  gap: 16px;
+  align-self: end;
+  justify-self: start;
+  margin: 0 0 5rem max(1rem, calc((100vw - 1320px) / 2 + 1rem));
+}
+.skeleton-hero-panel .skeleton-line:nth-child(1) { width: 22%; }
+.skeleton-hero-panel .skeleton-line:nth-child(2) { width: 74%; height: 44px; border-radius: 18px; }
+.skeleton-hero-panel .skeleton-line:nth-child(3) { width: 48%; }
+.skeleton-hero-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+.skeleton-hero-actions .skeleton-block {
+  width: 140px;
+  min-height: 46px;
+}
+@media (max-width: 768px) {
+  .skeleton-hero-panel {
+    align-self: center;
+    margin: 0 1rem;
+  }
+  .skeleton-hero-panel .skeleton-line:nth-child(2) {
+    height: 34px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-line,
+  .skeleton-block,
+  .skeleton-media,
+  .skeleton-avatar,
+  .skeleton-row td::before,
+  .reservation-skeleton,
+  .reservation-skeleton-line,
+  .reservation-skeleton-media,
+  .reservation-time-skeleton,
+  .admin-reservation-skeleton span {
+    animation: none !important;
+  }
+}
+
 /* ---------- Search bar ---------- */
 .search-pill {
   background: var(--card);

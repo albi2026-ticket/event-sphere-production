@@ -134,7 +134,7 @@
   }
 
   function loadingState(label) {
-    return `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>${escape(label)}</span></div>`;
+    return `<div class="dashboard-empty" role="status" aria-label="${escape(label)}">${window.EventSphereSkeleton?.dashboardBlock?.(3) || `<span>${escape(label)}</span>`}</div>`;
   }
 
   function errorState(message, retryAttr) {
@@ -403,7 +403,7 @@
     const pager = document.querySelector('[data-ticket-pagination]');
     if (!el) return;
     if (state.loading.tickets) {
-      el.innerHTML = `<div class="col-12">${loadingState(tr('loading.loading_tickets', 'Loading tickets...'))}</div>`;
+      el.innerHTML = window.EventSphereSkeleton?.eventCards?.(3, 'col-md-6 col-xl-4') || `<div class="col-12">${loadingState(tr('loading.loading_tickets', 'Loading tickets...'))}</div>`;
       if (pager) pager.innerHTML = '';
       return;
     }
@@ -424,7 +424,7 @@
     const pager = document.querySelector('[data-order-pagination]');
     if (!body) return;
     if (state.loading.orders) {
-      body.innerHTML = `<tr><td colspan="7">${loadingState(tr('orders.loading_orders', 'Loading orders...'))}</td></tr>`;
+      body.innerHTML = window.EventSphereSkeleton?.tableRows?.(7, 5) || `<tr><td colspan="7">${loadingState(tr('orders.loading_orders', 'Loading orders...'))}</td></tr>`;
       if (pager) pager.innerHTML = '';
       return;
     }
@@ -492,7 +492,7 @@
     const pager = document.querySelector('[data-favorite-pagination]');
     if (!el) return;
     if (state.loading.favorites) {
-      el.innerHTML = `<div class="col-12">${loadingState(tr('dashboard.loading_favorites', 'Loading favorites...'))}</div>`;
+      el.innerHTML = window.EventSphereSkeleton?.eventCards?.(3, 'col-md-6 col-xl-4') || `<div class="col-12">${loadingState(tr('dashboard.loading_favorites', 'Loading favorites...'))}</div>`;
       if (pager) pager.innerHTML = '';
       return;
     }
@@ -511,7 +511,7 @@
     const activityEl = document.querySelector('[data-dashboard-activity]');
     if (!activityEl) return;
     if (state.loading.summary || state.loading.orders || state.loading.tickets || state.loading.favorites) {
-      activityEl.innerHTML = `<li>${loadingState(tr('dashboard.loading_activity', 'Loading activity...'))}</li>`;
+      activityEl.innerHTML = `<li>${window.EventSphereSkeleton?.dashboardBlock?.(3) || loadingState(tr('dashboard.loading_activity', 'Loading activity...'))}</li>`;
       return;
     }
 
@@ -581,7 +581,7 @@
 
     if (!body) return;
     if (state.loading.history) {
-      body.innerHTML = `<tr><td colspan="4">${loadingState(tr('dashboard.loading_attendance_history', 'Loading attendance history...'))}</td></tr>`;
+      body.innerHTML = window.EventSphereSkeleton?.tableRows?.(4, 4) || `<tr><td colspan="4">${loadingState(tr('dashboard.loading_attendance_history', 'Loading attendance history...'))}</td></tr>`;
       return;
     }
     if (state.errors.history) {

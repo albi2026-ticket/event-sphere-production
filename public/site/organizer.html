@@ -60,7 +60,7 @@
               <button class="btn btn-glass btn-sm" type="button" data-retry-summary><i class="bi bi-arrow-clockwise me-1"></i><span data-i18n="buttons.refresh">Refresh</span></button>
             </div>
             <div class="dashboard-stack" data-organizer-activity>
-              <div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span data-i18n="admin.loading_activity">Loading activity...</span></div>
+              <div class="dashboard-loading-skeleton"><span class="skeleton-line" style="width:72%"></span><span class="skeleton-line" style="width:88%"></span><span class="skeleton-line" style="width:46%"></span></div>
             </div>
           </div>
         </div>
@@ -68,7 +68,7 @@
           <div class="card-pro p-4 h-100">
             <h4 class="mb-3" data-i18n="organizer.upcoming_live_events">Upcoming and live events</h4>
             <div class="dashboard-stack" data-organizer-upcoming>
-              <div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span data-i18n="loading.loading_events">Loading events...</span></div>
+              <div class="row g-3"><div class="col-md-6"><article class="card-pro skeleton-card"><div class="skeleton-media"></div><div class="body"><span class="skeleton-line skeleton-title" style="width:72%"></span><span class="skeleton-line" style="width:54%"></span></div></article></div><div class="col-md-6"><article class="card-pro skeleton-card"><div class="skeleton-media"></div><div class="body"><span class="skeleton-line skeleton-title" style="width:64%"></span><span class="skeleton-line" style="width:58%"></span></div></article></div></div>
             </div>
           </div>
         </div>
@@ -103,7 +103,8 @@
           <table class="table table-borderless align-middle mb-0 dashboard-table">
             <thead><tr><th data-i18n="scanner.event">Event</th><th data-i18n="admin.status">Status</th><th>Starts</th><th>Service Fee</th><th data-i18n="admin.tickets">Tickets</th><th data-i18n="admin.revenue">Revenue</th><th data-i18n="organizer.inventory">Inventory</th><th></th></tr></thead>
             <tbody data-organizer-events>
-              <tr><td colspan="8"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading events...</span></div></td></tr>
+              <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
             </tbody>
           </table>
         </div>
@@ -116,7 +117,8 @@
               <table class="table table-borderless align-middle mb-0 dashboard-table">
                 <thead><tr><th>Event</th><th>Sold</th><th>Remaining</th><th>Orders</th><th>Check-ins</th></tr></thead>
                 <tbody data-organizer-performance>
-                  <tr><td colspan="5"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading performance...</span></div></td></tr>
+                  <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td></tr>
+                  <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td></tr>
                 </tbody>
               </table>
             </div>
@@ -126,7 +128,7 @@
           <div class="card-pro p-3 h-100">
             <h5 class="mb-3" data-i18n="organizer.inventory_remaining">Inventory remaining</h5>
             <div data-organizer-inventory class="dashboard-stack">
-              <div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading inventory...</span></div>
+              <div class="dashboard-loading-skeleton"><span class="skeleton-line" style="width:78%"></span><span class="skeleton-line" style="width:64%"></span><span class="skeleton-line" style="width:86%"></span></div>
             </div>
           </div>
         </div>
@@ -160,7 +162,7 @@
       <div class="card-pro p-3">
         <h5 class="mb-3" data-i18n="organizer.top_performing_events">Top performing events</h5>
         <div data-organizer-top-events class="dashboard-stack">
-          <div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading top events...</span></div>
+          <div class="dashboard-loading-skeleton"><span class="skeleton-line" style="width:78%"></span><span class="skeleton-line" style="width:64%"></span><span class="skeleton-line" style="width:52%"></span></div>
         </div>
       </div>
     </section>
@@ -201,7 +203,8 @@
           <table class="table table-borderless align-middle mb-0 dashboard-table">
             <thead><tr><th>Event</th><th>Revenue</th><th>Tickets sold</th><th>Orders</th></tr></thead>
             <tbody data-organizer-revenue-table>
-              <tr><td colspan="4"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading revenue...</span></div></td></tr>
+              <tr class="skeleton-row"><td></td><td></td><td></td><td></td></tr>
+              <tr class="skeleton-row"><td></td><td></td><td></td><td></td></tr>
             </tbody>
           </table>
         </div>
@@ -234,7 +237,8 @@
           <table class="table table-borderless align-middle mb-0 dashboard-table">
             <thead><tr><th>Attendee</th><th>Event</th><th>Ticket</th><th>Order</th><th>Purchase date</th><th>Status</th><th></th></tr></thead>
             <tbody data-organizer-attendees>
-              <tr><td colspan="7"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading attendees...</span></div></td></tr>
+              <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
             </tbody>
           </table>
         </div>
@@ -298,7 +302,8 @@
               <table class="table table-borderless align-middle mb-0 dashboard-table">
                 <thead><tr><th>Result</th><th>Attendee</th><th>Ticket</th><th>Scanned</th></tr></thead>
                 <tbody data-checkin-logs>
-                  <tr><td colspan="4"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span>Loading validation logs...</span></div></td></tr>
+                  <tr class="skeleton-row"><td></td><td></td><td></td><td></td></tr>
+                  <tr class="skeleton-row"><td></td><td></td><td></td><td></td></tr>
                 </tbody>
               </table>
             </div>

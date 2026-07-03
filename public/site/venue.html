@@ -177,7 +177,11 @@
       <!-- About -->
       <section class="mb-5">
         <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="venue.about">About</h3>
-        <p data-detail-description class="venue-detail-description mb-0" data-i18n="venue.loading_details">Loading restaurant or bar details...</p>
+        <p data-detail-description class="venue-detail-description mb-0" role="status" aria-label="Loading restaurant or bar details">
+          <span class="skeleton-line mb-2" style="width:92%"></span>
+          <span class="skeleton-line mb-2" style="width:84%"></span>
+          <span class="skeleton-line" style="width:58%"></span>
+        </p>
       </section>
 
       <div class="divider-gold" data-detail-divider="facilities"></div>
@@ -261,7 +265,7 @@
         <div class="card-pro p-3 mt-3" style="background:rgba(255,255,255,.035);border:1px solid var(--border);border-radius:18px;box-shadow:0 16px 42px rgba(0,0,0,.16)">
           <div class="d-flex gap-3 align-items-center">
             <div style="width:42px;height:42px;border-radius:12px;background:var(--res-gold-soft);display:grid;place-items:center"><i class="bi bi-info-circle text-gold"></i></div>
-            <div><div class="fw-semibold" data-detail-side-title data-i18n="venue.details">Restaurant & Bar details</div><div class="small text-muted-pro" data-detail-side-copy data-i18n="venue.loading_profile">Loading profile...</div></div>
+            <div><div class="fw-semibold" data-detail-side-title data-i18n="venue.details">Restaurant & Bar details</div><div class="small text-muted-pro" data-detail-side-copy role="status" aria-label="Loading profile"><span class="skeleton-line" style="width:180px"></span></div></div>
           </div>
         </div>
       </div>

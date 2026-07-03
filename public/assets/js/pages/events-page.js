@@ -312,7 +312,8 @@
       return;
     }
 
-    grid.innerHTML = '<div class="col-12 text-center text-muted-pro py-5">Loading events…</div>';
+    grid.innerHTML = window.EventSphereSkeleton?.eventCards?.(state.view === 'list' ? 4 : 6, state.view === 'list' ? 'col-12' : 'col-md-6 col-xl-4')
+      || '<div class="col-12 text-center text-muted-pro py-5">Loading events...</div>';
 
     try {
       const { events, meta } = await fetchEvents(params);

@@ -571,6 +571,73 @@
     if (e.key === 'Escape') setDashboardSidebar(false);
   });
 
+  /* ---------- Skeleton loading states ---------- */
+  const skeletonLine = (width = '100%', extra = '') => `<span class="skeleton-line ${extra}" style="width:${html(width)}"></span>`;
+  const skeletonBlock = (extra = '') => `<span class="skeleton-block ${extra}"></span>`;
+
+  window.EventSphereSkeleton = {
+    line: skeletonLine,
+    block: skeletonBlock,
+    tableRows(cols = 5, rows = 5) {
+      return Array.from({ length: rows }).map(() => `
+        <tr class="skeleton-row">
+          ${Array.from({ length: cols }).map(() => '<td></td>').join('')}
+        </tr>
+      `).join('');
+    },
+    eventCards(count = 6, col = 'col-md-6 col-xl-4') {
+      return Array.from({ length: count }).map(() => `
+        <div class="${col}">
+          <article class="card-pro skeleton-card" aria-hidden="true">
+            <div class="skeleton-media"></div>
+            <div class="body">
+              ${skeletonLine('34%', 'mb-2')}
+              ${skeletonLine('86%', 'skeleton-title')}
+              ${skeletonLine('58%')}
+              <div class="skeleton-card-foot">
+                ${skeletonLine('28%')}
+                ${skeletonLine('32%')}
+              </div>
+            </div>
+          </article>
+        </div>
+      `).join('');
+    },
+    venueCards(count = 4) {
+      return Array.from({ length: count }).map(() => `
+        <div class="col-lg-3 col-md-6">
+          <article class="venue-card skeleton-card" aria-hidden="true">
+            <div class="img-wrap skeleton-media"></div>
+            <div class="body">
+              ${skeletonLine('74%', 'skeleton-title')}
+              ${skeletonLine('52%')}
+              ${skeletonLine('88%')}
+              <div class="skeleton-card-foot">
+                ${skeletonLine('42%')}
+                ${skeletonLine('28%')}
+              </div>
+            </div>
+          </article>
+        </div>
+      `).join('');
+    },
+    dashboardBlock(rows = 3) {
+      return `<div class="dashboard-loading-skeleton">${Array.from({ length: rows }).map((_, index) => skeletonLine(index === 0 ? '72%' : index === rows - 1 ? '46%' : '92%')).join('')}</div>`;
+    },
+    notificationRows(count = 6) {
+      return `<div class="notification-skeleton-list">${Array.from({ length: count }).map(() => `
+        <div class="notification-item skeleton-notification" aria-hidden="true">
+          <span class="notification-icon skeleton-avatar"></span>
+          <span class="notification-copy">
+            ${skeletonLine('42%')}
+            ${skeletonLine('86%')}
+            ${skeletonLine('24%')}
+          </span>
+        </div>
+      `).join('')}</div>`;
+    },
+  };
+
   /* ---------- Init ---------- */
   document.addEventListener('DOMContentLoaded', () => {
     paintFavs();

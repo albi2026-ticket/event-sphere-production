@@ -63,7 +63,15 @@
 <!-- ===== HERO ===== -->
 <section class="hero hero-slider" data-hero-slider aria-label="Featured events">
   <div class="hero-loading" data-hero-loading>
-    <div class="spinner-border text-light" role="status"><span class="visually-hidden">Loading featured events</span></div>
+    <div class="skeleton-hero-panel" role="status" aria-label="Loading featured events">
+      <span class="skeleton-line"></span>
+      <span class="skeleton-line"></span>
+      <span class="skeleton-line"></span>
+      <span class="skeleton-hero-actions">
+        <span class="skeleton-block"></span>
+        <span class="skeleton-block"></span>
+      </span>
+    </div>
   </div>
   <div class="hero-slides" data-hero-slides></div>
   <button class="hero-nav hero-nav-prev" type="button" data-hero-prev aria-label="Previous featured event"><i class="bi bi-chevron-left"></i></button>

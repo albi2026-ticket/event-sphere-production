@@ -223,7 +223,8 @@
             </tr>
           </thead>
           <tbody data-owner-reservations-table>
-            <tr><td colspan="7"><div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span data-i18n="reservation.loading_reservations">Loading reservations...</span></div></td></tr>
+            <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
           </tbody>
         </table>
       </div>
@@ -265,7 +266,11 @@
       </div>
 
       <div class="owner-calendar" data-owner-calendar>
-        <div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span data-i18n="loading.loading">Loading calendar...</span></div>
+        <div class="dashboard-loading-skeleton" role="status" aria-label="Loading calendar">
+          <span class="skeleton-block"></span>
+          <span class="skeleton-block"></span>
+          <span class="skeleton-block"></span>
+        </div>
       </div>
     </div>
 

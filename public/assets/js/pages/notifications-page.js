@@ -67,7 +67,7 @@
     if (!list) return;
 
     if (state.loading) {
-      list.innerHTML = `<div class="dashboard-empty"><span class="spinner-border spinner-border-sm"></span><span data-i18n="loading.loading_notifications">${window.t?.('loading.loading_notifications') || 'Loading notifications...'}</span></div>`;
+      list.innerHTML = window.EventSphereSkeleton?.notificationRows?.(6) || `<div class="dashboard-empty"><span data-i18n="loading.loading_notifications">${window.t?.('loading.loading_notifications') || 'Loading notifications...'}</span></div>`;
       if (pager) pager.innerHTML = '';
       return;
     }
