@@ -54,44 +54,46 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/register', [RegisteredUserController::class, 'store'])->middleware('guest');
-Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('guest');
-Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->middleware('guest');
-Route::post('/reset-password', [NewPasswordController::class, 'store'])->middleware('guest');
+Route::post('/register', [RegisteredUserController::class, 'store'])->middleware(['guest', 'throttle:auth-register']);
+Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware(['guest', 'throttle:auth-login']);
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->middleware(['guest', 'throttle:auth-login']);
+Route::post('/reset-password', [NewPasswordController::class, 'store'])->middleware(['guest', 'throttle:auth-login']);
 
-Route::get('/events', [EventController::class, 'index']);
-Route::get('/venues', [VenueController::class, 'index']);
-Route::get('/venues/{venue}/availability', [VenueController::class, 'availability']);
-Route::get('/venues/{venue}', [VenueController::class, 'show']);
-Route::get('/venue-facilities', [VenueLookupController::class, 'facilities']);
-Route::get('/cuisine-types', [VenueLookupController::class, 'cuisineTypes']);
-Route::get('/payment-options', [VenueLookupController::class, 'paymentOptions']);
-Route::get('/homepage', [HomepageController::class, 'index']);
-Route::get('/homepage/featured-events', [HomepageController::class, 'featured']);
-Route::get('/homepage/trending-events', [HomepageController::class, 'trending']);
-Route::get('/homepage/upcoming-events', [HomepageController::class, 'upcoming']);
-Route::get('/homepage/recommendations', [HomepageController::class, 'recommendations']);
-Route::get('/homepage/categories', [HomepageController::class, 'categories']);
-Route::get('/events/{event:slug}/images', [EventImageController::class, 'index']);
-Route::get('/events/{event:slug}/ticket-types', [TicketTypeController::class, 'index']);
-Route::get('/events/{event:slug}/related', [EventController::class, 'related']);
-Route::get('/events/{event:slug}', [EventController::class, 'show']);
-Route::get('/categories', [CategoryController::class, 'index']);
-Route::get('/event-images/{eventImage}', [EventImageController::class, 'show']);
-Route::get('/ticket-types/{ticketType}', [TicketTypeController::class, 'show']);
+Route::middleware('throttle:api-search')->group(function (): void {
+    Route::get('/events', [EventController::class, 'index']);
+    Route::get('/venues', [VenueController::class, 'index']);
+    Route::get('/venues/{venue}/availability', [VenueController::class, 'availability']);
+    Route::get('/venues/{venue}', [VenueController::class, 'show']);
+    Route::get('/venue-facilities', [VenueLookupController::class, 'facilities']);
+    Route::get('/cuisine-types', [VenueLookupController::class, 'cuisineTypes']);
+    Route::get('/payment-options', [VenueLookupController::class, 'paymentOptions']);
+    Route::get('/homepage', [HomepageController::class, 'index']);
+    Route::get('/homepage/featured-events', [HomepageController::class, 'featured']);
+    Route::get('/homepage/trending-events', [HomepageController::class, 'trending']);
+    Route::get('/homepage/upcoming-events', [HomepageController::class, 'upcoming']);
+    Route::get('/homepage/recommendations', [HomepageController::class, 'recommendations']);
+    Route::get('/homepage/categories', [HomepageController::class, 'categories']);
+    Route::get('/events/{event:slug}/images', [EventImageController::class, 'index']);
+    Route::get('/events/{event:slug}/ticket-types', [TicketTypeController::class, 'index']);
+    Route::get('/events/{event:slug}/related', [EventController::class, 'related']);
+    Route::get('/events/{event:slug}', [EventController::class, 'show']);
+    Route::get('/categories', [CategoryController::class, 'index']);
+    Route::get('/event-images/{eventImage}', [EventImageController::class, 'show']);
+    Route::get('/ticket-types/{ticketType}', [TicketTypeController::class, 'show']);
+});
 Route::get('/tickets/{ticket}/email-qr-code', [TicketController::class, 'emailQrCode'])
     ->middleware('signed')
     ->name('tickets.email.qr-code');
 Route::get('/tickets/{ticket}/email-download', [TicketController::class, 'emailDownload'])
     ->middleware('signed')
     ->name('tickets.email.download');
-Route::post('/newsletter-subscriptions', [NewsletterSubscriptionController::class, 'store']);
+Route::post('/newsletter-subscriptions', [NewsletterSubscriptionController::class, 'store'])->middleware('throttle:api-search');
 Route::get('/newsletter-subscriptions/{newsletterSubscription}/unsubscribe', [NewsletterSubscriptionController::class, 'unsubscribe'])
     ->middleware('signed')
     ->name('newsletter-subscriptions.unsubscribe');
 Route::post('/stripe/webhook', WebhookController::class);
 
-Route::middleware('auth:sanctum')->group(function (): void {
+Route::middleware(['auth:sanctum', 'throttle:api-search'])->group(function (): void {
     Route::get('/user', [AuthUserController::class, 'show']);
     Route::patch('/user/language', [AuthUserController::class, 'updateLanguage']);
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy']);
@@ -120,28 +122,28 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/me/favorites', [UserFavoriteController::class, 'store']);
         Route::post('/me/favorites/toggle', [UserFavoriteController::class, 'toggle']);
         Route::delete('/me/favorites/{event}', [UserFavoriteController::class, 'destroy']);
-        Route::post('/checkout-reservations', [CheckoutReservationController::class, 'store']);
+        Route::post('/checkout-reservations', [CheckoutReservationController::class, 'store'])->middleware('throttle:checkout');
         Route::get('/checkout-reservations/{checkoutReservation}', [CheckoutReservationController::class, 'show']);
-        Route::delete('/checkout-reservations/{checkoutReservation}', [CheckoutReservationController::class, 'cancel']);
-        Route::post('/reservations', [ReservationController::class, 'store']);
+        Route::delete('/checkout-reservations/{checkoutReservation}', [CheckoutReservationController::class, 'cancel'])->middleware('throttle:checkout');
+        Route::post('/reservations', [ReservationController::class, 'store'])->middleware('throttle:reservation');
         Route::get('/my-reservations', [ReservationController::class, 'mine']);
         Route::get('/reservations/{reservation}', [ReservationController::class, 'show']);
-        Route::patch('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
-        Route::post('/ticket-types/{ticketType}/reserve', [TicketTypeController::class, 'reserve']);
-        Route::post('/orders', [OrderController::class, 'store']);
-        Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
-        Route::post('/payment/mock-success', [MockPaymentController::class, 'store']);
+        Route::patch('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel'])->middleware('throttle:reservation');
+        Route::post('/ticket-types/{ticketType}/reserve', [TicketTypeController::class, 'reserve'])->middleware('throttle:checkout');
+        Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:checkout');
+        Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->middleware('throttle:checkout');
+        Route::post('/payment/mock-success', [MockPaymentController::class, 'store'])->middleware('throttle:checkout');
         Route::get('/orders/{order}/tickets', [TicketController::class, 'orderTickets']);
         Route::get('/orders/{order}/payment-status', [CheckoutSessionController::class, 'show']);
-        Route::post('/orders/{order}/checkout-session', [CheckoutSessionController::class, 'store']);
+        Route::post('/orders/{order}/checkout-session', [CheckoutSessionController::class, 'store'])->middleware('throttle:checkout');
         Route::get('/tickets/{ticket}', [TicketController::class, 'show']);
         Route::get('/tickets/{ticket}/qr-code', [TicketController::class, 'qrCode']);
         Route::get('/tickets/{ticket}/download', [TicketController::class, 'download']);
     });
 
     Route::middleware('role:organizer,scanner,admin')->group(function (): void {
-        Route::post('/tickets/validate', [OrganizerTicketController::class, 'validateTicket']);
-        Route::post('/tickets/check-in', [OrganizerTicketController::class, 'checkIn']);
+        Route::post('/tickets/validate', [OrganizerTicketController::class, 'validateTicket'])->middleware('throttle:scanner');
+        Route::post('/tickets/check-in', [OrganizerTicketController::class, 'checkIn'])->middleware('throttle:scanner');
     });
 
     Route::middleware('role:organizer')->prefix('organizer')->group(function (): void {
@@ -160,8 +162,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/events/{event}/attendees', [OrganizerTicketController::class, 'attendees']);
         Route::get('/events/{event}/check-in-stats', [OrganizerTicketController::class, 'checkInStats']);
         Route::get('/validation-logs', [OrganizerTicketController::class, 'validationLogs']);
-        Route::post('/tickets/validate', [OrganizerTicketController::class, 'validateTicket']);
-        Route::post('/tickets/check-in', [OrganizerTicketController::class, 'checkIn']);
+        Route::post('/tickets/validate', [OrganizerTicketController::class, 'validateTicket'])->middleware('throttle:scanner');
+        Route::post('/tickets/check-in', [OrganizerTicketController::class, 'checkIn'])->middleware('throttle:scanner');
         Route::get('/tickets/lookup', [OrganizerTicketController::class, 'lookup']);
         Route::get('/events', [OrganizerEventController::class, 'index']);
         Route::post('/events', [OrganizerEventController::class, 'store']);
@@ -182,8 +184,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/events', [ScannerDashboardController::class, 'events']);
         Route::get('/events/{event}/check-in-stats', [ScannerDashboardController::class, 'checkInStats']);
         Route::get('/validation-logs', [OrganizerTicketController::class, 'validationLogs']);
-        Route::post('/tickets/validate', [OrganizerTicketController::class, 'validateTicket']);
-        Route::post('/tickets/check-in', [OrganizerTicketController::class, 'checkIn']);
+        Route::post('/tickets/validate', [OrganizerTicketController::class, 'validateTicket'])->middleware('throttle:scanner');
+        Route::post('/tickets/check-in', [OrganizerTicketController::class, 'checkIn'])->middleware('throttle:scanner');
         Route::get('/tickets/lookup', [OrganizerTicketController::class, 'lookup']);
     });
 
@@ -245,8 +247,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/tickets/lookup', [AdminTicketController::class, 'lookup']);
         Route::get('/tickets/check-in-stats', [AdminTicketController::class, 'checkInStats']);
         Route::get('/validation-logs', [AdminTicketController::class, 'validationLogs']);
-        Route::post('/tickets/validate', [AdminTicketController::class, 'validateTicket']);
-        Route::post('/tickets/check-in', [AdminTicketController::class, 'checkIn']);
+        Route::post('/tickets/validate', [AdminTicketController::class, 'validateTicket'])->middleware('throttle:scanner');
+        Route::post('/tickets/check-in', [AdminTicketController::class, 'checkIn'])->middleware('throttle:scanner');
         Route::get('/tickets/{ticket}', [AdminTicketController::class, 'show']);
         Route::patch('/tickets/{ticket}/status', [AdminTicketController::class, 'updateStatus']);
         Route::patch('/users/{user}/role', [UserRoleController::class, 'update']);
