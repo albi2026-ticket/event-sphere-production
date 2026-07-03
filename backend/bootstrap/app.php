@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\EnsureOrganizerOwnsEvent;
 use App\Http\Middleware\EnsureUserHasRole;
@@ -17,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->append(AddSecurityHeaders::class);
+
         $middleware->api(prepend: [
             EnsureFrontendRequestsAreStateful::class,
             SetApplicationLocale::class,

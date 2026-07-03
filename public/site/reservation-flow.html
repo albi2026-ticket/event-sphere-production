@@ -202,44 +202,6 @@
 <script src="../assets/js/api/config.js"></script>
 <script src="../assets/js/api/api-client.js"></script>
 <script src="../assets/js/api/auth.js"></script>
-<script>
-  // Step navigation
-  const steps = document.querySelectorAll('#stepper .step');
-  const panels = document.querySelectorAll('.step-panel');
-  function go(n) {
-    steps.forEach(s => {
-      const i = +s.dataset.step;
-      s.classList.toggle('active', i === n);
-      s.classList.toggle('done', i < n);
-    });
-    panels.forEach(p => p.classList.toggle('d-none', +p.dataset.panel !== n));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-  document.querySelectorAll('.next-step').forEach(b => b.addEventListener('click', () => go(+b.dataset.next)));
-  document.querySelectorAll('.prev-step').forEach(b => b.addEventListener('click', () => go(+b.dataset.prev)));
-
-  // Chip selection
-  document.querySelectorAll('.chip-grid').forEach(grid => {
-    grid.addEventListener('click', e => {
-      const c = e.target.closest('.chip-select');
-      if (!c || c.classList.contains('disabled')) return;
-      [...grid.children].forEach(x => x.classList.remove('active'));
-      c.classList.add('active');
-    });
-  });
-
-  // Build date grid (next 14 days)
-  const dg = document.getElementById('dateGrid');
-  const today = new Date();
-  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  for (let i = 1; i <= 14; i++) {
-    const d = new Date(today); d.setDate(today.getDate() + i);
-    const el = document.createElement('div');
-    el.className = 'chip-select' + (i === 1 ? ' active' : '') + (d.getDay() === 1 ? ' disabled' : '');
-    el.innerHTML = `${d.getDate()}<small>${days[d.getDay()]} · ${months[d.getMonth()]}</small>`;
-    dg.appendChild(el);
-  }
-</script>
+<script src="../assets/js/pages/reservation-flow-page.js"></script>
 </body>
 </html>

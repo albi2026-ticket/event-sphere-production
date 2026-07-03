@@ -1261,8 +1261,10 @@
         window.tkToast?.('Popup blocked. Allow popups to export PDF.', 'error');
         return;
       }
-      win.document.write(`<!doctype html><html><head><title>${u().escapeHtml(report.title)}</title><style>body{font-family:Arial,sans-serif;color:#111827;padding:28px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border-bottom:1px solid #e5e7eb;padding:10px;text-align:left;font-size:12px}th{background:#f8fafc}.brand{font-weight:700;color:#2563eb}</style></head><body><div class="brand">Tiketa</div><h1>${u().escapeHtml(report.title)}</h1><p>Generated ${u().escapeHtml(dateTimeLabel(new Date().toISOString()))}</p><table><thead><tr>${report.headers.map((header) => `<th>${u().escapeHtml(header)}</th>`).join('')}</tr></thead><tbody>${report.rows.map((row) => `<tr>${row.map((cell) => `<td>${u().escapeHtml(cell)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${report.headers.length}">No data</td></tr>`}</tbody></table><script>window.print();<\/script></body></html>`);
+      win.document.write(`<!doctype html><html><head><title>${u().escapeHtml(report.title)}</title><style>body{font-family:Arial,sans-serif;color:#111827;padding:28px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border-bottom:1px solid #e5e7eb;padding:10px;text-align:left;font-size:12px}th{background:#f8fafc}.brand{font-weight:700;color:#2563eb}</style></head><body><div class="brand">Tiketa</div><h1>${u().escapeHtml(report.title)}</h1><p>Generated ${u().escapeHtml(dateTimeLabel(new Date().toISOString()))}</p><table><thead><tr>${report.headers.map((header) => `<th>${u().escapeHtml(header)}</th>`).join('')}</tr></thead><tbody>${report.rows.map((row) => `<tr>${row.map((cell) => `<td>${u().escapeHtml(cell)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${report.headers.length}">No data</td></tr>`}</tbody></table></body></html>`);
       win.document.close();
+      win.focus();
+      win.print();
       return;
     }
     const csv = [report.headers, ...report.rows].map((row) => row.map(csvEscape).join(',')).join('\n');

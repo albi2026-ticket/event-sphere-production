@@ -21,6 +21,44 @@ const cleanUrlAliases: Record<string, string> = {
   "my-tickets": "dashboard",
 };
 
+const securityHeaders: Record<string, string> = {
+  "Content-Security-Policy": [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "script-src 'self' https://cdn.jsdelivr.net https://maps.googleapis.com",
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
+    "connect-src 'self' http: https: ws: wss:",
+    "frame-src 'self' https://maps.google.com https://www.google.com",
+    "worker-src 'self' blob:",
+    "manifest-src 'self'",
+    "upgrade-insecure-requests",
+  ].join("; "),
+  "X-Frame-Options": "DENY",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": [
+    "accelerometer=()",
+    "autoplay=()",
+    "camera=(self)",
+    "display-capture=()",
+    "encrypted-media=()",
+    "fullscreen=(self)",
+    "geolocation=(self)",
+    "gyroscope=()",
+    "magnetometer=()",
+    "microphone=()",
+    "midi=()",
+    "payment=(self)",
+    "picture-in-picture=()",
+    "usb=()",
+  ].join(", "),
+};
+
 function cleanStaticHtmlUrls() {
   const siteRoot = path.resolve(process.cwd(), "public/site");
 
@@ -28,7 +66,11 @@ function cleanStaticHtmlUrls() {
     name: "clean-static-html-urls",
     apply: "serve" as const,
     configureServer(server: ViteDevServer) {
-      server.middlewares.use((req: IncomingMessage, _res: ServerResponse, next: () => void) => {
+      server.middlewares.use((req: IncomingMessage, res: ServerResponse, next: () => void) => {
+        Object.entries(securityHeaders).forEach(([header, value]) => {
+          res.setHeader(header, value);
+        });
+
         if (!req.url || (req.method !== "GET" && req.method !== "HEAD")) {
           return next();
         }

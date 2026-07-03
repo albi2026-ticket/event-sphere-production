@@ -1,0 +1,40 @@
+<?php
+
+return [
+    'headers' => [
+        'content_security_policy' => implode('; ', [
+            "default-src 'self'",
+            "base-uri 'self'",
+            "object-src 'none'",
+            "frame-ancestors 'none'",
+            "form-action 'self'",
+            "script-src 'self' https://cdn.jsdelivr.net https://maps.googleapis.com",
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
+            "img-src 'self' data: blob: https:",
+            "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
+            "connect-src 'self' http: https: ws: wss:",
+            "frame-src 'self' https://maps.google.com https://www.google.com",
+            "worker-src 'self' blob:",
+            "manifest-src 'self'",
+            "upgrade-insecure-requests",
+        ]),
+        'permissions_policy' => implode(', ', [
+            'accelerometer=()',
+            'autoplay=()',
+            'camera=(self)',
+            'display-capture=()',
+            'encrypted-media=()',
+            'fullscreen=(self)',
+            'geolocation=(self)',
+            'gyroscope=()',
+            'magnetometer=()',
+            'microphone=()',
+            'midi=()',
+            'payment=(self)',
+            'picture-in-picture=()',
+            'usb=()',
+        ]),
+        'strict_transport_security' => 'max-age=31536000; includeSubDomains; preload',
+        'referrer_policy' => 'strict-origin-when-cross-origin',
+    ],
+];
