@@ -372,7 +372,7 @@
     const empty = emptyState('bi-calendar2-plus', tr('dashboard.no_upcoming_events', 'No upcoming events'), tr('dashboard.future_events_appear', 'When you buy tickets for future events, they will appear here.'), `<a class="btn btn-glass btn-sm mt-2" href="/events/list" data-i18n="buttons.browse_events">${tr('buttons.browse_events', 'Browse events')}</a>`);
     const compact = state.upcomingEvents.slice(0, 4).map((event) => `
       <a class="dashboard-event-row" href="${window.EventSphereRoutes?.eventUrl?.(event.slug) || `/event/${encodeURIComponent(event.slug)}`}">
-        <img src="${escape(u().eventImage(event))}" alt=""/>
+        <img src="${escape(u().eventImage(event))}" alt="${escape([event.title, event.venue_name, event.city].filter(Boolean).join(' in '))}"/>
         <div class="flex-grow-1">
           <div class="fw-semibold">${escape(event.title)}</div>
           <small>${escape(event.venue_name || '')}${event.city ? `, ${escape(event.city)}` : ''}</small>
@@ -387,7 +387,7 @@
         return `
           <div class="dashboard-mini-row">
             <div class="d-flex gap-3 align-items-center">
-              <img src="${escape(u().eventImage(event))}" alt="" class="rounded" style="width:76px;height:56px;object-fit:cover;background:var(--card-2)"/>
+              <img src="${escape(u().eventImage(event))}" alt="${escape([event.title, event.venue_name, event.city].filter(Boolean).join(' in '))}" class="rounded" style="width:76px;height:56px;object-fit:cover;background:var(--card-2)"/>
               <span><span class="fw-semibold d-block">${escape(event.title)}</span><small>${escape(dateLabel(event.starts_at, event.timezone))} · ${escape(event.venue_name || '')}${event.city ? `, ${escape(event.city)}` : ''}</small><small class="d-block"><span data-i18n="dashboard.starts_in">${tr('dashboard.starts_in', 'Starts in')}</span> ${escape(countdownLabel(event.starts_at))}</small></span>
             </div>
             <div class="dashboard-actions">
@@ -469,7 +469,7 @@
         <article class="card-pro dashboard-favorite-card">
           <div class="thumb">
             <span class="badge-soft">${escape((event.category || 'EVENT').toUpperCase())}</span>
-            <img loading="lazy" src="${escape(img)}" alt=""/>
+            <img loading="lazy" decoding="async" src="${escape(img)}" alt="${escape([event.title, event.venue_name, event.city].filter(Boolean).join(' in '))}"/>
           </div>
           <div class="body">
             <div class="meta"><i class="bi bi-calendar3"></i> ${escape(dateLabel(event.starts_at, event.timezone))}</div>

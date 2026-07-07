@@ -138,7 +138,7 @@
 <!-- Breadcrumb + title -->
 <div class="container-xxl pt-4">
   <div class="d-flex gap-2 small mb-3" style="color:var(--muted)">
-    <a href="/restaurants" class="text-gold">Reservations</a> <span>›</span> <span data-detail-city>City</span> <span>›</span> <span data-detail-name>Restaurant / Bar</span>
+    <a href="/restaurants" class="text-gold" data-i18n="header.reservations">Reservations</a> <span>›</span> <span data-detail-city>City</span> <span>›</span> <span data-detail-crumb-category>Cuisine</span> <span>›</span> <span data-detail-name>Restaurant / Bar</span>
   </div>
 
   <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
@@ -148,7 +148,7 @@
         <span class="chip-available"><i class="bi bi-circle-fill" style="font-size:.4rem"></i> Active restaurant or bar</span>
       </div>
       <div class="d-flex align-items-center gap-3 flex-wrap">
-        <img data-detail-logo alt="" class="venue-detail-logo" hidden />
+        <img data-detail-logo alt="Restaurant or bar logo" class="venue-detail-logo" hidden />
         <h1 data-detail-title style="font-family:'Cormorant Garamond',serif;font-weight:600;margin:0">Restaurant / Bar</h1>
       </div>
       <div class="mt-2 d-flex flex-wrap align-items-center gap-3" style="color:var(--muted)">
@@ -174,7 +174,7 @@
 <!-- GALLERY -->
 <div class="container-xxl">
   <div class="gallery-grid" data-detail-gallery>
-    <img class="g-main" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80" alt="" />
+    <img class="g-main" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80" alt="Restaurant dining room prepared for reservations" fetchpriority="high" loading="eager" decoding="async" />
   </div>
 </div>
 
@@ -403,7 +403,7 @@
   <button class="venue-lightbox-close" type="button" data-gallery-close aria-label="Close gallery"><i class="bi bi-x-lg"></i></button>
   <button class="venue-lightbox-nav venue-lightbox-prev" type="button" data-gallery-prev aria-label="Previous photo"><i class="bi bi-chevron-left"></i></button>
   <figure class="venue-lightbox-frame">
-    <img src="" alt="" data-gallery-lightbox-image>
+    <img src="" alt="Restaurant gallery photo" data-gallery-lightbox-image>
     <figcaption>
       <strong data-gallery-lightbox-title>Restaurant photo</strong>
       <span data-gallery-lightbox-count>1 / 1</span>

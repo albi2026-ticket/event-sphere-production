@@ -158,6 +158,7 @@
     const slug = event.slug;
     const detailsHref = window.EventSphereRoutes?.eventUrl?.(slug) || `/event/${encodeURIComponent(slug)}`;
     const favKey = `event-${event.id}`;
+    const imageAlt = [event.title, event.venue_name, event.city].filter(Boolean).join(' at ') || tr('events.event', 'Event');
 
     return `
   <div class="col-md-6 col-xl-4">
@@ -165,7 +166,7 @@
       <div class="thumb">
         <span class="badge-soft"${status.labelKey && (status.key === 'ended' || status.key === 'sold_out' || status.key === 'live') ? ` data-i18n="${status.labelKey}"` : ''}>${u().escapeHtml(cat)}</span>
         <span class="fav" data-fav="${favKey}" data-event-id="${event.id}"><i class="bi bi-heart"></i></span>
-        <img loading="lazy" src="${u().escapeHtml(img)}" alt=""/>
+        <img loading="lazy" decoding="async" src="${u().escapeHtml(img)}" alt="${u().escapeHtml(imageAlt)}"/>
       </div>
       <div class="body">
         <div class="meta"><i class="bi bi-calendar3"></i> ${u().escapeHtml(date)}</div>

@@ -117,7 +117,7 @@
       <div class="col-md-6 col-xl-4">
         <article class="venue-card my-reservation-card">
           <div class="img-wrap">
-            <img loading="lazy" decoding="async" src="${esc(image)}" alt="">
+            <img loading="lazy" decoding="async" src="${esc(image)}" alt="${esc(`${reservation.venue?.name || tr('common.restaurant_bar', 'Restaurant / Bar')} reservation venue`)}">
             <div class="badges">
               ${statusBadge(status)}
               <span class="fav"><i class="bi bi-calendar-heart"></i></span>
@@ -244,7 +244,7 @@
     $('[data-reservation-detail-title]').textContent = tr('reservation.reservation_details', 'Reservation Details');
     $('[data-reservation-detail-body]').innerHTML = `
       <div class="my-reservation-detail">
-        <img loading="lazy" decoding="async" src="${esc(reservation.venue?.image_url || fallbackImage)}" alt="">
+        <img loading="lazy" decoding="async" src="${esc(reservation.venue?.image_url || fallbackImage)}" alt="${esc(`${reservation.venue?.name || tr('common.restaurant_bar', 'Restaurant / Bar')} reservation details`)}">
         <div class="facility justify-content-between"><span data-i18n="common.restaurant_bar">${tr('common.restaurant_bar', 'Restaurant / Bar')}</span><strong>${esc(reservation.venue?.name || tr('common.restaurant_bar', 'Restaurant / Bar'))}</strong></div>
         <div class="facility justify-content-between"><span data-i18n="common.status">${window.t?.('common.status') || 'Status'}</span>${statusBadge(reservation.status)}</div>
         <div class="facility justify-content-between"><span data-i18n="common.date">${window.t?.('common.date') || 'Date'}</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div>

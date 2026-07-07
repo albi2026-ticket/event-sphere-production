@@ -29,6 +29,63 @@
     return venue.images?.[0]?.url || venue.images?.[0]?.image_path || venue.logo_image || fallbackImage;
   }
 
+  function absoluteUrl(path) {
+    try {
+      const origin = ['localhost', '127.0.0.1', '::1'].includes(location.hostname) ? 'https://tiketa.example' : location.origin;
+      return new URL(path || '/', origin).href;
+    } catch {
+      return new URL(path || '/', 'https://tiketa.example').href;
+    }
+  }
+
+  function setJsonLd(name, data) {
+    let script = document.querySelector(`script[type="application/ld+json"][${name}]`);
+    if (!script) {
+      script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.setAttribute(name, 'true');
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(data);
+    window.TiketaLanguage?.applyInternationalSeo?.();
+  }
+
+  function applyRestaurantListingSchemas(venues) {
+    const language = window.TiketaLanguage?.getLanguage?.() || 'en';
+    setJsonLd('data-restaurants-itemlist-schema', {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'Restaurants and Bars',
+      itemListElement: venues.slice(0, 24).map((venue, index) => {
+        const url = absoluteUrl(window.EventSphereRoutes?.restaurantUrl?.(venue.slug || venue.id) || `/restaurant/${encodeURIComponent(venue.slug || venue.id)}`);
+        return {
+          '@type': 'ListItem',
+          position: index + 1,
+          url,
+          item: {
+            '@type': String(venue.venue_type || '').toLowerCase() === 'restaurant' ? 'Restaurant' : 'LocalBusiness',
+            name: venue.name,
+            url,
+            image: venueImage(venue),
+            address: [venue.address, venue.city, venue.country].filter(Boolean).join(', '),
+            servesCuisine: (venue.cuisine_types || []).map((item) => item.name).filter(Boolean),
+          },
+        };
+      }),
+      inLanguage: language,
+    });
+
+    setJsonLd('data-restaurants-breadcrumb-schema', {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: window.t?.('header.home') || 'Home', item: absoluteUrl('/') },
+        { '@type': 'ListItem', position: 2, name: window.t?.('header.reservations') || 'Restaurants', item: absoluteUrl('/restaurants') },
+      ],
+      inLanguage: language,
+    });
+  }
+
   function titleCase(value) {
     return String(value || 'Restaurant / Bar').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
   }
@@ -42,12 +99,13 @@
     const facilities = preview(venue.facilities, tr('restaurants.facilities_coming_soon', 'Facilities coming soon'));
     const cuisines = preview(venue.cuisine_types, titleCase(venue.venue_type));
     const detailsUrl = window.EventSphereRoutes?.restaurantUrl?.(venue.slug) || `/restaurant/${encodeURIComponent(venue.slug)}`;
+    const imageAlt = [venue.name, cuisines, venue.city].filter(Boolean).join(' in ');
     return `
     <div class="col-lg-3 col-md-6">
       <a class="text-decoration-none" href="${detailsUrl}">
         <article class="venue-card">
           <div class="img-wrap">
-            <img src="${esc(venueImage(venue))}" alt="${esc(venue.name)}" loading="lazy" />
+            <img src="${esc(venueImage(venue))}" alt="${esc(imageAlt)}" loading="lazy" decoding="async" />
             <div class="badges">
               ${venue.featured ? `<span class="chip-available"><i class="bi bi-stars"></i> <span data-i18n="common.featured">${window.t?.('common.featured') || 'Featured'}</span></span>` : `<span class="chip-available"><i class="bi bi-circle-fill" style="font-size:.4rem"></i> <span data-i18n="header.reservations">${window.t?.('header.reservations') || 'Reservations'}</span></span>`}
             </div>
@@ -163,6 +221,7 @@
       button.classList.toggle('active', button.dataset.discoveryView === state.discoveryView);
       button.setAttribute('aria-pressed', button.dataset.discoveryView === state.discoveryView ? 'true' : 'false');
     });
+    if (!state.loading) applyRestaurantListingSchemas(mainVenues);
   }
 
   function queryString() {

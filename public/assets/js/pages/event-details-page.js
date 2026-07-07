@@ -266,13 +266,19 @@
           name: tr('header.events', 'Events'),
           item: absoluteUrl('/events/list'),
         },
-        {
+        event.category ? {
           '@type': 'ListItem',
           position: 3,
+          name: compactText(event.category),
+          item: absoluteUrl(`/events/list?category=${encodeURIComponent(event.category)}`),
+        } : undefined,
+        {
+          '@type': 'ListItem',
+          position: event.category ? 4 : 3,
           name: compactText(event.title) || 'Event',
           item: absoluteUrl(window.EventSphereRoutes?.eventUrl?.(slug) || `/event/${encodeURIComponent(slug)}`),
         },
-      ],
+      ].filter(Boolean),
     };
   }
 
@@ -395,6 +401,7 @@
       banner: $('[data-event-banner]'),
       bannerPlaceholder: $('[data-event-banner-placeholder]'),
       breadcrumb: $('[data-event-breadcrumb]'),
+      breadcrumbCategory: $('[data-event-breadcrumb-category]'),
       category: $('[data-event-category]'),
       countdown: $('[data-countdown]'),
       description: $('[data-event-description]'),
@@ -424,6 +431,11 @@
       const salesStatus = eventsApi().salesStatus(event);
       if (els.title) els.title.textContent = event.title;
       if (els.breadcrumb) els.breadcrumb.textContent = event.title;
+      if (els.breadcrumbCategory) {
+        const category = event.category || tr('events.event', 'Event');
+        els.breadcrumbCategory.textContent = category;
+        els.breadcrumbCategory.href = `/events/list?category=${encodeURIComponent(category)}`;
+      }
       if (els.category) {
         els.category.dataset.i18n = salesStatus.labelKey || '';
         els.category.textContent = salesStatus.key === 'available' ? (event.category || tr('events.event', 'Event')).toUpperCase() : salesStatus.label.toUpperCase();

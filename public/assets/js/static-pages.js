@@ -129,6 +129,11 @@
         { title: 'Common fixes', body: ['Refresh your dashboard after payment confirmation.', 'Confirm you are signed in with the same email used at checkout.', 'Check organizer updates for venue, date, or entry-rule changes.', 'Keep your QR code visible and your phone charged before arriving.'] },
       ],
       contacts: sharedContacts.event,
+      faqs: [
+        ['Why is my ticket not showing yet?', 'Confirm you are signed in with the same email used at checkout, then refresh your dashboard after payment confirmation.'],
+        ['What should I do if my QR code will not load?', 'Check your connection, reopen the ticket from your dashboard, and contact support with the event name and order email if it still does not appear.'],
+        ['Can support change my ticket type?', 'Ticket type changes depend on organizer policy, availability, and the event terms shown before checkout.'],
+      ],
       cta: { title: 'Open a support request', body: 'Use the contact page and include the checklist above.', primary: ['Contact Us', '/contact'] },
     },
     'event.refund': {
@@ -153,6 +158,11 @@
         { icon: 'bi-calendar-plus', title: 'Create public listings', body: 'Add event details, date, venue, imagery, category, visibility, and customer-facing descriptions.' },
         { icon: 'bi-tags', title: 'Configure ticket tiers', body: 'Set names, pricing, capacity, sale windows, and availability for each ticket type.' },
         { icon: 'bi-qr-code', title: 'Manage entry', body: 'Use QR tickets and scanner workflows to support faster, cleaner check-in.' },
+      ],
+      faqs: [
+        ['Who can become an organizer?', 'Event teams, venues, promoters, and approved creators can use Tiketa organizer tools after account setup and platform review where required.'],
+        ['What information is required before publishing?', 'You need accurate event details, schedule, venue, imagery, ticket tiers, inventory, and customer-facing policies.'],
+        ['Can organizers manage check-in?', 'Yes. Organizer workflows support QR ticket validation and scanner preparation for event-day entry.'],
       ],
       cta: { title: 'Start organizing on Tiketa', body: 'Create an account or open your organizer workspace to begin.', primary: ['Create an Event', '/organizer'], secondary: ['Read the Guide', '/organizer-guide'] },
     },
@@ -303,6 +313,11 @@
         { title: 'Urgent timing', body: ['For same-day reservations, contact the venue directly when possible and send Tiketa Dining the reservation details for platform support.'] },
       ],
       contacts: sharedContacts.dining,
+      faqs: [
+        ['Is a reservation request instantly confirmed?', 'No. A request is confirmed only after the venue reviews availability and accepts it.'],
+        ['How do I change reservation details?', 'Contact the venue when possible and send support the venue name, date, time, and updated guest details.'],
+        ['What happens if a venue cancels?', 'The record remains visible for review, and support can help clarify the cancellation reason when needed.'],
+      ],
       cta: { title: 'Review the policy', body: 'Understand how reservation changes and cancellations are handled.', primary: ['Reservation Policy', '/reservation-policy'] },
     },
     'dining.policy': {
@@ -422,6 +437,11 @@
         { title: 'Zgjidhje te zakonshme', body: ['Rifreskoni dashboard-in pas konfirmimit te pageses.', 'Sigurohuni qe jeni futur me te njejtin email te checkout.', 'Kontrolloni perditesimet e organizatorit per vendin, daten ose rregullat e hyrjes.', 'Mbani kodin QR te dukshem dhe telefonin te karikuar.'] },
       ],
       contacts: sqContacts.event,
+      faqs: [
+        ['Pse nuk po shfaqet ende bileta ime?', 'Sigurohuni qe jeni futur me te njejtin email qe perdoret ne checkout, pastaj rifreskoni dashboard-in pas konfirmimit te pageses.'],
+        ['Cfare te bej nese kodi QR nuk hapet?', 'Kontrolloni lidhjen, rihapni bileten nga dashboard-i dhe kontaktoni mbeshtetjen me emrin e eventit dhe emailin e porosise nese ende nuk shfaqet.'],
+        ['A mund ta ndryshoje mbeshtetja llojin e biletes?', 'Ndryshimet varen nga politika e organizatorit, disponueshmeria dhe kushtet e eventit te shfaqura para checkout.'],
+      ],
       cta: { title: 'Hapni kerkese mbeshtetjeje', body: 'Perdorni faqen e kontaktit dhe perfshini listen me siper.', primary: ['Na Kontaktoni', '/contact'] },
     },
     'event.refund': {
@@ -446,6 +466,11 @@
         { icon: 'bi-calendar-plus', title: 'Krijoni lista publike', body: 'Shtoni detaje, date, venue, imazhe, kategori, dukshmeri dhe pershkrime per klientet.' },
         { icon: 'bi-tags', title: 'Konfiguroni nivele biletash', body: 'Vendosni emra, cmime, kapacitet, afate shitjeje dhe disponueshmeri.' },
         { icon: 'bi-qr-code', title: 'Menaxhoni hyrjen', body: 'Perdorni bileta QR dhe rrjedha skanimi per check-in me te paster.' },
+      ],
+      faqs: [
+        ['Kush mund te behet organizator?', 'Ekipet e eventeve, venue-t, promovuesit dhe krijuesit e miratuar mund te perdorin mjetet e organizatorit pas konfigurimit te llogarise.'],
+        ['Cfare informacioni duhet para publikimit?', 'Ju duhen detaje te sakta eventi, orar, venue, imazhe, nivele biletash, inventar dhe politika per klientet.'],
+        ['A mund te menaxhojne organizatoret check-in?', 'Po. Rrjedhat e organizatorit mbeshtesin validimin QR dhe pergatitjen e skanerit per hyrje.'],
       ],
       cta: { title: 'Filloni organizimin ne Tiketa', body: 'Krijoni llogari ose hapni hapesiren e organizatorit.', primary: ['Krijo Event', '/organizer'], secondary: ['Lexo Udhezuesin', '/organizer-guide'] },
     },
@@ -596,6 +621,11 @@
         { title: 'Kohe urgjente', body: ['Per rezervime te se njejtes dite, kontaktoni venue-n direkt kur eshte e mundur dhe dergoni Tiketa Dining detajet.'] },
       ],
       contacts: sqContacts.dining,
+      faqs: [
+        ['A konfirmohet menjehere kerkesa e rezervimit?', 'Jo. Kerkesa konfirmohet vetem pasi venue kontrollon disponueshmerine dhe e pranon.'],
+        ['Si i ndryshoj detajet e rezervimit?', 'Kontaktoni venue-n kur eshte e mundur dhe dergoni mbeshtetjes emrin e venue-s, daten, oren dhe detajet e reja.'],
+        ['Cfare ndodh nese venue anulon?', 'Regjistrimi mbetet i dukshem per rishikim dhe mbeshtetja mund te ndihmoje me arsyen e anulimit.'],
+      ],
       cta: { title: 'Rishikoni politiken', body: 'Kuptoni si trajtohen ndryshimet dhe anulimet.', primary: ['Politika e Rezervimeve', '/reservation-policy'] },
     },
     'dining.policy': {
@@ -712,6 +742,36 @@
     </div></div></section>`;
   }
 
+  function setFaqSchema(faqs) {
+    let script = document.querySelector('script[type="application/ld+json"][data-faq-schema]');
+    if (!faqs?.length) {
+      script?.remove();
+      return;
+    }
+
+    if (!script) {
+      script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.dataset.faqSchema = 'true';
+      document.head.appendChild(script);
+    }
+
+    script.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      inLanguage: window.TiketaLanguage?.getLanguage?.() || 'en',
+      mainEntity: faqs.map(([question, answer]) => ({
+        '@type': 'Question',
+        name: String(question || '').trim(),
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: String(answer || '').trim(),
+        },
+      })),
+    });
+    window.TiketaLanguage?.applyInternationalSeo?.();
+  }
+
   function ctaMarkup(cta) {
     if (!cta) return '';
     const secondary = cta.secondary ? `<a class="btn btn-ghost" href="${esc(cta.secondary[1])}">${esc(cta.secondary[0])}</a>` : '';
@@ -736,6 +796,7 @@
     const description = document.querySelector('meta[name="description"]');
     if (description) description.setAttribute('content', data.subtitle);
     applyStaticSocialMeta(root.dataset.staticPage, data);
+    setFaqSchema(data.faqs);
 
     root.innerHTML = `
       <section class="content-hero">

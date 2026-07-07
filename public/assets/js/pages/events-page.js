@@ -205,6 +205,87 @@
     });
   }
 
+  function absoluteUrl(path) {
+    try {
+      const origin = ['localhost', '127.0.0.1', '::1'].includes(location.hostname) ? 'https://tiketa.example' : location.origin;
+      return new URL(path || '/', origin).href;
+    } catch {
+      return new URL(path || '/', 'https://tiketa.example').href;
+    }
+  }
+
+  function currentListingName() {
+    const parts = [];
+    if (state.category) parts.push(`${state.category.replace(/-/g, ' ')} events`);
+    if (state.city) parts.push(`events in ${state.city}`);
+    if (state.q) parts.push(`search results for ${state.q}`);
+    return parts.length ? parts.join(' - ') : 'Events';
+  }
+
+  function setJsonLd(name, data) {
+    let script = document.querySelector(`script[type="application/ld+json"][${name}]`);
+    if (!script) {
+      script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.setAttribute(name, 'true');
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(data);
+    window.TiketaLanguage?.applyInternationalSeo?.();
+  }
+
+  function eventListItem(event, position) {
+    const slug = event.slug || event.id;
+    const url = absoluteUrl(window.EventSphereRoutes?.eventUrl?.(slug) || `/event/${encodeURIComponent(slug)}`);
+    return {
+      '@type': 'ListItem',
+      position,
+      url,
+      item: {
+        '@type': 'Event',
+        name: event.title,
+        url,
+        image: u().eventImage(event),
+        startDate: event.starts_at,
+        location: {
+          '@type': 'Place',
+          name: event.venue_name || event.city || 'Venue',
+          address: [event.venue_name, event.city, event.country].filter(Boolean).join(', '),
+        },
+      },
+    };
+  }
+
+  function applyListingSchemas(events) {
+    const language = window.TiketaLanguage?.getLanguage?.() || 'en';
+    setJsonLd('data-events-itemlist-schema', {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: currentListingName(),
+      itemListElement: events.slice(0, 24).map((event, index) => eventListItem(event, index + 1)),
+      inLanguage: language,
+    });
+
+    const crumbs = [
+      { name: window.t?.('header.home') || 'Home', item: absoluteUrl('/') },
+      { name: window.t?.('header.events') || 'Events', item: absoluteUrl('/events/list') },
+    ];
+    if (state.category) crumbs.push({ name: state.category.replace(/-/g, ' '), item: absoluteUrl(`${location.pathname}?category=${encodeURIComponent(state.category)}`) });
+    if (state.city) crumbs.push({ name: state.city, item: absoluteUrl(`${location.pathname}?city=${encodeURIComponent(state.city)}`) });
+
+    setJsonLd('data-events-breadcrumb-schema', {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: crumbs.map((crumb, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: crumb.name,
+        item: crumb.item,
+      })),
+      inLanguage: language,
+    });
+  }
+
   function renderEvents(events) {
     if (state.view === 'list') {
       return events.map((event) => {
@@ -215,7 +296,7 @@
         return `
           <div class="col-12">
             <article class="card-pro p-3 d-flex gap-3 align-items-center flex-wrap">
-              <img loading="lazy" decoding="async" src="${u().escapeHtml(u().eventImage(event))}" alt="" style="width:120px;height:86px;object-fit:cover;border-radius:10px"/>
+              <img loading="lazy" decoding="async" src="${u().escapeHtml(u().eventImage(event))}" alt="${u().escapeHtml([event.title, event.venue_name, event.city].filter(Boolean).join(' in '))}" style="width:120px;height:86px;object-fit:cover;border-radius:10px"/>
               <div class="flex-grow-1">
                 <div class="meta"><i class="bi bi-calendar3"></i> ${u().escapeHtml(date)}</div>
                 <h3 class="title mb-1"><a href="${detailsHref}" style="color:inherit">${u().escapeHtml(event.title)}</a></h3>
@@ -286,6 +367,7 @@
     }
 
     onIdle(() => window.EventSphereFavorites?.syncFavoriteButtons());
+    applyListingSchemas(events);
     syncUrl();
   }
 
@@ -435,5 +517,8 @@
 
     loadCategories();
     load();
+    document.addEventListener('tiketa:language-changed', () => {
+      if (lastRenderedEvents.length) applyListingSchemas(lastRenderedEvents);
+    });
   });
 })();

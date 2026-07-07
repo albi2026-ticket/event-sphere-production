@@ -166,7 +166,7 @@
   function userNameCell(user) {
     const name = user.name || user.email || `User #${user.id}`;
     const avatar = user.avatar_url || `https://i.pravatar.cc/80?u=${encodeURIComponent(user.email || user.id)}`;
-    return `<div class="d-flex align-items-center gap-2"><img src="${u().escapeHtml(avatar)}" class="rounded-circle admin-avatar" alt=""/> <div><div class="fw-semibold">${u().escapeHtml(name)}</div><div class="small text-muted-pro">#${user.id}</div></div></div>`;
+    return `<div class="d-flex align-items-center gap-2"><img src="${u().escapeHtml(avatar)}" class="rounded-circle admin-avatar" alt="${u().escapeHtml(`${name} profile avatar`)}"/> <div><div class="fw-semibold">${u().escapeHtml(name)}</div><div class="small text-muted-pro">#${user.id}</div></div></div>`;
   }
 
   function eventRevenue(eventId) {
@@ -1744,7 +1744,7 @@
         ['Created', dateLabel(venue.created_at)],
       ])}
       <h6 class="mt-4">Gallery</h6>
-      ${(venue.images || []).length ? `<div class="row g-2">${venue.images.map((image) => `<div class="col-4"><img src="${u().escapeHtml(image.url || image.image_path)}" alt="" class="w-100 rounded-pro" style="aspect-ratio:4/3;object-fit:cover"/></div>`).join('')}</div>` : '<p class="text-muted-pro mb-0">No gallery images.</p>'}
+      ${(venue.images || []).length ? `<div class="row g-2">${venue.images.map((image, index) => `<div class="col-4"><img src="${u().escapeHtml(image.url || image.image_path)}" alt="${u().escapeHtml(`${venue.name || 'Venue'} gallery image ${index + 1}`)}" class="w-100 rounded-pro" style="aspect-ratio:4/3;object-fit:cover"/></div>`).join('')}</div>` : '<p class="text-muted-pro mb-0">No gallery images.</p>'}
       <h6 class="mt-4">Opening Hours</h6>
       ${hours.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${hours.map((item) => `<tr><td>Day ${item.day_of_week}</td><td>${item.is_closed ? 'Closed' : `${u().escapeHtml(String(item.opens_at || '').slice(0, 5))} - ${u().escapeHtml(String(item.closes_at || '').slice(0, 5))}`}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No opening hours configured.</p>'}
     `);

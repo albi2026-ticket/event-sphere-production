@@ -184,13 +184,69 @@
 
   function preloadImage(src) {
     if (!src) return;
+    if ([...document.querySelectorAll('link[rel="preload"][as="image"]')].some((link) => link.href === src || link.getAttribute('href') === src)) return;
     const link = document.createElement('link');
     link.rel = 'preload';
     link.as = 'image';
+    link.fetchPriority = 'high';
     link.href = src;
     document.head.appendChild(link);
     const img = new Image();
     img.src = src;
+  }
+
+  function absoluteUrl(path) {
+    try {
+      const origin = ['localhost', '127.0.0.1', '::1'].includes(location.hostname) ? 'https://tiketa.example' : location.origin;
+      return new URL(path || '/', origin).href;
+    } catch {
+      return new URL(path || '/', 'https://tiketa.example').href;
+    }
+  }
+
+  function eventListItem(event, position) {
+    const slug = event.slug || event.id;
+    const url = absoluteUrl(window.EventSphereRoutes?.eventUrl?.(slug) || `/event/${encodeURIComponent(slug)}`);
+    return {
+      '@type': 'ListItem',
+      position,
+      url,
+      item: {
+        '@type': 'Event',
+        name: event.title,
+        url,
+        image: window.EventSphereUtils.eventImage(event),
+        startDate: event.starts_at,
+        location: {
+          '@type': 'Place',
+          name: event.venue_name || event.city || 'Venue',
+          address: [event.venue_name, event.city, event.country].filter(Boolean).join(', '),
+        },
+      },
+    };
+  }
+
+  function setItemListSchema(key, name, events) {
+    const items = (events || []).filter(Boolean).slice(0, 12).map((event, index) => eventListItem(event, index + 1));
+    let script = document.querySelector(`script[type="application/ld+json"][data-itemlist-schema="${key}"]`);
+    if (!items.length) {
+      script?.remove();
+      return;
+    }
+    if (!script) {
+      script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.dataset.itemlistSchema = key;
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name,
+      itemListElement: items,
+      inLanguage: window.TiketaLanguage?.getLanguage?.() || 'en',
+    });
+    window.TiketaLanguage?.applyInternationalSeo?.();
   }
 
   function renderHeroSlide(event, index) {
@@ -203,7 +259,7 @@
     const statusLabel = status.key === 'sold_out' || status.key === 'live' ? status.label : '';
 
     return `<article class="hero-slide${index === 0 ? ' active' : ''}" data-hero-slide data-index="${index}" aria-hidden="${index === 0 ? 'false' : 'true'}">
-      <div class="hero-slide-bg"><img src="${u.escapeHtml(img)}" alt="" ${index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'}></div>
+      <div class="hero-slide-bg"><img src="${u.escapeHtml(img)}" alt="${u.escapeHtml(`${event.title} at ${locationLabel(event)}`)}" ${index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'} decoding="async"></div>
       <div class="hero-slide-overlay"></div>
       <div class="container-xxl hero-slide-content">
         <div class="hero-slide-copy">
@@ -332,6 +388,7 @@
     const visibleEvents = events.slice(0, limit);
     section.hidden = !visibleEvents.length;
     grid.innerHTML = visibleEvents.map((event, index) => window.EventSphereEvents.renderEventCard(event, index)).join('');
+    setItemListSchema(gridSelector.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase(), sectionSelector.includes('trending') ? 'Trending Events' : 'Upcoming Events', visibleEvents);
   }
 
   function renderTrending(events) {
@@ -373,6 +430,9 @@
         </div>
       </section>`;
     }).join('');
+    categoryGroups.forEach((category) => {
+      setItemListSchema(`category-${category.key}`, `${category.label} Events`, category.events.slice(0, 8));
+    });
   }
 
   function startHeroCountdowns() {
@@ -437,6 +497,7 @@
       const data = await fetchHomepageData();
       homepageData = data;
       setupHeroSlider(uniqueEvents(data.featured, data.trending, data.upcoming));
+      setItemListSchema('featured-events', 'Featured Events', data.featured);
       renderTrending(data.trending);
       renderUpcomingWeek(data.upcoming);
       renderCategorySections(data.categories);

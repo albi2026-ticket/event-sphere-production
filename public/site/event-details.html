@@ -28,10 +28,10 @@
 <!-- Banner -->
 <section style="position:relative;height:420px;overflow:hidden" data-event-root>
   <div data-event-banner-placeholder class="event-banner-placeholder" style="width:100%;height:100%"></div>
-  <img data-event-banner src="" alt="" hidden decoding="async" fetchpriority="high" loading="eager" style="width:100%;height:100%;object-fit:cover"/>
+  <img data-event-banner src="" alt="Event hero image" hidden decoding="async" fetchpriority="high" loading="eager" style="width:100%;height:100%;object-fit:cover"/>
   <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,15,25,.2) 0%, rgba(11,15,25,.95) 90%)"></div>
   <div class="container-xxl position-relative" style="margin-top:-260px;z-index:2">
-    <nav class="text-white-50 small mb-2"><a href="/events/list" class="text-white-50" data-i18n="header.events">Events</a> <i class="bi bi-chevron-right mx-1"></i> <span data-event-breadcrumb data-i18n="events.loading_event">Loading event...</span></nav>
+    <nav class="text-white-50 small mb-2"><a href="/events/list" class="text-white-50" data-i18n="header.events">Events</a> <i class="bi bi-chevron-right mx-1"></i> <a href="/events/list" class="text-white-50" data-event-breadcrumb-category data-i18n="loading.loading">Loading</a> <i class="bi bi-chevron-right mx-1"></i> <span data-event-breadcrumb data-i18n="events.loading_event">Loading event...</span></nav>
     <span class="badge-soft" style="position:static" data-event-category data-i18n="loading.loading">Loading</span>
     <h1 class="mt-2 text-white" data-event-title style="max-width:780px"><span class="skel dashboard-skel-value" style="display:block;max-width:620px"></span></h1>
     <div class="d-flex flex-wrap gap-3 mt-3 text-white-50">

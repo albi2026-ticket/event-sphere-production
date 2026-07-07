@@ -260,13 +260,19 @@
           name: tr('footer.hospitality_reservations', 'Restaurants'),
           item: absoluteUrl('/restaurants'),
         },
-        {
+        venueCuisineLabel(venue) ? {
           '@type': 'ListItem',
           position: 3,
+          name: venueCuisineLabel(venue),
+          item: absoluteUrl(`/restaurants?cuisine=${encodeURIComponent(venueCuisineLabel(venue))}`),
+        } : undefined,
+        {
+          '@type': 'ListItem',
+          position: venueCuisineLabel(venue) ? 4 : 3,
           name: compactText(venue.name) || 'Restaurant',
           item: absoluteUrl(window.EventSphereRoutes?.restaurantUrl?.(slug) || `/restaurant/${encodeURIComponent(slug)}`),
         },
-      ],
+      ].filter(Boolean),
     };
   }
 
@@ -799,6 +805,7 @@
     applyVenueSchema(venue);
     applyBreadcrumbSchema(venue);
     setText('[data-detail-city]', venue.city || 'City');
+    setText('[data-detail-crumb-category]', venueCuisineLabel(venue));
     setText('[data-detail-name]', venue.name || 'Restaurant / Bar');
     setText('[data-detail-title]', venue.name || 'Restaurant / Bar');
     setText('[data-detail-type]', titleCase(venue.venue_type));
@@ -819,6 +826,7 @@
     const logo = $('[data-detail-logo]');
     if (logo && venue.logo_image) {
       logo.src = venue.logo_image;
+      logo.alt = `${venue.name || 'Restaurant or bar'} logo`;
       logo.loading = 'lazy';
       logo.decoding = 'async';
       logo.hidden = false;

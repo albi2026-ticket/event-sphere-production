@@ -170,7 +170,7 @@
         items.forEach((item) => {
           if (!item || typeof item !== 'object') return;
           const type = Array.isArray(item['@type']) ? item['@type'][0] : item['@type'];
-          if (['WebSite', 'Event', 'Restaurant', 'LocalBusiness', 'BreadcrumbList'].includes(type)) {
+          if (['WebSite', 'Event', 'Restaurant', 'LocalBusiness', 'BreadcrumbList', 'ItemList', 'FAQPage'].includes(type)) {
             item.inLanguage = language;
           }
         });
