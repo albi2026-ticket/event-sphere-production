@@ -16,6 +16,94 @@
     return u().formatMoney(amount, currency || 'USD');
   }
 
+  function compactText(value) {
+    return String(value || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function smartTrim(value, maxLength = 160) {
+    const text = compactText(value);
+    if (text.length <= maxLength) return text;
+    const slice = text.slice(0, maxLength - 3);
+    const boundary = Math.max(slice.lastIndexOf('.'), slice.lastIndexOf(','), slice.lastIndexOf(' '));
+    return `${slice.slice(0, boundary > 120 ? boundary : maxLength - 3).trim()}...`;
+  }
+
+  function eventDateLabel(event) {
+    if (!event.starts_at) return '';
+    try {
+      return new Intl.DateTimeFormat(undefined, {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: event.timezone || undefined,
+      }).format(new Date(event.starts_at));
+    } catch (err) {
+      return u().formatEventDate(event.starts_at, event.timezone);
+    }
+  }
+
+  function setMetaDescription(content) {
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'description';
+      document.head.appendChild(meta);
+    }
+    meta.content = content;
+  }
+
+  function absoluteUrl(value) {
+    const text = compactText(value);
+    if (!text) return '';
+    try {
+      return new URL(text, window.location.origin).href;
+    } catch (err) {
+      return text;
+    }
+  }
+
+  function setOpenGraph(property, content) {
+    const value = compactText(content);
+    if (!value) return;
+    let meta = document.querySelector(`meta[property="${property}"]`);
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('property', property);
+      document.head.appendChild(meta);
+    }
+    meta.content = value;
+  }
+
+  function eventMetaDescription(event) {
+    const title = compactText(event.title) || 'this event';
+    const city = compactText(event.city);
+    const venue = compactText(event.venue_name);
+    const date = eventDateLabel(event);
+    const category = compactText(event.category) || 'event';
+    const location = [venue, city].filter(Boolean).join(' in ');
+    const base = `Book ${category} tickets for ${title}${location ? ` at ${location}` : ''}${date ? ` on ${date}` : ''}.`;
+    const support = ' Discover details, ticket options, venue information, and secure entry with Tiketa.';
+    const extended = ' Browse schedules, pricing, availability, and ticket details before you book online.';
+    const description = compactText(`${base}${support}`);
+    return smartTrim(description.length < 140 ? `${description} ${extended}` : description, 160);
+  }
+
+  function applyEventOpenGraph(event, fallbackSlug) {
+    const slug = event.slug || fallbackSlug;
+    setOpenGraph('og:title', `${compactText(event.title) || 'Event'} | Tiketa`);
+    setOpenGraph('og:description', eventMetaDescription(event));
+    setOpenGraph('og:image', absoluteUrl(eventApiImage(event)));
+    setOpenGraph('og:url', absoluteUrl(window.EventSphereRoutes?.eventUrl?.(slug) || `/event/${encodeURIComponent(slug)}`));
+    setOpenGraph('og:type', 'event');
+  }
+
+  function applyEventMetadata(event, fallbackSlug) {
+    document.title = `${compactText(event.title) || 'Event'} | Tiketa`;
+    setMetaDescription(eventMetaDescription(event));
+    window.EventSphereRoutes?.setEventCanonical?.(event.slug || fallbackSlug);
+    applyEventOpenGraph(event, fallbackSlug);
+  }
+
   function onIdle(callback) {
     if ('requestIdleCallback' in window) {
       window.requestIdleCallback(callback, { timeout: 1200 });
@@ -137,8 +225,7 @@
 
     try {
       const event = await eventsApi().getEvent(slug);
-      document.title = `${event.title} · TicketHub`;
-      window.EventSphereRoutes?.setEventCanonical?.(event.slug || slug);
+      applyEventMetadata(event, slug);
 
       const img = eventApiImage(event);
       const salesStatus = eventsApi().salesStatus(event);

@@ -32,6 +32,86 @@
     return String(value || 'Restaurant / Bar').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
   }
 
+  function compactText(value) {
+    return String(value || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function smartTrim(value, maxLength = 160) {
+    const text = compactText(value);
+    if (text.length <= maxLength) return text;
+    const slice = text.slice(0, maxLength - 3);
+    const boundary = Math.max(slice.lastIndexOf('.'), slice.lastIndexOf(','), slice.lastIndexOf(' '));
+    return `${slice.slice(0, boundary > 100 ? boundary : maxLength - 3).trim()}...`;
+  }
+
+  function setMetaDescription(content) {
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'description';
+      document.head.appendChild(meta);
+    }
+    meta.content = content;
+  }
+
+  function absoluteUrl(value) {
+    const text = compactText(value);
+    if (!text) return '';
+    try {
+      return new URL(text, window.location.origin).href;
+    } catch (err) {
+      return text;
+    }
+  }
+
+  function setOpenGraph(property, content) {
+    const value = compactText(content);
+    if (!value) return;
+    let meta = document.querySelector(`meta[property="${property}"]`);
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('property', property);
+      document.head.appendChild(meta);
+    }
+    meta.content = value;
+  }
+
+  function venueCuisineLabel(venue) {
+    const cuisines = listNames(venue.cuisine_types, '');
+    if (cuisines) return cuisines;
+    return titleCase(venue.venue_type);
+  }
+
+  function venueMetaDescription(venue) {
+    const name = compactText(venue.name) || 'this restaurant';
+    const city = compactText(venue.city);
+    const cuisine = compactText(venueCuisineLabel(venue));
+    const intro = `Reserve a table at ${name}${city ? ` in ${city}` : ''}.`;
+    const detail = ` Discover ${cuisine ? `${cuisine} dining, ` : ''}availability, opening hours, and reservation details with Tiketa.`;
+    return smartTrim(`${intro}${detail}`, 160);
+  }
+
+  function venuePrimaryImage(venue) {
+    const image = venue.images?.[0];
+    return imageUrl(image) || venue.logo_image || fallbackImage;
+  }
+
+  function applyVenueOpenGraph(venue) {
+    const slug = venue.slug || slugFromLocation();
+    setOpenGraph('og:title', `${compactText(venue.name) || 'Restaurant'} | Reserve a Table | Tiketa`);
+    setOpenGraph('og:description', venueMetaDescription(venue));
+    setOpenGraph('og:image', absoluteUrl(venuePrimaryImage(venue)));
+    setOpenGraph('og:url', absoluteUrl(window.EventSphereRoutes?.restaurantUrl?.(slug) || `/restaurant/${encodeURIComponent(slug)}`));
+    setOpenGraph('og:type', 'restaurant');
+  }
+
+  function applyVenueMetadata(venue) {
+    document.title = `${compactText(venue.name) || 'Restaurant'} | Reserve a Table | Tiketa`;
+    setMetaDescription(venueMetaDescription(venue));
+    window.EventSphereRoutes?.setRestaurantCanonical?.(venue.slug || slugFromLocation());
+    applyVenueOpenGraph(venue);
+  }
+
   function occasionKey(value) {
     return {
       Birthday: 'reservation.birthday',
@@ -538,8 +618,7 @@
   function renderVenue(venue) {
     resetRenderStateForVenue(venue);
     currentVenue = venue;
-    document.title = `${venue.name} - Tiketa Reservations`;
-    window.EventSphereRoutes?.setRestaurantCanonical?.(venue.slug || slugFromLocation());
+    applyVenueMetadata(venue);
     setText('[data-detail-city]', venue.city || 'City');
     setText('[data-detail-name]', venue.name || 'Restaurant / Bar');
     setText('[data-detail-title]', venue.name || 'Restaurant / Bar');
