@@ -30,7 +30,7 @@ const securityHeaders: Record<string, string> = {
     "form-action 'self'",
     "script-src 'self' https://cdn.jsdelivr.net https://maps.googleapis.com",
     "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
-    "img-src 'self' data: blob: https:",
+    "img-src 'self' data: blob: https: http://127.0.0.1:8000 http://localhost:8000",
     "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
     "connect-src 'self' http: https: ws: wss:",
     "frame-src 'self' https://maps.google.com https://www.google.com",

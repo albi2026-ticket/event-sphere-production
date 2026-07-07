@@ -614,6 +614,8 @@
   };
 
   const pages = { en, sq };
+  const defaultEventSocialImage = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&q=80';
+  const defaultDiningSocialImage = 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80';
 
   function esc(value) {
     return String(value || '').replace(/[&<>"']/g, (char) => ({
@@ -632,6 +634,46 @@
   function pageFor(key) {
     const language = currentLanguage();
     return pages[language]?.[key] || pages.en[key];
+  }
+
+  function cleanPath() {
+    const path = window.location.pathname.replace(/^\/site\//, '/').replace(/\.html$/, '');
+    return path === '/welcome' ? '/' : path;
+  }
+
+  function absoluteUrl(path) {
+    return new URL(path || '/', 'https://tiketa.example').href;
+  }
+
+  function setSocialMeta(selector, attr, value) {
+    const content = String(value || '').replace(/\s+/g, ' ').trim();
+    if (!content) return;
+    let meta = document.querySelector(selector);
+    if (!meta) {
+      meta = document.createElement('meta');
+      const [name, key] = attr;
+      meta.setAttribute(name, key);
+      document.head.appendChild(meta);
+    }
+    meta.content = content;
+  }
+
+  function applyStaticSocialMeta(key, data) {
+    const title = `${data.title} | Tiketa`;
+    const description = data.subtitle || data.lead || 'Discover Tiketa events, reservations, support, and platform information.';
+    const image = key.startsWith('dining.') ? defaultDiningSocialImage : defaultEventSocialImage;
+    const url = absoluteUrl(cleanPath());
+
+    setSocialMeta('meta[property="og:title"]', ['property', 'og:title'], title);
+    setSocialMeta('meta[property="og:description"]', ['property', 'og:description'], description);
+    setSocialMeta('meta[property="og:image"]', ['property', 'og:image'], image);
+    setSocialMeta('meta[property="og:url"]', ['property', 'og:url'], url);
+    setSocialMeta('meta[property="og:type"]', ['property', 'og:type'], 'website');
+    setSocialMeta('meta[property="og:site_name"]', ['property', 'og:site_name'], 'Tiketa');
+    setSocialMeta('meta[name="twitter:card"]', ['name', 'twitter:card'], 'summary_large_image');
+    setSocialMeta('meta[name="twitter:title"]', ['name', 'twitter:title'], title);
+    setSocialMeta('meta[name="twitter:description"]', ['name', 'twitter:description'], description);
+    setSocialMeta('meta[name="twitter:image"]', ['name', 'twitter:image'], image);
   }
 
   function cardMarkup(card) {
@@ -693,6 +735,7 @@
     document.title = `${data.title} | Tiketa`;
     const description = document.querySelector('meta[name="description"]');
     if (description) description.setAttribute('content', data.subtitle);
+    applyStaticSocialMeta(root.dataset.staticPage, data);
 
     root.innerHTML = `
       <section class="content-hero">

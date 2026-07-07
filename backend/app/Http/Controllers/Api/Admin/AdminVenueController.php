@@ -203,6 +203,8 @@ class AdminVenueController extends Controller
         if (array_key_exists('images', $payload)) {
             $venue->images()->delete();
             $venue->images()->createMany(collect($payload['images'])->map(fn (array $image) => [
+                'disk' => $this->imageDisk($image['image_path']),
+                'path' => $this->imagePath($image['image_path']),
                 'image_path' => $image['image_path'],
                 'sort_order' => $image['sort_order'] ?? 0,
             ])->all());
@@ -234,5 +236,17 @@ class AdminVenueController extends Controller
         }
 
         return $slug;
+    }
+
+    protected function imageDisk(string $path): ?string
+    {
+        return str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, 'data:')
+            ? null
+            : 'public';
+    }
+
+    protected function imagePath(string $path): ?string
+    {
+        return $this->imageDisk($path) ? $path : null;
     }
 }

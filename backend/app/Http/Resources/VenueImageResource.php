@@ -9,11 +9,15 @@ class VenueImageResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $path = $this->path ?: $this->image_path;
+
         return [
             'id' => $this->id,
             'venue_id' => $this->venue_id,
-            'image_path' => $this->image_path,
+            'image_path' => $path,
             'url' => $this->publicUrl(),
+            'disk' => $this->disk,
+            'path' => $path,
             'sort_order' => $this->sort_order,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

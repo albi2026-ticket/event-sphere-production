@@ -23,9 +23,12 @@ class OwnerVenueImageController extends Controller
             'sort_order' => ['sometimes', 'integer', 'min:0'],
         ]);
 
-        $path = $payload['image']->store("venue-images/{$venue->id}", 'public');
+        $disk = 'public';
+        $path = $payload['image']->store("venue-images/{$venue->id}", $disk);
 
         $venue->images()->create([
+            'disk' => $disk,
+            'path' => $path,
             'image_path' => $path,
             'sort_order' => $payload['sort_order'] ?? ($venue->images()->max('sort_order') ?? 0) + 1,
         ]);
@@ -59,7 +62,9 @@ class OwnerVenueImageController extends Controller
         abort_unless($request->user()->canManageVenue($venueImage->venue), 403);
         $this->ensureVerifiedOwner($request);
 
-        if (! str_starts_with($venueImage->image_path, 'http') && ! str_starts_with($venueImage->image_path, 'data:')) {
+        if ($venueImage->disk && $venueImage->path) {
+            Storage::disk($venueImage->disk)->delete($venueImage->path);
+        } elseif (! str_starts_with($venueImage->image_path, 'http') && ! str_starts_with($venueImage->image_path, 'data:')) {
             Storage::disk('public')->delete($venueImage->image_path);
         }
 

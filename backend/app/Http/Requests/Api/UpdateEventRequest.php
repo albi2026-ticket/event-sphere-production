@@ -41,7 +41,7 @@ class UpdateEventRequest extends FormRequest
             'timezone' => ['nullable', 'string', 'max:255'],
             'status' => ['sometimes', Rule::in(['draft', 'published', 'cancelled', 'completed', 'pending_review', 'rejected'])],
             'visibility' => ['sometimes', Rule::in(['public', 'private', 'unlisted'])],
-            'banner_image_url' => ['nullable', 'url', 'max:2048'],
+            'banner_image_url' => ['prohibited'],
             'max_tickets_per_user' => ['nullable', 'integer', 'min:1'],
             'base_price' => ['nullable', 'numeric', 'min:0'],
             'currency' => ['sometimes', 'string', 'size:3'],

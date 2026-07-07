@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'venue_id',
+    'disk',
+    'path',
     'image_path',
     'sort_order',
 ])]
@@ -24,6 +26,10 @@ class VenueImage extends Model
 
     public function publicUrl(): string
     {
+        if ($this->disk && $this->path) {
+            return Storage::disk($this->disk)->url($this->path);
+        }
+
         if (str_starts_with($this->image_path, 'http://') || str_starts_with($this->image_path, 'https://') || str_starts_with($this->image_path, 'data:')) {
             return $this->image_path;
         }

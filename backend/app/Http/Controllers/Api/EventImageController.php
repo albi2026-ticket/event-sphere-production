@@ -12,7 +12,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 
 class EventImageController extends Controller
 {
@@ -56,18 +55,6 @@ class EventImageController extends Controller
         if ($request->hasFile('image')) {
             $this->deleteStoredFile($eventImage);
             $payload = array_merge($payload, $this->storedFilePayload($request->file('image'), $eventImage->event));
-        } elseif ($request->filled('url')) {
-            $this->deleteStoredFile($eventImage);
-            $payload = array_merge($payload, [
-                'disk' => null,
-                'path' => null,
-                'url' => $request->string('url')->toString(),
-                'original_name' => null,
-                'mime_type' => null,
-                'size' => null,
-                'width' => null,
-                'height' => null,
-            ]);
         }
 
         if ($request->boolean('is_primary')) {
@@ -86,7 +73,7 @@ class EventImageController extends Controller
 
         $this->deleteStoredFile($eventImage);
         $event = $eventImage->event;
-        $wasBanner = $event->banner_image_url === $eventImage->url;
+        $wasBanner = $eventImage->is_primary || $eventImage->type === 'banner' || $event->banner_image_url === $eventImage->publicUrl();
 
         $eventImage->delete();
 
@@ -94,7 +81,7 @@ class EventImageController extends Controller
             $replacement = $event->images()->where('is_primary', true)->first()
                 ?? $event->images()->orderBy('sort_order')->first();
 
-            $event->update(['banner_image_url' => $replacement?->url]);
+            $event->update(['banner_image_url' => $replacement?->isExternal() ? $replacement->publicUrl() : null]);
         }
 
         return response()->json(['message' => 'Event image deleted.']);
@@ -111,20 +98,7 @@ class EventImageController extends Controller
             ]);
         }
 
-        return [
-            'disk' => null,
-            'path' => null,
-            'url' => $request->string('url')->toString(),
-            'original_name' => null,
-            'mime_type' => null,
-            'size' => null,
-            'width' => null,
-            'height' => null,
-            'alt_text' => $request->input('alt_text'),
-            'type' => $request->input('type', 'gallery'),
-            'sort_order' => $request->integer('sort_order', 0),
-            'is_primary' => $request->boolean('is_primary'),
-        ];
+        abort(422, 'Image upload is required.');
     }
 
     protected function storedFilePayload(UploadedFile $file, Event $event): array
@@ -136,7 +110,7 @@ class EventImageController extends Controller
         return [
             'disk' => $disk,
             'path' => $path,
-            'url' => Storage::disk($disk)->url($path),
+            'url' => null,
             'original_name' => $file->getClientOriginalName(),
             'mime_type' => $file->getMimeType(),
             'size' => $file->getSize(),
@@ -155,7 +129,7 @@ class EventImageController extends Controller
     protected function syncEventBanner(EventImage $eventImage): void
     {
         if ($eventImage->is_primary || $eventImage->type === 'banner') {
-            $eventImage->event->update(['banner_image_url' => $eventImage->publicUrl()]);
+            $eventImage->event->update(['banner_image_url' => $eventImage->isExternal() ? $eventImage->publicUrl() : null]);
         }
     }
 }

@@ -41,6 +41,11 @@ class EventImage extends Model
         return $this->url;
     }
 
+    public function isExternal(): bool
+    {
+        return ! $this->disk && (bool) $this->url;
+    }
+
     protected function casts(): array
     {
         return [

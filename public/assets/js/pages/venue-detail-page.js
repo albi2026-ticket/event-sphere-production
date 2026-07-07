@@ -6,6 +6,7 @@
   const tr = (key, fallback, replacements) => window.t?.(key, replacements) || fallback;
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
   const fallbackImage = 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80';
+  const defaultRestaurantSocialImage = fallbackImage;
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const occasionOptions = ['Birthday', 'Anniversary', 'Date Night', 'Business Meeting', 'Family Gathering', 'Celebration', 'Friends Night Out', 'Other'];
   let currentVenue = null;
@@ -76,6 +77,40 @@
     meta.content = value;
   }
 
+  function setTwitter(name, content) {
+    const value = compactText(content);
+    if (!value) return;
+    let meta = document.querySelector(`meta[name="${name}"]`);
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = name;
+      document.head.appendChild(meta);
+    }
+    meta.content = value;
+  }
+
+  function socialImageUrl(value, fallback = defaultRestaurantSocialImage) {
+    const url = absoluteUrl(value || fallback);
+    if (!url) return absoluteUrl(fallback);
+    try {
+      const parsed = new URL(url);
+      if (['localhost', '127.0.0.1', '::1'].includes(parsed.hostname)) return absoluteUrl(fallback);
+    } catch (err) {
+      return absoluteUrl(fallback);
+    }
+    return url;
+  }
+
+  function socialPageUrl(path) {
+    try {
+      const current = new URL(window.location.href);
+      const base = ['localhost', '127.0.0.1', '::1'].includes(current.hostname) ? 'https://tiketa.example' : current.origin;
+      return new URL(path, base).href;
+    } catch (err) {
+      return new URL(path, 'https://tiketa.example').href;
+    }
+  }
+
   function venueCuisineLabel(venue) {
     const cuisines = listNames(venue.cuisine_types, '');
     if (cuisines) return cuisines;
@@ -98,11 +133,22 @@
 
   function applyVenueOpenGraph(venue) {
     const slug = venue.slug || slugFromLocation();
-    setOpenGraph('og:title', `${compactText(venue.name) || 'Restaurant'} | Reserve a Table | Tiketa`);
-    setOpenGraph('og:description', venueMetaDescription(venue));
-    setOpenGraph('og:image', absoluteUrl(venuePrimaryImage(venue)));
-    setOpenGraph('og:url', absoluteUrl(window.EventSphereRoutes?.restaurantUrl?.(slug) || `/restaurant/${encodeURIComponent(slug)}`));
-    setOpenGraph('og:type', 'restaurant');
+    const title = `${compactText(venue.name) || 'Restaurant'} | Reserve a Table | Tiketa`;
+    const description = venueMetaDescription(venue);
+    const image = socialImageUrl(venuePrimaryImage(venue));
+    const path = window.EventSphereRoutes?.restaurantUrl?.(slug) || `/restaurant/${encodeURIComponent(slug)}`;
+    const url = socialPageUrl(path);
+
+    setOpenGraph('og:title', title);
+    setOpenGraph('og:description', description);
+    setOpenGraph('og:image', image);
+    setOpenGraph('og:url', url);
+    setOpenGraph('og:type', 'website');
+    setOpenGraph('og:site_name', 'Tiketa');
+    setTwitter('twitter:card', 'summary_large_image');
+    setTwitter('twitter:title', title);
+    setTwitter('twitter:description', description);
+    setTwitter('twitter:image', image);
   }
 
   function cleanObject(value) {

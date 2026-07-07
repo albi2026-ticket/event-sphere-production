@@ -5,6 +5,7 @@
   const u = () => window.EventSphereUtils;
   const cart = () => window.EventSphereCart;
   const tr = (key, fallback, replacements) => window.t?.(key, replacements) || fallback;
+  const defaultEventSocialImage = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&q=80';
 
   function eventApiImage(event) {
     if (event.banner_image_url) return event.banner_image_url;
@@ -74,6 +75,40 @@
     meta.content = value;
   }
 
+  function setTwitter(name, content) {
+    const value = compactText(content);
+    if (!value) return;
+    let meta = document.querySelector(`meta[name="${name}"]`);
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = name;
+      document.head.appendChild(meta);
+    }
+    meta.content = value;
+  }
+
+  function socialImageUrl(value, fallback = defaultEventSocialImage) {
+    const url = absoluteUrl(value || fallback);
+    if (!url) return absoluteUrl(fallback);
+    try {
+      const parsed = new URL(url);
+      if (['localhost', '127.0.0.1', '::1'].includes(parsed.hostname)) return absoluteUrl(fallback);
+    } catch (err) {
+      return absoluteUrl(fallback);
+    }
+    return url;
+  }
+
+  function socialPageUrl(path) {
+    try {
+      const current = new URL(window.location.href);
+      const base = ['localhost', '127.0.0.1', '::1'].includes(current.hostname) ? 'https://tiketa.example' : current.origin;
+      return new URL(path, base).href;
+    } catch (err) {
+      return new URL(path, 'https://tiketa.example').href;
+    }
+  }
+
   function eventMetaDescription(event) {
     const title = compactText(event.title) || 'this event';
     const city = compactText(event.city);
@@ -90,11 +125,22 @@
 
   function applyEventOpenGraph(event, fallbackSlug) {
     const slug = event.slug || fallbackSlug;
-    setOpenGraph('og:title', `${compactText(event.title) || 'Event'} | Tiketa`);
-    setOpenGraph('og:description', eventMetaDescription(event));
-    setOpenGraph('og:image', absoluteUrl(eventApiImage(event)));
-    setOpenGraph('og:url', absoluteUrl(window.EventSphereRoutes?.eventUrl?.(slug) || `/event/${encodeURIComponent(slug)}`));
-    setOpenGraph('og:type', 'event');
+    const title = `${compactText(event.title) || 'Event'} | Tiketa`;
+    const description = eventMetaDescription(event);
+    const image = socialImageUrl(eventApiImage(event));
+    const path = window.EventSphereRoutes?.eventUrl?.(slug) || `/event/${encodeURIComponent(slug)}`;
+    const url = socialPageUrl(path);
+
+    setOpenGraph('og:title', title);
+    setOpenGraph('og:description', description);
+    setOpenGraph('og:image', image);
+    setOpenGraph('og:url', url);
+    setOpenGraph('og:type', 'website');
+    setOpenGraph('og:site_name', 'Tiketa');
+    setTwitter('twitter:card', 'summary_large_image');
+    setTwitter('twitter:title', title);
+    setTwitter('twitter:description', description);
+    setTwitter('twitter:image', image);
   }
 
   function cleanObject(value) {
