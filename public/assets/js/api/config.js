@@ -26,6 +26,11 @@
     return clean ? `${basePath}/${encodeURIComponent(clean)}` : basePath;
   }
 
+  function canonicalDetailUrl(basePath, slug) {
+    const clean = cleanSlug(slug).split(/[?#]/)[0];
+    return clean ? `${basePath}/${encodeURIComponent(clean)}` : basePath;
+  }
+
   function pathSlug(basePath) {
     const path = location.pathname.replace(/^\/site\//, '/').replace(/\.html$/, '');
     const prefix = `${basePath}/`;
@@ -50,6 +55,18 @@
     location.replace(detailUrl(basePath, slug));
   }
 
+  function setCanonical(path) {
+    const cleanPath = `/${cleanSlug(path || location.pathname)}`.replace(/\/$/, '') || '/';
+    const href = cleanPath === '' ? '/' : cleanPath;
+    let link = document.querySelector('link[rel="canonical"]');
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'canonical';
+      document.head.appendChild(link);
+    }
+    link.href = href || '/';
+  }
+
   window.EventSphereRoutes = {
     eventUrl: (slug) => detailUrl('/event', slug),
     restaurantUrl: (slug) => detailUrl('/restaurant', slug),
@@ -57,5 +74,8 @@
     restaurantSlug: () => detailSlug('/restaurant', ['venue']),
     redirectLegacyEvent: () => redirectLegacyDetail('/event'),
     redirectLegacyRestaurant: () => redirectLegacyDetail('/restaurant', ['venue']),
+    setCanonical,
+    setEventCanonical: (slug) => setCanonical(canonicalDetailUrl('/event', slug)),
+    setRestaurantCanonical: (slug) => setCanonical(canonicalDetailUrl('/restaurant', slug)),
   };
 })();

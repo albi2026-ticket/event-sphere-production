@@ -138,6 +138,7 @@
     try {
       const event = await eventsApi().getEvent(slug);
       document.title = `${event.title} · TicketHub`;
+      window.EventSphereRoutes?.setEventCanonical?.(event.slug || slug);
 
       const img = eventApiImage(event);
       const salesStatus = eventsApi().salesStatus(event);

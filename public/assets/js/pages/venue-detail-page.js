@@ -539,6 +539,7 @@
     resetRenderStateForVenue(venue);
     currentVenue = venue;
     document.title = `${venue.name} - Tiketa Reservations`;
+    window.EventSphereRoutes?.setRestaurantCanonical?.(venue.slug || slugFromLocation());
     setText('[data-detail-city]', venue.city || 'City');
     setText('[data-detail-name]', venue.name || 'Restaurant / Bar');
     setText('[data-detail-title]', venue.name || 'Restaurant / Bar');
