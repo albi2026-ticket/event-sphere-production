@@ -121,6 +121,11 @@
     const name = compactText(venue.name) || 'this restaurant';
     const city = compactText(venue.city);
     const cuisine = compactText(venueCuisineLabel(venue));
+    if (window.TiketaLanguage?.getLanguage?.() === 'sq') {
+      const intro = `Rezervoni tavolinë te ${name}${city ? ` në ${city}` : ''}.`;
+      const detail = ` Shikoni ${cuisine ? `${cuisine}, ` : ''}disponueshmërinë, oraret dhe detajet e rezervimit me Tiketa.`;
+      return smartTrim(`${intro}${detail}`, 160);
+    }
     const intro = `Reserve a table at ${name}${city ? ` in ${city}` : ''}.`;
     const detail = ` Discover ${cuisine ? `${cuisine} dining, ` : ''}availability, opening hours, and reservation details with Tiketa.`;
     return smartTrim(`${intro}${detail}`, 160);
@@ -200,6 +205,7 @@
     return cleanObject({
       '@context': 'https://schema.org',
       '@type': venueSchemaType(venue),
+      inLanguage: window.TiketaLanguage?.getLanguage?.() || 'en',
       name: compactText(venue.name),
       image: venuePrimaryImage(venue) ? [absoluteUrl(venuePrimaryImage(venue))] : [],
       description: compactText(venue.description) || venueMetaDescription(venue),
@@ -245,13 +251,13 @@
         {
           '@type': 'ListItem',
           position: 1,
-          name: 'Home',
+          name: tr('header.home', 'Home'),
           item: absoluteUrl('/'),
         },
         {
           '@type': 'ListItem',
           position: 2,
-          name: 'Restaurants',
+          name: tr('footer.hospitality_reservations', 'Restaurants'),
           item: absoluteUrl('/restaurants'),
         },
         {
@@ -273,6 +279,7 @@
       document.head.appendChild(script);
     }
     script.textContent = JSON.stringify(breadcrumbJsonLd(venue));
+    window.TiketaLanguage?.applyInternationalSeo?.();
   }
 
   function applyVenueMetadata(venue) {

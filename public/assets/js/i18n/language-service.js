@@ -4,6 +4,11 @@
   const STORAGE_KEY = 'preferred_language';
   const DEFAULT_LANGUAGE = 'en';
   const SUPPORTED_LANGUAGES = ['en', 'sq'];
+  const LOCALES = {
+    en: 'en_US',
+    sq: 'sq_AL',
+  };
+  const PUBLIC_BASE_URL = 'https://tiketa.example';
 
   function dictionaries() {
     return window.TiketaDictionaries || {};
@@ -85,6 +90,117 @@
     root.querySelectorAll('[data-i18n-attr]').forEach(applyAttributes);
     updateSwitchers(root);
     document.documentElement.lang = service.getLanguage();
+    applyInternationalSeo();
+  }
+
+  function isNoindexPage() {
+    const robots = document.querySelector('meta[name="robots"]')?.content || '';
+    return /\bnoindex\b/i.test(robots);
+  }
+
+  function cleanPath(path = window.location.pathname) {
+    const cleaned = String(path || '/')
+      .replace(/^\/site\//, '/')
+      .replace(/\.html$/, '')
+      .replace(/\/index$/, '/events')
+      .replace(/\/reservations$/, '/restaurants');
+
+    if (cleaned === '/welcome') return '/';
+    return cleaned || '/';
+  }
+
+  function publicOrigin() {
+    try {
+      const current = new URL(window.location.href);
+      if (!['localhost', '127.0.0.1', '::1'].includes(current.hostname)) {
+        return current.origin;
+      }
+    } catch {
+      /* fall back to configured public base */
+    }
+    return PUBLIC_BASE_URL;
+  }
+
+  function absolutePublicUrl(path) {
+    return new URL(cleanPath(path), publicOrigin()).href;
+  }
+
+  function canonicalPath() {
+    const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href') || cleanPath();
+    try {
+      return cleanPath(new URL(canonical, publicOrigin()).pathname);
+    } catch {
+      return cleanPath(canonical);
+    }
+  }
+
+  function setLink(rel, attrs) {
+    const selector = attrs.hreflang
+      ? `link[rel="${rel}"][hreflang="${attrs.hreflang}"]`
+      : Object.entries(attrs).reduce((query, [key, value]) => `${query}[${key}="${value}"]`, `link[rel="${rel}"]`);
+    let link = document.querySelector(selector);
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = rel;
+      document.head.appendChild(link);
+    }
+    Object.entries(attrs).forEach(([key, value]) => link.setAttribute(key, value));
+    return link;
+  }
+
+  function setMeta(selector, attr, value) {
+    const content = String(value || '').trim();
+    if (!content) return;
+    let meta = document.querySelector(selector);
+    if (!meta) {
+      meta = document.createElement('meta');
+      const [name, key] = attr;
+      meta.setAttribute(name, key);
+      document.head.appendChild(meta);
+    }
+    meta.content = content;
+  }
+
+  function updateJsonLdLanguage() {
+    const language = service.getLanguage();
+    document.querySelectorAll('script[type="application/ld+json"]').forEach((script) => {
+      try {
+        const data = JSON.parse(script.textContent || '{}');
+        const items = Array.isArray(data) ? data : [data];
+        items.forEach((item) => {
+          if (!item || typeof item !== 'object') return;
+          const type = Array.isArray(item['@type']) ? item['@type'][0] : item['@type'];
+          if (['WebSite', 'Event', 'Restaurant', 'LocalBusiness', 'BreadcrumbList'].includes(type)) {
+            item.inLanguage = language;
+          }
+        });
+        script.textContent = JSON.stringify(Array.isArray(data) ? items : items[0], null, 2);
+      } catch {
+        /* keep invalid or non-object structured data unchanged */
+      }
+    });
+  }
+
+  function applyInternationalSeo() {
+    if (isNoindexPage()) return;
+
+    const path = canonicalPath();
+    const href = absolutePublicUrl(path);
+
+    SUPPORTED_LANGUAGES.forEach((language) => {
+      setLink('alternate', {
+        hreflang: language,
+        href,
+      });
+    });
+    setLink('alternate', {
+      hreflang: 'x-default',
+      href,
+    });
+
+    setMeta('meta[property="og:locale"]', ['property', 'og:locale'], LOCALES[service.getLanguage()] || LOCALES.en);
+    setMeta('meta[property="og:locale:alternate"]', ['property', 'og:locale:alternate'], service.getLanguage() === 'en' ? LOCALES.sq : LOCALES.en);
+    updateJsonLdLanguage();
   }
 
   function switcherMarkup() {
@@ -130,6 +246,7 @@
     translate,
     applyTranslations,
     ensureSwitcher,
+    applyInternationalSeo,
   };
 
   let currentLanguage = readStoredLanguage();
@@ -142,6 +259,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     service.ensureSwitcher();
+    service.applyInternationalSeo();
   });
 
   document.addEventListener('event-sphere:partials-loaded', () => {

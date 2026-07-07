@@ -116,6 +116,11 @@
     const date = eventDateLabel(event);
     const category = compactText(event.category) || 'event';
     const location = [venue, city].filter(Boolean).join(' in ');
+    if (window.TiketaLanguage?.getLanguage?.() === 'sq') {
+      const base = `Rezervoni bileta për ${title}${location ? ` në ${location}` : ''}${date ? ` më ${date}` : ''}.`;
+      const support = ' Shikoni detajet, opsionet e biletave, venue-n dhe hyrjen e sigurt me Tiketa.';
+      return smartTrim(compactText(`${base}${support}`), 160);
+    }
     const base = `Book ${category} tickets for ${title}${location ? ` at ${location}` : ''}${date ? ` on ${date}` : ''}.`;
     const support = ' Discover details, ticket options, venue information, and secure entry with Tiketa.';
     const extended = ' Browse schedules, pricing, availability, and ticket details before you book online.';
@@ -205,6 +210,7 @@
     return cleanObject({
       '@context': 'https://schema.org',
       '@type': 'Event',
+      inLanguage: window.TiketaLanguage?.getLanguage?.() || 'en',
       name: compactText(event.title),
       description: compactText(event.description) || eventMetaDescription(event),
       image: eventApiImage(event) ? [absoluteUrl(eventApiImage(event))] : [],
@@ -251,13 +257,13 @@
         {
           '@type': 'ListItem',
           position: 1,
-          name: 'Home',
+          name: tr('header.home', 'Home'),
           item: absoluteUrl('/'),
         },
         {
           '@type': 'ListItem',
           position: 2,
-          name: 'Events',
+          name: tr('header.events', 'Events'),
           item: absoluteUrl('/events/list'),
         },
         {
@@ -279,6 +285,7 @@
       document.head.appendChild(script);
     }
     script.textContent = JSON.stringify(breadcrumbJsonLd(event, fallbackSlug));
+    window.TiketaLanguage?.applyInternationalSeo?.();
   }
 
   function applyEventMetadata(event, fallbackSlug) {
