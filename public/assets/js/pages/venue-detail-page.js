@@ -105,6 +105,130 @@
     setOpenGraph('og:type', 'restaurant');
   }
 
+  function cleanObject(value) {
+    if (Array.isArray(value)) {
+      return value.map(cleanObject).filter((item) => item !== undefined);
+    }
+    if (!value || typeof value !== 'object') return value === '' || value === null ? undefined : value;
+    return Object.entries(value).reduce((acc, [key, item]) => {
+      const cleaned = cleanObject(item);
+      if (cleaned !== undefined && !(Array.isArray(cleaned) && cleaned.length === 0)) acc[key] = cleaned;
+      return acc;
+    }, {});
+  }
+
+  function venueSchemaType(venue) {
+    return String(venue.venue_type || '').toLowerCase() === 'restaurant' ? 'Restaurant' : 'LocalBusiness';
+  }
+
+  function venueOpeningHoursSchema(venue) {
+    return (venue.opening_hours || [])
+      .filter((item) => item && !item.is_closed && item.opens_at && item.closes_at)
+      .map((item) => cleanObject({
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: days[Number(item.day_of_week)] || '',
+        opens: item.opens_at,
+        closes: item.closes_at,
+      }));
+  }
+
+  function venueCuisineSchema(venue) {
+    return (venue.cuisine_types || []).map((item) => compactText(item.name)).filter(Boolean);
+  }
+
+  function venueRatingSchema(venue) {
+    const ratingValue = Number(venue.aggregate_rating?.rating_value ?? venue.aggregateRating?.ratingValue ?? venue.rating);
+    const reviewCount = Number(venue.aggregate_rating?.review_count ?? venue.aggregateRating?.reviewCount ?? venue.review_count);
+    if (!Number.isFinite(ratingValue) || ratingValue <= 0) return undefined;
+    return cleanObject({
+      '@type': 'AggregateRating',
+      ratingValue,
+      reviewCount: Number.isFinite(reviewCount) && reviewCount > 0 ? reviewCount : undefined,
+    });
+  }
+
+  function venueJsonLd(venue) {
+    const slug = venue.slug || slugFromLocation();
+    const lat = Number(venue.latitude);
+    const lng = Number(venue.longitude);
+    return cleanObject({
+      '@context': 'https://schema.org',
+      '@type': venueSchemaType(venue),
+      name: compactText(venue.name),
+      image: venuePrimaryImage(venue) ? [absoluteUrl(venuePrimaryImage(venue))] : [],
+      description: compactText(venue.description) || venueMetaDescription(venue),
+      telephone: compactText(venue.phone),
+      email: compactText(venue.email),
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: compactText(venue.address),
+        addressLocality: compactText(venue.city),
+        postalCode: compactText(venue.postal_code || venue.postalCode),
+        addressCountry: compactText(venue.country),
+      },
+      geo: Number.isFinite(lat) && Number.isFinite(lng) ? {
+        '@type': 'GeoCoordinates',
+        latitude: lat,
+        longitude: lng,
+      } : undefined,
+      url: absoluteUrl(window.EventSphereRoutes?.restaurantUrl?.(slug) || `/restaurant/${encodeURIComponent(slug)}`),
+      openingHoursSpecification: venueOpeningHoursSchema(venue),
+      servesCuisine: venueCuisineSchema(venue),
+      priceRange: compactText(venue.price_range || venue.priceRange),
+      aggregateRating: venueRatingSchema(venue),
+    });
+  }
+
+  function applyVenueSchema(venue) {
+    let script = document.querySelector('script[type="application/ld+json"][data-venue-schema]');
+    if (!script) {
+      script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.dataset.venueSchema = 'true';
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(venueJsonLd(venue));
+  }
+
+  function breadcrumbJsonLd(venue) {
+    const slug = venue.slug || slugFromLocation();
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: absoluteUrl('/'),
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Restaurants',
+          item: absoluteUrl('/restaurants'),
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: compactText(venue.name) || 'Restaurant',
+          item: absoluteUrl(window.EventSphereRoutes?.restaurantUrl?.(slug) || `/restaurant/${encodeURIComponent(slug)}`),
+        },
+      ],
+    };
+  }
+
+  function applyBreadcrumbSchema(venue) {
+    let script = document.querySelector('script[type="application/ld+json"][data-breadcrumb-schema]');
+    if (!script) {
+      script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.dataset.breadcrumbSchema = 'true';
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(breadcrumbJsonLd(venue));
+  }
+
   function applyVenueMetadata(venue) {
     document.title = `${compactText(venue.name) || 'Restaurant'} | Reserve a Table | Tiketa`;
     setMetaDescription(venueMetaDescription(venue));
@@ -619,6 +743,8 @@
     resetRenderStateForVenue(venue);
     currentVenue = venue;
     applyVenueMetadata(venue);
+    applyVenueSchema(venue);
+    applyBreadcrumbSchema(venue);
     setText('[data-detail-city]', venue.city || 'City');
     setText('[data-detail-name]', venue.name || 'Restaurant / Bar');
     setText('[data-detail-title]', venue.name || 'Restaurant / Bar');

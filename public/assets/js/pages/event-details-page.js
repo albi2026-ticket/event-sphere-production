@@ -97,6 +97,144 @@
     setOpenGraph('og:type', 'event');
   }
 
+  function cleanObject(value) {
+    if (Array.isArray(value)) {
+      return value.map(cleanObject).filter((item) => item !== undefined);
+    }
+    if (!value || typeof value !== 'object') return value === '' || value === null ? undefined : value;
+    return Object.entries(value).reduce((acc, [key, item]) => {
+      const cleaned = cleanObject(item);
+      if (cleaned !== undefined && !(Array.isArray(cleaned) && cleaned.length === 0)) acc[key] = cleaned;
+      return acc;
+    }, {});
+  }
+
+  function schemaDate(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? String(value) : date.toISOString();
+  }
+
+  function eventStatusSchema(event) {
+    if (event.status === 'cancelled') return 'https://schema.org/EventCancelled';
+    if (event.event_state?.key === 'ended' || event.status === 'completed') return 'https://schema.org/EventCompleted';
+    return 'https://schema.org/EventScheduled';
+  }
+
+  function offerAvailabilitySchema(ticketType) {
+    if (ticketType?.is_available) return 'https://schema.org/InStock';
+    if (ticketType?.is_sold_out || ticketType?.status === 'sold_out') return 'https://schema.org/SoldOut';
+    return 'https://schema.org/LimitedAvailability';
+  }
+
+  function eventOffersSchema(event, fallbackSlug) {
+    const slug = event.slug || fallbackSlug;
+    const url = absoluteUrl(window.EventSphereRoutes?.eventUrl?.(slug) || `/event/${encodeURIComponent(slug)}`);
+    const ticketTypes = (event.ticket_types || []).filter((ticketType) => ticketType && ticketType.status !== 'inactive');
+    const offers = ticketTypes.map((ticketType) => cleanObject({
+      '@type': 'Offer',
+      name: ticketType.name,
+      description: ticketType.description,
+      url,
+      price: Number(ticketType.price ?? event.base_price ?? 0),
+      priceCurrency: ticketType.currency || event.currency || 'USD',
+      availability: offerAvailabilitySchema(ticketType),
+      validFrom: schemaDate(ticketType.sale_starts_at),
+    }));
+    if (offers.length) return offers;
+    if (event.base_price === undefined || event.base_price === null) return [];
+    return [cleanObject({
+      '@type': 'Offer',
+      url,
+      price: Number(event.base_price || 0),
+      priceCurrency: event.currency || 'USD',
+      availability: Number(event.available_inventory || 0) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut',
+    })];
+  }
+
+  function eventJsonLd(event, fallbackSlug) {
+    const slug = event.slug || fallbackSlug;
+    const url = absoluteUrl(window.EventSphereRoutes?.eventUrl?.(slug) || `/event/${encodeURIComponent(slug)}`);
+    const locationName = compactText(event.venue_name) || compactText(event.city);
+    return cleanObject({
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      name: compactText(event.title),
+      description: compactText(event.description) || eventMetaDescription(event),
+      image: eventApiImage(event) ? [absoluteUrl(eventApiImage(event))] : [],
+      startDate: schemaDate(event.starts_at),
+      endDate: schemaDate(event.ends_at),
+      eventStatus: eventStatusSchema(event),
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      url,
+      organizer: {
+        '@type': 'Organization',
+        name: compactText(event.organizer?.name) || 'Tiketa',
+      },
+      location: locationName ? {
+        '@type': 'Place',
+        name: locationName,
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: compactText(event.address),
+          addressLocality: compactText(event.city),
+          addressCountry: compactText(event.country),
+        },
+      } : undefined,
+      offers: eventOffersSchema(event, fallbackSlug),
+    });
+  }
+
+  function applyEventSchema(event, fallbackSlug) {
+    let script = document.querySelector('script[type="application/ld+json"][data-event-schema]');
+    if (!script) {
+      script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.dataset.eventSchema = 'true';
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(eventJsonLd(event, fallbackSlug));
+  }
+
+  function breadcrumbJsonLd(event, fallbackSlug) {
+    const slug = event.slug || fallbackSlug;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: absoluteUrl('/'),
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Events',
+          item: absoluteUrl('/events/list'),
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: compactText(event.title) || 'Event',
+          item: absoluteUrl(window.EventSphereRoutes?.eventUrl?.(slug) || `/event/${encodeURIComponent(slug)}`),
+        },
+      ],
+    };
+  }
+
+  function applyBreadcrumbSchema(event, fallbackSlug) {
+    let script = document.querySelector('script[type="application/ld+json"][data-breadcrumb-schema]');
+    if (!script) {
+      script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.dataset.breadcrumbSchema = 'true';
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(breadcrumbJsonLd(event, fallbackSlug));
+  }
+
   function applyEventMetadata(event, fallbackSlug) {
     document.title = `${compactText(event.title) || 'Event'} | Tiketa`;
     setMetaDescription(eventMetaDescription(event));
@@ -226,6 +364,8 @@
     try {
       const event = await eventsApi().getEvent(slug);
       applyEventMetadata(event, slug);
+      applyEventSchema(event, slug);
+      applyBreadcrumbSchema(event, slug);
 
       const img = eventApiImage(event);
       const salesStatus = eventsApi().salesStatus(event);
