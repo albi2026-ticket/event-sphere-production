@@ -5020,3 +5020,311 @@ textarea.form-control:focus {
     transform: none !important;
   }
 }
+
+/* ---------- Whole-site mobile polish ---------- */
+@media (max-width: 767.98px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  body {
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 11vw, 3rem);
+    line-height: 1.02;
+  }
+
+  h2 {
+    font-size: clamp(1.55rem, 8vw, 2.25rem);
+    line-height: 1.08;
+  }
+
+  h3,
+  .card-pro .title {
+    line-height: 1.16;
+  }
+
+  p,
+  .text-muted-pro {
+    line-height: 1.58;
+  }
+
+  .container,
+  .container-fluid,
+  .container-lg,
+  .container-md,
+  .container-sm,
+  .container-xl,
+  .container-xxl {
+    max-width: 100%;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  .row {
+    --bs-gutter-x: 1rem;
+    --bs-gutter-y: 1rem;
+  }
+
+  .btn,
+  .icon-btn,
+  .form-control,
+  .form-select,
+  .page-link,
+  .dropdown-item,
+  .mobile-ticket-option,
+  .nav-link-pro {
+    min-height: 46px;
+  }
+
+  .btn {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .navbar {
+    min-height: 64px;
+  }
+
+  .navbar .container-xxl,
+  .navbar .container-fluid {
+    align-items: center;
+  }
+
+  .navbar-collapse {
+    max-height: calc(100dvh - 72px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .brand {
+    min-width: 0;
+    max-width: calc(100vw - 5rem);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .brand-logo {
+    flex: 0 0 auto;
+  }
+
+  .section-title,
+  .section-head-res,
+  .footer-top,
+  .footer .legal,
+  .card-pro .foot,
+  .hero-actions,
+  .dashboard-actions,
+  .admin-actions,
+  .venue-detail-actions,
+  .event-result-actions {
+    align-items: stretch !important;
+    flex-direction: column;
+  }
+
+  .section-title .btn,
+  .section-head-res .btn,
+  .card-pro .foot .btn,
+  .hero-actions .btn,
+  .dashboard-actions .btn,
+  .admin-actions .btn,
+  .venue-detail-actions .btn,
+  .event-result-actions .btn {
+    width: 100%;
+  }
+
+  .card-pro,
+  .glass,
+  .content-card,
+  .trust-card,
+  .how-step,
+  .kpi,
+  .dashboard-empty,
+  .admin-empty,
+  .reservation-empty-state {
+    border-radius: var(--radius-lg);
+  }
+
+  .card-pro .thumb,
+  .skeleton-media,
+  .venue-card .img-wrap {
+    aspect-ratio: 16 / 11;
+  }
+
+  .card-pro .thumb img,
+  .venue-card .img-wrap img,
+  .dashboard-event-row img,
+  [data-events-grid] .card-pro.d-flex img,
+  [data-events-list] .card-pro.d-flex img {
+    height: 100% !important;
+    object-fit: cover;
+    width: 100% !important;
+  }
+
+  .hero-slide-copy {
+    padding-right: 0;
+  }
+
+  .hero-slide-copy h1,
+  .homepage-premium h1,
+  .event-detail-hero-copy h1,
+  .checkout-result-card h1 {
+    font-size: clamp(2.15rem, 12vw, 3.35rem);
+  }
+
+  .hero-slide-meta,
+  .event-detail-meta,
+  .venue-detail-breadcrumb {
+    gap: .45rem;
+    overflow-wrap: anywhere;
+  }
+
+  .event-ticket-panel,
+  .checkout-summary-card,
+  .sticky-checkout,
+  .venue-reservation-sticky {
+    position: static !important;
+  }
+
+  .mobile-ticket-select,
+  .venue-mobile-reserve-bar {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .dash-shell,
+  .auth-split {
+    min-width: 0;
+  }
+
+  .dash-main,
+  .dashboard-enterprise .dash-main {
+    padding: 1rem;
+  }
+
+  .dash-main > .d-flex:first-child,
+  .dashboard-enterprise .dash-main > .d-flex:first-child,
+  .owner-dashboard-page [data-owner-venue-page] > .d-flex:first-child {
+    border-radius: 18px;
+    padding: 1rem;
+  }
+
+  .dash-main > .d-flex:first-child .d-flex,
+  .dashboard-enterprise .dash-main > .d-flex:first-child .d-flex {
+    width: 100%;
+  }
+
+  .dashboard-tabs,
+  .owner-reservation-tabs,
+  .owner-analytics-range,
+  .owner-calendar-view-toggle {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .dashboard-tabs::-webkit-scrollbar,
+  .owner-reservation-tabs::-webkit-scrollbar,
+  .owner-analytics-range::-webkit-scrollbar,
+  .owner-calendar-view-toggle::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dashboard-tabs button,
+  .owner-reservation-tab,
+  .owner-analytics-range .btn,
+  .owner-calendar-view-toggle .btn {
+    flex: 0 0 auto;
+  }
+
+  .dashboard-table td,
+  .owner-reservations-table td,
+  .admin-mini-table td {
+    overflow-wrap: anywhere;
+  }
+
+  .modal-dialog {
+    max-width: calc(100vw - 1rem);
+  }
+
+  .modal-content {
+    max-width: 100%;
+  }
+
+  .modal-footer {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+
+  .toast-stack {
+    top: calc(68px + env(safe-area-inset-top, 0px));
+  }
+}
+
+@media (max-width: 575.98px) {
+  .section,
+  .content-page {
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .section-sm {
+    padding-top: 1.75rem;
+    padding-bottom: 1.75rem;
+  }
+
+  .hero-slider,
+  .hero-slide-content {
+    min-height: min(620px, 92dvh);
+  }
+
+  .hero-slide-content {
+    padding-bottom: 5.25rem;
+  }
+
+  .hero-countdown,
+  .countdown {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .newsletter,
+  .content-card,
+  .trust-card,
+  .how-step,
+  .card-pro .body,
+  .dashboard-loading-skeleton {
+    padding: 1rem;
+  }
+
+  .auth-form,
+  .auth-split .card-pro {
+    width: 100%;
+  }
+
+  .footer {
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .footer-links-grid {
+    gap: 1.5rem;
+  }
+
+  .dashboard-pagination {
+    justify-content: stretch;
+  }
+
+  .dashboard-pagination .btn,
+  .dashboard-pagination .page-link {
+    flex: 1 1 auto;
+  }
+}

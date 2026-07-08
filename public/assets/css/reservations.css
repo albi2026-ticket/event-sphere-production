@@ -2403,3 +2403,177 @@ body.reservation-success-burst::after {
     transform: none !important;
   }
 }
+
+/* ---- Whole-site reservation mobile polish ---- */
+@media (max-width: 767.98px) {
+  .res-hero,
+  .my-reservations-hero {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .res-search,
+  .res-search.res-search-simple {
+    border-radius: 18px;
+    padding: .85rem;
+  }
+
+  .res-search .field,
+  .res-search.res-search-simple .field,
+  .res-search .btn,
+  .res-search.res-search-simple .btn {
+    min-height: 48px;
+    width: 100%;
+  }
+
+  .venue-card,
+  .venue-card-premium,
+  .my-reservation-card {
+    border-radius: 20px;
+  }
+
+  .venue-card .img-wrap,
+  .venue-card-premium .img-wrap,
+  .my-reservation-card .img-wrap {
+    aspect-ratio: 16 / 11;
+  }
+
+  .venue-card .body {
+    padding: 1rem;
+  }
+
+  .venue-card .footer-row,
+  .venue-card-premium .footer-row,
+  .my-reservation-actions,
+  .owner-preview-actions,
+  .venue-google-map-actions,
+  .venue-google-map-buttons {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .venue-card .footer-row .btn,
+  .venue-card-premium .footer-row .btn,
+  .my-reservation-actions .btn,
+  .owner-preview-actions .btn,
+  .venue-google-map-actions .btn,
+  .venue-google-map-buttons .btn {
+    width: 100%;
+  }
+
+  .venue-detail-shell {
+    padding-top: 1rem !important;
+  }
+
+  .venue-detail-hero {
+    border-radius: 20px;
+    padding: 1rem;
+  }
+
+  .venue-detail-heading h1,
+  .my-reservations-premium-page .my-reservations-hero h1,
+  .reservation-flow-main h1 {
+    font-size: clamp(2.15rem, 12vw, 3.25rem);
+  }
+
+  .venue-detail-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .venue-detail-actions .btn {
+    grid-column: 1 / -1;
+  }
+
+  .venue-gallery-premium,
+  .gallery-grid {
+    border-radius: 20px;
+    grid-template-columns: 1fr;
+  }
+
+  .gallery-grid .g-main,
+  .venue-gallery-premium .g-main {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .venue-detail-content {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  .venue-detail-section {
+    margin-bottom: 2rem !important;
+  }
+
+  .premium-reservation-card,
+  .venue-side-card,
+  .reservation-step-card,
+  .reservation-summary-card,
+  .confirm-card,
+  .reservation-booking-modal,
+  .reservation-detail-modal,
+  .reservation-cancel-modal {
+    border-radius: 20px !important;
+  }
+
+  .reservation-flow-shell {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  .reservation-flow-premium-page .res-stepper {
+    border-radius: 18px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .reservation-flow-premium-page .res-stepper::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chip-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reservation-choice,
+  .chip-select,
+  .reservation-picker-trigger,
+  .owner-reservation-tab {
+    min-height: 48px;
+  }
+
+  .owner-hours-row {
+    gap: .75rem;
+  }
+
+  .owner-calendar-summary,
+  .owner-analytics-mini-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-calendar-toolbar,
+  .owner-analytics-toolbar {
+    gap: .75rem;
+  }
+
+  .owner-calendar-nav,
+  .owner-calendar-filters,
+  .owner-analytics-filters {
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 420px) {
+  .chip-grid,
+  .reservation-date-grid,
+  .reservation-time-grid,
+  .reservation-guest-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .venue-detail-actions {
+    grid-template-columns: 1fr;
+  }
+}
