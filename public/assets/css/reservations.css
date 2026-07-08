@@ -415,6 +415,7 @@
   min-width: 0;
 }
 .booking-step {
+  position: relative;
   border: 1px solid rgba(255,255,255,.09);
   border-radius: 20px;
   padding: 16px;
@@ -458,6 +459,12 @@
   width: 100%;
   min-width: 0;
 }
+.booking-step:has(.reservation-picker.open) {
+  z-index: 80;
+}
+.reservation-picker.open {
+  z-index: 90;
+}
 .reservation-picker-trigger {
   display: flex;
   align-items: center;
@@ -497,7 +504,7 @@
 .reservation-picker-panel {
   display: none;
   position: absolute;
-  z-index: 20;
+  z-index: 100;
   top: calc(100% + 8px);
   left: 0;
   right: 0;
@@ -511,6 +518,7 @@
     radial-gradient(460px 180px at 10% 0%, rgba(124,92,255,.16), transparent 60%),
     #111827;
   box-shadow: 0 20px 50px rgba(0,0,0,.45);
+  pointer-events: auto;
   -webkit-overflow-scrolling: touch;
 }
 .reservation-picker.open .reservation-picker-panel {

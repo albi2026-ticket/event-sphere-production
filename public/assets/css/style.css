@@ -4056,7 +4056,14 @@ textarea.form-control:focus {
 }
 
 .event-detail-hero-copy {
+  position: absolute !important;
+  top: 50%;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  margin-top: 0 !important;
   padding-top: .5rem;
+  transform: translateY(-50%);
 }
 
 .event-detail-hero-copy h1 {
@@ -4312,7 +4319,7 @@ textarea.form-control:focus {
   }
 
   .event-detail-hero-copy {
-    margin-top: -230px !important;
+    margin-top: 0 !important;
   }
 }
 
@@ -4322,7 +4329,7 @@ textarea.form-control:focus {
   }
 
   .event-detail-hero-copy {
-    margin-top: -300px !important;
+    margin-top: 0 !important;
   }
 
   .event-detail-hero-copy h1 {
