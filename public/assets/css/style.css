@@ -3648,3 +3648,699 @@ textarea.form-control:focus {
     min-height: 46px;
   }
 }
+
+/* ---------- Premium homepage landing page ---------- */
+.homepage-premium {
+  background:
+    radial-gradient(900px 460px at 10% 0%, rgba(91,140,255,.16), transparent 62%),
+    radial-gradient(860px 480px at 96% 18%, rgba(139,92,246,.13), transparent 64%),
+    var(--bg);
+}
+
+.homepage-premium .nav-blur {
+  background: color-mix(in oklab, var(--bg) 72%, transparent);
+}
+
+.homepage-premium .hero-slider {
+  min-height: 760px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: #05060a;
+}
+
+.homepage-premium .hero-slide-bg img {
+  filter: saturate(1.08) contrast(1.04);
+  transform: scale(1.04);
+}
+
+.homepage-premium .hero-slide-overlay {
+  background:
+    radial-gradient(720px 420px at 20% 45%, rgba(91,140,255,.22), transparent 64%),
+    linear-gradient(90deg, rgba(5,6,10,.97) 0%, rgba(5,6,10,.84) 36%, rgba(5,6,10,.32) 68%, rgba(5,6,10,.82) 100%),
+    linear-gradient(0deg, rgba(5,6,10,.98) 0%, rgba(5,6,10,.24) 48%, rgba(5,6,10,.34) 100%);
+}
+
+.homepage-premium .hero-slide-content {
+  min-height: 760px;
+  padding-bottom: 7rem;
+}
+
+.homepage-premium .hero-slide-copy {
+  max-width: 720px;
+}
+
+.homepage-premium .hero-eyebrow,
+.homepage-premium .hero-countdown {
+  background: rgba(255,255,255,.1);
+  border-color: rgba(255,255,255,.2);
+  backdrop-filter: blur(16px);
+}
+
+.homepage-premium .hero-slide-copy h1 {
+  max-width: 860px;
+  font-size: clamp(3.2rem, 7vw, 6.35rem);
+  letter-spacing: -.055em;
+  text-shadow: 0 26px 80px rgba(0,0,0,.48);
+}
+
+.homepage-premium .hero-slide-meta {
+  color: rgba(255,255,255,.9);
+  font-size: 1rem;
+}
+
+.homepage-premium .hero-actions {
+  gap: .75rem;
+  margin-top: 1.85rem;
+}
+
+.homepage-premium .hero-actions .btn-primary-grad {
+  min-width: 178px;
+}
+
+.hero-trust-strip {
+  position: absolute;
+  left: 50%;
+  bottom: 4.75rem;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .7rem;
+  width: min(100% - 2rem, 820px);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.hero-trust-strip span {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  min-height: 38px;
+  padding: .5rem .85rem;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 999px;
+  background: rgba(8,12,22,.56);
+  color: rgba(255,255,255,.86);
+  box-shadow: 0 12px 32px rgba(0,0,0,.24);
+  backdrop-filter: blur(14px);
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.hero-trust-strip i {
+  color: #93B4FF;
+}
+
+.homepage-premium .home-section {
+  position: relative;
+}
+
+.homepage-premium .home-section::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 50%;
+  width: min(920px, 86vw);
+  height: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  opacity: .75;
+}
+
+.homepage-premium .section-title {
+  margin-bottom: 1.5rem;
+}
+
+.homepage-premium .section-title h2 {
+  max-width: 720px;
+  font-size: clamp(1.9rem, 3.6vw, 3rem);
+  letter-spacing: -.04em;
+}
+
+.homepage-premium .section-title p {
+  max-width: 620px;
+}
+
+.homepage-premium .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .36rem .7rem;
+  border: 1px solid color-mix(in oklab, var(--primary) 28%, transparent);
+  border-radius: 999px;
+  background: var(--info-soft);
+  letter-spacing: .09em;
+}
+
+.homepage-premium [data-home-trending],
+.homepage-premium [data-home-week],
+.homepage-premium [data-home-category-sections] .row {
+  align-items: stretch;
+}
+
+.homepage-premium [data-home-trending] .card-pro,
+.homepage-premium [data-home-week] .card-pro,
+.homepage-premium [data-home-category-sections] .card-pro {
+  height: 100%;
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--card) 94%, white 6%), var(--card));
+  box-shadow: 0 18px 44px rgba(0,0,0,.18);
+}
+
+.homepage-premium [data-home-trending] .card-pro .thumb,
+.homepage-premium [data-home-week] .card-pro .thumb,
+.homepage-premium [data-home-category-sections] .card-pro .thumb {
+  aspect-ratio: 16 / 11;
+}
+
+.homepage-premium .card-pro .thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 48%, rgba(5,6,10,.68));
+  pointer-events: none;
+}
+
+.restaurant-landing-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr);
+  gap: clamp(1.25rem, 4vw, 3rem);
+  align-items: center;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(560px 280px at 90% 0%, rgba(212,167,90,.16), transparent 64%),
+    radial-gradient(520px 280px at 10% 100%, rgba(91,140,255,.14), transparent 66%),
+    linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.024));
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.restaurant-landing-copy h2 {
+  max-width: 720px;
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  letter-spacing: -.045em;
+}
+
+.restaurant-landing-copy p {
+  max-width: 640px;
+  font-size: 1.02rem;
+  line-height: 1.8;
+}
+
+.restaurant-landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-top: 1.5rem;
+}
+
+.restaurant-landing-cards {
+  display: grid;
+  gap: .85rem;
+}
+
+.restaurant-landing-cards article {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: .2rem .85rem;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklab, var(--card) 82%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+
+.restaurant-landing-cards i {
+  grid-row: span 2;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #7C5CFF, #D4A75A);
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.restaurant-landing-cards strong {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.restaurant-landing-cards span {
+  color: var(--muted);
+  font-size: .9rem;
+  line-height: 1.45;
+}
+
+.homepage-premium .trust-card,
+.homepage-premium .how-step {
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--card) 92%, white 8%), var(--card));
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.homepage-premium .trust-card:hover,
+.homepage-premium .how-step:hover {
+  transform: translateY(-3px);
+}
+
+.homepage-premium .newsletter {
+  border: 1px solid rgba(255,255,255,.18);
+  background:
+    radial-gradient(700px 320px at 80% 20%, rgba(255,255,255,.34), transparent 62%),
+    linear-gradient(135deg, #4A78E8 0%, #7C5CFF 58%, #8B5CF6 100%);
+  box-shadow: 0 28px 80px rgba(91,140,255,.28);
+}
+
+.homepage-premium .newsletter h2 {
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  letter-spacing: -.045em;
+}
+
+.homepage-premium .footer {
+  margin-top: 1rem;
+  background:
+    radial-gradient(760px 360px at 12% 0%, rgba(91,140,255,.1), transparent 62%),
+    var(--bg-soft);
+}
+
+.homepage-premium .footer-top {
+  align-items: center;
+}
+
+.homepage-premium .footer-brand p {
+  font-size: .98rem;
+  line-height: 1.75;
+}
+
+@media (max-width: 991.98px) {
+  .restaurant-landing-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-premium .hero-slide-content {
+    min-height: 720px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .homepage-premium .hero-slider,
+  .homepage-premium .hero-slide-content {
+    min-height: 660px;
+  }
+
+  .homepage-premium .hero-slide-copy {
+    padding-right: 0;
+  }
+
+  .homepage-premium .hero-slide-copy h1 {
+    font-size: clamp(2.65rem, 14vw, 4rem);
+  }
+
+  .hero-trust-strip {
+    bottom: 4.35rem;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: .2rem;
+    pointer-events: auto;
+  }
+
+  .hero-trust-strip span {
+    flex: 0 0 auto;
+  }
+
+  .restaurant-landing-panel {
+    padding: 1.25rem;
+  }
+
+  .restaurant-landing-actions .btn {
+    width: 100%;
+  }
+}
+
+/* ---------- Premium event purchase experience ---------- */
+.event-card-pro {
+  height: 100%;
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--card) 94%, white 6%), var(--card));
+  box-shadow: 0 18px 44px rgba(0,0,0,.18);
+}
+
+.event-card-pro .thumb {
+  aspect-ratio: 16 / 11;
+}
+
+.event-card-pro .thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 46%, rgba(5,6,10,.72));
+  pointer-events: none;
+}
+
+.event-card-pro .badge-soft,
+.event-card-pro .fav {
+  z-index: 2;
+}
+
+.event-card-pro .title {
+  font-size: 1.12rem;
+  line-height: 1.28;
+}
+
+.event-card-pro .meta,
+.event-card-pro .venue {
+  line-height: 1.45;
+}
+
+.event-card-pro .foot {
+  gap: .85rem;
+}
+
+.event-card-pro .price {
+  font-size: 1rem;
+}
+
+.event-card-cta {
+  flex: 0 0 auto;
+}
+
+.event-experience-page {
+  background:
+    radial-gradient(900px 480px at 12% 4%, rgba(91,140,255,.14), transparent 64%),
+    radial-gradient(760px 420px at 96% 16%, rgba(139,92,246,.11), transparent 64%),
+    var(--bg);
+}
+
+.event-detail-hero {
+  min-height: 500px;
+  isolation: isolate;
+}
+
+.event-detail-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(760px 380px at 20% 48%, rgba(91,140,255,.18), transparent 66%),
+    linear-gradient(180deg, rgba(11,15,25,.12), rgba(11,15,25,.96));
+  pointer-events: none;
+}
+
+.event-detail-hero [data-event-banner] {
+  filter: saturate(1.08) contrast(1.05);
+  transform: scale(1.02);
+}
+
+.event-detail-hero-copy {
+  padding-top: .5rem;
+}
+
+.event-detail-hero-copy h1 {
+  max-width: 920px !important;
+  font-size: clamp(2.8rem, 6vw, 5.35rem);
+  letter-spacing: -.055em;
+  line-height: .96;
+  text-shadow: 0 24px 80px rgba(0,0,0,.48);
+}
+
+.event-detail-hero-copy nav,
+.event-detail-hero-copy .d-flex {
+  text-shadow: 0 10px 30px rgba(0,0,0,.45);
+}
+
+.event-detail-body .row {
+  align-items: flex-start;
+}
+
+.event-countdown-panel {
+  background:
+    radial-gradient(420px 180px at 94% 0%, rgba(91,140,255,.13), transparent 66%),
+    linear-gradient(180deg, rgba(255,255,255,.052), rgba(255,255,255,.026));
+  box-shadow: var(--shadow-md);
+}
+
+.event-description-heading {
+  font-size: clamp(1.45rem, 2.6vw, 2rem);
+  letter-spacing: -.025em;
+}
+
+.event-description {
+  max-width: 780px;
+  font-size: 1.02rem;
+  line-height: 1.85;
+}
+
+.event-description p {
+  margin-bottom: 1rem;
+}
+
+.event-organizer-card {
+  background: linear-gradient(180deg, color-mix(in oklab, var(--card) 94%, white 6%), var(--card));
+  box-shadow: var(--shadow-sm);
+}
+
+.event-ticket-panel,
+.checkout-summary-card {
+  border-color: var(--border-strong);
+  background:
+    radial-gradient(420px 180px at 100% 0%, rgba(91,140,255,.12), transparent 66%),
+    var(--card);
+  box-shadow: var(--shadow-lg);
+}
+
+.event-ticket-panel [data-event-price] {
+  font-size: clamp(2rem, 4vw, 2.7rem) !important;
+  letter-spacing: -.04em;
+}
+
+.event-ticket-panel .form-label {
+  margin-bottom: .55rem;
+}
+
+.event-ticket-panel .form-select,
+.event-ticket-panel .qty-wrap .form-control,
+.mobile-ticket-select .form-select {
+  min-height: 50px;
+  border-color: var(--border-strong);
+  background-color: color-mix(in oklab, var(--input-bg) 88%, white 4%);
+}
+
+.event-ticket-panel .qty-wrap {
+  padding: .55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgba(255,255,255,.025);
+}
+
+.event-ticket-panel .qty-wrap .btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+}
+
+.event-ticket-panel [data-qty-total] {
+  padding-inline: .4rem;
+  color: var(--text);
+  font-size: 1.05rem;
+}
+
+.event-ticket-panel ul li {
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+  padding: .32rem 0;
+}
+
+.event-related-section {
+  padding-top: 1rem;
+}
+
+.event-related-section .section-title h2 {
+  font-size: clamp(1.85rem, 3.4vw, 2.8rem);
+  letter-spacing: -.04em;
+}
+
+.event-checkout-page {
+  background:
+    radial-gradient(840px 420px at 12% 0%, rgba(91,140,255,.13), transparent 64%),
+    var(--bg);
+}
+
+.checkout-heading {
+  max-width: 760px;
+  margin-bottom: 1.35rem;
+}
+
+.checkout-heading h1 {
+  margin: .45rem 0 .35rem;
+  letter-spacing: -.035em;
+}
+
+.event-checkout-section .stepper {
+  margin-bottom: 1.5rem;
+}
+
+.event-checkout-section .stepper .step {
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklab, var(--card) 88%, transparent);
+}
+
+.checkout-form-card {
+  position: relative;
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.checkout-form-card h5 {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  font-size: 1.05rem;
+}
+
+.checkout-form-card h5::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 0 5px color-mix(in oklab, var(--primary) 16%, transparent);
+}
+
+.checkout-summary-card img {
+  width: 82px !important;
+  height: 82px !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.checkout-summary-card [data-reservation-countdown] {
+  min-width: 64px;
+  padding: .35rem .55rem;
+  border-radius: 999px;
+  background: var(--info-soft);
+  color: var(--info-text);
+  text-align: center;
+}
+
+.checkout-result-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(780px 420px at 50% 0%, rgba(91,140,255,.16), transparent 64%),
+    var(--bg);
+}
+
+.checkout-result-card {
+  padding: clamp(2rem, 6vw, 3.5rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.026)),
+    var(--card);
+  box-shadow: var(--shadow-lg);
+}
+
+.checkout-result-icon {
+  width: 86px;
+  height: 86px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 1rem;
+  border-radius: 999px;
+  background: var(--success-soft);
+  color: var(--success);
+  box-shadow: 0 18px 46px rgba(34,197,94,.18);
+}
+
+.checkout-result-icon i {
+  font-size: 2.55rem;
+}
+
+.checkout-result-cancelled .checkout-result-icon {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+  box-shadow: 0 18px 46px rgba(239,68,68,.16);
+}
+
+[data-dashboard-tickets] .qr-ticket {
+  border-color: var(--border-strong);
+  background:
+    radial-gradient(360px 160px at 100% 0%, rgba(91,140,255,.12), transparent 66%),
+    linear-gradient(180deg, color-mix(in oklab, var(--card) 92%, white 6%), var(--card));
+  box-shadow: var(--shadow-md);
+}
+
+[data-dashboard-tickets] .qr-ticket h5 {
+  font-size: 1.18rem;
+  line-height: 1.3;
+}
+
+[data-dashboard-tickets] .qr-ticket .qr {
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: inset 0 0 0 1px rgba(15,23,42,.08), var(--shadow-sm);
+}
+
+[data-dashboard-tickets] .ticket-codes {
+  padding: .65rem .75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.026);
+}
+
+.dashboard-favorite-card {
+  height: 100%;
+}
+
+.dashboard-favorite-card img {
+  box-shadow: var(--shadow-sm);
+}
+
+.dashboard-favorite-card .btn[data-remove-favorite] {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+}
+
+@media (max-width: 991.98px) {
+  .event-detail-hero {
+    min-height: 460px;
+  }
+
+  .event-detail-hero-copy {
+    margin-top: -230px !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .event-detail-hero {
+    min-height: 520px;
+  }
+
+  .event-detail-hero-copy {
+    margin-top: -300px !important;
+  }
+
+  .event-detail-hero-copy h1 {
+    font-size: clamp(2.4rem, 13vw, 3.7rem);
+  }
+
+  .event-ticket-panel .qty-wrap {
+    align-items: stretch !important;
+  }
+
+  .event-ticket-panel [data-qty-total] {
+    width: 100%;
+    margin-left: 0 !important;
+    padding-top: .4rem;
+    text-align: center;
+  }
+
+  .checkout-result-card {
+    border-radius: var(--radius-lg);
+  }
+}

@@ -420,7 +420,7 @@
 
     wrap.innerHTML = categoryGroups.map((category) => {
       const cards = category.events.slice(0, 3).map((event, index) => window.EventSphereEvents.renderEventCard(event, index)).join('');
-      return `<section class="section-sm" data-home-category-section="${window.EventSphereUtils.escapeHtml(category.key)}">
+      return `<section class="section-sm home-section home-category-section" data-home-category-section="${window.EventSphereUtils.escapeHtml(category.key)}">
         <div class="container-xxl">
           <div class="section-title fade-up in">
             <div><div class="eyebrow">${window.EventSphereUtils.escapeHtml(category.label)}</div><h2 class="mt-2">${window.EventSphereUtils.escapeHtml(category.key === 'sports' ? tr('homepage.game_day_title', 'Game day, every day') : tr('homepage.newest_category_events', 'Newest {category} events', { category: category.label }))}</h2></div>

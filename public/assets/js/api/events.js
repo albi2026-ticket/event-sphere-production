@@ -162,7 +162,7 @@
 
     return `
   <div class="col-md-6 col-xl-4">
-    <article class="card-pro fade-up in">
+    <article class="card-pro event-card-pro fade-up in">
       <div class="thumb">
         <span class="badge-soft"${status.labelKey && (status.key === 'ended' || status.key === 'sold_out' || status.key === 'live') ? ` data-i18n="${status.labelKey}"` : ''}>${u().escapeHtml(cat)}</span>
         <span class="fav" data-fav="${favKey}" data-event-id="${event.id}"><i class="bi bi-heart"></i></span>
@@ -172,7 +172,7 @@
         <div class="meta"><i class="bi bi-calendar3"></i> ${u().escapeHtml(date)}</div>
         <h3 class="title"><a href="${detailsHref}" style="color:inherit">${u().escapeHtml(event.title)}</a></h3>
         <div class="venue"><i class="bi bi-geo-alt"></i> ${u().escapeHtml(event.venue_name || '')}${event.city ? `, ${u().escapeHtml(event.city)}` : ''}</div>
-        <div class="foot"><div class="price">${status.canBuy ? `<span data-i18n="events.from">${tr('events.from', 'From')}</span> ${u().formatMoney(price.amount, price.currency)}` : `<span${status.priceKey ? ` data-i18n="${status.priceKey}"` : ''}>${u().escapeHtml(status.priceLabel)}</span>`}</div><a class="btn btn-glass btn-sm" href="${detailsHref}" data-i18n="buttons.view">${window.t?.('buttons.view') || 'View'}</a></div>
+        <div class="foot"><div class="price">${status.canBuy ? `<span data-i18n="events.from">${tr('events.from', 'From')}</span> ${u().formatMoney(price.amount, price.currency)}` : `<span${status.priceKey ? ` data-i18n="${status.priceKey}"` : ''}>${u().escapeHtml(status.priceLabel)}</span>`}</div><a class="btn btn-glass btn-sm event-card-cta" href="${detailsHref}" data-i18n="buttons.view">${window.t?.('buttons.view') || 'View'}</a></div>
       </div>
     </article>
   </div>`;

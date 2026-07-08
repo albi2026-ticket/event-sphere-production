@@ -21,16 +21,16 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <link href="../assets/css/style.css" rel="stylesheet">
 </head>
-<body>
+<body class="event-experience-page">
 <div data-partial="header"></div>
 <script src="../assets/js/partials.js"></script>
 
 <!-- Banner -->
-<section style="position:relative;height:420px;overflow:hidden" data-event-root>
+<section class="event-detail-hero" style="position:relative;height:420px;overflow:hidden" data-event-root>
   <div data-event-banner-placeholder class="event-banner-placeholder" style="width:100%;height:100%"></div>
   <img data-event-banner src="" alt="Event hero image" hidden decoding="async" fetchpriority="high" loading="eager" style="width:100%;height:100%;object-fit:cover"/>
   <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,15,25,.2) 0%, rgba(11,15,25,.95) 90%)"></div>
-  <div class="container-xxl position-relative" style="margin-top:-260px;z-index:2">
+  <div class="container-xxl position-relative event-detail-hero-copy" style="margin-top:-260px;z-index:2">
     <nav class="text-white-50 small mb-2"><a href="/events/list" class="text-white-50" data-i18n="header.events">Events</a> <i class="bi bi-chevron-right mx-1"></i> <a href="/events/list" class="text-white-50" data-event-breadcrumb-category data-i18n="loading.loading">Loading</a> <i class="bi bi-chevron-right mx-1"></i> <span data-event-breadcrumb data-i18n="events.loading_event">Loading event...</span></nav>
     <span class="badge-soft" style="position:static" data-event-category data-i18n="loading.loading">Loading</span>
     <h1 class="mt-2 text-white" data-event-title style="max-width:780px"><span class="skel dashboard-skel-value" style="display:block;max-width:620px"></span></h1>
@@ -41,13 +41,13 @@
   </div>
 </section>
 
-<section class="section-sm">
+<section class="section-sm event-detail-body">
   <div class="container-xxl">
     <div data-event-alert></div>
     <div class="row g-4">
       <div class="col-lg-8">
         <!-- Countdown -->
-        <div class="glass p-4 mb-4">
+        <div class="glass p-4 mb-4 event-countdown-panel">
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div><div class="eyebrow" data-i18n="events.event_starts_in">Event starts in</div><h4 class="mb-0 mt-1" data-i18n="events.dont_miss_out">Don't miss out</h4></div>
             <div class="countdown" data-countdown></div>
@@ -64,7 +64,7 @@
 
         <!-- Organizer -->
         <h4 class="mt-5" data-i18n="events.organizer">Organizer</h4>
-        <div class="card-pro p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div class="card-pro p-4 d-flex justify-content-between align-items-center flex-wrap gap-3 event-organizer-card">
           <div class="d-flex align-items-center gap-3">
             <div style="width:56px;height:56px;border-radius:14px;background:var(--grad-primary);display:grid;place-items:center"><i class="bi bi-music-note-list text-white fs-4"></i></div>
             <div><div class="fw-semibold" data-event-organizer-name data-i18n="events.loading_organizer">Loading organizer...</div><small class="text-muted-pro" data-event-organizer-meta data-i18n="events.organizer_details_appear">Organizer details will appear here.</small></div>
@@ -76,7 +76,7 @@
       <!-- Sticky checkout -->
       <div class="col-lg-4">
         <div class="sticky-checkout">
-          <div class="card-pro p-4">
+          <div class="card-pro p-4 event-ticket-panel">
             <div class="d-flex justify-content-between align-items-start"><div><div class="text-muted-pro small" data-i18n="events.starting_from">Starting from</div><div class="fs-3 fw-bold" data-event-price data-i18n="loading.loading">Loading...</div></div><span class="badge status-badge status-active" data-event-availability data-i18n="loading.loading">Loading</span></div>
             <hr class="divider"/>
             <label class="form-label" data-i18n="events.ticket_type">Ticket type</label>
@@ -103,6 +103,23 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-sm event-related-section">
+  <div class="container-xxl">
+    <div class="section-title">
+      <div>
+        <div class="eyebrow" data-i18n="events.related_events">Related events</div>
+        <h2 class="mt-2">More events you may like</h2>
+      </div>
+      <a class="btn btn-ghost" href="/events/list" data-i18n="buttons.browse_events">Browse events</a>
+    </div>
+    <div class="row g-4" data-related-events>
+      <div class="col-md-6 col-xl-4"><article class="card-pro skeleton-card"><div class="skeleton-media"></div><div class="body"><span class="skeleton-line skeleton-title" style="width:72%"></span><span class="skeleton-line" style="width:56%"></span><span class="skeleton-line" style="width:80%"></span></div></article></div>
+      <div class="col-md-6 col-xl-4"><article class="card-pro skeleton-card"><div class="skeleton-media"></div><div class="body"><span class="skeleton-line skeleton-title" style="width:66%"></span><span class="skeleton-line" style="width:50%"></span><span class="skeleton-line" style="width:78%"></span></div></article></div>
+      <div class="col-md-6 col-xl-4"><article class="card-pro skeleton-card"><div class="skeleton-media"></div><div class="body"><span class="skeleton-line skeleton-title" style="width:70%"></span><span class="skeleton-line" style="width:54%"></span><span class="skeleton-line" style="width:82%"></span></div></article></div>
     </div>
   </div>
 </section>
