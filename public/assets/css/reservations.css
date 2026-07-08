@@ -1761,3 +1761,130 @@ body.reservation-success-burst::after {
 
 /* ---- Loading shimmer line ---- */
 .divider-gold { height: 1px; background: linear-gradient(90deg, transparent, var(--res-gold), transparent); opacity:.4; margin: 2rem 0; }
+
+/* ---- Reservations design system alignment ---- */
+.nav-res .nav-link-pro:hover,
+.nav-res .nav-link-pro.active {
+  color: var(--res-gold-2) !important;
+}
+
+.btn-res-grad,
+.btn-gold,
+.btn-gold-outline {
+  border-radius: 999px;
+  min-height: 44px;
+  font-weight: 800;
+}
+
+.btn-res-grad:focus-visible,
+.btn-gold:focus-visible,
+.btn-gold-outline:focus-visible,
+.res-search .field:focus-within,
+.reservation-picker-trigger:focus,
+.reservation-choice:focus-visible,
+.owner-reservation-tab:focus-visible,
+.owner-calendar-item:focus-visible,
+.owner-reservation-actions .btn:focus-visible {
+  box-shadow: 0 0 0 4px rgba(212,167,90,.18);
+}
+
+.chip-gold,
+.chip-available,
+.eyebrow-res,
+.venue-preview-tags span,
+.choice-card .features span,
+.reservation-status,
+.owner-location-badge {
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.res-search,
+.venue-card,
+.reservation-empty-state,
+.reservation-card-skeleton,
+.choice-card,
+.booking-step,
+.reservation-picker-panel,
+.facility,
+.owner-completion-card,
+.owner-calendar-summary > div,
+.owner-calendar-day,
+.owner-analytics-panel,
+.owner-analytics-rate,
+.owner-reservations-table,
+.owner-location-card,
+.venue-google-map,
+.owner-location-map {
+  border-radius: var(--radius-lg);
+}
+
+.venue-card,
+.choice-card,
+.booking-step,
+.owner-completion-card,
+.owner-analytics-panel,
+.owner-analytics-rate,
+.owner-location-card {
+  box-shadow: var(--shadow-sm);
+}
+
+.venue-card:hover,
+.choice-card:hover,
+.booking-step:hover,
+.owner-location-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.res-search .field,
+.reservation-picker-trigger,
+.reservation-choice,
+.chip-select,
+.owner-time-select,
+.owner-calendar-item {
+  border-radius: var(--radius);
+}
+
+.res-search.res-search-simple .field,
+.res-search.res-search-simple .btn,
+.reservation-choice-time {
+  border-radius: 999px;
+}
+
+.venue-card .body {
+  padding: 1.15rem 1.2rem 1.3rem;
+}
+
+.venue-card .title,
+.section-head-res h2,
+.reservation-modal-head .modal-title,
+.choice-card h3 {
+  letter-spacing: -.01em;
+}
+
+.owner-time-select,
+.reservation-booking-modal .form-control,
+.reservation-booking-modal .form-select,
+.reservation-booking-modal textarea.form-control {
+  min-height: 46px;
+  border-radius: var(--radius);
+}
+
+.owner-reservations-table thead th {
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+  .res-search.res-search-simple {
+    border-radius: var(--radius-lg);
+  }
+
+  .res-search.res-search-simple .field,
+  .res-search.res-search-simple .btn {
+    border-radius: var(--radius);
+  }
+}
