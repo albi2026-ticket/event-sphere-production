@@ -4742,3 +4742,281 @@ textarea.form-control:focus {
     padding: .85rem;
   }
 }
+
+/* ---------- Premium micro-interactions ---------- */
+:root {
+  --motion-fast: 120ms;
+  --motion-med: 190ms;
+  --motion-slow: 260ms;
+  --motion-ease: cubic-bezier(.2, .8, .2, 1);
+  --motion-pop: cubic-bezier(.16, 1, .3, 1);
+}
+
+.micro-interactions-ready img {
+  opacity: .01;
+  transition: opacity var(--motion-slow) var(--motion-ease), transform var(--motion-slow) var(--motion-ease), filter var(--motion-slow) var(--motion-ease);
+}
+
+.micro-interactions-ready img[data-image-revealed="true"] {
+  opacity: 1;
+}
+
+.btn,
+.icon-btn,
+.nav-link-pro,
+.page-link,
+.dropdown-item,
+.dashboard-tabs button,
+.owner-reservation-tab,
+.chip,
+.chip-select,
+.reservation-choice,
+.reservation-picker-trigger {
+  transition-duration: var(--motion-med);
+  transition-timing-function: var(--motion-ease);
+}
+
+.btn:not(:disabled):not(.disabled):hover,
+.icon-btn:hover,
+.page-link:hover {
+  transform: translateY(-1px);
+}
+
+.btn:not(:disabled):not(.disabled):active,
+.icon-btn:active,
+.page-link:active,
+.chip-select:active,
+.reservation-choice:active {
+  transform: translateY(0) scale(.985);
+}
+
+.btn-primary-grad,
+.btn-res-grad,
+.btn-gold {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary-grad::after,
+.btn-res-grad::after,
+.btn-gold::after {
+  content: "";
+  position: absolute;
+  inset: -45% auto -45% -35%;
+  width: 38%;
+  transform: skewX(-18deg) translateX(-160%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.28), transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.btn-primary-grad:hover::after,
+.btn-res-grad:hover::after,
+.btn-gold:hover::after {
+  opacity: 1;
+  animation: buttonSheen 680ms var(--motion-ease);
+}
+
+@keyframes buttonSheen {
+  from { transform: skewX(-18deg) translateX(-160%); }
+  to { transform: skewX(-18deg) translateX(440%); }
+}
+
+.card-pro,
+.venue-card,
+.dashboard-event-row,
+.dashboard-mini-row,
+.reservation-stat,
+.owner-calendar-day,
+.owner-calendar-item,
+.owner-analytics-panel,
+.owner-analytics-rate,
+.owner-analytics-rank,
+.content-card,
+.trust-card,
+.how-step {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  transition: transform var(--motion-med) var(--motion-ease), box-shadow var(--motion-med) var(--motion-ease), border-color var(--motion-med) var(--motion-ease), background var(--motion-med) var(--motion-ease);
+}
+
+.card-pro:hover,
+.venue-card:hover,
+.dashboard-event-row:hover,
+.dashboard-mini-row:hover,
+.reservation-stat:hover,
+.owner-calendar-item:hover,
+.owner-analytics-panel:hover,
+.owner-analytics-rate:hover,
+.owner-analytics-rank:hover,
+.content-card:hover,
+.trust-card:hover,
+.how-step:hover {
+  transform: translateY(-3px);
+}
+
+.card-pro .thumb,
+.venue-card .img-wrap,
+.event-detail-hero-media,
+.gallery-photo,
+.dashboard-event-row {
+  overflow: hidden;
+}
+
+.card-pro .thumb img,
+.venue-card .img-wrap img,
+.gallery-photo img,
+.dashboard-event-row img,
+.dashboard-mini-row img,
+.qr-ticket img {
+  will-change: opacity, transform;
+}
+
+.dashboard-loading-skeleton,
+.skeleton-card,
+.reservation-card-skeleton,
+.admin-reservation-skeleton {
+  animation: skeletonSettle var(--motion-slow) var(--motion-pop);
+}
+
+@keyframes skeletonSettle {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.skeleton-line,
+.skeleton-block,
+.skeleton-media,
+.skeleton-avatar,
+.skeleton-row td::before,
+.skel {
+  animation-duration: 1.05s;
+}
+
+.toast-pro {
+  transform-origin: right center;
+  animation: toastEnter var(--motion-slow) var(--motion-pop);
+  transition: opacity var(--motion-med) var(--motion-ease), transform var(--motion-med) var(--motion-ease);
+}
+
+.toast-pro.toast-leaving {
+  opacity: 0;
+  transform: translateX(16px) scale(.98);
+}
+
+.toast-pro.success i {
+  animation: successPop 520ms var(--motion-pop);
+}
+
+.toast-pro.error i {
+  animation: errorPulse 520ms var(--motion-ease);
+}
+
+@keyframes toastEnter {
+  from { opacity: 0; transform: translateX(16px) scale(.985); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes successPop {
+  0% { transform: scale(.72); }
+  55% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+@keyframes errorPulse {
+  0%, 100% { transform: translateX(0); }
+  30% { transform: translateX(-2px); }
+  60% { transform: translateX(2px); }
+}
+
+.modal.fade .modal-dialog {
+  transform: translateY(10px) scale(.985);
+  transition: transform var(--motion-slow) var(--motion-pop), opacity var(--motion-slow) var(--motion-ease);
+}
+
+.modal.show .modal-dialog {
+  transform: translateY(0) scale(1);
+}
+
+.modal-backdrop.show {
+  opacity: .68;
+  transition: opacity var(--motion-med) var(--motion-ease);
+}
+
+.dropdown-menu {
+  transform-origin: top center;
+  animation: dropdownRise var(--motion-med) var(--motion-pop);
+}
+
+@keyframes dropdownRise {
+  from { opacity: 0; transform: translateY(6px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.dashboard-section.active,
+.organizer-section.active,
+.admin-section.active {
+  animation: pageSectionIn var(--motion-slow) var(--motion-pop);
+}
+
+@keyframes pageSectionIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.alert,
+.dashboard-empty,
+.admin-empty,
+.reservation-empty-state,
+.checkin-result {
+  animation: stateIn var(--motion-slow) var(--motion-pop);
+}
+
+@keyframes stateIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.text-danger,
+.invalid-feedback,
+.form-control.is-invalid,
+.form-select.is-invalid {
+  transition: color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease), background var(--motion-fast) var(--motion-ease);
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+  animation: fieldNudge 220ms var(--motion-ease);
+}
+
+@keyframes fieldNudge {
+  0%, 100% { transform: translateX(0); }
+  35% { transform: translateX(-2px); }
+  70% { transform: translateX(2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .001ms !important;
+  }
+
+  .micro-interactions-ready img {
+    opacity: 1;
+  }
+
+  .btn:hover,
+  .icon-btn:hover,
+  .card-pro:hover,
+  .venue-card:hover,
+  .dashboard-event-row:hover,
+  .dashboard-mini-row:hover,
+  .reservation-stat:hover,
+  .owner-calendar-item:hover {
+    transform: none !important;
+  }
+}

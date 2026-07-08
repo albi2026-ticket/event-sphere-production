@@ -1,6 +1,7 @@
 /* TicketHub — shared frontend logic */
 (function () {
   'use strict';
+  document.documentElement.classList.add('micro-interactions-ready');
 
   /* ---------- Theme toggle ---------- */
   const THEME_KEY = 'tickethub-theme';
@@ -34,7 +35,7 @@
     const icon = type === 'success' ? 'bi-check-circle-fill' : type === 'error' ? 'bi-x-circle-fill' : 'bi-info-circle-fill';
     t.innerHTML = `<i class="bi ${icon}"></i><div>${msg}</div>`;
     s.appendChild(t);
-    setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(20px)'; t.style.transition = 'all .25s'; }, 2800);
+    setTimeout(() => { t.classList.add('toast-leaving'); }, 2800);
     setTimeout(() => t.remove(), 3200);
   };
 
@@ -333,6 +334,34 @@
     entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
   }, { threshold: 0.12 });
   const observeFades = () => document.querySelectorAll('.fade-up:not(.in)').forEach(el => io.observe(el));
+
+  /* ---------- Image reveal ---------- */
+  function markLoadedImage(img) {
+    if (!img || img.dataset.imageRevealed === 'true') return;
+    img.dataset.imageRevealed = 'true';
+  }
+  function observeImages() {
+    document.querySelectorAll('img:not([data-image-revealed])').forEach((img) => {
+      if (img.complete && img.naturalWidth > 0) {
+        markLoadedImage(img);
+      }
+    });
+  }
+  document.addEventListener('load', (event) => {
+    if (event.target?.tagName === 'IMG') markLoadedImage(event.target);
+  }, true);
+  const imageRevealObserver = 'MutationObserver' in window
+    ? new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node?.tagName === 'IMG' && node.complete && node.naturalWidth > 0) markLoadedImage(node);
+          node?.querySelectorAll?.('img').forEach((img) => {
+            if (img.complete && img.naturalWidth > 0) markLoadedImage(img);
+          });
+        });
+      });
+    })
+    : null;
 
   /* ---------- Footer reveal ---------- */
   const footerIo = 'IntersectionObserver' in window
@@ -643,6 +672,8 @@
     paintFavs();
     observeFades();
     observeFooters();
+    observeImages();
+    imageRevealObserver?.observe(document.body, { childList: true, subtree: true });
     document.querySelectorAll('[data-count]').forEach(el => cio.observe(el));
     document.querySelectorAll('[data-countdown]').forEach(startCountdown);
     document.querySelectorAll('[data-seatmap]').forEach(buildSeatmap);
@@ -660,4 +691,5 @@
     });
   });
   document.addEventListener('event-sphere:partials-loaded', observeFooters);
+  document.addEventListener('event-sphere:partials-loaded', observeImages);
 })();

@@ -2303,3 +2303,103 @@ body.reservation-success-burst::after {
     border-radius: 20px !important;
   }
 }
+
+/* ---- Reservation micro-interactions ---- */
+.venue-card,
+.choice-card,
+.booking-step,
+.reservation-step-card,
+.reservation-summary-card,
+.confirm-card,
+.reservation-stat,
+.owner-completion-card,
+.owner-location-card,
+.owner-calendar-day,
+.owner-calendar-item,
+.owner-analytics-panel,
+.owner-analytics-rate,
+.owner-analytics-rank,
+.facility {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  transition: transform var(--motion-med, 190ms) var(--motion-ease, ease), box-shadow var(--motion-med, 190ms) var(--motion-ease, ease), border-color var(--motion-med, 190ms) var(--motion-ease, ease), background var(--motion-med, 190ms) var(--motion-ease, ease);
+}
+
+.venue-card:hover,
+.choice-card:hover,
+.booking-step:hover,
+.reservation-step-card:hover,
+.reservation-summary-card:hover,
+.reservation-stat:hover,
+.owner-completion-card:hover,
+.owner-location-card:hover,
+.owner-calendar-item:hover,
+.owner-analytics-panel:hover,
+.owner-analytics-rate:hover,
+.owner-analytics-rank:hover,
+.facility:hover {
+  transform: translateY(-3px);
+}
+
+.gallery-photo,
+.venue-google-map,
+.owner-location-map {
+  animation: reservationSurfaceIn var(--motion-slow, 260ms) var(--motion-pop, ease);
+}
+
+@keyframes reservationSurfaceIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reservation-picker-panel {
+  transform-origin: top center;
+  animation: reservationMenuIn var(--motion-med, 190ms) var(--motion-pop, ease);
+}
+
+@keyframes reservationMenuIn {
+  from { opacity: 0; transform: translateY(5px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.reservation-choice.active,
+.reservation-choice[aria-selected="true"],
+.chip-select.active,
+.owner-reservation-tab.active,
+.owner-calendar-view-toggle .btn.active,
+.owner-analytics-range .btn.active {
+  animation: reservationSelectPop 220ms var(--motion-pop, ease);
+}
+
+@keyframes reservationSelectPop {
+  from { transform: scale(.98); }
+  to { transform: scale(1); }
+}
+
+.reservation-picker-loading,
+.reservation-skeleton,
+.reservation-skeleton-line,
+.reservation-skeleton-media,
+.reservation-time-skeleton {
+  animation-duration: 1.05s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .venue-card,
+  .choice-card,
+  .booking-step,
+  .reservation-step-card,
+  .reservation-summary-card,
+  .confirm-card,
+  .reservation-stat,
+  .owner-completion-card,
+  .owner-location-card,
+  .owner-calendar-day,
+  .owner-calendar-item,
+  .owner-analytics-panel,
+  .owner-analytics-rate,
+  .owner-analytics-rank,
+  .facility {
+    transform: none !important;
+  }
+}
