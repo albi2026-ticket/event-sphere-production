@@ -14,7 +14,7 @@
 <link href="../assets/css/style.css" rel="stylesheet">
 <link href="../assets/css/reservations.css" rel="stylesheet">
 </head>
-<body>
+<body class="restaurant-experience-page reservation-flow-premium-page">
 
 <nav class="navbar navbar-expand-lg nav-blur nav-res">
   <div class="container-xxl">
@@ -50,11 +50,11 @@
   </div>
 </nav>
 
-<div class="container-xxl py-5">
+<div class="container-xxl py-5 reservation-flow-shell">
   <div class="row g-5">
 
     <!-- LEFT -->
-    <div class="col-lg-8">
+    <div class="col-lg-8 reservation-flow-main">
       <h1 style="font-family:'Cormorant Garamond',serif;font-weight:600">Reserve your table</h1>
       <p style="color:var(--muted)">Aurora Rooftop · Shoreditch, London</p>
 
@@ -68,7 +68,7 @@
       </div>
 
       <!-- STEP 1 — DATE -->
-      <div class="card-pro p-4 step-panel" data-panel="1" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+      <div class="card-pro p-4 step-panel reservation-step-card" data-panel="1" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
         <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Choose a date</h4>
         <p class="text-muted-pro small">Select the day you'd like to dine with us.</p>
         <div class="chip-grid mt-3" id="dateGrid"></div>
@@ -78,7 +78,7 @@
       </div>
 
       <!-- STEP 2 — TIME -->
-      <div class="card-pro p-4 step-panel d-none" data-panel="2" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+      <div class="card-pro p-4 step-panel d-none reservation-step-card" data-panel="2" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
         <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Choose a time</h4>
         <p class="text-muted-pro small">Available windows for your party.</p>
         <div class="chip-grid mt-3">
@@ -98,7 +98,7 @@
       </div>
 
       <!-- STEP 3 — GUESTS -->
-      <div class="card-pro p-4 step-panel d-none" data-panel="3" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+      <div class="card-pro p-4 step-panel d-none reservation-step-card" data-panel="3" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
         <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">How many guests?</h4>
         <p class="text-muted-pro small">Parties larger than 8 require a private booking.</p>
         <div class="chip-grid mt-3" style="grid-template-columns:repeat(8,1fr)">
@@ -112,7 +112,7 @@
       </div>
 
       <!-- STEP 4 — DETAILS -->
-      <div class="card-pro p-4 step-panel d-none" data-panel="4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+      <div class="card-pro p-4 step-panel d-none reservation-step-card" data-panel="4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
         <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Your details</h4>
         <p class="text-muted-pro small">We'll send your confirmation to this email and phone.</p>
         <div class="row g-3 mt-1">
@@ -146,7 +146,7 @@
       </div>
 
       <!-- STEP 5 — CONFIRMATION -->
-      <div class="step-panel d-none" data-panel="5">
+      <div class="step-panel d-none reservation-confirmation-panel" data-panel="5">
         <div class="confirm-card">
           <div class="confirm-check"><i class="bi bi-check2"></i></div>
           <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600">Reservation confirmed</h3>
@@ -173,7 +173,7 @@
     <!-- RIGHT — Summary -->
     <aside class="col-lg-4">
       <div style="position:sticky;top:90px">
-        <div class="card-pro p-0" style="background:var(--card);border:1px solid var(--border);border-radius:22px;overflow:hidden">
+        <div class="card-pro reservation-summary-card p-0" style="background:var(--card);border:1px solid var(--border);border-radius:22px;overflow:hidden">
           <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80" style="width:100%;height:160px;object-fit:cover" alt="Restaurant table prepared for a reservation" loading="lazy" decoding="async" />
           <div class="p-4">
             <span class="chip-gold mb-2"><i class="bi bi-award-fill"></i> Editor's pick</span>

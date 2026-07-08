@@ -1888,3 +1888,418 @@ body.reservation-success-burst::after {
     border-radius: var(--radius);
   }
 }
+
+/* ---- Premium restaurant module polish ---- */
+.restaurant-experience-page {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(212,167,90,.12), transparent 34rem),
+    radial-gradient(circle at 88% 12%, rgba(245,213,141,.08), transparent 30rem),
+    linear-gradient(180deg, rgba(255,255,255,.025), transparent 34rem),
+    var(--bg);
+}
+
+.restaurant-experience-page .nav-res {
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 18px 46px rgba(0,0,0,.16);
+}
+
+.venue-card-premium {
+  border-color: rgba(255,255,255,.105);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.066), rgba(255,255,255,.028)),
+    var(--card);
+  box-shadow: 0 18px 55px rgba(0,0,0,.22);
+}
+
+.venue-card-premium:hover {
+  border-color: rgba(212,167,90,.35);
+  transform: translateY(-5px);
+  box-shadow: 0 26px 72px rgba(0,0,0,.32), 0 0 0 1px rgba(212,167,90,.12) inset;
+}
+
+.venue-card-premium .img-wrap {
+  aspect-ratio: 1.12 / 1;
+  background: rgba(255,255,255,.04);
+}
+
+.venue-card-premium .img-wrap::after {
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.32) 74%, rgba(0,0,0,.62)),
+    radial-gradient(circle at 16% 18%, rgba(245,213,141,.18), transparent 28rem);
+}
+
+.venue-card-premium .badges {
+  inset: .85rem .85rem auto .85rem;
+}
+
+.venue-card-premium .chip-available,
+.venue-card-premium .reservation-status,
+.venue-card-premium .fav {
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(10,10,12,.58);
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+  backdrop-filter: blur(14px);
+}
+
+.venue-card-premium .title {
+  font-size: clamp(1.08rem, 1.8vw, 1.34rem);
+  line-height: 1.08;
+}
+
+.venue-card-premium .meta {
+  min-height: 1.35rem;
+}
+
+.venue-card-premium .venue-preview-tags {
+  min-height: 2.1rem;
+}
+
+.venue-card-premium .footer-row {
+  align-items: flex-end;
+  border-top: 1px solid rgba(255,255,255,.08);
+  margin-top: .35rem;
+  padding-top: .85rem;
+}
+
+.venue-card-premium .footer-row .btn {
+  box-shadow: 0 12px 28px rgba(212,167,90,.2);
+  white-space: nowrap;
+}
+
+.venue-detail-shell,
+.venue-detail-content,
+.reservation-flow-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.venue-detail-breadcrumb {
+  align-items: center;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 999px;
+  display: inline-flex !important;
+  max-width: 100%;
+  padding: .5rem .75rem;
+  background: rgba(255,255,255,.035);
+  backdrop-filter: blur(12px);
+}
+
+.venue-detail-hero {
+  border: 1px solid rgba(255,255,255,.095);
+  border-radius: 28px;
+  padding: clamp(1.15rem, 2vw, 1.6rem);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.07), rgba(255,255,255,.028)),
+    radial-gradient(circle at 84% 18%, rgba(212,167,90,.13), transparent 20rem);
+  box-shadow: 0 22px 64px rgba(0,0,0,.22);
+}
+
+.venue-detail-heading h1 {
+  font-size: clamp(2.45rem, 6vw, 5.4rem);
+  letter-spacing: -.025em;
+  line-height: .92;
+}
+
+.venue-detail-logo {
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: 0 16px 34px rgba(0,0,0,.28);
+}
+
+.venue-detail-actions .icon-btn,
+.venue-detail-actions .btn {
+  min-height: 46px;
+  box-shadow: 0 14px 34px rgba(0,0,0,.18);
+}
+
+.venue-live-status {
+  border-color: rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  box-shadow: 0 12px 34px rgba(0,0,0,.16);
+}
+
+.venue-gallery-premium {
+  border: 1px solid rgba(255,255,255,.11);
+  border-radius: 30px;
+  box-shadow: 0 28px 82px rgba(0,0,0,.34);
+  overflow: hidden;
+}
+
+.venue-gallery-premium .gallery-photo,
+.venue-gallery-premium > img {
+  min-height: 100%;
+}
+
+.venue-gallery-premium .gallery-photo::after {
+  background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.36));
+}
+
+.venue-gallery-premium .gallery-photo:hover img {
+  transform: scale(1.045);
+}
+
+.venue-gallery-premium .gallery-cover-label {
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(10,10,12,.62);
+  box-shadow: 0 12px 30px rgba(0,0,0,.2);
+  backdrop-filter: blur(14px);
+}
+
+.venue-detail-section h3,
+.reservation-flow-main h1,
+.reservation-step-card h4,
+.confirm-card h3 {
+  letter-spacing: -.02em;
+}
+
+.venue-detail-section h3 {
+  align-items: center;
+  display: flex;
+  gap: .7rem;
+  margin-bottom: 1rem;
+}
+
+.venue-detail-section h3::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(212,167,90,.42), transparent);
+}
+
+.venue-detail-description {
+  color: rgba(245,247,250,.78);
+  font-size: 1.04rem;
+  line-height: 1.78;
+}
+
+.venue-detail-page .facility,
+.reservation-detail-premium .facility {
+  border-color: rgba(255,255,255,.1);
+  background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.025));
+  box-shadow: 0 12px 34px rgba(0,0,0,.14);
+}
+
+.premium-reservation-card,
+.venue-side-card {
+  border-color: rgba(212,167,90,.24) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.082), rgba(255,255,255,.032)),
+    radial-gradient(circle at 100% 0%, rgba(212,167,90,.14), transparent 15rem) !important;
+  box-shadow: 0 28px 74px rgba(0,0,0,.28), 0 0 0 1px rgba(212,167,90,.07) inset !important;
+}
+
+.premium-reservation-card .reservation-icon {
+  box-shadow: 0 14px 32px rgba(212,167,90,.18);
+}
+
+.premium-reservation-card .btn,
+.reservation-booking-modal .modal-footer .btn,
+.reservation-step-card .btn,
+.confirm-card .btn {
+  min-height: 48px;
+}
+
+.venue-mobile-reserve-bar {
+  background: rgba(9,10,13,.76);
+  border-top: 1px solid rgba(255,255,255,.1);
+}
+
+.reservation-booking-modal {
+  border-color: rgba(212,167,90,.22);
+  background:
+    linear-gradient(180deg, rgba(24,24,27,.98), rgba(13,14,18,.985)),
+    radial-gradient(circle at 84% 0%, rgba(212,167,90,.14), transparent 18rem);
+  box-shadow: 0 30px 90px rgba(0,0,0,.42);
+}
+
+.reservation-modal-head {
+  border-bottom-color: rgba(255,255,255,.09);
+}
+
+.reservation-booking-flow {
+  gap: 1rem;
+}
+
+.booking-step {
+  border-color: rgba(255,255,255,.1);
+  background: linear-gradient(180deg, rgba(255,255,255,.058), rgba(255,255,255,.025));
+}
+
+.booking-step-title > span {
+  background: linear-gradient(135deg, var(--res-gold), var(--res-gold-2));
+  color: #18120a;
+  box-shadow: 0 12px 28px rgba(212,167,90,.2);
+}
+
+.reservation-picker-trigger,
+.reservation-booking-modal .form-control,
+.reservation-booking-modal textarea.form-control {
+  border-color: rgba(255,255,255,.12);
+  background: rgba(255,255,255,.045);
+}
+
+.reservation-picker-trigger:hover,
+.reservation-choice:hover {
+  border-color: rgba(212,167,90,.34);
+  background: rgba(212,167,90,.075);
+}
+
+.reservation-choice.active,
+.reservation-choice[aria-selected="true"],
+.chip-select.active {
+  border-color: rgba(212,167,90,.62);
+  background: linear-gradient(135deg, rgba(212,167,90,.24), rgba(245,213,141,.13));
+  color: #fff7df;
+}
+
+.reservation-flow-premium-page .res-stepper {
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 24px;
+  padding: .6rem;
+  background: rgba(255,255,255,.035);
+  box-shadow: 0 18px 44px rgba(0,0,0,.18);
+}
+
+.reservation-flow-premium-page .step {
+  border-radius: 18px;
+  padding: .72rem .8rem;
+}
+
+.reservation-flow-premium-page .step.active {
+  background: rgba(212,167,90,.12);
+  color: var(--res-gold-2);
+}
+
+.reservation-step-card,
+.reservation-summary-card,
+.confirm-card {
+  border-color: rgba(255,255,255,.105) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.066), rgba(255,255,255,.028)),
+    var(--card) !important;
+  box-shadow: 0 24px 70px rgba(0,0,0,.26);
+}
+
+.reservation-summary-card img {
+  filter: saturate(1.06) contrast(1.04);
+}
+
+.reservation-summary-card hr,
+.confirm-detail {
+  border-color: rgba(255,255,255,.1) !important;
+}
+
+.chip-select {
+  border-color: rgba(255,255,255,.105);
+  background: rgba(255,255,255,.04);
+  transition: border-color .18s ease, background .18s ease, transform .18s ease;
+}
+
+.chip-select:not(.disabled):hover {
+  border-color: rgba(212,167,90,.38);
+  transform: translateY(-2px);
+}
+
+.my-reservations-premium-page .my-reservations-hero {
+  background:
+    radial-gradient(circle at 86% 8%, rgba(212,167,90,.14), transparent 24rem),
+    linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.015));
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.my-reservations-premium-page .my-reservations-hero h1 {
+  font-size: clamp(2.4rem, 6vw, 4.7rem);
+  letter-spacing: -.035em;
+  line-height: .95;
+}
+
+.my-reservations-premium-page .reservation-stat {
+  border-color: rgba(255,255,255,.1);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.064), rgba(255,255,255,.026)),
+    radial-gradient(circle at 100% 0%, rgba(212,167,90,.09), transparent 12rem);
+  box-shadow: 0 18px 48px rgba(0,0,0,.2);
+}
+
+.my-reservations-premium-page .reservation-section {
+  padding-top: 2.35rem;
+}
+
+.reservation-card-premium .my-reservation-actions {
+  align-items: stretch;
+  gap: .6rem;
+}
+
+.reservation-card-premium .my-reservation-actions .btn {
+  flex: 1 1 auto;
+}
+
+.reservation-detail-modal,
+.reservation-cancel-modal {
+  border-color: rgba(212,167,90,.2);
+  box-shadow: 0 28px 86px rgba(0,0,0,.42);
+}
+
+.reservation-detail-premium img {
+  box-shadow: 0 20px 58px rgba(0,0,0,.25);
+}
+
+.reservation-cancel-modal textarea.form-control {
+  min-height: 130px;
+  border-color: rgba(255,255,255,.12);
+  background: rgba(255,255,255,.045);
+  color: var(--text);
+}
+
+@media (max-width: 991.98px) {
+  .venue-detail-hero {
+    align-items: flex-start !important;
+  }
+
+  .venue-detail-actions {
+    width: 100%;
+  }
+
+  .venue-detail-actions .btn {
+    flex: 1 1 auto;
+  }
+
+  .venue-gallery-premium {
+    border-radius: 24px;
+  }
+
+  .reservation-flow-premium-page .res-stepper {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .venue-detail-breadcrumb {
+    border-radius: 18px;
+    flex-wrap: wrap;
+  }
+
+  .venue-detail-hero {
+    border-radius: 22px;
+  }
+
+  .venue-detail-heading h1,
+  .my-reservations-premium-page .my-reservations-hero h1 {
+    font-size: clamp(2.25rem, 13vw, 3.55rem);
+  }
+
+  .venue-card-premium .footer-row,
+  .reservation-card-premium .my-reservation-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .venue-card-premium .footer-row .btn,
+  .reservation-card-premium .my-reservation-actions .btn {
+    width: 100%;
+  }
+
+  .reservation-step-card,
+  .confirm-card {
+    border-radius: 20px !important;
+  }
+}

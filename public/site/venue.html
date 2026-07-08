@@ -99,7 +99,7 @@
   }
 </style>
 </head>
-<body>
+<body class="restaurant-experience-page venue-detail-page">
 
 <nav class="navbar navbar-expand-lg nav-blur nav-res">
   <div class="container-xxl">
@@ -136,13 +136,13 @@
 </nav>
 
 <!-- Breadcrumb + title -->
-<div class="container-xxl pt-4">
-  <div class="d-flex gap-2 small mb-3" style="color:var(--muted)">
+<div class="container-xxl pt-4 venue-detail-shell">
+  <div class="venue-detail-breadcrumb d-flex gap-2 small mb-3" style="color:var(--muted)">
     <a href="/restaurants" class="text-gold" data-i18n="header.reservations">Reservations</a> <span>›</span> <span data-detail-city>City</span> <span>›</span> <span data-detail-crumb-category>Cuisine</span> <span>›</span> <span data-detail-name>Restaurant / Bar</span>
   </div>
 
-  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
-    <div>
+  <div class="venue-detail-hero d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+    <div class="venue-detail-heading">
       <div class="d-flex flex-wrap gap-2 mb-2">
         <span class="chip-gold" data-detail-featured><i class="bi bi-award-fill"></i> Featured restaurant or bar</span>
         <span class="chip-available"><i class="bi bi-circle-fill" style="font-size:.4rem"></i> Active restaurant or bar</span>
@@ -163,7 +163,7 @@
         </div>
       </div>
     </div>
-    <div class="d-flex gap-2">
+    <div class="venue-detail-actions d-flex gap-2">
       <button class="icon-btn"><i class="bi bi-heart"></i></button>
       <button class="icon-btn"><i class="bi bi-share"></i></button>
       <button class="btn btn-gold" type="button" data-reserve-button><i class="bi bi-calendar-check me-1"></i> Reserve now</button>
@@ -173,20 +173,20 @@
 
 <!-- GALLERY -->
 <div class="container-xxl">
-  <div class="gallery-grid" data-detail-gallery>
+  <div class="gallery-grid venue-gallery-premium" data-detail-gallery>
     <img class="g-main" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80" alt="Restaurant dining room prepared for reservations" fetchpriority="high" loading="eager" decoding="async" />
   </div>
 </div>
 
 <!-- BODY -->
-<div class="container-xxl py-5">
+<div class="container-xxl py-5 venue-detail-content">
   <div class="row g-5">
 
     <!-- LEFT -->
     <div class="col-lg-8">
 
       <!-- About -->
-      <section class="mb-5">
+      <section class="mb-5 venue-detail-section">
         <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="venue.about">About</h3>
         <p data-detail-description class="venue-detail-description mb-0" role="status" aria-label="Loading restaurant or bar details">
           <span class="skeleton-line mb-2" style="width:92%"></span>
@@ -198,21 +198,21 @@
       <div class="divider-gold" data-detail-divider="facilities"></div>
 
       <!-- Facilities -->
-      <section class="mb-5" data-detail-section="facilities">
+      <section class="mb-5 venue-detail-section" data-detail-section="facilities">
         <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="venue.facilities">Facilities</h3>
         <div class="row g-3 mt-2" data-detail-facilities></div>
       </section>
 
       <div class="divider-gold" data-detail-divider="facilities"></div>
 
-      <section class="mb-5" data-detail-section="cuisines">
+      <section class="mb-5 venue-detail-section" data-detail-section="cuisines">
         <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="venue.cuisines">Cuisines</h3>
         <div class="row g-3 mt-2" data-detail-cuisine-list></div>
       </section>
 
       <div class="divider-gold" data-detail-divider="cuisines"></div>
 
-      <section class="mb-5" data-detail-section="payments">
+      <section class="mb-5 venue-detail-section" data-detail-section="payments">
         <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="venue.payment_options">Payment Options</h3>
         <div class="row g-3 mt-2" data-detail-payments></div>
       </section>
@@ -220,7 +220,7 @@
       <div class="divider-gold" data-detail-divider="payments"></div>
 
       <!-- Hours -->
-      <section class="mb-5">
+      <section class="mb-5 venue-detail-section">
         <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="venue.opening_hours">Opening Hours</h3>
         <div class="row g-2 mt-2" data-detail-hours></div>
       </section>
@@ -228,7 +228,7 @@
       <div class="divider-gold"></div>
 
       <!-- Contact + Map -->
-      <section class="mb-5">
+      <section class="mb-5 venue-detail-section">
         <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="venue.location_contact">Location & Contact</h3>
         <div class="row g-3 mt-2" data-detail-contact></div>
         <div class="venue-google-map mt-3" data-detail-map-section hidden>
@@ -258,7 +258,7 @@
     <!-- RIGHT - Reserve CTA -->
     <aside class="col-lg-4" id="reservationSection" style="align-self:flex-start;scroll-margin-top:110px">
       <div class="venue-reservation-sticky">
-        <div class="venue-reservation-card p-4">
+        <div class="venue-reservation-card premium-reservation-card p-4">
           <div class="d-flex align-items-center gap-3 mb-3">
             <span class="reservation-icon"><i class="bi bi-calendar-check fs-4"></i></span>
             <div>
@@ -273,7 +273,7 @@
           </p>
         </div>
 
-        <div class="card-pro p-3 mt-3" style="background:rgba(255,255,255,.035);border:1px solid var(--border);border-radius:18px;box-shadow:0 16px 42px rgba(0,0,0,.16)">
+        <div class="card-pro venue-side-card p-3 mt-3" style="background:rgba(255,255,255,.035);border:1px solid var(--border);border-radius:18px;box-shadow:0 16px 42px rgba(0,0,0,.16)">
           <div class="d-flex gap-3 align-items-center">
             <div style="width:42px;height:42px;border-radius:12px;background:var(--res-gold-soft);display:grid;place-items:center"><i class="bi bi-info-circle text-gold"></i></div>
             <div><div class="fw-semibold" data-detail-side-title data-i18n="venue.details">Restaurant & Bar details</div><div class="small text-muted-pro" data-detail-side-copy role="status" aria-label="Loading profile"><span class="skeleton-line" style="width:180px"></span></div></div>

@@ -103,7 +103,7 @@
     return `
     <div class="col-lg-3 col-md-6">
       <a class="text-decoration-none" href="${detailsUrl}">
-        <article class="venue-card">
+        <article class="venue-card venue-card-premium">
           <div class="img-wrap">
             <img src="${esc(venueImage(venue))}" alt="${esc(imageAlt)}" loading="lazy" decoding="async" />
             <div class="badges">
@@ -133,7 +133,7 @@
     if (state.loading) {
       el.innerHTML = window.EventSphereSkeleton?.venueCards?.(4) || Array.from({ length: 4 }).map(() => `
         <div class="col-lg-3 col-md-6">
-          <article class="venue-card"><div class="img-wrap reservation-skeleton"></div><div class="body"><div class="reservation-skeleton-line"></div><div class="reservation-skeleton-line short"></div><div class="reservation-skeleton-line"></div></div></article>
+          <article class="venue-card venue-card-premium"><div class="img-wrap reservation-skeleton"></div><div class="body"><div class="reservation-skeleton-line"></div><div class="reservation-skeleton-line short"></div><div class="reservation-skeleton-line"></div></div></article>
         </div>
       `).join('');
       return;
