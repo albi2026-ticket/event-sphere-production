@@ -5328,3 +5328,404 @@ textarea.form-control:focus {
     flex: 1 1 auto;
   }
 }
+
+/* ---------- Final luxury polish ---------- */
+:root {
+  --lux-border: color-mix(in oklab, var(--border-strong) 72%, transparent);
+  --lux-border-soft: color-mix(in oklab, var(--border) 74%, transparent);
+  --lux-surface: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.024));
+  --lux-surface-strong: linear-gradient(145deg, rgba(255,255,255,.09), rgba(255,255,255,.032));
+  --lux-shadow: 0 22px 64px rgba(0,0,0,.24), 0 1px 0 rgba(255,255,255,.04) inset;
+  --lux-shadow-hover: 0 30px 86px rgba(0,0,0,.32), 0 0 0 1px rgba(255,255,255,.035) inset;
+  --lux-glow-primary: 0 18px 58px rgba(91,140,255,.22);
+  --lux-glow-gold: 0 18px 58px rgba(212,167,90,.2);
+}
+
+.section,
+.section-sm,
+.content-page,
+.dash-main,
+.venue-detail-content,
+.reservation-flow-shell {
+  position: relative;
+}
+
+.section::before,
+.section-sm::before,
+.dashboard-section.active::before,
+.organizer-section.active::before,
+.admin-section.active::before,
+.reservation-section::before {
+  content: "";
+  display: block;
+  height: 1px;
+  margin-bottom: clamp(1.4rem, 3vw, 2rem);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.16), rgba(91,140,255,.22), transparent);
+  opacity: .72;
+}
+
+.hero + .section::before,
+.hero-slider + .section::before,
+.homepage-premium .section:first-of-type::before {
+  display: none;
+}
+
+.card-pro,
+.glass,
+.content-card,
+.trust-card,
+.how-step,
+.kpi,
+.dashboard-modal,
+.admin-modal,
+.modal-content,
+.qr-ticket,
+.dashboard-empty,
+.admin-empty,
+.reservation-empty-state,
+.event-ticket-panel,
+.checkout-summary-card,
+.checkout-result-card {
+  border-color: var(--lux-border);
+  background:
+    var(--lux-surface),
+    radial-gradient(circle at 100% 0%, rgba(91,140,255,.055), transparent 16rem),
+    var(--card);
+  box-shadow: var(--lux-shadow);
+}
+
+.glass,
+.nav-blur,
+.notification-panel,
+.dropdown-menu,
+.modal-content,
+.toast-pro {
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+
+.card-pro:hover,
+.content-card:hover,
+.trust-card:hover,
+.how-step:hover,
+.kpi:hover,
+.dashboard-mini-row:hover,
+.dashboard-event-row:hover,
+.dashboard-empty:hover,
+.admin-empty:hover {
+  border-color: color-mix(in oklab, var(--primary) 30%, var(--lux-border));
+  box-shadow: var(--lux-shadow-hover);
+}
+
+.btn-primary-grad,
+.btn-res-grad,
+.btn-gold {
+  border: 1px solid rgba(255,255,255,.12);
+  text-shadow: 0 1px 1px rgba(0,0,0,.14);
+}
+
+.btn-primary-grad {
+  box-shadow: var(--lux-glow-primary), 0 1px 0 rgba(255,255,255,.16) inset;
+}
+
+.btn-gold,
+.btn-res-grad {
+  box-shadow: var(--lux-glow-gold), 0 1px 0 rgba(255,255,255,.18) inset;
+}
+
+.btn-glass,
+.btn-ghost,
+.icon-btn,
+.page-link {
+  box-shadow: 0 1px 0 rgba(255,255,255,.04) inset;
+}
+
+.brand-logo,
+.dashboard-activity-icon,
+.activity-item > i,
+.dashboard-empty i,
+.admin-empty i,
+.trust-icon,
+.content-icon,
+.reservation-icon,
+.confirm-check {
+  box-shadow:
+    0 14px 34px rgba(0,0,0,.24),
+    0 1px 0 rgba(255,255,255,.18) inset;
+}
+
+.card-pro .thumb::after,
+.event-card-media::after,
+.venue-card .img-wrap::after,
+.hero-slide-bg::after,
+.event-detail-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0) 38%, rgba(0,0,0,.42) 100%),
+    radial-gradient(circle at 18% 16%, rgba(255,255,255,.12), transparent 24rem);
+  opacity: .86;
+}
+
+.card-pro .thumb,
+.venue-card .img-wrap,
+.hero-slide-bg,
+.event-detail-hero {
+  position: relative;
+}
+
+.badge-soft,
+.status-badge,
+.chip,
+.chip-gold,
+.chip-available,
+.reservation-status,
+.footer-badges span,
+.venue-preview-tags span {
+  border-color: color-mix(in oklab, currentColor 22%, var(--border));
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.035)),
+    rgba(255,255,255,.025);
+  box-shadow: 0 1px 0 rgba(255,255,255,.08) inset;
+}
+
+.section-title h2,
+.section-head-res h2,
+.dashboard-enterprise .dash-main > .d-flex:first-child h1,
+.owner-dashboard-page [data-owner-venue-page] > .d-flex:first-child h1,
+.event-detail-hero-copy h1,
+.venue-detail-heading h1,
+.homepage-premium h1 {
+  text-wrap: balance;
+  letter-spacing: -.04em;
+}
+
+.card-pro .title,
+.venue-card .title,
+.dashboard-mini-row .fw-semibold,
+.activity-item .fw-semibold {
+  letter-spacing: -.018em;
+}
+
+.dashboard-loading-skeleton,
+.skeleton-card,
+.reservation-card-skeleton,
+.admin-reservation-skeleton,
+.skeleton-line,
+.skeleton-block,
+.skeleton-media,
+.skeleton-avatar,
+.skel {
+  box-shadow: 0 1px 0 rgba(255,255,255,.04) inset;
+}
+
+.dashboard-empty,
+.admin-empty,
+.reservation-empty-state {
+  min-height: 132px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(91,140,255,.105), transparent 18rem),
+    var(--lux-surface),
+    var(--card);
+}
+
+.footer {
+  border-top: 1px solid var(--lux-border-soft);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(91,140,255,.08), transparent 26rem),
+    radial-gradient(circle at 84% 0%, rgba(139,92,246,.065), transparent 24rem),
+    linear-gradient(180deg, rgba(255,255,255,.018), transparent);
+}
+
+.footer a {
+  color: color-mix(in oklab, var(--muted) 92%, var(--text));
+}
+
+.footer a:hover {
+  color: var(--text);
+}
+
+.table-responsive,
+.dashboard-table tbody tr,
+.owner-reservations-table tbody tr {
+  box-shadow: 0 1px 0 rgba(255,255,255,.025) inset;
+}
+
+@media (max-width: 767.98px) {
+  .section::before,
+  .section-sm::before,
+  .dashboard-section.active::before,
+  .organizer-section.active::before,
+  .admin-section.active::before,
+  .reservation-section::before {
+    margin-bottom: 1.15rem;
+  }
+
+  .card-pro,
+  .glass,
+  .content-card,
+  .trust-card,
+  .how-step,
+  .kpi,
+  .dashboard-empty,
+  .admin-empty,
+  .reservation-empty-state {
+    box-shadow: 0 16px 44px rgba(0,0,0,.2), 0 1px 0 rgba(255,255,255,.035) inset;
+  }
+}
+
+/* ---------- Mobile hero trust badges layout fix ---------- */
+@media (max-width: 768px) {
+  .homepage-premium .hero-slider {
+    min-height: 760px;
+    overflow: hidden;
+  }
+
+  .homepage-premium .hero-slide-content {
+    min-height: 760px;
+    padding-bottom: calc(14.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .hero-trust-strip {
+    left: 1rem;
+    right: 1rem;
+    bottom: calc(5.1rem + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    max-width: none;
+    transform: none;
+    justify-content: center;
+    gap: .6rem;
+    overflow: visible;
+    padding: 0;
+    pointer-events: none;
+  }
+
+  .hero-trust-strip span {
+    flex: 0 1 auto;
+    max-width: 100%;
+    white-space: nowrap;
+  }
+
+  .hero-nav {
+    top: auto;
+    bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
+    transform: none;
+  }
+
+  .hero-nav:hover {
+    transform: none;
+  }
+
+  .hero-dots {
+    bottom: calc(2.2rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ---------- Mobile dashboard ticket cards layout fix ---------- */
+@media (max-width: 768px) {
+  [data-dashboard-tickets],
+  [data-dashboard-tickets] > [data-ticket-id],
+  [data-dashboard-tickets] .qr-ticket,
+  [data-dashboard-tickets] .qr-ticket .info,
+  [data-dashboard-tickets] .ticket-meta,
+  [data-dashboard-tickets] .ticket-codes,
+  [data-dashboard-tickets] .ticket-actions {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  [data-dashboard-tickets] > [data-ticket-id] {
+    width: 100%;
+  }
+
+  [data-dashboard-tickets] .qr-ticket {
+    overflow: hidden;
+  }
+
+  [data-dashboard-tickets] .qr-ticket .info {
+    overflow-wrap: anywhere;
+  }
+
+  [data-dashboard-tickets] .ticket-meta small,
+  [data-dashboard-tickets] .ticket-codes,
+  [data-dashboard-tickets] .ticket-code,
+  [data-dashboard-tickets] .order-code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  [data-dashboard-tickets] .ticket-actions {
+    align-items: stretch;
+  }
+
+  [data-dashboard-tickets] .ticket-actions .btn {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    max-width: 100%;
+    min-width: 0;
+    text-align: center;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 430px) {
+  [data-dashboard-tickets] {
+    --bs-gutter-y: .85rem;
+  }
+
+  [data-dashboard-tickets] .qr-ticket .info {
+    padding: 1rem;
+  }
+
+  [data-dashboard-tickets] .ticket-codes {
+    padding: .7rem .75rem;
+  }
+
+  [data-dashboard-tickets] .ticket-actions {
+    grid-template-columns: 1fr;
+  }
+
+  [data-dashboard-tickets] .ticket-actions [data-ticket-download] {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 390px) {
+  [data-dashboard-tickets] .qr-ticket .info {
+    padding: .9rem;
+  }
+
+  [data-dashboard-tickets] .ticket-actions {
+    gap: .55rem !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .homepage-premium .hero-slider {
+    min-height: 790px;
+  }
+
+  .homepage-premium .hero-slide-content {
+    min-height: 790px;
+    padding-bottom: calc(15rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 390px) {
+  .homepage-premium .hero-slider {
+    min-height: 820px;
+  }
+
+  .homepage-premium .hero-slide-content {
+    min-height: 820px;
+    padding-bottom: calc(15.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .hero-trust-strip span {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+}

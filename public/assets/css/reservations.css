@@ -2577,3 +2577,160 @@ body.reservation-success-burst::after {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- Final luxury hospitality polish ---- */
+.restaurant-experience-page,
+.owner-dashboard-page {
+  background:
+    radial-gradient(circle at 16% -8%, rgba(212,167,90,.105), transparent 34rem),
+    radial-gradient(circle at 90% 4%, rgba(124,92,255,.115), transparent 32rem),
+    linear-gradient(180deg, rgba(255,255,255,.018), transparent 36rem),
+    var(--bg);
+}
+
+.nav-res,
+.res-search,
+.venue-card,
+.venue-card-premium,
+.choice-card,
+.reservation-booking-modal,
+.booking-step,
+.reservation-picker-panel,
+.reservation-choice,
+.reservation-step-card,
+.reservation-summary-card,
+.confirm-card,
+.venue-detail-hero,
+.venue-gallery-premium,
+.premium-reservation-card,
+.venue-side-card,
+.reservation-stat,
+.owner-completion-card,
+.owner-location-card,
+.owner-analytics-panel,
+.owner-analytics-rate,
+.reservation-detail-modal,
+.reservation-cancel-modal,
+.my-reservation-detail .facility,
+.venue-google-map,
+.owner-location-map {
+  border-color: rgba(255,255,255,.12);
+  box-shadow:
+    0 22px 64px rgba(0,0,0,.24),
+    0 1px 0 rgba(255,255,255,.05) inset;
+}
+
+.res-search,
+.reservation-booking-modal,
+.reservation-picker-panel,
+.premium-reservation-card,
+.venue-side-card,
+.venue-detail-hero,
+.reservation-detail-modal,
+.reservation-cancel-modal {
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+
+.venue-card:hover,
+.venue-card-premium:hover,
+.choice-card:hover,
+.booking-step:hover,
+.reservation-step-card:hover,
+.reservation-summary-card:hover,
+.reservation-stat:hover,
+.owner-completion-card:hover,
+.owner-location-card:hover,
+.owner-analytics-panel:hover,
+.owner-analytics-rate:hover {
+  border-color: rgba(212,167,90,.38);
+  box-shadow:
+    0 30px 86px rgba(0,0,0,.32),
+    0 0 0 1px rgba(212,167,90,.08) inset;
+}
+
+.venue-card .img-wrap::before,
+.gallery-photo::before,
+.venue-gallery-premium > img::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 18% 12%, rgba(255,255,255,.15), transparent 18rem);
+  opacity: .7;
+  z-index: 1;
+}
+
+.gallery-photo img,
+.venue-card .img-wrap img,
+.my-reservation-detail img,
+.reservation-summary-card img {
+  filter: saturate(1.06) contrast(1.035);
+}
+
+.venue-card .badges,
+.gallery-cover-label,
+.reservation-status,
+.chip-gold,
+.chip-available,
+.eyebrow-res,
+.owner-location-badge {
+  box-shadow: 0 10px 26px rgba(0,0,0,.18), 0 1px 0 rgba(255,255,255,.08) inset;
+}
+
+.reservation-modal-head,
+.reservation-booking-modal .modal-footer,
+.venue-detail-section h3::after,
+.divider-gold,
+.confirm-detail,
+.owner-reservations-table thead th {
+  border-color: rgba(255,255,255,.095);
+}
+
+.venue-detail-section h3::after,
+.divider-gold {
+  background: linear-gradient(90deg, transparent, rgba(212,167,90,.55), rgba(255,255,255,.12), transparent);
+}
+
+.reservation-picker-trigger,
+.reservation-booking-modal .form-control,
+.reservation-booking-modal textarea.form-control,
+.owner-time-select {
+  box-shadow: 0 1px 0 rgba(255,255,255,.04) inset;
+}
+
+.reservation-empty-state,
+.owner-reservation-empty,
+.owner-gallery-empty,
+.reservation-picker-empty {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(212,167,90,.11), transparent 18rem),
+    linear-gradient(180deg, rgba(255,255,255,.056), rgba(255,255,255,.022));
+  border-color: rgba(212,167,90,.24);
+}
+
+.btn-gold,
+.btn-res-grad {
+  box-shadow:
+    0 18px 58px rgba(212,167,90,.24),
+    0 1px 0 rgba(255,255,255,.18) inset;
+}
+
+@media (max-width: 767.98px) {
+  .venue-card,
+  .venue-card-premium,
+  .choice-card,
+  .reservation-booking-modal,
+  .booking-step,
+  .reservation-step-card,
+  .reservation-summary-card,
+  .confirm-card,
+  .venue-detail-hero,
+  .premium-reservation-card,
+  .venue-side-card,
+  .reservation-stat {
+    box-shadow:
+      0 16px 44px rgba(0,0,0,.2),
+      0 1px 0 rgba(255,255,255,.045) inset;
+  }
+}
