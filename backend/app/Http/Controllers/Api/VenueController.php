@@ -18,7 +18,13 @@ class VenueController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = Venue::query()
-            ->with(['images', 'facilities', 'cuisineTypes', 'paymentOptions', 'openingHours'])
+            ->with([
+                'images:id,venue_id,image_path,disk,path,sort_order,created_at,updated_at',
+                'facilities:id,name,slug,icon',
+                'cuisineTypes:id,name,slug',
+                'paymentOptions:id,name,slug',
+                'openingHours:id,venue_id,day_of_week,opens_at,closes_at,is_closed',
+            ])
             ->publicDiscovery();
 
         if ($request->filled('q')) {

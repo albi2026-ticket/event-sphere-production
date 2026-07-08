@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('QUEUE_CONNECTION', 'database'),
+    'default' => env('QUEUE_CONNECTION', 'sync'),
 
     /*
     |--------------------------------------------------------------------------
@@ -84,6 +84,7 @@ return [
         'failover' => [
             'driver' => 'failover',
             'connections' => [
+                env('QUEUE_PRIMARY_CONNECTION', 'redis'),
                 'database',
                 'deferred',
             ],

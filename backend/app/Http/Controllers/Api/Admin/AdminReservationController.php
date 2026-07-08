@@ -194,13 +194,18 @@ class AdminReservationController extends Controller
      */
     protected function stats(Builder $query): array
     {
+        $counts = (clone $query)
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
         return [
-            'total' => (clone $query)->count(),
-            'pending' => (clone $query)->where('status', Reservation::STATUS_PENDING)->count(),
-            'confirmed' => (clone $query)->where('status', Reservation::STATUS_CONFIRMED)->count(),
-            'completed' => (clone $query)->where('status', Reservation::STATUS_COMPLETED)->count(),
-            'cancelled' => (clone $query)->where('status', Reservation::STATUS_CANCELLED)->count(),
-            'no_show' => (clone $query)->where('status', Reservation::STATUS_NO_SHOW)->count(),
+            'total' => (int) $counts->sum(),
+            'pending' => (int) ($counts[Reservation::STATUS_PENDING] ?? 0),
+            'confirmed' => (int) ($counts[Reservation::STATUS_CONFIRMED] ?? 0),
+            'completed' => (int) ($counts[Reservation::STATUS_COMPLETED] ?? 0),
+            'cancelled' => (int) ($counts[Reservation::STATUS_CANCELLED] ?? 0),
+            'no_show' => (int) ($counts[Reservation::STATUS_NO_SHOW] ?? 0),
         ];
     }
 

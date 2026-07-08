@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Cache;
 
 class HomepageCache
 {
-    public const TTL_SECONDS = 45;
+    public const TTL_SECONDS = 120;
 
     private const VERSION_KEY = 'homepage.cache.version';
 

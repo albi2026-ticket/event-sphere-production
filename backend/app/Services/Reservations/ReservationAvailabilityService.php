@@ -43,6 +43,7 @@ class ReservationAvailabilityService
         $lastReservationMinutes = $this->lastReservationBoundaryMinutes($venue, $opensAtMinutes, $closingBoundaryMinutes);
         $now = now();
         $slots = [];
+        $candidateTimes = [];
 
         foreach ($this->slotMinutes($opensAtMinutes, $closingBoundaryMinutes, $interval) as $minutes) {
             if ($lastReservationMinutes !== null && $minutes > $lastReservationMinutes) {
@@ -54,8 +55,14 @@ class ReservationAvailabilityService
                 continue;
             }
 
-            $time = $this->minutesToTime($minutes);
-            if (! $this->slotIsFull($venue, $dateValue, $time)) {
+            $candidateTimes[] = $this->minutesToTime($minutes);
+        }
+
+        $reservationCounts = $this->slotReservationCounts($venue, $dateValue, $candidateTimes);
+        $limit = max(1, (int) ($venue->max_reservations_per_slot ?: 10));
+
+        foreach ($candidateTimes as $time) {
+            if (($reservationCounts[$time] ?? 0) < $limit) {
                 $slots[] = [
                     'time' => $time,
                     'available' => true,
@@ -168,6 +175,38 @@ class ReservationAvailabilityService
         $value = preg_match('/^\d{2}:\d{2}:\d{2}$/', $time) ? substr($time, 0, 5) : $time;
 
         return [$value, "{$value}:00"];
+    }
+
+    /**
+     * @param  array<int, string>  $times
+     * @return array<string, int>
+     */
+    private function slotReservationCounts(Venue $venue, string $date, array $times): array
+    {
+        if ($times === []) {
+            return [];
+        }
+
+        $variants = collect($times)
+            ->flatMap(fn (string $time): array => $this->timeVariants($time))
+            ->unique()
+            ->values()
+            ->all();
+
+        return Reservation::query()
+            ->selectRaw('reservation_time, count(*) as total')
+            ->where('venue_id', $venue->id)
+            ->whereDate('reservation_date', $date)
+            ->whereIn('reservation_time', $variants)
+            ->where('status', '!=', Reservation::STATUS_CANCELLED)
+            ->groupBy('reservation_time')
+            ->get()
+            ->reduce(function (array $counts, Reservation $reservation): array {
+                $time = substr((string) $reservation->reservation_time, 0, 5);
+                $counts[$time] = ($counts[$time] ?? 0) + (int) $reservation->total;
+
+                return $counts;
+            }, []);
     }
 
     /**

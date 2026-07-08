@@ -286,19 +286,29 @@ class OwnerReservationController extends Controller
     {
         return Cache::remember($this->summaryCacheKey($request, 'stats'), now()->addSeconds(self::SUMMARY_TTL_SECONDS), function () use ($request): array {
             $base = $this->ownedReservations($request);
-            $counts = (clone $base)
-                ->selectRaw('status, count(*) as total')
+            $today = today();
+            $rows = (clone $base)
+                ->selectRaw(
+                    'status,
+                    count(*) as total,
+                    SUM(CASE WHEN reservation_date = ? THEN 1 ELSE 0 END) as today_total,
+                    SUM(CASE WHEN status IN (?, ?) AND reservation_date >= ? THEN 1 ELSE 0 END) as upcoming_total',
+                    [
+                        $today->toDateString(),
+                        Reservation::STATUS_PENDING,
+                        Reservation::STATUS_CONFIRMED,
+                        $today->toDateString(),
+                    ],
+                )
                 ->groupBy('status')
-                ->pluck('total', 'status');
+                ->get();
+            $counts = $rows->pluck('total', 'status');
 
             return [
                 'pending' => (int) ($counts[Reservation::STATUS_PENDING] ?? 0),
                 'confirmed' => (int) ($counts[Reservation::STATUS_CONFIRMED] ?? 0),
-                'today' => (clone $base)->whereDate('reservation_date', today())->count(),
-                'upcoming' => (clone $base)
-                    ->whereIn('status', [Reservation::STATUS_PENDING, Reservation::STATUS_CONFIRMED])
-                    ->whereDate('reservation_date', '>=', today())
-                    ->count(),
+                'today' => (int) $rows->sum('today_total'),
+                'upcoming' => (int) $rows->sum('upcoming_total'),
                 'completed' => (int) ($counts[Reservation::STATUS_COMPLETED] ?? 0),
                 'cancelled' => (int) ($counts[Reservation::STATUS_CANCELLED] ?? 0),
                 'no_show' => (int) ($counts[Reservation::STATUS_NO_SHOW] ?? 0),

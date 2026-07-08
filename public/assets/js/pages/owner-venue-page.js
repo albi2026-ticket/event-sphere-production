@@ -1329,7 +1329,11 @@
       window._ownerReservationStatusChart = null;
     }
 
-    if (!data || typeof Chart === 'undefined') return;
+    if (!data) return;
+    if (typeof Chart === 'undefined') {
+      window.EventSphereLoadChart?.().then(renderAnalyticsCharts).catch(() => {});
+      return;
+    }
 
     const theme = chartTheme();
     const trend = data.trend || [];

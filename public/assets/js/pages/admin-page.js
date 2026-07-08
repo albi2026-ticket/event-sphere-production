@@ -529,6 +529,11 @@
   }
 
   function renderCharts() {
+    if (document.querySelector('canvas') && !window.Chart) {
+      window.EventSphereLoadChart?.().then(renderCharts).catch(() => {});
+      return;
+    }
+
     const theme = chartTheme();
     const paid = state.orders.filter((o) => o.payment_status === 'paid');
     const byPeriod = (length) => {

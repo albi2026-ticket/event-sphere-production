@@ -587,7 +587,11 @@
   function renderRevenueChart() {
     const canvas = document.getElementById('chartRev');
     const empty = $('[data-organizer-revenue-empty]');
-    if (!canvas || !window.Chart) return;
+    if (!canvas) return;
+    if (!window.Chart) {
+      window.EventSphereLoadChart?.().then(renderRevenueChart).catch(() => {});
+      return;
+    }
     if (state.loading.revenue || state.errors.revenue) {
       if (empty) empty.innerHTML = state.errors.revenue ? emptyBlock('bi-exclamation-triangle', 'Revenue chart unavailable', state.errors.revenue) : '';
       return;
@@ -611,7 +615,11 @@
   function renderRevenueByEventChart() {
     const canvas = document.getElementById('chartCat');
     const empty = $('[data-organizer-event-revenue-empty]');
-    if (!canvas || !window.Chart) return;
+    if (!canvas) return;
+    if (!window.Chart) {
+      window.EventSphereLoadChart?.().then(renderRevenueByEventChart).catch(() => {});
+      return;
+    }
     if (state.loading.revenue || state.errors.revenue) return;
     const byEvent = rows(state.revenue?.by_event).slice(0, 6);
     if (window._chartCat) window._chartCat.destroy();
@@ -640,7 +648,11 @@
   function renderSalesChart(canvasId, data, emptySelector, label) {
     const canvas = document.getElementById(canvasId);
     const empty = $(emptySelector);
-    if (!canvas || !window.Chart) return;
+    if (!canvas) return;
+    if (!window.Chart) {
+      window.EventSphereLoadChart?.().then(() => renderSalesChart(canvasId, data, emptySelector, label)).catch(() => {});
+      return;
+    }
     const chartKey = canvasId === 'chartSalesWeek' ? '_chartSalesWeek' : '_chartSalesDay';
     if (window[chartKey]) window[chartKey].destroy();
     if (state.loading.ticketAnalytics) {

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class HomepageController extends Controller
 {
@@ -74,7 +75,7 @@ class HomepageController extends Controller
     {
         $limit = $this->limit($request, 8, 'featured_limit');
 
-        return Cache::remember(HomepageCache::sectionKey('featured_events', $limit), HomepageCache::ttl(), fn () => (
+        $eventIds = Cache::remember(HomepageCache::sectionKey('featured_event_ids', $limit), HomepageCache::ttl(), fn () => (
             $this->homepageEventQuery()
                 ->where('events.is_featured', true)
                 ->orderByDesc('events.is_featured')
@@ -86,15 +87,18 @@ class HomepageController extends Controller
                 ->orderByDesc('events.created_at')
                 ->orderBy('events.starts_at')
                 ->limit($limit)
-                ->get()
+                ->pluck('events.id')
+                ->all()
         ));
+
+        return $this->homepageEventsByIds($eventIds);
     }
 
     private function trendingEvents(Request $request)
     {
         $limit = $this->limit($request, 8, 'trending_limit');
 
-        return Cache::remember(HomepageCache::sectionKey('trending_events', $limit), HomepageCache::ttl(), fn () => (
+        $eventIds = Cache::remember(HomepageCache::sectionKey('trending_event_ids', $limit), HomepageCache::ttl(), fn () => (
             $this->homepageEventQuery()
                 ->orderByDesc('recent_tickets_sold_count')
                 ->orderByDesc('tickets_sold_count')
@@ -102,21 +106,27 @@ class HomepageController extends Controller
                 ->orderByDesc('events.views_count')
                 ->orderBy('events.starts_at')
                 ->limit($limit)
-                ->get()
+                ->pluck('events.id')
+                ->all()
         ));
+
+        return $this->homepageEventsByIds($eventIds);
     }
 
     private function upcomingEvents(Request $request)
     {
         $limit = $this->limit($request, 8, 'upcoming_limit');
 
-        return Cache::remember(HomepageCache::sectionKey('upcoming_events', $limit), HomepageCache::ttl(), fn () => (
+        $eventIds = Cache::remember(HomepageCache::sectionKey('upcoming_event_ids', $limit), HomepageCache::ttl(), fn () => (
             $this->homepageEventQuery()
                 ->where('events.starts_at', '>=', now())
                 ->orderBy('events.starts_at')
                 ->limit($limit)
-                ->get()
+                ->pluck('events.id')
+                ->all()
         ));
+
+        return $this->homepageEventsByIds($eventIds);
     }
 
     private function categoryGroups(Request $request): array
@@ -125,23 +135,63 @@ class HomepageController extends Controller
         $cacheKey = HomepageCache::sectionKey('categories', $limit);
 
         return Cache::remember($cacheKey, HomepageCache::ttl(), function () use ($limit, $request): array {
-            return EventCategory::query()
+            $categories = EventCategory::query()
                 ->where('is_active', true)
                 ->orderBy('sort_order')
                 ->orderBy('name')
+                ->get();
+
+            $categoryValues = $categories->mapWithKeys(fn (EventCategory $category): array => [
+                $category->id => $this->categoryFilterValues($category->slug ?: $category->name),
+            ]);
+
+            $values = $categoryValues
+                ->flatten()
+                ->unique()
+                ->values()
+                ->all();
+
+            if ($values === []) {
+                return [];
+            }
+
+            $ranked = Event::query()
+                ->select('events.id')
+                ->selectRaw('LOWER(events.category) as normalized_category')
+                ->selectRaw('ROW_NUMBER() OVER (PARTITION BY LOWER(events.category) ORDER BY events.created_at DESC, events.starts_at ASC, events.id ASC) as category_rank')
+                ->whereIn(DB::raw('LOWER(events.category)'), $values)
+                ->publicDiscovery();
+
+            $rankedRows = DB::query()
+                ->fromSub($ranked, 'ranked_events')
+                ->where('category_rank', '<=', $limit)
+                ->get();
+
+            $events = $this->homepageEventQuery()
+                ->whereKey($rankedRows->pluck('id')->all())
                 ->get()
-                ->map(function (EventCategory $category) use ($limit, $request): ?array {
-                    $events = $this->homepageEventQuery()
-                        ->where(function (Builder $query) use ($category): void {
-                            foreach ($this->categoryFilterValues($category->slug ?: $category->name) as $index => $value) {
-                                $method = $index === 0 ? 'whereRaw' : 'orWhereRaw';
-                                $query->{$method}('LOWER(events.category) = ?', [$value]);
-                            }
-                        })
-                        ->orderByDesc('events.created_at')
-                        ->orderBy('events.starts_at')
-                        ->limit($limit)
-                        ->get();
+                ->keyBy('id');
+
+            $eventsByCategory = $rankedRows
+                ->map(fn ($row) => [
+                    'category' => $row->normalized_category,
+                    'event' => $events->get($row->id),
+                ])
+                ->filter(fn (array $row): bool => $row['event'] instanceof Event)
+                ->groupBy('category')
+                ->map(fn ($rows) => $rows->pluck('event'));
+
+            return $categories
+                ->map(function (EventCategory $category) use ($categoryValues, $eventsByCategory, $limit, $request): ?array {
+                    $events = collect($categoryValues[$category->id] ?? [])
+                        ->flatMap(fn (string $value) => $eventsByCategory->get($value, collect()))
+                        ->unique('id')
+                        ->sortBy([
+                            ['created_at', 'desc'],
+                            ['starts_at', 'asc'],
+                        ])
+                        ->take($limit)
+                        ->values();
 
                     if ($events->isEmpty()) {
                         return null;
@@ -219,5 +269,20 @@ class HomepageController extends Controller
     private function eventsData($events, Request $request): array
     {
         return HomepageEventResource::collection($events)->resolve($request);
+    }
+
+    private function homepageEventsByIds(array $eventIds)
+    {
+        if ($eventIds === []) {
+            return collect();
+        }
+
+        $positions = array_flip($eventIds);
+
+        return $this->homepageEventQuery()
+            ->whereKey($eventIds)
+            ->get()
+            ->sortBy(fn (Event $event): int => $positions[$event->id] ?? PHP_INT_MAX)
+            ->values();
     }
 }

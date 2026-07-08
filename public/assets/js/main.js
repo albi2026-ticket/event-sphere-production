@@ -3,6 +3,45 @@
   'use strict';
   document.documentElement.classList.add('micro-interactions-ready');
 
+  const deferredScripts = {};
+  window.EventSphereLoadScript = function (src, attrs = {}) {
+    if (!src) return Promise.reject(new Error('Missing script source'));
+    if (deferredScripts[src]) return deferredScripts[src];
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing?.dataset.loaded === 'true') {
+      deferredScripts[src] = Promise.resolve(existing);
+      return deferredScripts[src];
+    }
+    deferredScripts[src] = new Promise((resolve, reject) => {
+      const script = existing || document.createElement('script');
+      Object.entries(attrs).forEach(([key, value]) => {
+        if (value === false || value === null || value === undefined) return;
+        if (value === true) script.setAttribute(key, '');
+        else script.setAttribute(key, String(value));
+      });
+      script.addEventListener('load', () => {
+        script.dataset.loaded = 'true';
+        resolve(script);
+      }, { once: true });
+      script.addEventListener('error', () => {
+        delete deferredScripts[src];
+        reject(new Error(`Failed to load ${src}`));
+      }, { once: true });
+      if (!existing) {
+        script.src = src;
+        script.defer = true;
+        document.head.appendChild(script);
+      }
+    });
+    return deferredScripts[src];
+  };
+
+  window.EventSphereLoadChart = function () {
+    if (window.Chart) return Promise.resolve(window.Chart);
+    return window.EventSphereLoadScript('https://cdn.jsdelivr.net/npm/chart.js', { crossorigin: 'anonymous' })
+      .then(() => window.Chart);
+  };
+
   /* ---------- Theme toggle ---------- */
   const THEME_KEY = 'tickethub-theme';
   const applyTheme = (t) => {

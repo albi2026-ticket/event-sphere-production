@@ -321,9 +321,12 @@ class OrganizerDashboardService
                     )
                     ->first();
 
-                $soldOutTicketTypes = $this->ticketTypesQuery($organizer, $filters)
-                    ->where('ticket_types.status', TicketType::STATUS_SOLD_OUT)
-                    ->count();
+                $ticketTypeAgg = $this->ticketTypesQuery($organizer, $filters)
+                    ->selectRaw(
+                        'SUM(CASE WHEN ticket_types.status = ? THEN 1 ELSE 0 END) as sold_out_ticket_types_count',
+                        [TicketType::STATUS_SOLD_OUT],
+                    )
+                    ->first();
 
                 return [
                     'events_count' => (int) ($eventAgg->events_count ?? 0),
@@ -337,7 +340,7 @@ class OrganizerDashboardService
                     'checked_in_count' => (int) ($ticketAgg->checked_in_count ?? 0),
                     'active_tickets_count' => (int) ($ticketAgg->active_tickets_count ?? 0),
                     'total_revenue' => (string) ($orderItemAgg->total_revenue ?? 0),
-                    'sold_out_ticket_types_count' => (int) $soldOutTicketTypes,
+                    'sold_out_ticket_types_count' => (int) ($ticketTypeAgg->sold_out_ticket_types_count ?? 0),
                 ];
             },
         );
