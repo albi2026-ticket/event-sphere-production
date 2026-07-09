@@ -25,6 +25,10 @@ class EventImageResource extends JsonResource
             'type' => $this->type,
             'sort_order' => $this->sort_order,
             'is_primary' => $this->is_primary,
+            'is_banner' => $this->is_banner,
+            'role' => $this->is_primary
+                ? 'primary'
+                : ($this->is_banner ? 'banner' : 'gallery'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

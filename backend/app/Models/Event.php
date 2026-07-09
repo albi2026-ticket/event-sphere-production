@@ -116,8 +116,45 @@ class Event extends Model
     {
         return $this->hasMany(EventImage::class)
             ->orderByDesc('is_primary')
+            ->orderByDesc('is_banner')
             ->orderBy('sort_order')
             ->orderBy('id');
+    }
+
+    public function primaryImage(): ?EventImage
+    {
+        return $this->orderedImages()->firstWhere('is_primary', true)
+            ?? $this->orderedImages()->first();
+    }
+
+    public function bannerImage(): ?EventImage
+    {
+        return $this->orderedImages()->firstWhere('is_banner', true)
+            ?? $this->orderedImages()->firstWhere('type', 'banner')
+            ?? $this->primaryImage();
+    }
+
+    public function galleryImages()
+    {
+        $primary = $this->primaryImage();
+        $banner = $this->bannerImage();
+        $excluded = collect([$primary?->id, $banner?->id])->filter()->unique();
+
+        return $this->orderedImages()
+            ->reject(fn (EventImage $image): bool => $excluded->contains($image->id))
+            ->values();
+    }
+
+    private function orderedImages()
+    {
+        $images = $this->relationLoaded('images')
+            ? $this->images
+            : $this->images()->get();
+
+        return $images->sortBy([
+            ['sort_order', 'asc'],
+            ['id', 'asc'],
+        ])->values();
     }
 
     public function ticketTypes(): HasMany

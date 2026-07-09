@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Storage;
     'type',
     'sort_order',
     'is_primary',
+    'is_banner',
 ])]
 class EventImage extends Model
 {
@@ -54,6 +55,7 @@ class EventImage extends Model
             'height' => 'integer',
             'sort_order' => 'integer',
             'is_primary' => 'boolean',
+            'is_banner' => 'boolean',
         ];
     }
 }

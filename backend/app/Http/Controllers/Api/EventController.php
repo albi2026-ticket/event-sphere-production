@@ -39,7 +39,7 @@ class EventController extends Controller
                 'events.currency',
                 'events.views_count',
             ])
-            ->with(['images:id,event_id,disk,path,url,is_primary,sort_order'])
+            ->with(['images:id,event_id,disk,path,url,type,is_primary,is_banner,sort_order'])
             ->withMin([
                 'ticketTypes as minimum_price' => fn (Builder $query) => $query->where('status', 'active'),
             ], 'price')
@@ -66,9 +66,9 @@ class EventController extends Controller
             'organizer:id,name,role',
             'images' => fn ($query) => $query
                 ->orderByDesc('is_primary')
+                ->orderByDesc('is_banner')
                 ->orderBy('sort_order')
-                ->orderBy('id')
-                ->limit(1),
+                ->orderBy('id'),
             'ticketTypes' => fn ($query) => $query
                 ->whereIn('status', ['active', 'sold_out'])
                 ->withSum([
@@ -117,7 +117,7 @@ class EventController extends Controller
                 'events.views_count',
             ])
             ->whereKey($eventIds)
-            ->with(['images:id,event_id,disk,path,url,is_primary,sort_order'])
+            ->with(['images:id,event_id,disk,path,url,type,is_primary,is_banner,sort_order'])
             ->withMin([
                 'ticketTypes as minimum_price' => fn (Builder $query) => $query->where('status', 'active'),
             ], 'price')

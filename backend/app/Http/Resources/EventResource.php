@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\EventImage;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -9,10 +10,12 @@ class EventResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $primaryImage = $this->whenLoaded('images', fn () => $this->images->firstWhere('is_primary', true) ?? $this->images->first());
-        $bannerImageUrl = $primaryImage instanceof \App\Models\EventImage
-            ? $primaryImage->publicUrl()
-            : $this->banner_image_url;
+        $primaryImage = $this->primaryImage();
+        $bannerImage = $this->bannerImage();
+        $primaryImageUrl = $primaryImage instanceof EventImage ? $primaryImage->publicUrl() : null;
+        $bannerImageUrl = $bannerImage instanceof EventImage
+            ? $bannerImage->publicUrl()
+            : ($this->banner_image_url ?: $primaryImageUrl);
         $ticketTypes = $this->relationLoaded('ticketTypes') ? $this->ticketTypes : collect();
         $totalInventory = (int) $ticketTypes->sum('quantity_total');
         $soldTickets = (int) $ticketTypes->sum('quantity_sold');
@@ -50,6 +53,10 @@ class EventResource extends JsonResource
             'status' => $this->status,
             'visibility' => $this->visibility,
             'banner_image_url' => $bannerImageUrl,
+            'primary_image_url' => $primaryImageUrl,
+            'primary_image' => $primaryImage instanceof EventImage ? new EventImageResource($primaryImage) : null,
+            'banner_image' => $bannerImage instanceof EventImage ? new EventImageResource($bannerImage) : null,
+            'gallery_images' => EventImageResource::collection($this->galleryImages()),
             'max_tickets_per_user' => $this->max_tickets_per_user,
             'service_fee_percentage' => $this->service_fee_percentage ?? 10,
             'base_price' => $this->base_price,

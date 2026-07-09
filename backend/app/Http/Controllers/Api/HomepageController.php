@@ -252,7 +252,7 @@ class HomepageController extends Controller
                 'events.views_count',
                 'events.created_at',
             ])
-            ->with(['images:id,event_id,disk,path,url,is_primary,sort_order'])
+            ->with(['images:id,event_id,disk,path,url,type,is_primary,is_banner,sort_order'])
             ->withMin([
                 'ticketTypes as price_from' => fn (Builder $query) => $query->where('status', 'active'),
             ], 'price')

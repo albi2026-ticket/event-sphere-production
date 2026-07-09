@@ -197,6 +197,7 @@ class DatabaseSeeder extends Seeder
                         'url' => $data['image'],
                         'alt_text' => $data['title'],
                         'is_primary' => true,
+                        'is_banner' => true,
                     ],
                 );
 

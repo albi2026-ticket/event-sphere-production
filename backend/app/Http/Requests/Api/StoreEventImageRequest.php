@@ -28,6 +28,7 @@ class StoreEventImageRequest extends FormRequest
             'type' => ['sometimes', Rule::in(['banner', 'card', 'gallery', 'thumbnail'])],
             'sort_order' => ['sometimes', 'integer', 'min:0'],
             'is_primary' => ['sometimes', 'boolean'],
+            'is_banner' => ['sometimes', 'boolean'],
         ];
     }
 }
