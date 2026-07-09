@@ -43,13 +43,15 @@ class OrganizerDashboardService
      */
     public function analytics(User $organizer, array $filters = []): array
     {
+        $eventPerformance = $this->eventPerformance($organizer, $filters);
+
         return [
-            'summary' => $this->summary($organizer, $filters)['cards'],
+            'summary' => $this->summaryCards($organizer, $filters),
             'revenue_by_event' => $this->revenueByEvent($organizer, $filters),
             'sales_trends' => $this->salesTrends($organizer, $filters),
             'ticket_inventory' => $this->inventorySummary($organizer, $filters),
-            'event_performance' => $this->eventPerformance($organizer, $filters),
-            'conversion_metrics' => $this->conversionMetrics($organizer, $filters),
+            'event_performance' => $eventPerformance,
+            'conversion_metrics' => $this->conversionMetricsFromPerformance($eventPerformance),
         ];
     }
 
@@ -124,15 +126,7 @@ class OrganizerDashboardService
      */
     public function conversionMetrics(User $organizer, array $filters = []): Collection
     {
-        return $this->eventPerformance($organizer, $filters)
-            ->map(fn ($event) => [
-                'event_id' => $event->event_id,
-                'title' => $event->title,
-                'event_views' => null,
-                'ticket_purchases' => (int) $event->orders_count,
-                'tickets_sold' => (int) $event->tickets_sold,
-                'conversion_rate' => null,
-            ]);
+        return $this->conversionMetricsFromPerformance($this->eventPerformance($organizer, $filters));
     }
 
     /**
@@ -283,7 +277,7 @@ class OrganizerDashboardService
      * @param  array<string, mixed>  $filters
      * @return array<string, mixed>
      */
-    protected function summaryCards(User $organizer, array $filters = []): array
+    public function summaryCards(User $organizer, array $filters = []): array
     {
         return Cache::remember(
             $this->cacheKey('summary-cards', $organizer, $filters),
@@ -359,5 +353,17 @@ class OrganizerDashboardService
             $organizer->id,
             md5(json_encode($filters) ?: ''),
         );
+    }
+
+    public function conversionMetricsFromPerformance(Collection $eventPerformance): Collection
+    {
+        return $eventPerformance->map(fn ($event) => [
+            'event_id' => $event->event_id,
+            'title' => $event->title,
+            'event_views' => null,
+            'ticket_purchases' => (int) $event->orders_count,
+            'tickets_sold' => (int) $event->tickets_sold,
+            'conversion_rate' => null,
+        ]);
     }
 }

@@ -335,7 +335,7 @@
           return `
           <div class="col-12">
             <article class="card-pro p-3 d-flex gap-3 align-items-center flex-wrap">
-              <img loading="lazy" decoding="async" src="${u().escapeHtml(u().eventImage(event))}" alt="${u().escapeHtml([event.title, event.venue_name, event.city].filter(Boolean).join(" in "))}" style="width:120px;height:86px;object-fit:cover;border-radius:10px"/>
+              <img loading="lazy" decoding="async" width="120" height="86" src="${u().escapeHtml(u().eventImage(event))}" alt="${u().escapeHtml([event.title, event.venue_name, event.city].filter(Boolean).join(" in "))}" style="width:120px;height:86px;object-fit:cover;border-radius:10px"/>
               <div class="flex-grow-1">
                 <div class="meta"><i class="bi bi-calendar3"></i> ${u().escapeHtml(date)}</div>
                 <h3 class="title mb-1"><a href="${detailsHref}" style="color:inherit">${u().escapeHtml(event.title)}</a></h3>

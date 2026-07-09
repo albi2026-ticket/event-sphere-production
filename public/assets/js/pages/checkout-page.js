@@ -105,7 +105,7 @@
 
       const inner = `
         <div class="d-flex gap-3 mb-3 pb-3 border-bottom" style="border-color:var(--border) !important">
-          <img src="${u().escapeHtml(c.event_image)}" loading="eager" decoding="async" style="width:70px;height:70px;object-fit:cover;border-radius:10px"/>
+          <img src="${u().escapeHtml(c.event_image)}" loading="eager" decoding="async" width="70" height="70" style="width:70px;height:70px;object-fit:cover;border-radius:10px"/>
           <div><div class="fw-semibold">${u().escapeHtml(c.event_title)}</div>
           <small class="text-muted-pro">${u().escapeHtml(c.venue_name || "")}</small><br>
           <small class="text-muted-pro">${item.quantity}× ${u().escapeHtml(item.ticket_type_name)}</small>

@@ -35,7 +35,7 @@
     return `
       <div class="col-md-6">
         <div class="dashboard-mini-row align-items-start h-100">
-          <img class="rounded-3" style="width:96px;aspect-ratio:4/3;object-fit:cover" src="${esc(image)}" alt="${esc(event.title)}">
+          <img class="rounded-3" style="width:96px;aspect-ratio:4/3;object-fit:cover" width="384" height="288" loading="lazy" decoding="async" src="${esc(image)}" alt="${esc(event.title)}">
           <span class="flex-grow-1">
             <span class="fw-semibold d-block">${esc(event.title)}</span>
             <small>${dateTime(event.starts_at)} · ${esc(event.venue_name || "-")}</small>
@@ -83,7 +83,7 @@
     scanLink?.setAttribute("href", `/check-in?event_id=${encodeURIComponent(event.id)}`);
     wrap.innerHTML = `
       <div class="col-md-5">
-        <img class="img-fluid rounded-3 w-100" style="aspect-ratio:16/10;object-fit:cover" src="${esc(image)}" alt="${esc(event.title)}">
+        <img class="img-fluid rounded-3 w-100" style="aspect-ratio:16/10;object-fit:cover" width="960" height="600" fetchpriority="high" loading="eager" decoding="async" src="${esc(image)}" alt="${esc(event.title)}">
       </div>
       <div class="col-md-7">
         <div class="eyebrow mb-2">${esc(tr("scanner.assigned_event", "Assigned Event"))}</div>

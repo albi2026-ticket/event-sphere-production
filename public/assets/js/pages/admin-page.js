@@ -208,7 +208,7 @@
     const name = user.name || user.email || `User #${user.id}`;
     const avatar =
       user.avatar_url || `https://i.pravatar.cc/80?u=${encodeURIComponent(user.email || user.id)}`;
-    return `<div class="d-flex align-items-center gap-2"><img src="${u().escapeHtml(avatar)}" class="rounded-circle admin-avatar" alt="${u().escapeHtml(`${name} profile avatar`)}"/> <div><div class="fw-semibold">${u().escapeHtml(name)}</div><div class="small text-muted-pro">#${user.id}</div></div></div>`;
+    return `<div class="d-flex align-items-center gap-2"><img src="${u().escapeHtml(avatar)}" class="rounded-circle admin-avatar" alt="${u().escapeHtml(`${name} profile avatar`)}" loading="lazy" decoding="async" width="36" height="36"/> <div><div class="fw-semibold">${u().escapeHtml(name)}</div><div class="small text-muted-pro">#${user.id}</div></div></div>`;
   }
 
   function eventRevenue(eventId) {
@@ -2340,7 +2340,7 @@
         ["Created", dateLabel(venue.created_at)],
       ])}
       <h6 class="mt-4">Gallery</h6>
-      ${(venue.images || []).length ? `<div class="row g-2">${venue.images.map((image, index) => `<div class="col-4"><img src="${u().escapeHtml(image.url || image.image_path)}" alt="${u().escapeHtml(`${venue.name || "Venue"} gallery image ${index + 1}`)}" class="w-100 rounded-pro" style="aspect-ratio:4/3;object-fit:cover"/></div>`).join("")}</div>` : '<p class="text-muted-pro mb-0">No gallery images.</p>'}
+      ${(venue.images || []).length ? `<div class="row g-2">${venue.images.map((image, index) => `<div class="col-4"><img src="${u().escapeHtml(image.url || image.image_path)}" alt="${u().escapeHtml(`${venue.name || "Venue"} gallery image ${index + 1}`)}" class="w-100 rounded-pro" loading="lazy" decoding="async" width="400" height="300" style="aspect-ratio:4/3;object-fit:cover"/></div>`).join("")}</div>` : '<p class="text-muted-pro mb-0">No gallery images.</p>'}
       <h6 class="mt-4">Opening Hours</h6>
       ${hours.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${hours.map((item) => `<tr><td>Day ${item.day_of_week}</td><td>${item.is_closed ? "Closed" : `${u().escapeHtml(String(item.opens_at || "").slice(0, 5))} - ${u().escapeHtml(String(item.closes_at || "").slice(0, 5))}`}</td></tr>`).join("")}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No opening hours configured.</p>'}
     `,
@@ -2435,7 +2435,7 @@
       ticket?.qr_code_url || `${window.EventSphereConfig.API_BASE_URL}/tickets/${ticketId}/qr-code`;
     setModal(
       "Ticket QR",
-      `<div class="text-center"><img src="${u().escapeHtml(url)}" alt="Ticket QR code" style="max-width:280px;width:100%;background:#fff;border-radius:12px;padding:12px"/><p class="text-muted-pro mt-3 mb-0">${u().escapeHtml(ticket?.ticket_code || "")}</p></div>`,
+      `<div class="text-center"><img src="${u().escapeHtml(url)}" alt="Ticket QR code" width="280" height="280" loading="eager" decoding="async" style="max-width:280px;width:100%;background:#fff;border-radius:12px;padding:12px"/><p class="text-muted-pro mt-3 mb-0">${u().escapeHtml(ticket?.ticket_code || "")}</p></div>`,
     );
   }
 

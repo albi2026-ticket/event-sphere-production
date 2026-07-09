@@ -871,7 +871,7 @@
       <div class="col-md-6 col-xl-4">
         <div class="owner-gallery-card ${index === 0 ? "is-cover" : ""}" draggable="true" data-owner-gallery-card="${image.id}">
           <div class="owner-gallery-image">
-            <img loading="lazy" decoding="async" src="${esc(imageUrl(image))}" alt="${esc(state.venue?.name || "Restaurant or bar")} gallery photo ${index + 1}" />
+            <img loading="lazy" decoding="async" width="800" height="500" sizes="(min-width: 1200px) 33vw, (min-width: 768px) 50vw, 100vw" src="${esc(imageUrl(image))}" alt="${esc(state.venue?.name || "Restaurant or bar")} gallery photo ${index + 1}" />
             <span class="owner-gallery-cover-badge"><i class="bi bi-star-fill"></i> ${tr("owner.cover", "Cover")}</span>
             <span class="owner-gallery-drag-hint"><i class="bi bi-grip-vertical"></i> ${tr("owner.drag", "Drag")}</span>
           </div>

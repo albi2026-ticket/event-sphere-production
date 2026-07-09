@@ -416,7 +416,7 @@
         .map(
           (event) => `
       <a class="dashboard-event-row" href="${window.EventSphereRoutes?.eventUrl?.(event.slug) || `/event/${encodeURIComponent(event.slug)}`}">
-        <img src="${escape(u().eventImage(event))}" alt="${escape([event.title, event.venue_name, event.city].filter(Boolean).join(" in "))}"/>
+        <img src="${escape(u().eventImage(event))}" alt="${escape([event.title, event.venue_name, event.city].filter(Boolean).join(" in "))}" loading="lazy" decoding="async" width="120" height="90"/>
         <div class="flex-grow-1">
           <div class="fw-semibold">${escape(event.title)}</div>
           <small>${escape(event.venue_name || "")}${event.city ? `, ${escape(event.city)}` : ""}</small>
@@ -435,7 +435,7 @@
             return `
           <div class="dashboard-mini-row">
             <div class="d-flex gap-3 align-items-center">
-              <img src="${escape(u().eventImage(event))}" alt="${escape([event.title, event.venue_name, event.city].filter(Boolean).join(" in "))}" class="rounded" style="width:76px;height:56px;object-fit:cover;background:var(--card-2)"/>
+              <img src="${escape(u().eventImage(event))}" alt="${escape([event.title, event.venue_name, event.city].filter(Boolean).join(" in "))}" class="rounded" loading="lazy" decoding="async" width="76" height="56" style="width:76px;height:56px;object-fit:cover;background:var(--card-2)"/>
               <span><span class="fw-semibold d-block">${escape(event.title)}</span><small>${escape(dateLabel(event.starts_at, event.timezone))} · ${escape(event.venue_name || "")}${event.city ? `, ${escape(event.city)}` : ""}</small><small class="d-block"><span data-i18n="dashboard.starts_in">${tr("dashboard.starts_in", "Starts in")}</span> ${escape(countdownLabel(event.starts_at))}</small></span>
             </div>
             <div class="dashboard-actions">
@@ -534,7 +534,7 @@
         <article class="card-pro dashboard-favorite-card">
           <div class="thumb">
             <span class="badge-soft">${escape((event.category || "EVENT").toUpperCase())}</span>
-            <img loading="lazy" decoding="async" src="${escape(img)}" alt="${escape([event.title, event.venue_name, event.city].filter(Boolean).join(" in "))}"/>
+            <img loading="lazy" decoding="async" width="640" height="400" sizes="(min-width: 1200px) 33vw, (min-width: 768px) 50vw, 100vw" src="${escape(img)}" alt="${escape([event.title, event.venue_name, event.city].filter(Boolean).join(" in "))}"/>
           </div>
           <div class="body">
             <div class="meta"><i class="bi bi-calendar3"></i> ${escape(dateLabel(event.starts_at, event.timezone))}</div>
@@ -1108,7 +1108,7 @@
       const blob = await ticketsApi().loadQrBlob(ticketId);
       const url = URL.createObjectURL(blob);
       document.querySelector("[data-dashboard-detail-body]").innerHTML =
-        `<div class="dashboard-qr-wrap"><img src="${url}" alt="${tr("tickets.ticket_qr_code", "Ticket QR code")}"/></div>`;
+        `<div class="dashboard-qr-wrap"><img src="${url}" alt="${tr("tickets.ticket_qr_code", "Ticket QR code")}" width="280" height="280" loading="eager" decoding="async"/></div>`;
     } catch (err) {
       document.querySelector("[data-dashboard-detail-body]").innerHTML = errorState(
         err.message || tr("tickets.qr_code_failed", "QR code failed to load"),

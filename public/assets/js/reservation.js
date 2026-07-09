@@ -139,7 +139,7 @@
       <a class="text-decoration-none" href="${detailsUrl}">
         <article class="venue-card venue-card-premium">
           <div class="img-wrap">
-            <img src="${esc(venueImage(venue))}" alt="${esc(imageAlt)}" loading="lazy" decoding="async" />
+            <img src="${esc(venueImage(venue))}" alt="${esc(imageAlt)}" loading="lazy" decoding="async" width="800" height="600" sizes="(min-width: 992px) 25vw, (min-width: 768px) 50vw, 100vw" />
             <div class="badges">
               ${venue.featured ? `<span class="chip-available"><i class="bi bi-stars"></i> <span data-i18n="common.featured">${window.t?.("common.featured") || "Featured"}</span></span>` : `<span class="chip-available"><i class="bi bi-circle-fill" style="font-size:.4rem"></i> <span data-i18n="header.reservations">${window.t?.("header.reservations") || "Reservations"}</span></span>`}
             </div>

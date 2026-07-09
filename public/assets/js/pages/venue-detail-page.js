@@ -705,7 +705,7 @@
       .map(
         (image, index) => `
       <button class="gallery-photo ${index === 0 ? "g-main" : ""}" type="button" data-gallery-open="${index}" aria-label="Open photo ${index + 1}">
-        <img src="${esc(image.src)}" alt="${esc(image.alt)}" loading="${index === 0 ? "eager" : "lazy"}" decoding="async" ${index === 0 ? 'fetchpriority="high"' : ""} />
+        <img src="${esc(image.src)}" alt="${esc(image.alt)}" width="${index === 0 ? "1200" : "640"}" height="${index === 0 ? "800" : "480"}" sizes="${index === 0 ? "(min-width: 992px) 66vw, 100vw" : "(min-width: 992px) 33vw, 50vw"}" loading="${index === 0 ? "eager" : "lazy"}" decoding="async" ${index === 0 ? 'fetchpriority="high"' : ""} />
         ${index === 0 ? `<span class="gallery-cover-label"><i class="bi bi-star-fill"></i> ${tr("venue.cover_photo", "Cover Photo")}</span>` : ""}
       </button>
     `,

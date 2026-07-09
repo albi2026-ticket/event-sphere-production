@@ -76,7 +76,7 @@ class HomepageController extends Controller
         $limit = $this->limit($request, 8, 'featured_limit');
 
         $eventIds = Cache::remember(HomepageCache::sectionKey('featured_event_ids', $limit), HomepageCache::ttl(), fn () => (
-            $this->homepageEventQuery()
+            $this->homepageRankedEventQuery()
                 ->where('events.is_featured', true)
                 ->orderByDesc('events.is_featured')
                 ->orderByDesc('events.is_trending')
@@ -99,7 +99,7 @@ class HomepageController extends Controller
         $limit = $this->limit($request, 8, 'trending_limit');
 
         $eventIds = Cache::remember(HomepageCache::sectionKey('trending_event_ids', $limit), HomepageCache::ttl(), fn () => (
-            $this->homepageEventQuery()
+            $this->homepageRankedEventQuery()
                 ->orderByDesc('recent_tickets_sold_count')
                 ->orderByDesc('tickets_sold_count')
                 ->orderByDesc('favorites_count')
@@ -118,7 +118,7 @@ class HomepageController extends Controller
         $limit = $this->limit($request, 8, 'upcoming_limit');
 
         $eventIds = Cache::remember(HomepageCache::sectionKey('upcoming_event_ids', $limit), HomepageCache::ttl(), fn () => (
-            $this->homepageEventQuery()
+            $this->homepageEventResourceQuery()
                 ->where('events.starts_at', '>=', now())
                 ->orderBy('events.starts_at')
                 ->limit($limit)
@@ -167,7 +167,7 @@ class HomepageController extends Controller
                 ->where('category_rank', '<=', $limit)
                 ->get();
 
-            $events = $this->homepageEventQuery()
+            $events = $this->homepageEventResourceQuery()
                 ->whereKey($rankedRows->pluck('id')->all())
                 ->get()
                 ->keyBy('id');
@@ -221,7 +221,14 @@ class HomepageController extends Controller
         return Cache::remember(HomepageCache::sectionKey('popular_venues'), HomepageCache::ttl(), fn (): array => []);
     }
 
-    private function homepageEventQuery(): Builder
+    private function homepageRankedEventQuery(): Builder
+    {
+        return $this->homepageEventResourceQuery()
+            ->withCount('favorites')
+            ->withDiscoveryMetrics();
+    }
+
+    private function homepageEventResourceQuery(): Builder
     {
         return Event::query()
             ->select([
@@ -249,8 +256,6 @@ class HomepageController extends Controller
             ->withMin([
                 'ticketTypes as price_from' => fn (Builder $query) => $query->where('status', 'active'),
             ], 'price')
-            ->withCount('favorites')
-            ->withDiscoveryMetrics()
             ->publicDiscovery();
     }
 
@@ -279,7 +284,7 @@ class HomepageController extends Controller
 
         $positions = array_flip($eventIds);
 
-        return $this->homepageEventQuery()
+        return $this->homepageEventResourceQuery()
             ->whereKey($eventIds)
             ->get()
             ->sortBy(fn (Event $event): int => $positions[$event->id] ?? PHP_INT_MAX)

@@ -1551,7 +1551,7 @@
             (image) => `
       <div class="col-6">
         <div class="card-pro p-2">
-          <img src="${esc(image.optimized_url || image.url)}" alt="${esc(`${image.type || "Event"} uploaded gallery image`)}" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px"/>
+          <img src="${esc(image.optimized_url || image.url)}" alt="${esc(`${image.type || "Event"} uploaded gallery image`)}" loading="lazy" decoding="async" width="640" height="360" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px"/>
           <div class="d-flex justify-content-between align-items-center mt-2">
             <small class="text-muted-pro">${image.is_primary ? "Primary" : esc(image.type || "gallery")}</small>
             <button class="btn btn-glass btn-sm" type="button" data-image-delete="${image.id}"><i class="bi bi-trash"></i></button>

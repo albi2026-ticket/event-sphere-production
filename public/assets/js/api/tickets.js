@@ -85,7 +85,7 @@
               <button class="btn btn-primary-grad btn-sm" data-ticket-download="${ticket.id}" data-ticket-code="${u().escapeHtml(ticket.ticket_code)}"><i class="bi bi-download me-1"></i> <span data-i18n="tickets.download_pdf">${tr("tickets.download_pdf", "Download PDF")}</span></button>
             </div>
           </div>
-          <div class="qr"><img alt="QR" data-ticket-qr="${ticket.id}" src="" style="min-width:180px;min-height:180px;background:#fff;border-radius:8px"/></div>
+          <div class="qr"><img alt="QR" data-ticket-qr="${ticket.id}" src="" width="180" height="180" loading="lazy" decoding="async" style="min-width:180px;min-height:180px;background:#fff;border-radius:8px"/></div>
         </div>
       </div>`;
   }

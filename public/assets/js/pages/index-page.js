@@ -307,7 +307,7 @@
     const statusLabel = status.key === "sold_out" || status.key === "live" ? status.label : "";
 
     return `<article class="hero-slide${index === 0 ? " active" : ""}" data-hero-slide data-index="${index}" aria-hidden="${index === 0 ? "false" : "true"}">
-      <div class="hero-slide-bg"><img src="${u.escapeHtml(img)}" alt="${u.escapeHtml(`${event.title} at ${locationLabel(event)}`)}" ${index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'} decoding="async"></div>
+      <div class="hero-slide-bg"><img src="${u.escapeHtml(img)}" alt="${u.escapeHtml(`${event.title} at ${locationLabel(event)}`)}" width="1600" height="900" sizes="100vw" ${index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'} decoding="async"></div>
       <div class="hero-slide-overlay"></div>
       <div class="container-xxl hero-slide-content">
         <div class="hero-slide-copy">

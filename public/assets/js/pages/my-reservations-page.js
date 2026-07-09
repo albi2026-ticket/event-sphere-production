@@ -137,7 +137,7 @@
       <div class="col-md-6 col-xl-4">
         <article class="venue-card venue-card-premium my-reservation-card reservation-card-premium">
           <div class="img-wrap">
-            <img loading="lazy" decoding="async" src="${esc(image)}" alt="${esc(`${reservation.venue?.name || tr("common.restaurant_bar", "Restaurant / Bar")} reservation venue`)}">
+            <img loading="lazy" decoding="async" width="800" height="500" sizes="(min-width: 1200px) 33vw, (min-width: 768px) 50vw, 100vw" src="${esc(image)}" alt="${esc(`${reservation.venue?.name || tr("common.restaurant_bar", "Restaurant / Bar")} reservation venue`)}">
             <div class="badges">
               ${statusBadge(status)}
               <span class="fav"><i class="bi bi-calendar-heart"></i></span>
@@ -292,7 +292,7 @@
     );
     $("[data-reservation-detail-body]").innerHTML = `
       <div class="my-reservation-detail reservation-detail-premium">
-        <img loading="lazy" decoding="async" src="${esc(reservation.venue?.image_url || fallbackImage)}" alt="${esc(`${reservation.venue?.name || tr("common.restaurant_bar", "Restaurant / Bar")} reservation details`)}">
+        <img loading="lazy" decoding="async" width="960" height="540" sizes="100vw" src="${esc(reservation.venue?.image_url || fallbackImage)}" alt="${esc(`${reservation.venue?.name || tr("common.restaurant_bar", "Restaurant / Bar")} reservation details`)}">
         <div class="facility justify-content-between"><span data-i18n="common.restaurant_bar">${tr("common.restaurant_bar", "Restaurant / Bar")}</span><strong>${esc(reservation.venue?.name || tr("common.restaurant_bar", "Restaurant / Bar"))}</strong></div>
         <div class="facility justify-content-between"><span data-i18n="common.status">${window.t?.("common.status") || "Status"}</span>${statusBadge(reservation.status)}</div>
         <div class="facility justify-content-between"><span data-i18n="common.date">${window.t?.("common.date") || "Date"}</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div>
