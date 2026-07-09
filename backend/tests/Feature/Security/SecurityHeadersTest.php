@@ -19,9 +19,16 @@ class SecurityHeadersTest extends TestCase
         $response->assertHeader('X-Content-Type-Options', 'nosniff');
         $response->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->assertHeader('Permissions-Policy');
+        $response->assertHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+        $response->assertHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        $response->assertHeader('Origin-Agent-Cluster', '?1');
 
         $this->assertStringContainsString("default-src 'self'", $response->headers->get('Content-Security-Policy'));
         $this->assertStringContainsString("frame-ancestors 'none'", $response->headers->get('Content-Security-Policy'));
+        $this->assertStringContainsString("script-src-elem 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://maps.googleapis.com", $response->headers->get('Content-Security-Policy'));
+        $this->assertStringContainsString('img-src', $response->headers->get('Content-Security-Policy'));
+        $this->assertStringContainsString("font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net", $response->headers->get('Content-Security-Policy'));
+        $this->assertStringContainsString("connect-src 'self' https: wss:", $response->headers->get('Content-Security-Policy'));
         $this->assertStringContainsString('camera=(self)', $response->headers->get('Permissions-Policy'));
     }
 

@@ -54,7 +54,33 @@ class ProductionPreflightCommand extends Command
         $this->record($production ? 'ok' : 'warn', 'APP_ENV is '.config('app.env').'. Run this command with production env before release.');
         $this->record(! config('app.debug') ? 'ok' : $productionSafetyLevel, 'APP_DEBUG must be disabled for production.');
         $this->record(Str::startsWith((string) config('app.url'), 'https://') ? 'ok' : $productionSafetyLevel, 'APP_URL must use HTTPS for production.');
+        $this->record(filter_var((string) config('app.url'), FILTER_VALIDATE_URL) ? 'ok' : $productionSafetyLevel, 'APP_URL must be a valid URL.');
         $this->record((bool) config('session.secure') ? 'ok' : $productionSafetyLevel, 'Session cookies must be marked secure for production.');
+        $this->record((bool) config('session.encrypt') ? 'ok' : $productionSafetyLevel, 'Session cookies must be encrypted for production.');
+        $this->record((bool) config('session.http_only') ? 'ok' : $productionSafetyLevel, 'Session cookies must be HttpOnly for production.');
+        $this->record(in_array(config('session.same_site'), ['lax', 'strict', 'none'], true) ? 'ok' : $productionSafetyLevel, 'Session SameSite policy must be lax, strict, or none.');
+        $this->record((int) config('session.lifetime') >= 15 ? 'ok' : $productionSafetyLevel, 'Session lifetime must be at least 15 minutes.');
+
+        $required = config('production.required_env', []);
+        $trustedProxies = trim((string) ($required['TRUSTED_PROXIES'] ?? ''));
+        $this->record($trustedProxies !== '' ? 'ok' : $productionSafetyLevel, 'Trusted proxies must be configured for production.');
+        $this->record(! in_array($trustedProxies, ['*', '**'], true) ? 'ok' : 'fail', 'Trusted proxies must not trust every proxy in production.');
+        $this->record((int) config('auth.guards.web.remember') > 0 ? 'ok' : $productionSafetyLevel, 'Remember-me duration must be greater than zero.');
+
+        $allowedOrigins = (array) config('cors.allowed_origins', []);
+        $allowedMethods = (array) config('cors.allowed_methods', []);
+        $allowedHeaders = (array) config('cors.allowed_headers', []);
+
+        $this->record($allowedOrigins !== [] ? 'ok' : $productionSafetyLevel, 'CORS allowed origins must be configured.');
+        $this->record(! in_array('*', $allowedOrigins, true) ? 'ok' : 'fail', 'CORS must not allow every origin in production.');
+        $this->record(! in_array('*', $allowedMethods, true) ? 'ok' : $productionSafetyLevel, 'CORS allowed methods should be explicit.');
+        $this->record(! in_array('*', $allowedHeaders, true) ? 'ok' : $productionSafetyLevel, 'CORS allowed headers should be explicit.');
+        $this->record((bool) config('cors.supports_credentials') ? 'ok' : $productionSafetyLevel, 'CORS credentials must be enabled for Sanctum/session-aware frontend calls.');
+        $this->record((int) config('cors.max_age') >= 300 ? 'ok' : 'warn', 'CORS preflight max age should reduce production preflight overhead.');
+
+        foreach (config('rate_limits') as $name => $value) {
+            $this->record((int) $value > 0 ? 'ok' : 'fail', "Rate limit [{$name}] must be greater than zero.");
+        }
     }
 
     private function validateStorage(): void

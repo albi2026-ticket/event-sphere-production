@@ -5478,9 +5478,13 @@ textarea.form-control:focus {
 
 .card-pro .thumb,
 .venue-card .img-wrap,
-.hero-slide-bg,
 .event-detail-hero {
   position: relative;
+}
+
+.hero-slider .hero-slide-bg {
+  position: absolute;
+  inset: 0;
 }
 
 .badge-soft,
