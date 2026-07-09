@@ -59,14 +59,23 @@
             "@php artisan config:cache",
             "@php artisan route:cache",
             "@php artisan event:cache",
-            "@php artisan view:cache"
+            "@php artisan view:cache",
+            "@php artisan optimize"
         ],
         "deploy:optimize": [
             "@composer dump-autoload --optimize --no-dev",
-            "@composer deploy:cache"
+            "@composer deploy:cache",
+            "@php artisan queue:restart"
+        ],
+        "deploy:preflight": [
+            "@php artisan production:preflight"
         ],
         "deploy:clear": [
             "@php artisan optimize:clear"
+        ],
+        "deploy:rollback": [
+            "@php artisan optimize:clear",
+            "@php artisan queue:restart"
         ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",

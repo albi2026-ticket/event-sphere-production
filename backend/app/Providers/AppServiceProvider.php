@@ -85,6 +85,8 @@ class AppServiceProvider extends ServiceProvider
             return;
         }
 
+        $this->assertRequiredProductionEnvironment();
+
         if ((bool) config('app.debug')) {
             throw new \RuntimeException('Production cannot boot with APP_DEBUG enabled.');
         }
@@ -92,6 +94,42 @@ class AppServiceProvider extends ServiceProvider
         if (! (bool) config('session.secure')) {
             throw new \RuntimeException('Production cannot boot without SESSION_SECURE_COOKIE enabled.');
         }
+    }
+
+    private function assertRequiredProductionEnvironment(): void
+    {
+        $required = config('production.required_env', []);
+
+        $missing = array_keys(array_filter($required, fn (mixed $value): bool => $this->productionEnvValueIsMissing($value)));
+
+        if ($missing !== []) {
+            throw new \RuntimeException('Production environment is missing required values: '.implode(', ', $missing));
+        }
+
+        if (config('app.env') !== 'production') {
+            throw new \RuntimeException('Production deployment requires APP_ENV=production.');
+        }
+
+        $appDebug = $required['APP_DEBUG'] ?? null;
+
+        if ($appDebug !== false && $appDebug !== 'false') {
+            throw new \RuntimeException('Production deployment requires APP_DEBUG=false.');
+        }
+    }
+
+    private function productionEnvValueIsMissing(mixed $value): bool
+    {
+        if ($value === null || $value === '') {
+            return true;
+        }
+
+        $normalized = Str::lower(trim((string) $value));
+
+        return str_contains($normalized, 'replace-with')
+            || str_contains($normalized, 'your-')
+            || str_contains($normalized, 'change_me')
+            || str_contains($normalized, '<')
+            || str_contains($normalized, '>');
     }
 
     private function configureRateLimiting(): void
