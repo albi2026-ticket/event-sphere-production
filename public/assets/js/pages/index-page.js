@@ -295,7 +295,7 @@
 
   function renderHeroSlide(event, index) {
     const u = window.EventSphereUtils;
-    const img = u.eventImage(event);
+    const img = u.eventBannerImage(event);
     const detailsHref =
       window.EventSphereRoutes?.eventUrl?.(event.slug) ||
       `/event/${encodeURIComponent(event.slug)}`;
@@ -350,7 +350,7 @@
       return;
     }
 
-    preloadImage(window.EventSphereUtils.eventImage(heroEvents[0]));
+    preloadImage(window.EventSphereUtils.eventBannerImage(heroEvents[0]));
     slidesWrap.innerHTML = heroEvents.map(renderHeroSlide).join("");
     dotsWrap.innerHTML = heroEvents
       .map(

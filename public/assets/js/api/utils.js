@@ -102,12 +102,34 @@
 
   function eventImage(event) {
     if (event.image) return event.image;
-    if (event.banner_image_url) return event.banner_image_url;
-    const img = event.images?.[0];
+    if (event.primary_image?.optimized_url || event.primary_image?.url) {
+      return event.primary_image.optimized_url || event.primary_image.url;
+    }
+    if (event.primary_image_url) return event.primary_image_url;
+    const img = event.images?.find?.((image) => image?.is_primary) || event.images?.[0];
     return (
       img?.url ||
       img?.image_url ||
       "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80"
+    );
+  }
+
+  function eventBannerImage(event) {
+    if (event.banner_image?.optimized_url || event.banner_image?.url) {
+      return event.banner_image.optimized_url || event.banner_image.url;
+    }
+    if (event.banner_image_url) return event.banner_image_url;
+    const img =
+      event.images?.find?.((image) => image?.is_banner) ||
+      event.images?.find?.((image) => image?.type === "banner") ||
+      event.primary_image ||
+      event.images?.find?.((image) => image?.is_primary) ||
+      event.images?.[0];
+    return (
+      img?.optimized_url ||
+      img?.url ||
+      img?.image_url ||
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&q=80"
     );
   }
 
@@ -151,6 +173,7 @@
     EVENT_TIMEZONE,
     EVENT_CALCULATION_TIMEZONE,
     eventImage,
+    eventBannerImage,
     paginateLinks,
     categoryRoutes,
   };

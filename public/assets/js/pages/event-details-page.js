@@ -9,9 +9,7 @@
     "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&q=80";
 
   function eventApiImage(event) {
-    if (event.banner_image_url) return event.banner_image_url;
-    const image = event.images?.[0];
-    return image?.optimized_url || image?.url || image?.image_url || "";
+    return u().eventBannerImage(event);
   }
 
   function money(amount, currency) {

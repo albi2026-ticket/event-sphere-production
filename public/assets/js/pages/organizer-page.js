@@ -1534,6 +1534,7 @@
       fd.append("image", image);
       fd.append("type", index === 0 ? "banner" : "gallery");
       fd.append("is_primary", index === 0 ? "1" : "0");
+      fd.append("is_banner", index === 0 ? "1" : "0");
       fd.append("sort_order", String(index + 1));
       fd.append("alt_text", event.title || "Event image");
       await api().fetch(`/organizer/events/${event.id}/images`, { method: "POST", body: fd });
@@ -1552,15 +1553,49 @@
       <div class="col-6">
         <div class="card-pro p-2">
           <img src="${esc(image.optimized_url || image.url)}" alt="${esc(`${image.type || "Event"} uploaded gallery image`)}" loading="lazy" decoding="async" width="640" height="360" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px"/>
-          <div class="d-flex justify-content-between align-items-center mt-2">
-            <small class="text-muted-pro">${image.is_primary ? "Primary" : esc(image.type || "gallery")}</small>
-            <button class="btn btn-glass btn-sm" type="button" data-image-delete="${image.id}"><i class="bi bi-trash"></i></button>
+          <div class="d-flex flex-column gap-2 mt-2">
+            <div class="d-flex flex-wrap gap-2">
+              <span class="badge ${image.is_primary ? "text-bg-primary" : "text-bg-secondary"}">${image.is_primary ? "✓ Primary" : "Gallery"}</span>
+              ${image.is_banner ? '<span class="badge text-bg-info">✓ Banner</span>' : ""}
+            </div>
+            <div class="d-grid gap-2">
+              <button class="btn btn-glass btn-sm" type="button" data-image-role="primary" data-image-id="${image.id}" ${image.is_primary ? "disabled" : ""}>${image.is_primary ? "✓ Primary" : "○ Set as Primary"}</button>
+              <button class="btn btn-glass btn-sm" type="button" data-image-role="banner" data-image-id="${image.id}" ${image.is_banner ? "disabled" : ""}>${image.is_banner ? "✓ Banner" : "○ Set as Banner"}</button>
+            </div>
+            <button class="btn btn-glass btn-sm text-danger" type="button" data-image-delete="${image.id}"><i class="bi bi-trash"></i> Delete</button>
           </div>
         </div>
       </div>`,
           )
           .join("")
       : '<div class="col-12 small text-muted-pro">No uploaded images yet.</div>';
+  }
+
+  async function refreshSelectedEventImages() {
+    const eventId = $("[data-organizer-event-form]")?.elements.event_id.value;
+    if (!eventId) return null;
+    const { data } = await api().fetch(`/organizer/events/${eventId}`);
+    state.selectedEvent = data;
+    renderGallery(data.images || []);
+    return data;
+  }
+
+  async function setEventImageRole(imageId, role) {
+    const payload =
+      role === "primary"
+        ? { is_primary: true }
+        : {
+            is_banner: true,
+            type: "banner",
+          };
+
+    await api().fetch(`/organizer/event-images/${imageId}`, {
+      method: "PATCH",
+      body: payload,
+    });
+    await refreshSelectedEventImages();
+    await refreshEventsAndAnalytics();
+    window.tkToast?.(role === "primary" ? "Primary image updated" : "Banner image updated");
   }
 
   function updateImageName(files) {
@@ -1925,16 +1960,24 @@
           await api().fetch(`/organizer/event-images/${imageDelete.dataset.imageDelete}`, {
             method: "DELETE",
           });
-          const eventId = $("[data-organizer-event-form]")?.elements.event_id.value;
-          if (eventId) {
-            const { data } = await api().fetch(`/organizer/events/${eventId}`);
-            state.selectedEvent = data;
-            renderGallery(data.images || []);
-          }
+          await refreshSelectedEventImages();
           await refreshEventsAndAnalytics();
           window.tkToast?.("Image deleted");
         } catch (err) {
           window.tkToast?.(err.message || "Image delete failed", "error");
+        } finally {
+          setBusy(false);
+        }
+        return;
+      }
+
+      const imageRole = event.target.closest("[data-image-role]");
+      if (imageRole) {
+        try {
+          setBusy(true);
+          await setEventImageRole(imageRole.dataset.imageId, imageRole.dataset.imageRole);
+        } catch (err) {
+          window.tkToast?.(err.message || "Image role update failed", "error");
         } finally {
           setBusy(false);
         }
