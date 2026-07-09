@@ -20,6 +20,8 @@ class OrganizerDashboardTest extends TestCase
 
     public function test_organizer_can_create_ticket_and_publish_complete_event_workflow(): void
     {
+        Storage::fake('public');
+
         $organizer = User::factory()->create([
             'role' => User::ROLE_ORGANIZER,
             'status' => User::STATUS_ACTIVE,
@@ -39,7 +41,6 @@ class OrganizerDashboardTest extends TestCase
                 'status' => 'draft',
                 'visibility' => 'public',
                 'max_tickets_per_user' => 5,
-                'banner_image_url' => 'https://example.test/cover.jpg',
                 'currency' => 'USD',
             ])
             ->assertCreated()
@@ -50,8 +51,8 @@ class OrganizerDashboardTest extends TestCase
         $eventId = $eventResponse->json('data.id');
 
         $this->actingAs($organizer, 'sanctum')
-            ->postJson("/api/organizer/events/{$eventId}/images", [
-                'url' => 'https://example.test/gallery.jpg',
+            ->post("/api/organizer/events/{$eventId}/images", [
+                'image' => UploadedFile::fake()->image('complete-cover.jpg', 1200, 675),
                 'type' => 'banner',
                 'is_primary' => true,
                 'alt_text' => 'Complete Creation Event',

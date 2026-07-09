@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class EventImageController extends Controller
 {
@@ -81,7 +82,7 @@ class EventImageController extends Controller
             $replacement = $event->images()->where('is_primary', true)->first()
                 ?? $event->images()->orderBy('sort_order')->first();
 
-            $event->update(['banner_image_url' => $replacement?->isExternal() ? $replacement->publicUrl() : null]);
+            $event->update(['banner_image_url' => $replacement?->publicUrl()]);
         }
 
         return response()->json(['message' => 'Event image deleted.']);
@@ -129,7 +130,7 @@ class EventImageController extends Controller
     protected function syncEventBanner(EventImage $eventImage): void
     {
         if ($eventImage->is_primary || $eventImage->type === 'banner') {
-            $eventImage->event->update(['banner_image_url' => $eventImage->isExternal() ? $eventImage->publicUrl() : null]);
+            $eventImage->event->update(['banner_image_url' => $eventImage->publicUrl()]);
         }
     }
 }

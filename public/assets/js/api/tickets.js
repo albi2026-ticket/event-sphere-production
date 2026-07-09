@@ -1,24 +1,24 @@
 (function () {
-  'use strict';
+  "use strict";
 
   const api = () => window.EventSphereApi;
   const u = () => window.EventSphereUtils;
   const tr = (key, fallback, replacements) => window.t?.(key, replacements) || fallback;
 
   async function listActiveTickets() {
-    const { data } = await api().fetch('/me/tickets/active');
+    const { data } = await api().fetch("/me/tickets/active");
     return Array.isArray(data) ? data : [];
   }
 
   async function listTickets(params = {}) {
     const qs = new URLSearchParams(params).toString();
-    const { data, meta } = await api().fetch(`/me/tickets${qs ? `?${qs}` : ''}`);
+    const { data, meta } = await api().fetch(`/me/tickets${qs ? `?${qs}` : ""}`);
     return { tickets: Array.isArray(data) ? data : [], meta };
   }
 
   async function listTicketHistory(params = {}) {
     const qs = new URLSearchParams(params).toString();
-    const { data, meta } = await api().fetch(`/me/tickets/history${qs ? `?${qs}` : ''}`);
+    const { data, meta } = await api().fetch(`/me/tickets/history${qs ? `?${qs}` : ""}`);
     return { tickets: Array.isArray(data) ? data : [], meta };
   }
 
@@ -34,7 +34,7 @@
   async function downloadTicket(ticketId, ticketCode) {
     const blob = await api().fetchBlob(`/tickets/${ticketId}/download`);
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `ticket-${ticketCode || ticketId}.pdf`;
     a.click();
@@ -44,35 +44,45 @@
   function renderTicketCard(ticket) {
     const ev = ticket.event || {};
     const eventDate = ev.ends_at || ev.starts_at;
-    const ended = eventDate && new Date(eventDate) < new Date() && ticket.status === 'valid';
-    const eventCancelled = ev.status === 'cancelled';
-    const statusKey = eventCancelled ? 'tickets.cancelled' : (ended ? 'events.event_ended' : `tickets.${String(ticket.status || 'valid').toLowerCase()}`);
-    const status = (eventCancelled ? tr('tickets.cancelled', 'Cancelled') : (ended ? tr('events.event_ended', 'Event Ended') : tr(statusKey, (ticket.status || 'valid').replace(/_/g, ' ')))).toUpperCase();
+    const ended = eventDate && new Date(eventDate) < new Date() && ticket.status === "valid";
+    const eventCancelled = ev.status === "cancelled";
+    const statusKey = eventCancelled
+      ? "tickets.cancelled"
+      : ended
+        ? "events.event_ended"
+        : `tickets.${String(ticket.status || "valid").toLowerCase()}`;
+    const status = (
+      eventCancelled
+        ? tr("tickets.cancelled", "Cancelled")
+        : ended
+          ? tr("events.event_ended", "Event Ended")
+          : tr(statusKey, (ticket.status || "valid").replace(/_/g, " "))
+    ).toUpperCase();
     const date = u().formatEventDate(ev.starts_at, ev.timezone);
     const attendee = ticket.attendee || {};
-    const orderNumber = ticket.order?.order_number || '-';
-    const ticketType = ticket.ticket_type?.name || 'Ticket';
+    const orderNumber = ticket.order?.order_number || "-";
+    const ticketType = ticket.ticket_type?.name || "Ticket";
 
     return `
       <div class="col-lg-6" data-ticket-id="${ticket.id}">
         <div class="qr-ticket">
           <div class="info">
             <span class="badge-soft" style="position:static;background:rgba(91,140,255,.15);border-color:rgba(91,140,255,.3);color:#93b4ff" data-i18n="${statusKey}">${u().escapeHtml(status)}</span>
-            <h5 class="mt-2">${u().escapeHtml(ev.title || tr('events.event', 'Event'))}</h5>
+            <h5 class="mt-2">${u().escapeHtml(ev.title || tr("events.event", "Event"))}</h5>
             <div class="ticket-meta">
-              <small class="text-muted-pro d-block"><i class="bi bi-geo-alt me-1"></i>${u().escapeHtml(ev.venue_name || '')}${ev.city ? `, ${u().escapeHtml(ev.city)}` : ''}</small>
+              <small class="text-muted-pro d-block"><i class="bi bi-geo-alt me-1"></i>${u().escapeHtml(ev.venue_name || "")}${ev.city ? `, ${u().escapeHtml(ev.city)}` : ""}</small>
               <small class="text-muted-pro d-block"><i class="bi bi-calendar3 me-1"></i>${u().escapeHtml(date)}</small>
               <small class="text-muted-pro d-block"><i class="bi bi-ticket-perforated me-1"></i>${u().escapeHtml(ticketType)}</small>
-              <small class="text-muted-pro d-block"><i class="bi bi-person me-1"></i>${u().escapeHtml(attendee.name || 'Guest')}${attendee.email ? ` · ${u().escapeHtml(attendee.email)}` : ''}</small>
+              <small class="text-muted-pro d-block"><i class="bi bi-person me-1"></i>${u().escapeHtml(attendee.name || "Guest")}${attendee.email ? ` · ${u().escapeHtml(attendee.email)}` : ""}</small>
             </div>
             <div class="ticket-codes small">
-              <div><span data-i18n="tickets.order_label">${tr('tickets.order_label', 'Order')}</span> <b class="order-code" style="color:var(--text)">${u().escapeHtml(orderNumber)}</b></div>
-              <div><span data-i18n="tickets.ticket_label">${tr('tickets.ticket_label', 'Ticket')}</span> <b class="ticket-code" style="color:var(--text)">${u().escapeHtml(ticket.ticket_code)}</b></div>
+              <div><span data-i18n="tickets.order_label">${tr("tickets.order_label", "Order")}</span> <b class="order-code" style="color:var(--text)">${u().escapeHtml(orderNumber)}</b></div>
+              <div><span data-i18n="tickets.ticket_label">${tr("tickets.ticket_label", "Ticket")}</span> <b class="ticket-code" style="color:var(--text)">${u().escapeHtml(ticket.ticket_code)}</b></div>
             </div>
             <div class="ticket-actions mt-3 d-flex gap-2 flex-wrap">
-              <button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}"><i class="bi bi-eye me-1"></i> <span data-i18n="tickets.view_ticket">${tr('tickets.view_ticket', 'View Ticket')}</span></button>
-              <button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}"><i class="bi bi-qr-code me-1"></i> <span data-i18n="tickets.view_qr">${tr('tickets.view_qr', 'View QR')}</span></button>
-              <button class="btn btn-primary-grad btn-sm" data-ticket-download="${ticket.id}" data-ticket-code="${u().escapeHtml(ticket.ticket_code)}"><i class="bi bi-download me-1"></i> <span data-i18n="tickets.download_pdf">${tr('tickets.download_pdf', 'Download PDF')}</span></button>
+              <button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}"><i class="bi bi-eye me-1"></i> <span data-i18n="tickets.view_ticket">${tr("tickets.view_ticket", "View Ticket")}</span></button>
+              <button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}"><i class="bi bi-qr-code me-1"></i> <span data-i18n="tickets.view_qr">${tr("tickets.view_qr", "View QR")}</span></button>
+              <button class="btn btn-primary-grad btn-sm" data-ticket-download="${ticket.id}" data-ticket-code="${u().escapeHtml(ticket.ticket_code)}"><i class="bi bi-download me-1"></i> <span data-i18n="tickets.download_pdf">${tr("tickets.download_pdf", "Download PDF")}</span></button>
             </div>
           </div>
           <div class="qr"><img alt="QR" data-ticket-qr="${ticket.id}" src="" style="min-width:180px;min-height:180px;background:#fff;border-radius:8px"/></div>
@@ -81,14 +91,14 @@
   }
 
   async function hydrateQrImages(root) {
-    const imgs = (root || document).querySelectorAll('[data-ticket-qr]');
+    const imgs = (root || document).querySelectorAll("[data-ticket-qr]");
     for (const img of imgs) {
-      const id = img.getAttribute('data-ticket-qr');
+      const id = img.getAttribute("data-ticket-qr");
       try {
         const blob = await loadQrBlob(id);
         img.src = URL.createObjectURL(blob);
       } catch {
-        img.alt = tr('tickets.qr_unavailable', 'QR unavailable');
+        img.alt = tr("tickets.qr_unavailable", "QR unavailable");
       }
     }
   }

@@ -1,5 +1,5 @@
 (function () {
-  'use strict';
+  "use strict";
 
   const api = () => window.EventSphereApi;
   const auth = () => window.EventSphereAuth;
@@ -35,13 +35,39 @@
     emailMeta: null,
     auditFilters: {},
     checkInFilters: {},
-    currentSection: 'overview',
+    currentSection: "overview",
     sectionLoaded: {},
     sectionRequests: {},
     dataLoaded: {},
     dataRequests: {},
-    loading: { users: false, events: false, venues: false, reservations: false, payments: false, tickets: false, categories: false, emailCenter: false, subscribers: false, auditLogs: false, checkIns: false, settings: false },
-    errors: { users: null, events: null, venues: null, reservations: null, payments: null, tickets: null, categories: null, emailCenter: null, subscribers: null, auditLogs: null, checkIns: null, settings: null },
+    loading: {
+      users: false,
+      events: false,
+      venues: false,
+      reservations: false,
+      payments: false,
+      tickets: false,
+      categories: false,
+      emailCenter: false,
+      subscribers: false,
+      auditLogs: false,
+      checkIns: false,
+      settings: false,
+    },
+    errors: {
+      users: null,
+      events: null,
+      venues: null,
+      reservations: null,
+      payments: null,
+      tickets: null,
+      categories: null,
+      emailCenter: null,
+      subscribers: null,
+      auditLogs: null,
+      checkIns: null,
+      settings: null,
+    },
   };
 
   function rows(payload) {
@@ -53,13 +79,13 @@
   function qs(params) {
     const clean = {};
     Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && String(value).trim() !== '') clean[key] = value;
+      if (value !== undefined && value !== null && String(value).trim() !== "") clean[key] = value;
     });
     return new URLSearchParams(clean).toString();
   }
 
   function money(amount, currency) {
-    return u().formatMoney(amount || 0, currency || 'USD');
+    return u().formatMoney(amount || 0, currency || "USD");
   }
 
   function tr(key, fallback) {
@@ -72,53 +98,65 @@
 
   function chartTheme() {
     return {
-      text: cssVar('--muted') || '#94A3B8',
-      grid: cssVar('--border') || 'rgba(148,163,184,.16)',
-      primary: cssVar('--primary') || '#5B8CFF',
+      text: cssVar("--muted") || "#94A3B8",
+      grid: cssVar("--border") || "rgba(148,163,184,.16)",
+      primary: cssVar("--primary") || "#5B8CFF",
     };
   }
 
   function badge(value, label) {
-    const key = String(value || 'none').toLowerCase();
-    const classKey = key.replace(/\s+/g, '_');
-    const safe = u().escapeHtml(label || key.replace(/_/g, ' '));
+    const key = String(value || "none").toLowerCase();
+    const classKey = key.replace(/\s+/g, "_");
+    const safe = u().escapeHtml(label || key.replace(/_/g, " "));
     return `<span class="badge status-badge status-${u().escapeHtml(classKey)}">${safe}</span>`;
   }
 
   function reservationBadge(value) {
-    const key = String(value || 'pending').toLowerCase();
-    const classKey = key.replace(/\s+/g, '_');
-    const safe = u().escapeHtml(key.replace(/_/g, ' '));
+    const key = String(value || "pending").toLowerCase();
+    const classKey = key.replace(/\s+/g, "_");
+    const safe = u().escapeHtml(key.replace(/_/g, " "));
     return `<span class="reservation-status reservation-status-${u().escapeHtml(classKey)}">${safe}</span>`;
   }
 
   function verificationBadge(user) {
     const verified = Boolean(user.email_verified_at);
-    return `<span class="badge status-badge status-${verified ? 'verified' : 'not_verified'}"><i class="bi ${verified ? 'bi-check-circle' : 'bi-x-circle'} me-1"></i>${verified ? 'Verified' : 'Not Verified'}</span>`;
+    return `<span class="badge status-badge status-${verified ? "verified" : "not_verified"}"><i class="bi ${verified ? "bi-check-circle" : "bi-x-circle"} me-1"></i>${verified ? "Verified" : "Not Verified"}</span>`;
   }
 
   function dateLabel(value) {
-    if (!value) return '-';
+    if (!value) return "-";
     const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return '-';
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    if (Number.isNaN(d.getTime())) return "-";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   }
 
   function dateTimeLabel(value) {
-    if (!value) return '-';
+    if (!value) return "-";
     const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return '-';
-    return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    if (Number.isNaN(d.getTime())) return "-";
+    return d.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
   }
 
   function titleize(value) {
-    return String(value || '-').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+    return String(value || "-")
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
   }
 
   function eventInventory(event) {
     const tiers = event.ticket_types || [];
-    const total = Number(event.total_inventory ?? tiers.reduce((sum, tier) => sum + Number(tier.quantity_total || 0), 0));
-    const sold = Number(event.sold_tickets ?? tiers.reduce((sum, tier) => sum + Number(tier.quantity_sold || 0), 0));
+    const total = Number(
+      event.total_inventory ??
+        tiers.reduce((sum, tier) => sum + Number(tier.quantity_total || 0), 0),
+    );
+    const sold = Number(
+      event.sold_tickets ?? tiers.reduce((sum, tier) => sum + Number(tier.quantity_sold || 0), 0),
+    );
     const reserved = tiers.reduce((sum, tier) => sum + Number(tier.quantity_reserved || 0), 0);
     const available = Number(event.available_inventory ?? Math.max(0, total - sold - reserved));
     return { sold, total, available };
@@ -126,29 +164,32 @@
 
   function adminEventState(event) {
     if (event.event_state?.key) return event.event_state;
-    if (event.status === 'cancelled' || event.status === 'completed') return { key: 'ended', label: 'Ended' };
-    if (event.status !== 'published') return { key: 'draft', label: 'Draft' };
+    if (event.status === "cancelled" || event.status === "completed")
+      return { key: "ended", label: "Ended" };
+    if (event.status !== "published") return { key: "draft", label: "Draft" };
 
     const end = event.ends_at ? new Date(event.ends_at) : null;
     if (end && !Number.isNaN(end.getTime()) && Date.now() > end.getTime()) {
-      return { key: 'ended', label: 'Ended' };
+      return { key: "ended", label: "Ended" };
     }
 
-    if (eventInventory(event).available <= 0) return { key: 'sold_out', label: 'Sold Out' };
+    if (eventInventory(event).available <= 0) return { key: "sold_out", label: "Sold Out" };
 
     const start = event.starts_at ? new Date(event.starts_at) : null;
     return start && !Number.isNaN(start.getTime()) && Date.now() >= start.getTime()
-      ? { key: 'live', label: 'Live' }
-      : { key: 'upcoming', label: 'Upcoming' };
+      ? { key: "live", label: "Live" }
+      : { key: "upcoming", label: "Upcoming" };
   }
 
-  function buttonIcon(icon, label, attrs, extraClass = 'btn-glass') {
+  function buttonIcon(icon, label, attrs, extraClass = "btn-glass") {
     return `<button class="btn ${extraClass} btn-sm" type="button" ${attrs} title="${u().escapeHtml(label)}"><i class="bi ${icon}"></i><span class="visually-hidden">${u().escapeHtml(label)}</span></button>`;
   }
 
   function loadingRow(cols, label) {
-    return window.EventSphereSkeleton?.tableRows?.(cols, 5)
-      || `<tr><td colspan="${cols}" class="py-4 text-muted-pro">${u().escapeHtml(label)}</td></tr>`;
+    return (
+      window.EventSphereSkeleton?.tableRows?.(cols, 5) ||
+      `<tr><td colspan="${cols}" class="py-4 text-muted-pro">${u().escapeHtml(label)}</td></tr>`
+    );
   }
 
   function loadingPanel(label) {
@@ -156,7 +197,7 @@
   }
 
   function errorRow(cols, label, retryAttr) {
-    return `<tr><td colspan="${cols}" class="py-4"><div class="admin-empty text-danger"><i class="bi bi-exclamation-triangle"></i><span>${u().escapeHtml(label)}</span><button class="btn btn-glass btn-sm" type="button" ${retryAttr} data-i18n="buttons.retry">${window.t?.('buttons.retry') || 'Retry'}</button></div></td></tr>`;
+    return `<tr><td colspan="${cols}" class="py-4"><div class="admin-empty text-danger"><i class="bi bi-exclamation-triangle"></i><span>${u().escapeHtml(label)}</span><button class="btn btn-glass btn-sm" type="button" ${retryAttr} data-i18n="buttons.retry">${window.t?.("buttons.retry") || "Retry"}</button></div></td></tr>`;
   }
 
   function emptyRow(cols, icon, label) {
@@ -165,22 +206,27 @@
 
   function userNameCell(user) {
     const name = user.name || user.email || `User #${user.id}`;
-    const avatar = user.avatar_url || `https://i.pravatar.cc/80?u=${encodeURIComponent(user.email || user.id)}`;
+    const avatar =
+      user.avatar_url || `https://i.pravatar.cc/80?u=${encodeURIComponent(user.email || user.id)}`;
     return `<div class="d-flex align-items-center gap-2"><img src="${u().escapeHtml(avatar)}" class="rounded-circle admin-avatar" alt="${u().escapeHtml(`${name} profile avatar`)}"/> <div><div class="fw-semibold">${u().escapeHtml(name)}</div><div class="small text-muted-pro">#${user.id}</div></div></div>`;
   }
 
   function eventRevenue(eventId) {
     return state.orders
-      .filter((order) => order.payment_status === 'paid')
+      .filter((order) => order.payment_status === "paid")
       .flatMap((order) => order.items || [])
       .filter((item) => String(item.event_id || item.event?.id) === String(eventId))
       .reduce((sum, item) => sum + Number(item.total || 0), 0);
   }
 
   function organizerRevenue(userId) {
-    const eventIds = new Set(state.events.filter((event) => String(event.organizer_id) === String(userId)).map((event) => String(event.id)));
+    const eventIds = new Set(
+      state.events
+        .filter((event) => String(event.organizer_id) === String(userId))
+        .map((event) => String(event.id)),
+    );
     return state.orders
-      .filter((order) => order.payment_status === 'paid')
+      .filter((order) => order.payment_status === "paid")
       .flatMap((order) => order.items || [])
       .filter((item) => eventIds.has(String(item.event_id || item.event?.id)))
       .reduce((sum, item) => sum + Number(item.total || 0), 0);
@@ -198,10 +244,10 @@
     renderPayments();
     try {
       const query = qs({ per_page: 100, ...state.paymentFilters });
-      const res = await api().fetch(`/admin/payments${query ? `?${query}` : ''}`);
+      const res = await api().fetch(`/admin/payments${query ? `?${query}` : ""}`);
       state.orders = rows(res.data);
     } catch (err) {
-      state.errors.payments = err.message || 'Failed to load payments';
+      state.errors.payments = err.message || "Failed to load payments";
     } finally {
       state.loading.payments = false;
       renderKpis();
@@ -215,11 +261,11 @@
     state.loading.settings = true;
     state.errors.settings = null;
     try {
-      const { data } = await api().fetch('/admin/settings');
+      const { data } = await api().fetch("/admin/settings");
       state.settings = data;
       fillSettingsForms();
     } catch (err) {
-      state.errors.settings = err.message || 'Failed to load platform settings';
+      state.errors.settings = err.message || "Failed to load platform settings";
     } finally {
       state.loading.settings = false;
     }
@@ -230,11 +276,11 @@
     state.errors.categories = null;
     renderCategories();
     try {
-      const { data } = await api().fetch('/admin/categories');
+      const { data } = await api().fetch("/admin/categories");
       state.categories = rows(data);
       hydrateReportFilters();
     } catch (err) {
-      state.errors.categories = err.message || 'Failed to load categories';
+      state.errors.categories = err.message || "Failed to load categories";
     } finally {
       state.loading.categories = false;
       renderCategories();
@@ -247,11 +293,11 @@
     renderEmailCenter();
     try {
       const query = qs({ page: state.emailFilters.page || 1, ...state.emailFilters });
-      const { data } = await api().fetch(`/admin/email-center${query ? `?${query}` : ''}`);
+      const { data } = await api().fetch(`/admin/email-center${query ? `?${query}` : ""}`);
       state.emailCenter = data;
       state.emailMeta = data.meta || null;
     } catch (err) {
-      state.errors.emailCenter = err.message || 'Failed to load email center';
+      state.errors.emailCenter = err.message || "Failed to load email center";
     } finally {
       state.loading.emailCenter = false;
       renderEmailCenter();
@@ -263,13 +309,17 @@
     state.errors.subscribers = null;
     renderSubscribers();
     try {
-      const query = qs({ page: state.subscriberFilters.page || 1, per_page: 25, ...state.subscriberFilters });
-      const { data } = await api().fetch(`/admin/subscribers${query ? `?${query}` : ''}`);
+      const query = qs({
+        page: state.subscriberFilters.page || 1,
+        per_page: 25,
+        ...state.subscriberFilters,
+      });
+      const { data } = await api().fetch(`/admin/subscribers${query ? `?${query}` : ""}`);
       state.subscribers = data.subscribers || [];
       state.subscriberSummary = data.summary || null;
       state.subscriberMeta = data.meta || null;
     } catch (err) {
-      state.errors.subscribers = err.message || 'Failed to load subscribers';
+      state.errors.subscribers = err.message || "Failed to load subscribers";
     } finally {
       state.loading.subscribers = false;
       renderSubscribers();
@@ -282,11 +332,11 @@
     renderAuditLogs();
     try {
       const query = qs({ per_page: 25, page, ...state.auditFilters });
-      const res = await api().fetch(`/admin/audit-logs${query ? `?${query}` : ''}`);
+      const res = await api().fetch(`/admin/audit-logs${query ? `?${query}` : ""}`);
       state.auditLogs = rows(res.data);
       state.auditMeta = res.meta || res.raw?.meta || res.raw;
     } catch (err) {
-      state.errors.auditLogs = err.message || 'Failed to load audit logs';
+      state.errors.auditLogs = err.message || "Failed to load audit logs";
     } finally {
       state.loading.auditLogs = false;
       renderAuditLogs();
@@ -300,10 +350,10 @@
     renderOrganizers();
     try {
       const query = qs({ per_page: 100, ...state.userFilters });
-      const res = await api().fetch(`/admin/users${query ? `?${query}` : ''}`);
+      const res = await api().fetch(`/admin/users${query ? `?${query}` : ""}`);
       state.users = rows(res.data);
     } catch (err) {
-      state.errors.users = err.message || 'Failed to load users';
+      state.errors.users = err.message || "Failed to load users";
     } finally {
       state.loading.users = false;
       hydrateReportFilters();
@@ -319,14 +369,14 @@
     state.errors.events = null;
     renderEvents();
     try {
-      const query = qs({ per_page: 100, sort: 'newest', ...state.eventFilters });
-      const res = await api().fetch(`/admin/events${query ? `?${query}` : ''}`);
+      const query = qs({ per_page: 100, sort: "newest", ...state.eventFilters });
+      const res = await api().fetch(`/admin/events${query ? `?${query}` : ""}`);
       state.events = rows(res.data);
       hydrateCheckInEvents();
       hydrateTicketEvents();
       hydrateReportFilters();
     } catch (err) {
-      state.errors.events = err.message || 'Failed to load events';
+      state.errors.events = err.message || "Failed to load events";
     } finally {
       state.loading.events = false;
       renderKpis();
@@ -342,11 +392,11 @@
     renderVenues();
     try {
       const query = qs({ per_page: 100, ...state.venueFilters });
-      const res = await api().fetch(`/admin/venues${query ? `?${query}` : ''}`);
+      const res = await api().fetch(`/admin/venues${query ? `?${query}` : ""}`);
       state.venues = rows(res.data);
       hydrateReservationFilters();
     } catch (err) {
-      state.errors.venues = err.message || 'Failed to load venues';
+      state.errors.venues = err.message || "Failed to load venues";
     } finally {
       state.loading.venues = false;
       renderKpis();
@@ -361,11 +411,11 @@
     renderReservations();
     try {
       const query = qs({ per_page: 100, ...state.reservationFilters });
-      const res = await api().fetch(`/admin/reservations${query ? `?${query}` : ''}`);
+      const res = await api().fetch(`/admin/reservations${query ? `?${query}` : ""}`);
       state.reservations = rows(res.data);
       state.reservationMeta = res.meta || null;
     } catch (err) {
-      state.errors.reservations = err.message || 'Failed to load reservations';
+      state.errors.reservations = err.message || "Failed to load reservations";
       state.reservationMeta = null;
     } finally {
       state.loading.reservations = false;
@@ -381,10 +431,10 @@
     renderTickets();
     try {
       const query = qs({ per_page: 100, ...state.ticketFilters });
-      const res = await api().fetch(`/admin/tickets${query ? `?${query}` : ''}`);
+      const res = await api().fetch(`/admin/tickets${query ? `?${query}` : ""}`);
       state.tickets = rows(res.data);
     } catch (err) {
-      state.errors.tickets = err.message || 'Failed to load tickets';
+      state.errors.tickets = err.message || "Failed to load tickets";
     } finally {
       state.loading.tickets = false;
       renderKpis();
@@ -401,13 +451,13 @@
       const statsQuery = qs({ event_id: state.checkInFilters.event_id });
       const logsQuery = qs({ per_page: 20, ...state.checkInFilters });
       const [stats, logs] = await Promise.all([
-        api().fetch(`/admin/tickets/check-in-stats${statsQuery ? `?${statsQuery}` : ''}`),
-        api().fetch(`/admin/validation-logs${logsQuery ? `?${logsQuery}` : ''}`),
+        api().fetch(`/admin/tickets/check-in-stats${statsQuery ? `?${statsQuery}` : ""}`),
+        api().fetch(`/admin/validation-logs${logsQuery ? `?${logsQuery}` : ""}`),
       ]);
       state.checkInStats = stats.data;
       state.checkInLogs = rows(logs.data);
     } catch (err) {
-      state.errors.checkIns = err.message || 'Failed to load check-in monitoring';
+      state.errors.checkIns = err.message || "Failed to load check-in monitoring";
     } finally {
       state.loading.checkIns = false;
       renderCheckIns();
@@ -415,43 +465,66 @@
   }
 
   function hydrateCheckInEvents() {
-    const select = document.querySelector('[data-admin-checkin-event]');
+    const select = document.querySelector("[data-admin-checkin-event]");
     if (!select) return;
     const current = select.value;
-    select.innerHTML = '<option value="">All events</option>' + state.events.map((event) => `<option value="${event.id}">${u().escapeHtml(event.title)}</option>`).join('');
+    select.innerHTML =
+      '<option value="">All events</option>' +
+      state.events
+        .map((event) => `<option value="${event.id}">${u().escapeHtml(event.title)}</option>`)
+        .join("");
     select.value = current;
   }
 
   function hydrateTicketEvents() {
-    const select = document.querySelector('[data-admin-ticket-event]');
+    const select = document.querySelector("[data-admin-ticket-event]");
     if (!select) return;
     const current = select.value;
-    select.innerHTML = '<option value="">All events</option>' + state.events.map((event) => `<option value="${event.id}">${u().escapeHtml(event.title)}</option>`).join('');
+    select.innerHTML =
+      '<option value="">All events</option>' +
+      state.events
+        .map((event) => `<option value="${event.id}">${u().escapeHtml(event.title)}</option>`)
+        .join("");
     select.value = current;
   }
 
   function hydrateReservationFilters() {
-    const venueSelect = document.querySelector('[data-admin-reservation-venue]');
+    const venueSelect = document.querySelector("[data-admin-reservation-venue]");
     if (venueSelect) {
       const current = venueSelect.value;
-      venueSelect.innerHTML = '<option value="">All venues</option>' + state.venues.map((venue) => `<option value="${venue.id}">${u().escapeHtml(venue.name)}</option>`).join('');
+      venueSelect.innerHTML =
+        '<option value="">All venues</option>' +
+        state.venues
+          .map((venue) => `<option value="${venue.id}">${u().escapeHtml(venue.name)}</option>`)
+          .join("");
       venueSelect.value = current;
     }
 
-    const ownerSelect = document.querySelector('[data-admin-reservation-owner]');
+    const ownerSelect = document.querySelector("[data-admin-reservation-owner]");
     if (ownerSelect) {
       const current = ownerSelect.value;
-      const owners = Array.from(new Map(state.venues
-        .filter((venue) => venue.owner?.id)
-        .map((venue) => [String(venue.owner.id), venue.owner])).values());
-      ownerSelect.innerHTML = '<option value="">All owners</option>' + owners.map((owner) => `<option value="${owner.id}">${u().escapeHtml(owner.name || owner.email)}</option>`).join('');
+      const owners = Array.from(
+        new Map(
+          state.venues
+            .filter((venue) => venue.owner?.id)
+            .map((venue) => [String(venue.owner.id), venue.owner]),
+        ).values(),
+      );
+      ownerSelect.innerHTML =
+        '<option value="">All owners</option>' +
+        owners
+          .map(
+            (owner) =>
+              `<option value="${owner.id}">${u().escapeHtml(owner.name || owner.email)}</option>`,
+          )
+          .join("");
       ownerSelect.value = current;
     }
   }
 
   async function loadAdminDashboard() {
     try {
-      const { data } = await api().fetch('/admin/dashboard');
+      const { data } = await api().fetch("/admin/dashboard");
       state.adminDashboard = data;
     } catch (err) {
       state.adminDashboard = null;
@@ -461,89 +534,200 @@
   }
 
   function renderKpis() {
-    const paidOrders = state.orders.filter((o) => o.payment_status === 'paid');
+    const paidOrders = state.orders.filter((o) => o.payment_status === "paid");
     const totalGmv = paidOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
     const serviceFees = paidOrders.reduce((sum, o) => sum + Number(o.service_fee || 0), 0);
-    const organizers = state.users.filter((usr) => usr.role === 'organizer' || usr.organizer_status !== 'none');
+    const organizers = state.users.filter(
+      (usr) => usr.role === "organizer" || usr.organizer_status !== "none",
+    );
     const verifiedUsers = state.users.filter((usr) => usr.email_verified_at).length;
     const unverifiedUsers = state.users.filter((usr) => !usr.email_verified_at).length;
-    const activeEvents = state.events.filter((event) => event.status === 'published').length;
-    const liveEvents = state.events.filter((event) => adminEventState(event).key === 'live').length;
-    const upcomingEvents = state.events.filter((event) => adminEventState(event).key === 'upcoming').length;
-    const endedEvents = state.events.filter((event) => adminEventState(event).key === 'ended').length;
-    const soldOutEvents = state.events.filter((event) => adminEventState(event).key === 'sold_out').length;
-    const ticketsSold = state.tickets.length || state.events.reduce((sum, event) => sum + eventInventory(event).sold, 0);
-    const checkedIn = Number(state.checkInStats?.checked_in || state.tickets.filter((ticket) => ticket.status === 'checked_in').length);
+    const activeEvents = state.events.filter((event) => event.status === "published").length;
+    const liveEvents = state.events.filter((event) => adminEventState(event).key === "live").length;
+    const upcomingEvents = state.events.filter(
+      (event) => adminEventState(event).key === "upcoming",
+    ).length;
+    const endedEvents = state.events.filter(
+      (event) => adminEventState(event).key === "ended",
+    ).length;
+    const soldOutEvents = state.events.filter(
+      (event) => adminEventState(event).key === "sold_out",
+    ).length;
+    const ticketsSold =
+      state.tickets.length ||
+      state.events.reduce((sum, event) => sum + eventInventory(event).sold, 0);
+    const checkedIn = Number(
+      state.checkInStats?.checked_in ||
+        state.tickets.filter((ticket) => ticket.status === "checked_in").length,
+    );
     const attendanceRate = ticketsSold ? Math.round((checkedIn / ticketsSold) * 100) : 0;
     const reservationStats = state.adminDashboard?.reservations || {};
-    const row = document.querySelector('[data-admin-kpis]');
+    const row = document.querySelector("[data-admin-kpis]");
 
     if (!row) return;
     row.innerHTML = `
       ${[
-        ['Total Events', state.events.length, `${activeEvents} active`],
-        ['Active Events', activeEvents, `${liveEvents} live now`],
-        ['Live Events', liveEvents, 'Happening now'],
-        ['Upcoming Events', upcomingEvents, 'Published future events'],
-        ['Ended Events', endedEvents, 'Completed or past'],
-        ['Sold Out Events', soldOutEvents, 'No inventory remaining'],
-        ['Total Organizers', organizers.length, `${state.users.filter((u) => u.organizer_status === 'pending').length} pending`],
-        ['Total Users', state.users.length, `${state.users.filter((u) => u.status === 'suspended').length} suspended`],
-        ['Verified Users', verifiedUsers, 'Email verified'],
-        ['Unverified Users', unverifiedUsers, 'Need verification'],
-        ['Tickets Sold', ticketsSold, `${checkedIn} checked in`],
-        ['Active Reservations', Number(reservationStats.active || 0), 'Checkout holds'],
-        ['Expired Reservations', Number(reservationStats.expired || 0), 'Audit retained'],
-        ['Completed Reservations', Number(reservationStats.completed || 0), 'Converted to orders'],
-        ['Total Venues', Number(reservationStats.total_venues || state.venues.length || 0), 'Reservation module'],
-        ['Active Venues', Number(reservationStats.active_venues || state.venues.filter((venue) => venue.status === 'active').length || 0), 'Accepting reservations'],
-        ['Total Reservations', Number(reservationStats.total_reservations || state.reservations.length || 0), 'Guest bookings'],
-        ['Pending Reservations', Number(reservationStats.pending_reservations || state.reservations.filter((item) => item.status === 'pending').length || 0), 'Need attention'],
-        ['Confirmed Reservations', Number(reservationStats.confirmed_reservations || state.reservations.filter((item) => item.status === 'confirmed').length || 0), 'Approved bookings'],
-        ['Cancelled Reservations', Number(reservationStats.cancelled_reservations || state.reservations.filter((item) => item.status === 'cancelled').length || 0), 'Cancelled bookings'],
-        ['Revenue Generated', money(totalGmv, 'USD'), `${paidOrders.length} paid orders`],
-        ['Service Fees Collected', money(serviceFees, 'USD'), `${Number(state.settings?.default_service_fee_percentage ?? 10)}% default`],
-        ['Check-Ins Completed', checkedIn, `${Number(state.checkInStats?.remaining || 0)} remaining`],
-        ['Attendance Rate', `${attendanceRate}%`, 'Checked in / sold'],
-      ].map(([label, value, delta]) => `<div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">${label}</div><div class="value">${value}</div><div class="delta">${delta}</div></div></div>`).join('')}`;
+        ["Total Events", state.events.length, `${activeEvents} active`],
+        ["Active Events", activeEvents, `${liveEvents} live now`],
+        ["Live Events", liveEvents, "Happening now"],
+        ["Upcoming Events", upcomingEvents, "Published future events"],
+        ["Ended Events", endedEvents, "Completed or past"],
+        ["Sold Out Events", soldOutEvents, "No inventory remaining"],
+        [
+          "Total Organizers",
+          organizers.length,
+          `${state.users.filter((u) => u.organizer_status === "pending").length} pending`,
+        ],
+        [
+          "Total Users",
+          state.users.length,
+          `${state.users.filter((u) => u.status === "suspended").length} suspended`,
+        ],
+        ["Verified Users", verifiedUsers, "Email verified"],
+        ["Unverified Users", unverifiedUsers, "Need verification"],
+        ["Tickets Sold", ticketsSold, `${checkedIn} checked in`],
+        ["Active Reservations", Number(reservationStats.active || 0), "Checkout holds"],
+        ["Expired Reservations", Number(reservationStats.expired || 0), "Audit retained"],
+        ["Completed Reservations", Number(reservationStats.completed || 0), "Converted to orders"],
+        [
+          "Total Venues",
+          Number(reservationStats.total_venues || state.venues.length || 0),
+          "Reservation module",
+        ],
+        [
+          "Active Venues",
+          Number(
+            reservationStats.active_venues ||
+              state.venues.filter((venue) => venue.status === "active").length ||
+              0,
+          ),
+          "Accepting reservations",
+        ],
+        [
+          "Total Reservations",
+          Number(reservationStats.total_reservations || state.reservations.length || 0),
+          "Guest bookings",
+        ],
+        [
+          "Pending Reservations",
+          Number(
+            reservationStats.pending_reservations ||
+              state.reservations.filter((item) => item.status === "pending").length ||
+              0,
+          ),
+          "Need attention",
+        ],
+        [
+          "Confirmed Reservations",
+          Number(
+            reservationStats.confirmed_reservations ||
+              state.reservations.filter((item) => item.status === "confirmed").length ||
+              0,
+          ),
+          "Approved bookings",
+        ],
+        [
+          "Cancelled Reservations",
+          Number(
+            reservationStats.cancelled_reservations ||
+              state.reservations.filter((item) => item.status === "cancelled").length ||
+              0,
+          ),
+          "Cancelled bookings",
+        ],
+        ["Revenue Generated", money(totalGmv, "USD"), `${paidOrders.length} paid orders`],
+        [
+          "Service Fees Collected",
+          money(serviceFees, "USD"),
+          `${Number(state.settings?.default_service_fee_percentage ?? 10)}% default`,
+        ],
+        [
+          "Check-Ins Completed",
+          checkedIn,
+          `${Number(state.checkInStats?.remaining || 0)} remaining`,
+        ],
+        ["Attendance Rate", `${attendanceRate}%`, "Checked in / sold"],
+      ]
+        .map(
+          ([label, value, delta]) =>
+            `<div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">${label}</div><div class="value">${value}</div><div class="delta">${delta}</div></div></div>`,
+        )
+        .join("")}`;
     renderHealth();
   }
 
   function renderHealth() {
-    const wrap = document.querySelector('[data-admin-health]');
+    const wrap = document.querySelector("[data-admin-health]");
     if (!wrap) return;
-    const pendingEvents = state.events.filter((e) => ['draft', 'pending_review'].includes(e.status)).length;
-    const pendingOrganizers = state.users.filter((usr) => usr.organizer_status === 'pending').length;
-    const refunds = state.orders.filter((o) => o.payment_status === 'refunded' || o.refunded_at).length;
+    const pendingEvents = state.events.filter((e) =>
+      ["draft", "pending_review"].includes(e.status),
+    ).length;
+    const pendingOrganizers = state.users.filter(
+      (usr) => usr.organizer_status === "pending",
+    ).length;
+    const refunds = state.orders.filter(
+      (o) => o.payment_status === "refunded" || o.refunded_at,
+    ).length;
     const reservationStats = state.adminDashboard?.reservations || {};
     wrap.innerHTML = [
-      ['Moderation Queue', pendingEvents, 'pending_review'],
-      ['Organizer Requests', pendingOrganizers, 'pending'],
-      ['Active Reservations', Number(reservationStats.active || 0), 'active'],
-      ['Expired Reservations', Number(reservationStats.expired || 0), 'expired'],
-      ['Active Venues', Number(reservationStats.active_venues || state.venues.filter((venue) => venue.status === 'active').length || 0), 'active'],
-      ['Pending Table Reservations', Number(reservationStats.pending_reservations || state.reservations.filter((item) => item.status === 'pending').length || 0), 'pending'],
-      ['Refunds Tracked', refunds, refunds ? 'refunded' : 'valid'],
-      ['Default Service Fee', `${Number(state.settings?.default_service_fee_percentage ?? 10)}%`, 'active'],
-    ].map(([label, value, status]) => `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${label}</span><small>Platform status</small></span>${badge(status, String(value))}</div>`).join('');
+      ["Moderation Queue", pendingEvents, "pending_review"],
+      ["Organizer Requests", pendingOrganizers, "pending"],
+      ["Active Reservations", Number(reservationStats.active || 0), "active"],
+      ["Expired Reservations", Number(reservationStats.expired || 0), "expired"],
+      [
+        "Active Venues",
+        Number(
+          reservationStats.active_venues ||
+            state.venues.filter((venue) => venue.status === "active").length ||
+            0,
+        ),
+        "active",
+      ],
+      [
+        "Pending Table Reservations",
+        Number(
+          reservationStats.pending_reservations ||
+            state.reservations.filter((item) => item.status === "pending").length ||
+            0,
+        ),
+        "pending",
+      ],
+      ["Refunds Tracked", refunds, refunds ? "refunded" : "valid"],
+      [
+        "Default Service Fee",
+        `${Number(state.settings?.default_service_fee_percentage ?? 10)}%`,
+        "active",
+      ],
+    ]
+      .map(
+        ([label, value, status]) =>
+          `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${label}</span><small>Platform status</small></span>${badge(status, String(value))}</div>`,
+      )
+      .join("");
   }
 
   function renderCharts() {
-    if (document.querySelector('canvas') && !window.Chart) {
-      window.EventSphereLoadChart?.().then(renderCharts).catch(() => {});
+    if (document.querySelector("canvas") && !window.Chart) {
+      window
+        .EventSphereLoadChart?.()
+        .then(renderCharts)
+        .catch(() => {});
       return;
     }
 
     const theme = chartTheme();
-    const paid = state.orders.filter((o) => o.payment_status === 'paid');
+    const paid = state.orders.filter((o) => o.payment_status === "paid");
     const byPeriod = (length) => {
       const result = {};
       paid.forEach((o) => {
-        const key = (o.created_at || o.paid_at || '').slice(0, length);
+        const key = (o.created_at || o.paid_at || "").slice(0, length);
         if (!key) return;
         result[key] = result[key] || { revenue: 0, tickets: 0 };
         result[key].revenue += Number(o.total || 0);
-        result[key].tickets += (o.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+        result[key].tickets += (o.items || []).reduce(
+          (sum, item) => sum + Number(item.quantity || 0),
+          0,
+        );
       });
       return result;
     };
@@ -551,7 +735,7 @@
       const map = {};
       paid.forEach((order) => {
         (order.items || []).forEach((item) => {
-          const title = item.event?.title || item.event_title || 'Unknown event';
+          const title = item.event?.title || item.event_title || "Unknown event";
           map[title] = (map[title] || 0) + Number(item.total || 0);
         });
       });
@@ -562,7 +746,7 @@
       const map = {};
       paid.forEach((order) => {
         (order.items || []).forEach((item) => {
-          const category = eventById[String(item.event_id || item.event?.id)]?.category || 'Other';
+          const category = eventById[String(item.event_id || item.event?.id)]?.category || "Other";
           map[category] = (map[category] || 0) + Number(item.total || 0);
         });
       });
@@ -574,7 +758,7 @@
       paid.forEach((order) => {
         (order.items || []).forEach((item) => {
           const event = eventById[String(item.event_id || item.event?.id)];
-          const name = event?.organizer?.name || item.event?.organizer?.name || 'Unknown organizer';
+          const name = event?.organizer?.name || item.event?.organizer?.name || "Unknown organizer";
           map[name] = (map[name] || 0) + Number(item.total || 0);
         });
       });
@@ -586,9 +770,19 @@
       const key = `_admin_${id}`;
       if (window[key]) window[key].destroy();
       window[key] = new Chart(canvas, {
-        type: 'bar',
-        data: { labels, datasets: [{ label, data: values, backgroundColor: theme.primary, borderRadius: 8 }] },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: theme.text }, grid: { color: theme.grid } }, x: { ticks: { color: theme.text }, grid: { display: false } } } },
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{ label, data: values, backgroundColor: theme.primary, borderRadius: 8 }],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { ticks: { color: theme.text }, grid: { color: theme.grid } },
+            x: { ticks: { color: theme.text }, grid: { display: false } },
+          },
+        },
       });
     };
     const renderDoughnut = (id, map) => {
@@ -598,152 +792,250 @@
       const key = `_admin_${id}`;
       if (window[key]) window[key].destroy();
       window[key] = new Chart(canvas, {
-        type: 'doughnut',
-        data: { labels, datasets: [{ data: labels.map((label) => map[label]), backgroundColor: ['#5B8CFF', '#22C55E', '#F59E0B', '#EF4444', '#A78BFA', '#14B8A6', '#F97316', '#64748B'] }] },
-        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: theme.text } } } },
+        type: "doughnut",
+        data: {
+          labels,
+          datasets: [
+            {
+              data: labels.map((label) => map[label]),
+              backgroundColor: [
+                "#5B8CFF",
+                "#22C55E",
+                "#F59E0B",
+                "#EF4444",
+                "#A78BFA",
+                "#14B8A6",
+                "#F97316",
+                "#64748B",
+              ],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: "bottom", labels: { color: theme.text } } },
+        },
       });
     };
 
-    const salesChart = document.querySelector('canvas#salesChart');
+    const salesChart = document.querySelector("canvas#salesChart");
     if (salesChart && window.Chart) {
       const monthly = byPeriod(7);
-      const byMonth = Object.fromEntries(Object.entries(monthly).map(([key, value]) => [key, value.revenue]));
+      const byMonth = Object.fromEntries(
+        Object.entries(monthly).map(([key, value]) => [key, value.revenue]),
+      );
       const labels = Object.keys(byMonth).sort().slice(-12);
       if (window._salesChart) window._salesChart.destroy();
       window._salesChart = new Chart(salesChart, {
-        type: 'bar',
-        data: { labels, datasets: [{ label: 'Sales', data: labels.map((label) => byMonth[label]), backgroundColor: theme.primary, borderRadius: 8 }] },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { ticks: { color: theme.text }, grid: { color: theme.grid } }, x: { ticks: { color: theme.text }, grid: { display: false } } } },
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Sales",
+              data: labels.map((label) => byMonth[label]),
+              backgroundColor: theme.primary,
+              borderRadius: 8,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { ticks: { color: theme.text }, grid: { color: theme.grid } },
+            x: { ticks: { color: theme.text }, grid: { display: false } },
+          },
+        },
       });
     }
 
     const daily = byPeriod(10);
     const dailyLabels = Object.keys(daily).sort().slice(-14);
-    renderBar('adminSalesDay', dailyLabels, dailyLabels.map((label) => daily[label].tickets), 'Tickets');
-    renderBar('adminSalesWeek', dailyLabels, dailyLabels.map((label) => daily[label].tickets), 'Tickets');
-    renderBar('adminRevenueTrend', dailyLabels, dailyLabels.map((label) => daily[label].revenue), 'Revenue');
-    renderDoughnut('adminRevenueEvent', paidEventRevenue());
-    renderDoughnut('adminRevenueCategory', paidCategoryRevenue());
-    renderDoughnut('adminRevenueOrganizer', paidOrganizerRevenue());
+    renderBar(
+      "adminSalesDay",
+      dailyLabels,
+      dailyLabels.map((label) => daily[label].tickets),
+      "Tickets",
+    );
+    renderBar(
+      "adminSalesWeek",
+      dailyLabels,
+      dailyLabels.map((label) => daily[label].tickets),
+      "Tickets",
+    );
+    renderBar(
+      "adminRevenueTrend",
+      dailyLabels,
+      dailyLabels.map((label) => daily[label].revenue),
+      "Revenue",
+    );
+    renderDoughnut("adminRevenueEvent", paidEventRevenue());
+    renderDoughnut("adminRevenueCategory", paidCategoryRevenue());
+    renderDoughnut("adminRevenueOrganizer", paidOrganizerRevenue());
 
-    const catChart = document.getElementById('cat');
+    const catChart = document.getElementById("cat");
     if (catChart && window.Chart) {
       const byCategory = {};
       state.events.forEach((event) => {
-        const category = event.category || 'Other';
+        const category = event.category || "Other";
         byCategory[category] = (byCategory[category] || 0) + 1;
       });
       const labels = Object.keys(byCategory).slice(0, 8);
       if (window._catChart) window._catChart.destroy();
       window._catChart = new Chart(catChart, {
-        type: 'doughnut',
-        data: { labels, datasets: [{ data: labels.map((label) => byCategory[label]), backgroundColor: ['#5B8CFF', '#22C55E', '#F59E0B', '#EF4444', '#A78BFA', '#14B8A6', '#F97316', '#64748B'] }] },
-        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: theme.text } } } },
+        type: "doughnut",
+        data: {
+          labels,
+          datasets: [
+            {
+              data: labels.map((label) => byCategory[label]),
+              backgroundColor: [
+                "#5B8CFF",
+                "#22C55E",
+                "#F59E0B",
+                "#EF4444",
+                "#A78BFA",
+                "#14B8A6",
+                "#F97316",
+                "#64748B",
+              ],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: "bottom", labels: { color: theme.text } } },
+        },
       });
     }
   }
 
   function renderUsers() {
-    const body = document.querySelector('[data-admin-users] tbody');
+    const body = document.querySelector("[data-admin-users] tbody");
     if (!body) return;
     if (state.loading.users) {
-      body.innerHTML = loadingRow(9, 'Loading users...');
+      body.innerHTML = loadingRow(9, "Loading users...");
       return;
     }
     if (state.errors.users) {
-      body.innerHTML = errorRow(9, state.errors.users, 'data-retry-users');
+      body.innerHTML = errorRow(9, state.errors.users, "data-retry-users");
       return;
     }
 
-    body.innerHTML = state.users.map((usr) => `
+    body.innerHTML =
+      state.users
+        .map(
+          (usr) => `
       <tr>
         <td data-label="User">${userNameCell(usr)}</td>
         <td data-label="Email">${u().escapeHtml(usr.email)}</td>
-        <td data-label="Email Verification"><div title="${usr.email_verified_at ? `Verified ${u().escapeHtml(dateTimeLabel(usr.email_verified_at))}` : 'Email not verified'}">${verificationBadge(usr)}</div><small class="text-muted-pro">${usr.email_verified_at ? dateTimeLabel(usr.email_verified_at) : ''}</small></td>
+        <td data-label="Email Verification"><div title="${usr.email_verified_at ? `Verified ${u().escapeHtml(dateTimeLabel(usr.email_verified_at))}` : "Email not verified"}">${verificationBadge(usr)}</div><small class="text-muted-pro">${usr.email_verified_at ? dateTimeLabel(usr.email_verified_at) : ""}</small></td>
         <td data-label="Joined">${dateLabel(usr.created_at)}</td>
         <td data-label="Orders">${usr.orders_count ?? 0}</td>
         <td data-label="Role">
           <select class="form-select form-select-sm admin-select" data-user-role="${usr.id}">
-            ${['user', 'organizer', 'owner', 'scanner', 'admin'].map((role) => `<option value="${role}" ${usr.role === role ? 'selected' : ''}>${role}</option>`).join('')}
+            ${["user", "organizer", "owner", "scanner", "admin"].map((role) => `<option value="${role}" ${usr.role === role ? "selected" : ""}>${role}</option>`).join("")}
           </select>
         </td>
         <td data-label="Organizer">${badge(usr.organizer_status)}</td>
         <td data-label="Status">${badge(usr.status)}</td>
         <td data-label="Actions" class="text-end">
           <div class="admin-actions">
-            ${buttonIcon('bi-eye', 'View profile', `data-view-user="${usr.id}"`)}
-            ${buttonIcon('bi-save', 'Save role', `data-save-role="${usr.id}"`)}
-            ${usr.status === 'suspended'
-              ? buttonIcon('bi-person-check', 'Reactivate user', `data-reactivate-user="${usr.id}"`)
-              : buttonIcon('bi-person-slash', 'Suspend user', `data-suspend-user="${usr.id}"`)}
+            ${buttonIcon("bi-eye", "View profile", `data-view-user="${usr.id}"`)}
+            ${buttonIcon("bi-save", "Save role", `data-save-role="${usr.id}"`)}
+            ${
+              usr.status === "suspended"
+                ? buttonIcon(
+                    "bi-person-check",
+                    "Reactivate user",
+                    `data-reactivate-user="${usr.id}"`,
+                  )
+                : buttonIcon("bi-person-slash", "Suspend user", `data-suspend-user="${usr.id}"`)
+            }
           </div>
         </td>
       </tr>
-    `).join('') || emptyRow(9, 'bi-people', 'No users match these filters');
+    `,
+        )
+        .join("") || emptyRow(9, "bi-people", "No users match these filters");
   }
 
   function renderOrganizers() {
-    const body = document.querySelector('[data-admin-organizers] tbody');
+    const body = document.querySelector("[data-admin-organizers] tbody");
     if (!body) return;
     if (state.loading.users) {
-      body.innerHTML = loadingRow(7, 'Loading organizers...');
+      body.innerHTML = loadingRow(7, "Loading organizers...");
       return;
     }
     if (state.errors.users) {
-      body.innerHTML = errorRow(7, state.errors.users, 'data-retry-users');
+      body.innerHTML = errorRow(7, state.errors.users, "data-retry-users");
       return;
     }
 
-    const organizers = state.users.filter((usr) => usr.role === 'organizer' || ['pending', 'approved', 'rejected'].includes(usr.organizer_status));
-    body.innerHTML = organizers.map((usr) => `
+    const organizers = state.users.filter(
+      (usr) =>
+        usr.role === "organizer" ||
+        ["pending", "approved", "rejected"].includes(usr.organizer_status),
+    );
+    body.innerHTML =
+      organizers
+        .map(
+          (usr) => `
       <tr>
         <td data-label="Organizer">${userNameCell(usr)}</td>
-        <td data-label="Contact"><div>${u().escapeHtml(usr.email)}</div><small class="text-muted-pro">${u().escapeHtml(usr.phone || '')}</small></td>
+        <td data-label="Contact"><div>${u().escapeHtml(usr.email)}</div><small class="text-muted-pro">${u().escapeHtml(usr.phone || "")}</small></td>
         <td data-label="Status">${badge(usr.organizer_status)}</td>
         <td data-label="Events">${usr.organized_events_count ?? 0}</td>
-        <td data-label="Revenue">${money(organizerRevenue(usr.id), 'USD')}</td>
+        <td data-label="Revenue">${money(organizerRevenue(usr.id), "USD")}</td>
         <td data-label="Tickets Sold">${organizerTicketsSold(usr.id)}</td>
         <td data-label="Actions" class="text-end">
           <div class="admin-actions">
-            ${buttonIcon('bi-eye', 'View profile', `data-view-user="${usr.id}"`)}
-            ${buttonIcon('bi-pencil', 'Edit organizer', `data-view-user="${usr.id}"`)}
-            <button class="btn btn-glass btn-sm" type="button" data-approve-organizer="${usr.id}" ${usr.organizer_status === 'approved' ? 'disabled' : ''}>Approve</button>
-            ${usr.status === 'suspended'
-              ? `<button class="btn btn-glass btn-sm" type="button" data-reactivate-user="${usr.id}">Reactivate</button>`
-              : `<button class="btn btn-glass btn-sm" type="button" data-suspend-user="${usr.id}">Suspend</button>`}
+            ${buttonIcon("bi-eye", "View profile", `data-view-user="${usr.id}"`)}
+            ${buttonIcon("bi-pencil", "Edit organizer", `data-view-user="${usr.id}"`)}
+            <button class="btn btn-glass btn-sm" type="button" data-approve-organizer="${usr.id}" ${usr.organizer_status === "approved" ? "disabled" : ""}>Approve</button>
+            ${
+              usr.status === "suspended"
+                ? `<button class="btn btn-glass btn-sm" type="button" data-reactivate-user="${usr.id}">Reactivate</button>`
+                : `<button class="btn btn-glass btn-sm" type="button" data-suspend-user="${usr.id}">Suspend</button>`
+            }
           </div>
         </td>
       </tr>
-    `).join('') || emptyRow(7, 'bi-person-check', 'No organizers found');
+    `,
+        )
+        .join("") || emptyRow(7, "bi-person-check", "No organizers found");
     renderOrganizerRanking();
   }
 
   function renderEvents() {
-    const body = document.querySelector('[data-admin-events] tbody');
+    const body = document.querySelector("[data-admin-events] tbody");
     if (!body) return;
     if (state.loading.events) {
-      body.innerHTML = loadingRow(11, 'Loading events...');
+      body.innerHTML = loadingRow(11, "Loading events...");
       return;
     }
     if (state.errors.events) {
-      body.innerHTML = errorRow(11, state.errors.events, 'data-retry-events');
+      body.innerHTML = errorRow(11, state.errors.events, "data-retry-events");
       return;
     }
 
-    body.innerHTML = state.events.map((event) => {
-      const inventory = eventInventory(event);
-      const displayState = adminEventState(event);
-      const revenue = eventRevenue(event.id);
-      return `
+    body.innerHTML =
+      state.events
+        .map((event) => {
+          const inventory = eventInventory(event);
+          const displayState = adminEventState(event);
+          const revenue = eventRevenue(event.id);
+          return `
         <tr>
           <td data-label="Select"><input class="form-check-input" type="checkbox" data-admin-event-select="${event.id}"></td>
-          <td data-label="Event"><div class="fw-semibold">${u().escapeHtml(event.title)}</div><div class="small text-muted-pro">${u().escapeHtml(event.city || '')} · ${u().escapeHtml(u().formatEventDate(event.starts_at, event.timezone))}</div></td>
-          <td data-label="Category">${u().escapeHtml(event.category || '-')}</td>
+          <td data-label="Event"><div class="fw-semibold">${u().escapeHtml(event.title)}</div><div class="small text-muted-pro">${u().escapeHtml(event.city || "")} · ${u().escapeHtml(u().formatEventDate(event.starts_at, event.timezone))}</div></td>
+          <td data-label="Category">${u().escapeHtml(event.category || "-")}</td>
           <td data-label="Organizer">${u().escapeHtml(event.organizer?.name || `#${event.organizer_id}`)}</td>
           <td data-label="Status">${badge(displayState.key, displayState.label)}</td>
           <td data-label="Tickets Sold"><span class="fw-semibold">${inventory.sold} / ${inventory.total}</span></td>
           <td data-label="Inventory">${inventory.available} remaining</td>
-          <td data-label="Revenue">${money(revenue, event.currency || 'USD')}</td>
+          <td data-label="Revenue">${money(revenue, event.currency || "USD")}</td>
           <td data-label="Service Fee">
             <div class="d-flex gap-2 align-items-center">
               <input class="form-control form-control-sm admin-select" style="max-width:84px" type="number" min="0" max="30" step="0.01" value="${Number(event.service_fee_percentage ?? 10)}" data-event-fee-input="${event.id}"/>
@@ -753,58 +1045,74 @@
           <td data-label="Created">${dateLabel(event.created_at)}</td>
           <td data-label="Actions" class="text-end">
             <div class="admin-actions">
-              ${buttonIcon('bi-eye', 'View event', `data-view-event="${event.id}"`)}
-              ${buttonIcon('bi-pencil', 'Edit event', `data-edit-event="${event.id}"`)}
+              ${buttonIcon("bi-eye", "View event", `data-view-event="${event.id}"`)}
+              ${buttonIcon("bi-pencil", "Edit event", `data-edit-event="${event.id}"`)}
               <button class="btn btn-glass btn-sm" type="button" data-assign-scanner="${event.id}"><i class="bi bi-qr-code-scan me-1"></i>Assign Scanner</button>
-              <button class="btn btn-glass btn-sm" type="button" data-publish-event="${event.id}" ${event.status === 'published' ? 'disabled' : ''}>Publish</button>
-              <button class="btn btn-glass btn-sm" type="button" data-unpublish-event="${event.id}" ${event.status !== 'published' ? 'disabled' : ''}>Unpublish</button>
-              <button class="btn btn-glass btn-sm" type="button" data-feature-event="${event.id}">${event.is_featured ? 'Unfeature' : 'Feature'}</button>
+              <button class="btn btn-glass btn-sm" type="button" data-publish-event="${event.id}" ${event.status === "published" ? "disabled" : ""}>Publish</button>
+              <button class="btn btn-glass btn-sm" type="button" data-unpublish-event="${event.id}" ${event.status !== "published" ? "disabled" : ""}>Unpublish</button>
+              <button class="btn btn-glass btn-sm" type="button" data-feature-event="${event.id}">${event.is_featured ? "Unfeature" : "Feature"}</button>
               <button class="btn btn-glass btn-sm" type="button" data-archive-event="${event.id}">Archive</button>
-              ${buttonIcon('bi-trash', 'Delete event', `data-delete-event="${event.id}"`)}
+              ${buttonIcon("bi-trash", "Delete event", `data-delete-event="${event.id}"`)}
             </div>
           </td>
         </tr>
       `;
-    }).join('') || emptyRow(11, 'bi-calendar-event', 'No events match these filters');
+        })
+        .join("") || emptyRow(11, "bi-calendar-event", "No events match these filters");
   }
 
   function renderVenues() {
-    const body = document.querySelector('[data-admin-venues]');
+    const body = document.querySelector("[data-admin-venues]");
     if (!body) return;
     if (state.loading.venues) {
-      body.innerHTML = loadingRow(8, 'Loading venues...');
+      body.innerHTML = loadingRow(8, "Loading venues...");
       return;
     }
     if (state.errors.venues) {
-      body.innerHTML = errorRow(8, state.errors.venues, 'data-retry-venues');
+      body.innerHTML = errorRow(8, state.errors.venues, "data-retry-venues");
       return;
     }
 
-    body.innerHTML = state.venues.map((venue) => `
+    body.innerHTML =
+      state.venues
+        .map(
+          (venue) => `
       <tr>
-        <td data-label="Venue Name"><div class="fw-semibold">${u().escapeHtml(venue.name)}</div><small class="text-muted-pro">${u().escapeHtml(venue.slug || '')}</small></td>
+        <td data-label="Venue Name"><div class="fw-semibold">${u().escapeHtml(venue.name)}</div><small class="text-muted-pro">${u().escapeHtml(venue.slug || "")}</small></td>
         <td data-label="Type">${titleize(venue.venue_type)}</td>
-        <td data-label="Owner"><div>${u().escapeHtml(venue.owner?.name || `#${venue.user_id}`)}</div><small class="text-muted-pro">${u().escapeHtml(venue.owner?.email || '')}</small></td>
-        <td data-label="City">${u().escapeHtml(venue.city || '-')}</td>
+        <td data-label="Owner"><div>${u().escapeHtml(venue.owner?.name || `#${venue.user_id}`)}</div><small class="text-muted-pro">${u().escapeHtml(venue.owner?.email || "")}</small></td>
+        <td data-label="City">${u().escapeHtml(venue.city || "-")}</td>
         <td data-label="Status">${badge(venue.status)}</td>
         <td data-label="Created Date">${dateLabel(venue.created_at)}</td>
         <td data-label="Total Reservations">${venue.reservations_count ?? 0}</td>
         <td data-label="Actions" class="text-end">
           <div class="admin-actions">
-            ${buttonIcon('bi-eye', 'View venue', `data-view-venue="${venue.slug}"`)}
-            ${buttonIcon('bi-pencil', 'Edit venue', `data-edit-venue="${venue.slug}"`)}
-            ${venue.status === 'active'
-              ? buttonIcon('bi-pause-circle', 'Deactivate venue', `data-deactivate-venue="${venue.slug}"`)
-              : buttonIcon('bi-play-circle', 'Activate venue', `data-activate-venue="${venue.slug}"`)}
-            ${buttonIcon('bi-trash', 'Delete venue', `data-delete-venue="${venue.slug}"`)}
+            ${buttonIcon("bi-eye", "View venue", `data-view-venue="${venue.slug}"`)}
+            ${buttonIcon("bi-pencil", "Edit venue", `data-edit-venue="${venue.slug}"`)}
+            ${
+              venue.status === "active"
+                ? buttonIcon(
+                    "bi-pause-circle",
+                    "Deactivate venue",
+                    `data-deactivate-venue="${venue.slug}"`,
+                  )
+                : buttonIcon(
+                    "bi-play-circle",
+                    "Activate venue",
+                    `data-activate-venue="${venue.slug}"`,
+                  )
+            }
+            ${buttonIcon("bi-trash", "Delete venue", `data-delete-venue="${venue.slug}"`)}
           </div>
         </td>
       </tr>
-    `).join('') || emptyRow(8, 'bi-shop', 'No venues match these filters');
+    `,
+        )
+        .join("") || emptyRow(8, "bi-shop", "No venues match these filters");
   }
 
   function renderReservations() {
-    const body = document.querySelector('[data-admin-reservations]');
+    const body = document.querySelector("[data-admin-reservations]");
     if (!body) return;
     renderReservationStats();
     if (state.loading.reservations) {
@@ -812,7 +1120,7 @@
         <tr>
           <td colspan="11">
             <div class="admin-reservation-skeleton" aria-label="Loading reservations">
-              ${Array.from({ length: 5 }, () => '<span></span>').join('')}
+              ${Array.from({ length: 5 }, () => "<span></span>").join("")}
             </div>
           </td>
         </tr>
@@ -820,56 +1128,66 @@
       return;
     }
     if (state.errors.reservations) {
-      body.innerHTML = errorRow(11, state.errors.reservations, 'data-retry-reservations');
+      body.innerHTML = errorRow(11, state.errors.reservations, "data-retry-reservations");
       return;
     }
 
-    body.innerHTML = state.reservations.map((reservation) => `
+    body.innerHTML =
+      state.reservations
+        .map(
+          (reservation) => `
       <tr>
         <td data-label="Reservation ID">#${reservation.id}</td>
-        <td data-label="Venue Name"><div class="fw-semibold">${u().escapeHtml(reservation.venue?.name || `#${reservation.venue_id}`)}</div><small class="text-muted-pro">${u().escapeHtml(reservation.venue?.city || '')}</small></td>
-        <td data-label="Guest Name">${u().escapeHtml(reservation.guest_name || reservation.user?.name || '-')}</td>
-        <td data-label="Guest Email">${u().escapeHtml(reservation.user?.email || '-')}</td>
-        <td data-label="Phone">${u().escapeHtml(reservation.phone || '-')}</td>
-        <td data-label="Party Size">${reservation.party_size ?? '-'}</td>
+        <td data-label="Venue Name"><div class="fw-semibold">${u().escapeHtml(reservation.venue?.name || `#${reservation.venue_id}`)}</div><small class="text-muted-pro">${u().escapeHtml(reservation.venue?.city || "")}</small></td>
+        <td data-label="Guest Name">${u().escapeHtml(reservation.guest_name || reservation.user?.name || "-")}</td>
+        <td data-label="Guest Email">${u().escapeHtml(reservation.user?.email || "-")}</td>
+        <td data-label="Phone">${u().escapeHtml(reservation.phone || "-")}</td>
+        <td data-label="Party Size">${reservation.party_size ?? "-"}</td>
         <td data-label="Date">${dateLabel(reservation.reservation_date)}</td>
-        <td data-label="Time">${u().escapeHtml(String(reservation.reservation_time || '').slice(0, 5) || '-')}</td>
+        <td data-label="Time">${u().escapeHtml(String(reservation.reservation_time || "").slice(0, 5) || "-")}</td>
         <td data-label="Status">${reservationBadge(reservation.status)}</td>
         <td data-label="Created At">${dateTimeLabel(reservation.created_at)}</td>
         <td data-label="Actions" class="text-end">
           <div class="admin-actions">
-            ${buttonIcon('bi-eye', 'View reservation', `data-view-reservation="${reservation.id}"`)}
-            <button class="btn btn-glass btn-sm" type="button" data-confirm-reservation="${reservation.id}" ${reservation.status !== 'pending' ? 'disabled' : ''}>Confirm</button>
-            <button class="btn btn-glass btn-sm" type="button" data-cancel-reservation="${reservation.id}" ${!['pending', 'confirmed'].includes(reservation.status) ? 'disabled' : ''}>Cancel</button>
-            <button class="btn btn-glass btn-sm" type="button" data-complete-reservation="${reservation.id}" ${reservation.status !== 'confirmed' ? 'disabled' : ''}>Complete</button>
-            <button class="btn btn-glass btn-sm" type="button" data-no-show-reservation="${reservation.id}" ${reservation.status !== 'confirmed' ? 'disabled' : ''}>No Show</button>
-            ${buttonIcon('bi-trash', 'Delete reservation', `data-delete-reservation="${reservation.id}"`)}
+            ${buttonIcon("bi-eye", "View reservation", `data-view-reservation="${reservation.id}"`)}
+            <button class="btn btn-glass btn-sm" type="button" data-confirm-reservation="${reservation.id}" ${reservation.status !== "pending" ? "disabled" : ""}>Confirm</button>
+            <button class="btn btn-glass btn-sm" type="button" data-cancel-reservation="${reservation.id}" ${!["pending", "confirmed"].includes(reservation.status) ? "disabled" : ""}>Cancel</button>
+            <button class="btn btn-glass btn-sm" type="button" data-complete-reservation="${reservation.id}" ${reservation.status !== "confirmed" ? "disabled" : ""}>Complete</button>
+            <button class="btn btn-glass btn-sm" type="button" data-no-show-reservation="${reservation.id}" ${reservation.status !== "confirmed" ? "disabled" : ""}>No Show</button>
+            ${buttonIcon("bi-trash", "Delete reservation", `data-delete-reservation="${reservation.id}"`)}
           </div>
         </td>
       </tr>
-    `).join('') || emptyRow(11, 'bi-calendar-check', 'No reservations match these filters');
+    `,
+        )
+        .join("") || emptyRow(11, "bi-calendar-check", "No reservations match these filters");
   }
 
   function renderReservationStats() {
-    const statsRoot = document.querySelector('[data-admin-reservation-stats]');
-    const platformRoot = document.querySelector('[data-admin-reservation-platform]');
+    const statsRoot = document.querySelector("[data-admin-reservation-stats]");
+    const platformRoot = document.querySelector("[data-admin-reservation-platform]");
     if (!statsRoot || !platformRoot) return;
     const stats = state.reservationMeta?.stats || {};
     statsRoot.innerHTML = [
-      ['Total Reservations', stats.total || 0],
-      ['Pending', stats.pending || 0],
-      ['Confirmed', stats.confirmed || 0],
-      ['Completed', stats.completed || 0],
-      ['Cancelled', stats.cancelled || 0],
-      ['No Show', stats.no_show || 0],
-    ].map(([label, value]) => `<div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">${label}</div><div class="value">${value}</div><div class="delta">Filtered results</div></div></div>`).join('');
+      ["Total Reservations", stats.total || 0],
+      ["Pending", stats.pending || 0],
+      ["Confirmed", stats.confirmed || 0],
+      ["Completed", stats.completed || 0],
+      ["Cancelled", stats.cancelled || 0],
+      ["No Show", stats.no_show || 0],
+    ]
+      .map(
+        ([label, value]) =>
+          `<div class="col-md-4 col-xl-2"><div class="kpi"><div class="label">${label}</div><div class="value">${value}</div><div class="delta">Filtered results</div></div></div>`,
+      )
+      .join("");
 
     const platform = state.reservationMeta?.platform || {};
     platformRoot.innerHTML = `
-      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Reservations Today</span><small>Platform-wide</small></span>${badge('active', String(platform.today || 0))}</div></div>
-      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Reservations This Month</span><small>Platform-wide</small></span>${badge('active', String(platform.this_month || 0))}</div></div>
-      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Top Venues By Reservations</span><small>${(platform.top_venues || []).map((item) => `${u().escapeHtml(item.name)} (${item.total})`).join('<br>') || 'No data'}</small></span></div></div>
-      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Most Active Cities</span><small>${(platform.top_cities || []).map((item) => `${u().escapeHtml(item.city)} (${item.total})`).join('<br>') || 'No data'}</small></span></div></div>
+      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Reservations Today</span><small>Platform-wide</small></span>${badge("active", String(platform.today || 0))}</div></div>
+      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Reservations This Month</span><small>Platform-wide</small></span>${badge("active", String(platform.this_month || 0))}</div></div>
+      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Top Venues By Reservations</span><small>${(platform.top_venues || []).map((item) => `${u().escapeHtml(item.name)} (${item.total})`).join("<br>") || "No data"}</small></span></div></div>
+      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Most Active Cities</span><small>${(platform.top_cities || []).map((item) => `${u().escapeHtml(item.city)} (${item.total})`).join("<br>") || "No data"}</small></span></div></div>
     `;
   }
 
@@ -878,79 +1196,101 @@
     return `
       <tr>
         <td data-label="Order"><div class="fw-semibold">${u().escapeHtml(order.order_number)}</div><div class="small text-muted-pro">${dateTimeLabel(order.created_at)}</div></td>
-        <td data-label="Customer">${u().escapeHtml(order.user?.name || order.user?.email || order.billing_email || '-')}</td>
+        <td data-label="Customer">${u().escapeHtml(order.user?.name || order.user?.email || order.billing_email || "-")}</td>
         <td data-label="Status">${badge(order.payment_status)}</td>
-        <td data-label="Provider">${u().escapeHtml(order.payment_provider || '-')}</td>
-        <td data-label="Email"><div>${badge(emailSent ? 'sent' : 'not sent')}</div><small class="text-muted-pro">${emailSent ? dateTimeLabel(order.order_confirmation_email_sent_at) : ''}</small></td>
+        <td data-label="Provider">${u().escapeHtml(order.payment_provider || "-")}</td>
+        <td data-label="Email"><div>${badge(emailSent ? "sent" : "not sent")}</div><small class="text-muted-pro">${emailSent ? dateTimeLabel(order.order_confirmation_email_sent_at) : ""}</small></td>
         <td data-label="Total">${money(order.total, order.currency)}</td>
         <td data-label="Actions" class="text-end"><div class="admin-actions">${actions(order)}</div></td>
       </tr>`;
   }
 
   function renderPayments() {
-    const paymentsBody = document.querySelector('[data-admin-payments] tbody');
-    const refundsBody = document.querySelector('[data-admin-refunds] tbody');
+    const paymentsBody = document.querySelector("[data-admin-payments] tbody");
+    const refundsBody = document.querySelector("[data-admin-refunds] tbody");
     if (!paymentsBody || !refundsBody) return;
     if (state.loading.payments) {
-      paymentsBody.innerHTML = loadingRow(7, 'Loading payments...');
-      refundsBody.innerHTML = loadingRow(7, 'Loading refunds...');
+      paymentsBody.innerHTML = loadingRow(7, "Loading payments...");
+      refundsBody.innerHTML = loadingRow(7, "Loading refunds...");
       return;
     }
     if (state.errors.payments) {
-      paymentsBody.innerHTML = errorRow(7, state.errors.payments, 'data-retry-payments');
-      refundsBody.innerHTML = errorRow(7, state.errors.payments, 'data-retry-payments');
+      paymentsBody.innerHTML = errorRow(7, state.errors.payments, "data-retry-payments");
+      refundsBody.innerHTML = errorRow(7, state.errors.payments, "data-retry-payments");
       return;
     }
 
-    const payments = state.orders.filter((o) => o.payment_status !== 'refunded').slice(0, 25);
-    const refunds = state.orders.filter((o) => o.payment_status === 'refunded' || o.refunded_at).slice(0, 25);
+    const payments = state.orders.filter((o) => o.payment_status !== "refunded").slice(0, 25);
+    const refunds = state.orders
+      .filter((o) => o.payment_status === "refunded" || o.refunded_at)
+      .slice(0, 25);
 
-    paymentsBody.innerHTML = payments.map((order) => paymentRow(order, (o) => `
-      ${buttonIcon('bi-receipt', 'Payment details', `data-view-payment="${o.id}"`)}
-      <button class="btn btn-glass btn-sm" type="button" data-refund-order="${o.id}" ${o.payment_status !== 'paid' ? 'disabled' : ''}>Refund</button>
-    `)).join('') || emptyRow(7, 'bi-credit-card', 'No payments found');
+    paymentsBody.innerHTML =
+      payments
+        .map((order) =>
+          paymentRow(
+            order,
+            (o) => `
+      ${buttonIcon("bi-receipt", "Payment details", `data-view-payment="${o.id}"`)}
+      <button class="btn btn-glass btn-sm" type="button" data-refund-order="${o.id}" ${o.payment_status !== "paid" ? "disabled" : ""}>Refund</button>
+    `,
+          ),
+        )
+        .join("") || emptyRow(7, "bi-credit-card", "No payments found");
 
-    refundsBody.innerHTML = refunds.map((order) => paymentRow(order, (o) => buttonIcon('bi-receipt', 'Refund details', `data-view-payment="${o.id}"`))).join('') || emptyRow(7, 'bi-arrow-counterclockwise', 'No refunded orders yet');
+    refundsBody.innerHTML =
+      refunds
+        .map((order) =>
+          paymentRow(order, (o) =>
+            buttonIcon("bi-receipt", "Refund details", `data-view-payment="${o.id}"`),
+          ),
+        )
+        .join("") || emptyRow(7, "bi-arrow-counterclockwise", "No refunded orders yet");
   }
 
   function renderTickets() {
-    const body = document.querySelector('[data-admin-tickets]');
+    const body = document.querySelector("[data-admin-tickets]");
     if (!body) return;
     if (state.loading.tickets) {
-      body.innerHTML = loadingRow(6, 'Loading tickets...');
+      body.innerHTML = loadingRow(6, "Loading tickets...");
       return;
     }
     if (state.errors.tickets) {
-      body.innerHTML = errorRow(6, state.errors.tickets, 'data-retry-tickets');
+      body.innerHTML = errorRow(6, state.errors.tickets, "data-retry-tickets");
       return;
     }
-    body.innerHTML = state.tickets.map((ticket) => `
+    body.innerHTML =
+      state.tickets
+        .map(
+          (ticket) => `
       <tr>
-        <td data-label="Ticket Type"><div class="fw-semibold">${u().escapeHtml(ticket.ticket_type?.name || '-')}</div><small class="text-muted-pro">${u().escapeHtml(ticket.ticket_code || '')}</small></td>
-        <td data-label="Event">${u().escapeHtml(ticket.event?.title || '-')}</td>
-        <td data-label="Attendee"><div>${u().escapeHtml(ticket.attendee?.name || 'Guest')}</div><small class="text-muted-pro">${u().escapeHtml(ticket.attendee?.email || '')}</small></td>
-        <td data-label="Purchaser"><div>${u().escapeHtml(ticket.purchaser?.name || ticket.order?.purchaser?.name || '-')}</div><small class="text-muted-pro">${u().escapeHtml(ticket.purchaser?.email || ticket.order?.purchaser?.email || '')}</small></td>
+        <td data-label="Ticket Type"><div class="fw-semibold">${u().escapeHtml(ticket.ticket_type?.name || "-")}</div><small class="text-muted-pro">${u().escapeHtml(ticket.ticket_code || "")}</small></td>
+        <td data-label="Event">${u().escapeHtml(ticket.event?.title || "-")}</td>
+        <td data-label="Attendee"><div>${u().escapeHtml(ticket.attendee?.name || "Guest")}</div><small class="text-muted-pro">${u().escapeHtml(ticket.attendee?.email || "")}</small></td>
+        <td data-label="Purchaser"><div>${u().escapeHtml(ticket.purchaser?.name || ticket.order?.purchaser?.name || "-")}</div><small class="text-muted-pro">${u().escapeHtml(ticket.purchaser?.email || ticket.order?.purchaser?.email || "")}</small></td>
         <td data-label="Status">${badge(ticket.status)}</td>
         <td data-label="Actions" class="text-end">
           <div class="admin-actions">
-            ${buttonIcon('bi-eye', 'View ticket', `data-view-ticket="${ticket.id}"`)}
-            ${buttonIcon('bi-qr-code', 'View QR', `data-ticket-qr="${ticket.id}"`)}
+            ${buttonIcon("bi-eye", "View ticket", `data-view-ticket="${ticket.id}"`)}
+            ${buttonIcon("bi-qr-code", "View QR", `data-ticket-qr="${ticket.id}"`)}
             <button class="btn btn-glass btn-sm" type="button" data-ticket-manual-validation="${ticket.ticket_code}">Manual Validation</button>
           </div>
         </td>
       </tr>
-    `).join('') || emptyRow(6, 'bi-ticket-perforated', 'No tickets match these filters');
+    `,
+        )
+        .join("") || emptyRow(6, "bi-ticket-perforated", "No tickets match these filters");
   }
 
   function fillSettingsForms() {
     const settings = state.settings || {};
-    const defaultFee = document.querySelector('[data-admin-default-fee]');
+    const defaultFee = document.querySelector("[data-admin-default-fee]");
     if (defaultFee) defaultFee.value = Number(settings.default_service_fee_percentage ?? 10);
-    document.querySelectorAll('[data-admin-platform-settings-form] [name]').forEach((input) => {
+    document.querySelectorAll("[data-admin-platform-settings-form] [name]").forEach((input) => {
       const value = settings[input.name];
       if (value === undefined || value === null) return;
-      if (input.name === 'maintenance_mode' || input.name === 'registration_enabled') {
-        input.value = value ? '1' : '0';
+      if (input.name === "maintenance_mode" || input.name === "registration_enabled") {
+        input.value = value ? "1" : "0";
       } else {
         input.value = value;
       }
@@ -958,72 +1298,86 @@
   }
 
   function renderCategories() {
-    const body = document.querySelector('[data-admin-categories]');
+    const body = document.querySelector("[data-admin-categories]");
     if (!body) return;
     if (state.loading.categories) {
-      body.innerHTML = loadingRow(6, 'Loading categories...');
+      body.innerHTML = loadingRow(6, "Loading categories...");
       return;
     }
     if (state.errors.categories) {
-      body.innerHTML = errorRow(6, state.errors.categories, 'data-retry-categories');
+      body.innerHTML = errorRow(6, state.errors.categories, "data-retry-categories");
       return;
     }
-    body.innerHTML = state.categories.map((category) => `
+    body.innerHTML =
+      state.categories
+        .map(
+          (category) => `
       <tr>
         <td data-label="Name"><input class="form-control form-control-sm" value="${u().escapeHtml(category.name)}" data-category-name="${category.id}"></td>
         <td data-label="Slug">${u().escapeHtml(category.slug)}</td>
-        <td data-label="Icon"><input class="form-control form-control-sm" value="${u().escapeHtml(category.icon || '')}" data-category-icon="${category.id}"></td>
+        <td data-label="Icon"><input class="form-control form-control-sm" value="${u().escapeHtml(category.icon || "")}" data-category-icon="${category.id}"></td>
         <td data-label="Events">${category.events_count ?? 0}</td>
-        <td data-label="Status">${badge(category.is_active ? 'active' : 'inactive')}</td>
-        <td data-label="Actions" class="text-end"><div class="admin-actions"><button class="btn btn-glass btn-sm" data-save-category="${category.id}">Save</button><button class="btn btn-glass btn-sm" data-toggle-category="${category.id}">${category.is_active ? 'Disable' : 'Enable'}</button><button class="btn btn-glass btn-sm" data-delete-category="${category.id}">Delete</button></div></td>
+        <td data-label="Status">${badge(category.is_active ? "active" : "inactive")}</td>
+        <td data-label="Actions" class="text-end"><div class="admin-actions"><button class="btn btn-glass btn-sm" data-save-category="${category.id}">Save</button><button class="btn btn-glass btn-sm" data-toggle-category="${category.id}">${category.is_active ? "Disable" : "Enable"}</button><button class="btn btn-glass btn-sm" data-delete-category="${category.id}">Delete</button></div></td>
       </tr>
-    `).join('') || emptyRow(6, 'bi-tags', 'No categories configured');
+    `,
+        )
+        .join("") || emptyRow(6, "bi-tags", "No categories configured");
   }
 
   function renderEmailCenter() {
     renderEmailSummary();
-    const statusBody = document.querySelector('[data-admin-email-statuses]');
-    const pager = document.querySelector('[data-admin-email-pagination]');
-    const select = document.querySelector('[data-email-template-select]');
+    const statusBody = document.querySelector("[data-admin-email-statuses]");
+    const pager = document.querySelector("[data-admin-email-pagination]");
+    const select = document.querySelector("[data-email-template-select]");
     if (statusBody) {
       if (state.loading.emailCenter) {
-        statusBody.innerHTML = loadingRow(7, 'Loading email logs...');
-        if (pager) pager.innerHTML = '';
+        statusBody.innerHTML = loadingRow(7, "Loading email logs...");
+        if (pager) pager.innerHTML = "";
       } else if (state.errors.emailCenter) {
-        statusBody.innerHTML = errorRow(7, state.errors.emailCenter, 'data-retry-email-center');
-        if (pager) pager.innerHTML = '';
+        statusBody.innerHTML = errorRow(7, state.errors.emailCenter, "data-retry-email-center");
+        if (pager) pager.innerHTML = "";
       } else {
         const logs = state.emailCenter?.email_logs || [];
-        statusBody.innerHTML = logs.map((email) => `
+        statusBody.innerHTML =
+          logs
+            .map(
+              (email) => `
           <tr data-email-log-id="${email.id}" role="button" tabindex="0">
-            <td data-label="Recipient"><div class="fw-semibold">${u().escapeHtml(email.recipient_name || '-')}</div></td>
-            <td data-label="Email">${u().escapeHtml(email.recipient_email || '-')}</td>
-            <td data-label="Module">${badge(email.module || 'System')}</td>
-            <td data-label="Email Type">${u().escapeHtml(email.email_type || '-')}</td>
-            <td data-label="Subject">${u().escapeHtml(email.subject || '-')}</td>
-            <td data-label="Status">${badge(email.status || 'Pending')}</td>
+            <td data-label="Recipient"><div class="fw-semibold">${u().escapeHtml(email.recipient_name || "-")}</div></td>
+            <td data-label="Email">${u().escapeHtml(email.recipient_email || "-")}</td>
+            <td data-label="Module">${badge(email.module || "System")}</td>
+            <td data-label="Email Type">${u().escapeHtml(email.email_type || "-")}</td>
+            <td data-label="Subject">${u().escapeHtml(email.subject || "-")}</td>
+            <td data-label="Status">${badge(email.status || "Pending")}</td>
             <td data-label="Sent At">${dateTimeLabel(email.sent_at || email.created_at)}</td>
           </tr>
-        `).join('') || emptyRow(7, 'bi-envelope', 'No email logs yet');
+        `,
+            )
+            .join("") || emptyRow(7, "bi-envelope", "No email logs yet");
 
         if (pager && state.emailMeta?.last_page > 1) {
           const current = Number(state.emailMeta.current_page || 1);
-          pager.innerHTML = `<div class="dashboard-pagination"><button class="btn btn-glass btn-sm" data-email-page="${current - 1}" ${current <= 1 ? 'disabled' : ''}>Previous</button><span class="text-muted-pro small">Page ${current} of ${state.emailMeta.last_page}</span><button class="btn btn-glass btn-sm" data-email-page="${current + 1}" ${current >= state.emailMeta.last_page ? 'disabled' : ''}>Next</button></div>`;
+          pager.innerHTML = `<div class="dashboard-pagination"><button class="btn btn-glass btn-sm" data-email-page="${current - 1}" ${current <= 1 ? "disabled" : ""}>Previous</button><span class="text-muted-pro small">Page ${current} of ${state.emailMeta.last_page}</span><button class="btn btn-glass btn-sm" data-email-page="${current + 1}" ${current >= state.emailMeta.last_page ? "disabled" : ""}>Next</button></div>`;
         } else if (pager) {
-          pager.innerHTML = '';
+          pager.innerHTML = "";
         }
       }
     }
     if (select && state.emailCenter?.templates) {
       const current = select.value;
-      select.innerHTML = state.emailCenter.templates.map((template) => `<option value="${template.id}">${u().escapeHtml(template.name)}</option>`).join('');
-      select.value = current || String(state.emailCenter.templates[0]?.id || '');
+      select.innerHTML = state.emailCenter.templates
+        .map(
+          (template) => `<option value="${template.id}">${u().escapeHtml(template.name)}</option>`,
+        )
+        .join("");
+      select.value = current || String(state.emailCenter.templates[0]?.id || "");
       fillEmailTemplateForm();
     }
   }
 
   function renderEmailSummary() {
-    const row = document.querySelector('[data-admin-email-summary]');
+    const row = document.querySelector("[data-admin-email-summary]");
     if (!row) return;
     const summary = state.emailCenter?.summary || {
       emails_sent_today: 0,
@@ -1042,44 +1396,54 @@
 
   function renderSubscribers() {
     renderSubscriberSummary();
-    const body = document.querySelector('[data-admin-subscribers]');
-    const pager = document.querySelector('[data-admin-subscriber-pagination]');
+    const body = document.querySelector("[data-admin-subscribers]");
+    const pager = document.querySelector("[data-admin-subscriber-pagination]");
     if (!body) return;
 
     if (state.loading.subscribers) {
-      body.innerHTML = loadingRow(6, 'Loading subscribers...');
-      if (pager) pager.innerHTML = '';
+      body.innerHTML = loadingRow(6, "Loading subscribers...");
+      if (pager) pager.innerHTML = "";
       return;
     }
     if (state.errors.subscribers) {
-      body.innerHTML = errorRow(6, state.errors.subscribers, 'data-retry-subscribers');
-      if (pager) pager.innerHTML = '';
+      body.innerHTML = errorRow(6, state.errors.subscribers, "data-retry-subscribers");
+      if (pager) pager.innerHTML = "";
       return;
     }
 
-    body.innerHTML = state.subscribers.map((subscriber) => `
+    body.innerHTML =
+      state.subscribers
+        .map(
+          (subscriber) => `
       <tr>
-        <td data-label="Email"><div class="fw-semibold">${u().escapeHtml(subscriber.email || '-')}</div><small class="text-muted-pro">#${subscriber.id}</small></td>
-        <td data-label="Source">${badge(subscriber.source || 'events')}</td>
-        <td data-label="Language">${u().escapeHtml((subscriber.language || 'en').toUpperCase())}</td>
-        <td data-label="Status">${badge(subscriber.status || 'active')}</td>
+        <td data-label="Email"><div class="fw-semibold">${u().escapeHtml(subscriber.email || "-")}</div><small class="text-muted-pro">#${subscriber.id}</small></td>
+        <td data-label="Source">${badge(subscriber.source || "events")}</td>
+        <td data-label="Language">${u().escapeHtml((subscriber.language || "en").toUpperCase())}</td>
+        <td data-label="Status">${badge(subscriber.status || "active")}</td>
         <td data-label="Subscribed">${dateTimeLabel(subscriber.subscribed_at)}</td>
         <td data-label="Unsubscribed">${dateTimeLabel(subscriber.unsubscribed_at)}</td>
       </tr>
-    `).join('') || emptyRow(6, 'bi-envelope-heart', 'No subscribers found');
+    `,
+        )
+        .join("") || emptyRow(6, "bi-envelope-heart", "No subscribers found");
 
     if (pager && state.subscriberMeta?.last_page > 1) {
       const current = Number(state.subscriberMeta.current_page || 1);
-      pager.innerHTML = `<div class="dashboard-pagination"><button class="btn btn-glass btn-sm" data-subscriber-page="${current - 1}" ${current <= 1 ? 'disabled' : ''}>Previous</button><span class="text-muted-pro small">Page ${current} of ${state.subscriberMeta.last_page}</span><button class="btn btn-glass btn-sm" data-subscriber-page="${current + 1}" ${current >= state.subscriberMeta.last_page ? 'disabled' : ''}>Next</button></div>`;
+      pager.innerHTML = `<div class="dashboard-pagination"><button class="btn btn-glass btn-sm" data-subscriber-page="${current - 1}" ${current <= 1 ? "disabled" : ""}>Previous</button><span class="text-muted-pro small">Page ${current} of ${state.subscriberMeta.last_page}</span><button class="btn btn-glass btn-sm" data-subscriber-page="${current + 1}" ${current >= state.subscriberMeta.last_page ? "disabled" : ""}>Next</button></div>`;
     } else if (pager) {
-      pager.innerHTML = '';
+      pager.innerHTML = "";
     }
   }
 
   function renderSubscriberSummary() {
-    const row = document.querySelector('[data-admin-subscriber-summary]');
+    const row = document.querySelector("[data-admin-subscriber-summary]");
     if (!row) return;
-    const summary = state.subscriberSummary || { total: 0, active: 0, unsubscribed: 0, by_source: {} };
+    const summary = state.subscriberSummary || {
+      total: 0,
+      active: 0,
+      unsubscribed: 0,
+      by_source: {},
+    };
     const bySource = summary.by_source || {};
     row.innerHTML = `
       <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Total Subscribers</div><div class="value">${summary.total ?? 0}</div></div></div>
@@ -1090,192 +1454,297 @@
   }
 
   function selectedEmailTemplate() {
-    const id = document.querySelector('[data-email-template-select]')?.value;
-    return (state.emailCenter?.templates || []).find((template) => String(template.id) === String(id));
+    const id = document.querySelector("[data-email-template-select]")?.value;
+    return (state.emailCenter?.templates || []).find(
+      (template) => String(template.id) === String(id),
+    );
   }
 
   function fillEmailTemplateForm() {
-    const form = document.querySelector('[data-email-template-form]');
+    const form = document.querySelector("[data-email-template-form]");
     const template = selectedEmailTemplate();
     if (!form || !template) return;
-    form.elements.subject.value = template.subject || '';
-    form.elements.html_template.value = template.html_template || '';
-    form.elements.text_template.value = template.text_template || '';
-    const preview = document.querySelector('[data-email-template-preview]');
+    form.elements.subject.value = template.subject || "";
+    form.elements.html_template.value = template.html_template || "";
+    form.elements.text_template.value = template.text_template || "";
+    const preview = document.querySelector("[data-email-template-preview]");
     if (preview) preview.hidden = true;
   }
 
   function renderAuditLogs() {
-    const body = document.querySelector('[data-admin-audit-logs]');
-    const pager = document.querySelector('[data-admin-audit-pagination]');
+    const body = document.querySelector("[data-admin-audit-logs]");
+    const pager = document.querySelector("[data-admin-audit-pagination]");
     if (!body) return;
     if (state.loading.auditLogs) {
-      body.innerHTML = loadingRow(4, 'Loading audit logs...');
-      if (pager) pager.innerHTML = '';
+      body.innerHTML = loadingRow(4, "Loading audit logs...");
+      if (pager) pager.innerHTML = "";
       return;
     }
     if (state.errors.auditLogs) {
-      body.innerHTML = errorRow(4, state.errors.auditLogs, 'data-retry-audit-logs');
-      if (pager) pager.innerHTML = '';
+      body.innerHTML = errorRow(4, state.errors.auditLogs, "data-retry-audit-logs");
+      if (pager) pager.innerHTML = "";
       return;
     }
-    body.innerHTML = state.auditLogs.map((log) => `
-      <tr><td data-label="Admin"><div class="fw-semibold">${u().escapeHtml(log.user?.name || 'System')}</div><small class="text-muted-pro">${u().escapeHtml(log.user?.email || '')}</small></td><td data-label="Action">${badge(log.action)}</td><td data-label="Target"><div>${u().escapeHtml(log.auditable_type || '-')}</div><small>${log.auditable_id || ''}</small></td><td data-label="Timestamp">${dateTimeLabel(log.created_at)}</td></tr>
-    `).join('') || emptyRow(4, 'bi-activity', 'No audit logs yet');
+    body.innerHTML =
+      state.auditLogs
+        .map(
+          (log) => `
+      <tr><td data-label="Admin"><div class="fw-semibold">${u().escapeHtml(log.user?.name || "System")}</div><small class="text-muted-pro">${u().escapeHtml(log.user?.email || "")}</small></td><td data-label="Action">${badge(log.action)}</td><td data-label="Target"><div>${u().escapeHtml(log.auditable_type || "-")}</div><small>${log.auditable_id || ""}</small></td><td data-label="Timestamp">${dateTimeLabel(log.created_at)}</td></tr>
+    `,
+        )
+        .join("") || emptyRow(4, "bi-activity", "No audit logs yet");
     if (pager && state.auditMeta?.last_page > 1) {
       const current = Number(state.auditMeta.current_page || 1);
-      pager.innerHTML = `<div class="dashboard-pagination"><button class="btn btn-glass btn-sm" data-audit-page="${current - 1}" ${current <= 1 ? 'disabled' : ''}>Previous</button><span class="text-muted-pro small">Page ${current} of ${state.auditMeta.last_page}</span><button class="btn btn-glass btn-sm" data-audit-page="${current + 1}" ${current >= state.auditMeta.last_page ? 'disabled' : ''}>Next</button></div>`;
+      pager.innerHTML = `<div class="dashboard-pagination"><button class="btn btn-glass btn-sm" data-audit-page="${current - 1}" ${current <= 1 ? "disabled" : ""}>Previous</button><span class="text-muted-pro small">Page ${current} of ${state.auditMeta.last_page}</span><button class="btn btn-glass btn-sm" data-audit-page="${current + 1}" ${current >= state.auditMeta.last_page ? "disabled" : ""}>Next</button></div>`;
     } else if (pager) {
-      pager.innerHTML = '';
+      pager.innerHTML = "";
     }
   }
 
   function renderRevenueKpis() {
-    const row = document.querySelector('[data-admin-revenue-kpis]');
+    const row = document.querySelector("[data-admin-revenue-kpis]");
     if (!row) return;
-    const paid = state.orders.filter((order) => order.payment_status === 'paid');
+    const paid = state.orders.filter((order) => order.payment_status === "paid");
     const now = new Date();
     const todayKey = now.toISOString().slice(0, 10);
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
     startOfWeek.setHours(0, 0, 0, 0);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const revenueFor = (predicate) => paid
-      .filter((order) => predicate(new Date(order.created_at || order.paid_at || 0)))
-      .reduce((sum, order) => sum + Number(order.total || 0), 0);
+    const revenueFor = (predicate) =>
+      paid
+        .filter((order) => predicate(new Date(order.created_at || order.paid_at || 0)))
+        .reduce((sum, order) => sum + Number(order.total || 0), 0);
     row.innerHTML = `
-      <div class="col-md-3"><div class="kpi"><div class="label">Total Revenue</div><div class="value">${money(revenueFor(() => true), 'USD')}</div><div class="delta">${paid.length} paid orders</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">This Month</div><div class="value">${money(revenueFor((date) => date >= startOfMonth), 'USD')}</div><div class="delta">Month to date</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">This Week</div><div class="value">${money(revenueFor((date) => date >= startOfWeek), 'USD')}</div><div class="delta">Week to date</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">Today</div><div class="value">${money(revenueFor((date) => date.toISOString().slice(0, 10) === todayKey), 'USD')}</div><div class="delta">Current day</div></div></div>`;
+      <div class="col-md-3"><div class="kpi"><div class="label">Total Revenue</div><div class="value">${money(
+        revenueFor(() => true),
+        "USD",
+      )}</div><div class="delta">${paid.length} paid orders</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">This Month</div><div class="value">${money(
+        revenueFor((date) => date >= startOfMonth),
+        "USD",
+      )}</div><div class="delta">Month to date</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">This Week</div><div class="value">${money(
+        revenueFor((date) => date >= startOfWeek),
+        "USD",
+      )}</div><div class="delta">Week to date</div></div></div>
+      <div class="col-md-3"><div class="kpi"><div class="label">Today</div><div class="value">${money(
+        revenueFor((date) => date.toISOString().slice(0, 10) === todayKey),
+        "USD",
+      )}</div><div class="delta">Current day</div></div></div>`;
   }
 
   function renderOrganizerRanking() {
-    const wrap = document.querySelector('[data-admin-organizer-ranking]');
+    const wrap = document.querySelector("[data-admin-organizer-ranking]");
     if (!wrap) return;
     const organizers = state.users
-      .filter((usr) => usr.role === 'organizer' || usr.organizer_status !== 'none')
-      .map((usr) => ({ user: usr, revenue: organizerRevenue(usr.id), tickets: organizerTicketsSold(usr.id) }))
+      .filter((usr) => usr.role === "organizer" || usr.organizer_status !== "none")
+      .map((usr) => ({
+        user: usr,
+        revenue: organizerRevenue(usr.id),
+        tickets: organizerTicketsSold(usr.id),
+      }))
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 8);
-    wrap.innerHTML = organizers.map((item, index) => `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${index + 1}. ${u().escapeHtml(item.user.name || item.user.email)}</span><small>${item.tickets} tickets sold</small></span><span class="fw-semibold">${money(item.revenue, 'USD')}</span></div>`).join('') || '<div class="admin-empty"><i class="bi bi-person-check"></i><span>No organizer performance yet</span></div>';
+    wrap.innerHTML =
+      organizers
+        .map(
+          (item, index) =>
+            `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${index + 1}. ${u().escapeHtml(item.user.name || item.user.email)}</span><small>${item.tickets} tickets sold</small></span><span class="fw-semibold">${money(item.revenue, "USD")}</span></div>`,
+        )
+        .join("") ||
+      '<div class="admin-empty"><i class="bi bi-person-check"></i><span>No organizer performance yet</span></div>';
     renderTopLists();
   }
 
   function renderTopLists() {
-    const topEvents = document.querySelector('[data-admin-top-events]');
+    const topEvents = document.querySelector("[data-admin-top-events]");
     if (topEvents) {
-      const events = [...state.events].sort((a, b) => eventRevenue(b.id) - eventRevenue(a.id)).slice(0, 8);
-      topEvents.innerHTML = events.map((event, index) => `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${index + 1}. ${u().escapeHtml(event.title)}</span><small>${eventInventory(event).sold} tickets sold</small></span><span class="fw-semibold">${money(eventRevenue(event.id), event.currency || 'USD')}</span></div>`).join('') || '<div class="admin-empty"><i class="bi bi-calendar-event"></i><span>No event sales yet</span></div>';
+      const events = [...state.events]
+        .sort((a, b) => eventRevenue(b.id) - eventRevenue(a.id))
+        .slice(0, 8);
+      topEvents.innerHTML =
+        events
+          .map(
+            (event, index) =>
+              `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${index + 1}. ${u().escapeHtml(event.title)}</span><small>${eventInventory(event).sold} tickets sold</small></span><span class="fw-semibold">${money(eventRevenue(event.id), event.currency || "USD")}</span></div>`,
+          )
+          .join("") ||
+        '<div class="admin-empty"><i class="bi bi-calendar-event"></i><span>No event sales yet</span></div>';
     }
-    const topOrganizers = document.querySelector('[data-admin-top-organizers]');
+    const topOrganizers = document.querySelector("[data-admin-top-organizers]");
     if (topOrganizers) {
       const organizers = state.users
-        .filter((usr) => usr.role === 'organizer' || usr.organizer_status !== 'none')
-        .map((usr) => ({ user: usr, revenue: organizerRevenue(usr.id), tickets: organizerTicketsSold(usr.id) }))
+        .filter((usr) => usr.role === "organizer" || usr.organizer_status !== "none")
+        .map((usr) => ({
+          user: usr,
+          revenue: organizerRevenue(usr.id),
+          tickets: organizerTicketsSold(usr.id),
+        }))
         .sort((a, b) => b.tickets - a.tickets)
         .slice(0, 8);
-      topOrganizers.innerHTML = organizers.map((item, index) => `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${index + 1}. ${u().escapeHtml(item.user.name || item.user.email)}</span><small>${money(item.revenue, 'USD')} revenue</small></span><span class="fw-semibold">${item.tickets}</span></div>`).join('') || '<div class="admin-empty"><i class="bi bi-person-check"></i><span>No organizer sales yet</span></div>';
+      topOrganizers.innerHTML =
+        organizers
+          .map(
+            (item, index) =>
+              `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${index + 1}. ${u().escapeHtml(item.user.name || item.user.email)}</span><small>${money(item.revenue, "USD")} revenue</small></span><span class="fw-semibold">${item.tickets}</span></div>`,
+          )
+          .join("") ||
+        '<div class="admin-empty"><i class="bi bi-person-check"></i><span>No organizer sales yet</span></div>';
     }
   }
 
   function hydrateReportFilters() {
-    const organizerSelect = document.querySelector('[data-report-organizer]');
+    const organizerSelect = document.querySelector("[data-report-organizer]");
     if (organizerSelect) {
       const current = organizerSelect.value;
-      const organizers = state.users.filter((usr) => usr.role === 'organizer' || usr.organizer_status !== 'none');
-      organizerSelect.innerHTML = '<option value="">All organizers</option>' + organizers.map((usr) => `<option value="${usr.id}">${u().escapeHtml(usr.name || usr.email)}</option>`).join('');
+      const organizers = state.users.filter(
+        (usr) => usr.role === "organizer" || usr.organizer_status !== "none",
+      );
+      organizerSelect.innerHTML =
+        '<option value="">All organizers</option>' +
+        organizers
+          .map(
+            (usr) => `<option value="${usr.id}">${u().escapeHtml(usr.name || usr.email)}</option>`,
+          )
+          .join("");
       organizerSelect.value = current;
     }
-    const categorySelect = document.querySelector('[data-report-category]');
+    const categorySelect = document.querySelector("[data-report-category]");
     if (categorySelect) {
       const current = categorySelect.value;
-      categorySelect.innerHTML = '<option value="">All categories</option>' + state.categories.map((category) => `<option value="${u().escapeHtml(category.name)}">${u().escapeHtml(category.name)}</option>`).join('');
+      categorySelect.innerHTML =
+        '<option value="">All categories</option>' +
+        state.categories
+          .map(
+            (category) =>
+              `<option value="${u().escapeHtml(category.name)}">${u().escapeHtml(category.name)}</option>`,
+          )
+          .join("");
       categorySelect.value = current;
     }
   }
 
   function reportFilters() {
     return {
-      dateFrom: document.querySelector('[data-report-date-from]')?.value || '',
-      dateTo: document.querySelector('[data-report-date-to]')?.value || '',
-      organizerId: document.querySelector('[data-report-organizer]')?.value || '',
-      category: document.querySelector('[data-report-category]')?.value || '',
+      dateFrom: document.querySelector("[data-report-date-from]")?.value || "",
+      dateTo: document.querySelector("[data-report-date-to]")?.value || "",
+      organizerId: document.querySelector("[data-report-organizer]")?.value || "",
+      category: document.querySelector("[data-report-category]")?.value || "",
     };
   }
 
   function eventMatchesReport(event, filters) {
-    if (filters.organizerId && String(event.organizer_id) !== String(filters.organizerId)) return false;
+    if (filters.organizerId && String(event.organizer_id) !== String(filters.organizerId))
+      return false;
     if (filters.category && event.category !== filters.category) return false;
     return true;
   }
 
   function orderMatchesReport(order, filters) {
-    const date = (order.created_at || order.paid_at || '').slice(0, 10);
+    const date = (order.created_at || order.paid_at || "").slice(0, 10);
     if (filters.dateFrom && date < filters.dateFrom) return false;
     if (filters.dateTo && date > filters.dateTo) return false;
     if (!filters.organizerId && !filters.category) return true;
     const eventById = Object.fromEntries(state.events.map((event) => [String(event.id), event]));
-    return (order.items || []).some((item) => eventMatchesReport(eventById[String(item.event_id || item.event?.id)] || {}, filters));
+    return (order.items || []).some((item) =>
+      eventMatchesReport(eventById[String(item.event_id || item.event?.id)] || {}, filters),
+    );
   }
 
   function reportRows(type) {
     const filters = reportFilters();
-    if (type === 'revenue') {
+    if (type === "revenue") {
       return {
-        title: 'Revenue Report',
-        headers: ['Order', 'Customer', 'Revenue', 'Service Fee', 'Date'],
-        rows: state.orders.filter((order) => order.payment_status === 'paid' && orderMatchesReport(order, filters)).map((order) => [order.order_number, order.user?.email || order.billing_email || '', money(order.total, order.currency), money(order.service_fee, order.currency), dateTimeLabel(order.created_at)]),
+        title: "Revenue Report",
+        headers: ["Order", "Customer", "Revenue", "Service Fee", "Date"],
+        rows: state.orders
+          .filter((order) => order.payment_status === "paid" && orderMatchesReport(order, filters))
+          .map((order) => [
+            order.order_number,
+            order.user?.email || order.billing_email || "",
+            money(order.total, order.currency),
+            money(order.service_fee, order.currency),
+            dateTimeLabel(order.created_at),
+          ]),
       };
     }
-    if (type === 'attendance') {
+    if (type === "attendance") {
       return {
-        title: 'Attendance Report',
-        headers: ['Event', 'Tickets Sold', 'Checked In', 'Remaining'],
-        rows: state.events.filter((event) => eventMatchesReport(event, filters)).map((event) => {
-          const sold = state.tickets.filter((ticket) => String(ticket.event?.id) === String(event.id)).length || eventInventory(event).sold;
-          const checked = state.tickets.filter((ticket) => String(ticket.event?.id) === String(event.id) && ticket.status === 'checked_in').length;
-          return [event.title, sold, checked, Math.max(0, sold - checked)];
-        }),
+        title: "Attendance Report",
+        headers: ["Event", "Tickets Sold", "Checked In", "Remaining"],
+        rows: state.events
+          .filter((event) => eventMatchesReport(event, filters))
+          .map((event) => {
+            const sold =
+              state.tickets.filter((ticket) => String(ticket.event?.id) === String(event.id))
+                .length || eventInventory(event).sold;
+            const checked = state.tickets.filter(
+              (ticket) =>
+                String(ticket.event?.id) === String(event.id) && ticket.status === "checked_in",
+            ).length;
+            return [event.title, sold, checked, Math.max(0, sold - checked)];
+          }),
       };
     }
-    if (type === 'organizers') {
+    if (type === "organizers") {
       return {
-        title: 'Organizer Report',
-        headers: ['Organizer', 'Email', 'Events', 'Tickets Sold', 'Revenue'],
-        rows: state.users.filter((usr) => usr.role === 'organizer' || usr.organizer_status !== 'none').filter((usr) => !filters.organizerId || String(usr.id) === String(filters.organizerId)).map((usr) => [usr.name || usr.email, usr.email, usr.organized_events_count || 0, organizerTicketsSold(usr.id), money(organizerRevenue(usr.id), 'USD')]),
+        title: "Organizer Report",
+        headers: ["Organizer", "Email", "Events", "Tickets Sold", "Revenue"],
+        rows: state.users
+          .filter((usr) => usr.role === "organizer" || usr.organizer_status !== "none")
+          .filter((usr) => !filters.organizerId || String(usr.id) === String(filters.organizerId))
+          .map((usr) => [
+            usr.name || usr.email,
+            usr.email,
+            usr.organized_events_count || 0,
+            organizerTicketsSold(usr.id),
+            money(organizerRevenue(usr.id), "USD"),
+          ]),
       };
     }
     return {
-      title: 'Ticket Sales Report',
-      headers: ['Event', 'Category', 'Tickets Sold', 'Inventory Remaining', 'Revenue'],
-      rows: state.events.filter((event) => eventMatchesReport(event, filters)).map((event) => [event.title, event.category || '', eventInventory(event).sold, eventInventory(event).available, money(eventRevenue(event.id), event.currency || 'USD')]),
+      title: "Ticket Sales Report",
+      headers: ["Event", "Category", "Tickets Sold", "Inventory Remaining", "Revenue"],
+      rows: state.events
+        .filter((event) => eventMatchesReport(event, filters))
+        .map((event) => [
+          event.title,
+          event.category || "",
+          eventInventory(event).sold,
+          eventInventory(event).available,
+          money(eventRevenue(event.id), event.currency || "USD"),
+        ]),
     };
   }
 
   function csvEscape(value) {
-    const text = String(value ?? '');
+    const text = String(value ?? "");
     return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
   }
 
   function exportReport(type, format) {
     const report = reportRows(type);
-    if (format === 'pdf') {
-      const win = window.open('', '_blank');
+    if (format === "pdf") {
+      const win = window.open("", "_blank");
       if (!win) {
-        window.tkToast?.('Popup blocked. Allow popups to export PDF.', 'error');
+        window.tkToast?.("Popup blocked. Allow popups to export PDF.", "error");
         return;
       }
-      win.document.write(`<!doctype html><html><head><title>${u().escapeHtml(report.title)}</title><style>body{font-family:Arial,sans-serif;color:#111827;padding:28px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border-bottom:1px solid #e5e7eb;padding:10px;text-align:left;font-size:12px}th{background:#f8fafc}.brand{font-weight:700;color:#2563eb}</style></head><body><div class="brand">Tiketa</div><h1>${u().escapeHtml(report.title)}</h1><p>Generated ${u().escapeHtml(dateTimeLabel(new Date().toISOString()))}</p><table><thead><tr>${report.headers.map((header) => `<th>${u().escapeHtml(header)}</th>`).join('')}</tr></thead><tbody>${report.rows.map((row) => `<tr>${row.map((cell) => `<td>${u().escapeHtml(cell)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${report.headers.length}">No data</td></tr>`}</tbody></table></body></html>`);
+      win.document.write(
+        `<!doctype html><html><head><title>${u().escapeHtml(report.title)}</title><style>body{font-family:Arial,sans-serif;color:#111827;padding:28px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border-bottom:1px solid #e5e7eb;padding:10px;text-align:left;font-size:12px}th{background:#f8fafc}.brand{font-weight:700;color:#2563eb}</style></head><body><div class="brand">Tiketa</div><h1>${u().escapeHtml(report.title)}</h1><p>Generated ${u().escapeHtml(dateTimeLabel(new Date().toISOString()))}</p><table><thead><tr>${report.headers.map((header) => `<th>${u().escapeHtml(header)}</th>`).join("")}</tr></thead><tbody>${report.rows.map((row) => `<tr>${row.map((cell) => `<td>${u().escapeHtml(cell)}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${report.headers.length}">No data</td></tr>`}</tbody></table></body></html>`,
+      );
       win.document.close();
       win.focus();
       win.print();
       return;
     }
-    const csv = [report.headers, ...report.rows].map((row) => row.map(csvEscape).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const csv = [report.headers, ...report.rows]
+      .map((row) => row.map(csvEscape).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
     link.download = `event-sphere-${type}-report.csv`;
     link.click();
@@ -1286,11 +1755,11 @@
     const params = Object.assign({}, state.emailFilters, { format });
     delete params.page;
     const query = qs(params);
-    const blob = await api().fetchBlob(`/admin/email-center/export${query ? `?${query}` : ''}`);
+    const blob = await api().fetchBlob(`/admin/email-center/export${query ? `?${query}` : ""}`);
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.download = `event-sphere-email-logs.${format === 'excel' ? 'xls' : 'csv'}`;
+    link.download = `event-sphere-email-logs.${format === "excel" ? "xls" : "csv"}`;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -1299,18 +1768,18 @@
     const params = Object.assign({}, state.subscriberFilters);
     delete params.page;
     const query = qs(params);
-    const blob = await api().fetchBlob(`/admin/subscribers/export${query ? `?${query}` : ''}`);
+    const blob = await api().fetchBlob(`/admin/subscribers/export${query ? `?${query}` : ""}`);
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.download = 'tiketa-subscribers.csv';
+    link.download = "tiketa-subscribers.csv";
     link.click();
     URL.revokeObjectURL(url);
   }
 
   function renderCheckIns() {
-    const statsRow = document.querySelector('[data-admin-checkin-stats]');
-    const body = document.querySelector('[data-admin-checkin-logs]');
+    const statsRow = document.querySelector("[data-admin-checkin-stats]");
+    const body = document.querySelector("[data-admin-checkin-logs]");
     if (statsRow) {
       const stats = state.checkInStats || { tickets_sold: 0, checked_in: 0, remaining: 0 };
       statsRow.innerHTML = `
@@ -1320,48 +1789,115 @@
     }
     if (!body) return;
     if (state.loading.checkIns) {
-      body.innerHTML = loadingRow(6, 'Loading validation logs...');
+      body.innerHTML = loadingRow(6, "Loading validation logs...");
       return;
     }
     if (state.errors.checkIns) {
-      body.innerHTML = errorRow(6, state.errors.checkIns, 'data-retry-checkins');
+      body.innerHTML = errorRow(6, state.errors.checkIns, "data-retry-checkins");
       return;
     }
-    body.innerHTML = state.checkInLogs.map((log) => `
+    body.innerHTML =
+      state.checkInLogs
+        .map(
+          (log) => `
       <tr>
         <td data-label="Result">${badge(log.result)}</td>
-        <td data-label="Event">${u().escapeHtml(log.event?.title || '-')}</td>
-        <td data-label="Attendee"><div class="fw-semibold">${u().escapeHtml(log.attendee?.name || '-')}</div><small class="text-muted-pro">${u().escapeHtml(log.attendee?.email || '')}</small></td>
-        <td data-label="Ticket">${u().escapeHtml(log.ticket_code || log.ticket_uuid || '-')}</td>
-        <td data-label="Scanned By">${u().escapeHtml(log.scanner?.name || log.scanner?.email || '-')}</td>
+        <td data-label="Event">${u().escapeHtml(log.event?.title || "-")}</td>
+        <td data-label="Attendee"><div class="fw-semibold">${u().escapeHtml(log.attendee?.name || "-")}</div><small class="text-muted-pro">${u().escapeHtml(log.attendee?.email || "")}</small></td>
+        <td data-label="Ticket">${u().escapeHtml(log.ticket_code || log.ticket_uuid || "-")}</td>
+        <td data-label="Scanned By">${u().escapeHtml(log.scanner?.name || log.scanner?.email || "-")}</td>
         <td data-label="Time">${dateTimeLabel(log.scanned_at)}</td>
       </tr>
-    `).join('') || emptyRow(6, 'bi-clock-history', 'No validation logs yet');
+    `,
+        )
+        .join("") || emptyRow(6, "bi-clock-history", "No validation logs yet");
   }
 
   function renderActivity() {
-    const wrap = document.querySelector('[data-admin-activity]');
+    const wrap = document.querySelector("[data-admin-activity]");
     if (!wrap) return;
 
     const activity = [
-      ...state.users.slice(0, 8).map((usr) => ({ at: usr.created_at, icon: 'bi-person-plus', text: `User registered: ${usr.email}`, status: usr.email_verified_at ? 'verified' : 'not_verified' })),
-      ...state.users.filter((usr) => usr.organizer_status === 'approved').slice(0, 5).map((usr) => ({ at: usr.organizer_approved_at || usr.updated_at, icon: 'bi-person-check', text: `Organizer approved: ${usr.name || usr.email}`, status: 'approved' })),
-      ...state.events.slice(0, 8).map((evt) => ({ at: evt.created_at, icon: 'bi-calendar-plus', text: `Event created: ${evt.title}`, status: evt.status })),
-      ...state.events.filter((evt) => evt.status === 'published').slice(0, 6).map((evt) => ({ at: evt.updated_at || evt.created_at, icon: 'bi-broadcast', text: `Event published: ${evt.title}`, status: 'published' })),
-      ...state.events.filter((evt) => adminEventState(evt).key === 'sold_out').slice(0, 6).map((evt) => ({ at: evt.updated_at || evt.created_at, icon: 'bi-lightning-charge', text: `Event sold out: ${evt.title}`, status: 'sold_out' })),
-      ...state.venues.slice(0, 6).map((venue) => ({ at: venue.created_at, icon: 'bi-shop', text: `Venue created: ${venue.name}`, status: venue.status })),
-      ...state.reservations.slice(0, 8).map((reservation) => ({ at: reservation.created_at, icon: 'bi-calendar-check', text: `Reservation requested: ${reservation.guest_name}`, status: reservation.status })),
-      ...state.orders.slice(0, 8).map((order) => ({ at: order.updated_at || order.created_at, icon: 'bi-ticket-perforated', text: `Ticket purchased: ${order.order_number}`, status: order.payment_status })),
-      ...state.checkInLogs.slice(0, 8).map((log) => ({ at: log.scanned_at, icon: 'bi-qr-code-scan', text: `Attendee checked in: ${log.attendee?.name || log.ticket_code || 'Ticket'}`, status: log.result })),
-    ].sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0)).slice(0, 8);
+      ...state.users.slice(0, 8).map((usr) => ({
+        at: usr.created_at,
+        icon: "bi-person-plus",
+        text: `User registered: ${usr.email}`,
+        status: usr.email_verified_at ? "verified" : "not_verified",
+      })),
+      ...state.users
+        .filter((usr) => usr.organizer_status === "approved")
+        .slice(0, 5)
+        .map((usr) => ({
+          at: usr.organizer_approved_at || usr.updated_at,
+          icon: "bi-person-check",
+          text: `Organizer approved: ${usr.name || usr.email}`,
+          status: "approved",
+        })),
+      ...state.events.slice(0, 8).map((evt) => ({
+        at: evt.created_at,
+        icon: "bi-calendar-plus",
+        text: `Event created: ${evt.title}`,
+        status: evt.status,
+      })),
+      ...state.events
+        .filter((evt) => evt.status === "published")
+        .slice(0, 6)
+        .map((evt) => ({
+          at: evt.updated_at || evt.created_at,
+          icon: "bi-broadcast",
+          text: `Event published: ${evt.title}`,
+          status: "published",
+        })),
+      ...state.events
+        .filter((evt) => adminEventState(evt).key === "sold_out")
+        .slice(0, 6)
+        .map((evt) => ({
+          at: evt.updated_at || evt.created_at,
+          icon: "bi-lightning-charge",
+          text: `Event sold out: ${evt.title}`,
+          status: "sold_out",
+        })),
+      ...state.venues.slice(0, 6).map((venue) => ({
+        at: venue.created_at,
+        icon: "bi-shop",
+        text: `Venue created: ${venue.name}`,
+        status: venue.status,
+      })),
+      ...state.reservations.slice(0, 8).map((reservation) => ({
+        at: reservation.created_at,
+        icon: "bi-calendar-check",
+        text: `Reservation requested: ${reservation.guest_name}`,
+        status: reservation.status,
+      })),
+      ...state.orders.slice(0, 8).map((order) => ({
+        at: order.updated_at || order.created_at,
+        icon: "bi-ticket-perforated",
+        text: `Ticket purchased: ${order.order_number}`,
+        status: order.payment_status,
+      })),
+      ...state.checkInLogs.slice(0, 8).map((log) => ({
+        at: log.scanned_at,
+        icon: "bi-qr-code-scan",
+        text: `Attendee checked in: ${log.attendee?.name || log.ticket_code || "Ticket"}`,
+        status: log.result,
+      })),
+    ]
+      .sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0))
+      .slice(0, 8);
 
-    wrap.innerHTML = activity.map((item) => `
+    wrap.innerHTML =
+      activity
+        .map(
+          (item) => `
       <div class="activity-item">
         <i class="bi ${item.icon}"></i>
         <div class="flex-grow-1"><div>${u().escapeHtml(item.text)}</div><small>${dateTimeLabel(item.at)}</small></div>
         ${badge(item.status)}
       </div>
-    `).join('') || '<div class="admin-empty py-4"><i class="bi bi-clock-history"></i><span>No recent activity yet</span></div>';
+    `,
+        )
+        .join("") ||
+      '<div class="admin-empty py-4"><i class="bi bi-clock-history"></i><span>No recent activity yet</span></div>';
   }
 
   function renderAll() {
@@ -1384,11 +1920,11 @@
     renderTopLists();
   }
 
-  document.addEventListener('tiketa:language-changed', renderAll);
+  document.addEventListener("tiketa:language-changed", renderAll);
 
   async function refreshAll() {
     renderAll();
-    await loadSection(state.currentSection || 'overview', true);
+    await loadSection(state.currentSection || "overview", true);
     renderAll();
   }
 
@@ -1411,66 +1947,75 @@
   }
 
   async function loadSection(section, force = false) {
-    const target = section || 'overview';
+    const target = section || "overview";
     if (!force && state.sectionLoaded[target]) return;
     if (!force && state.sectionRequests[target]) return state.sectionRequests[target];
 
     const loaders = {
-      overview: () => loadData('adminDashboard', loadAdminDashboard, force),
-      events: () => Promise.all([
-        loadData('events', loadEvents, force),
-        loadData('payments', loadPayments, force),
-      ]),
-      organizers: () => Promise.all([
-        loadData('users', loadUsers, force),
-        loadData('events', loadEvents, force),
-        loadData('payments', loadPayments, force),
-      ]),
-      users: () => loadData('users', loadUsers, force),
-      venues: () => loadData('venues', loadVenues, force),
-      reservations: () => Promise.all([
-        loadData('venues', loadVenues, force),
-        loadData('reservations', loadReservations, force),
-      ]),
-      tickets: () => Promise.all([
-        loadData('events', loadEvents, force),
-        loadData('tickets', loadTickets, force),
-      ]),
-      revenue: () => Promise.all([
-        loadData('payments', loadPayments, force),
-        loadData('events', loadEvents, force),
-      ]),
-      analytics: () => Promise.all([
-        loadData('payments', loadPayments, force),
-        loadData('events', loadEvents, force),
-        loadData('users', loadUsers, force),
-      ]),
-      checkins: () => Promise.all([
-        loadData('events', loadEvents, force),
-        loadData('checkIns', loadCheckIns, force),
-      ]),
-      'email-center': () => loadData('emailCenter', loadEmailCenter, force),
-      subscribers: () => loadData('subscribers', loadSubscribers, force),
-      categories: () => loadData('categories', loadCategories, force),
-      'platform-settings': () => loadData('settings', loadSettings, force),
-      reports: () => Promise.all([
-        loadData('users', loadUsers, force),
-        loadData('events', loadEvents, force),
-        loadData('venues', loadVenues, force),
-        loadData('reservations', loadReservations, force),
-        loadData('tickets', loadTickets, force),
-        loadData('payments', loadPayments, force),
-        loadData('categories', loadCategories, force),
-      ]),
-      'system-activity': () => Promise.all([
-        loadData('users', loadUsers, force),
-        loadData('events', loadEvents, force),
-        loadData('venues', loadVenues, force),
-        loadData('reservations', loadReservations, force),
-        loadData('payments', loadPayments, force),
-        loadData('checkIns', loadCheckIns, force),
-        loadData('auditLogs', loadAuditLogs, force),
-      ]),
+      overview: () => loadData("adminDashboard", loadAdminDashboard, force),
+      events: () =>
+        Promise.all([
+          loadData("events", loadEvents, force),
+          loadData("payments", loadPayments, force),
+        ]),
+      organizers: () =>
+        Promise.all([
+          loadData("users", loadUsers, force),
+          loadData("events", loadEvents, force),
+          loadData("payments", loadPayments, force),
+        ]),
+      users: () => loadData("users", loadUsers, force),
+      venues: () => loadData("venues", loadVenues, force),
+      reservations: () =>
+        Promise.all([
+          loadData("venues", loadVenues, force),
+          loadData("reservations", loadReservations, force),
+        ]),
+      tickets: () =>
+        Promise.all([
+          loadData("events", loadEvents, force),
+          loadData("tickets", loadTickets, force),
+        ]),
+      revenue: () =>
+        Promise.all([
+          loadData("payments", loadPayments, force),
+          loadData("events", loadEvents, force),
+        ]),
+      analytics: () =>
+        Promise.all([
+          loadData("payments", loadPayments, force),
+          loadData("events", loadEvents, force),
+          loadData("users", loadUsers, force),
+        ]),
+      checkins: () =>
+        Promise.all([
+          loadData("events", loadEvents, force),
+          loadData("checkIns", loadCheckIns, force),
+        ]),
+      "email-center": () => loadData("emailCenter", loadEmailCenter, force),
+      subscribers: () => loadData("subscribers", loadSubscribers, force),
+      categories: () => loadData("categories", loadCategories, force),
+      "platform-settings": () => loadData("settings", loadSettings, force),
+      reports: () =>
+        Promise.all([
+          loadData("users", loadUsers, force),
+          loadData("events", loadEvents, force),
+          loadData("venues", loadVenues, force),
+          loadData("reservations", loadReservations, force),
+          loadData("tickets", loadTickets, force),
+          loadData("payments", loadPayments, force),
+          loadData("categories", loadCategories, force),
+        ]),
+      "system-activity": () =>
+        Promise.all([
+          loadData("users", loadUsers, force),
+          loadData("events", loadEvents, force),
+          loadData("venues", loadVenues, force),
+          loadData("reservations", loadReservations, force),
+          loadData("payments", loadPayments, force),
+          loadData("checkIns", loadCheckIns, force),
+          loadData("auditLogs", loadAuditLogs, force),
+        ]),
     };
 
     const request = Promise.resolve()
@@ -1481,7 +2026,7 @@
         return result;
       })
       .catch((err) => {
-        window.tkToast?.(err.message || 'Failed to load admin section', 'error');
+        window.tkToast?.(err.message || "Failed to load admin section", "error");
         throw err;
       })
       .finally(() => {
@@ -1493,29 +2038,29 @@
   }
 
   async function refreshCategories() {
-    await loadData('categories', loadCategories, true);
+    await loadData("categories", loadCategories, true);
   }
 
   async function refreshEmailCenter() {
-    await loadData('emailCenter', loadEmailCenter, true);
+    await loadData("emailCenter", loadEmailCenter, true);
   }
 
   async function refreshEmailCenterPage(page = 1) {
     state.emailFilters.page = page;
-    await loadData('emailCenter', loadEmailCenter, true);
+    await loadData("emailCenter", loadEmailCenter, true);
   }
 
   async function refreshSubscribers(page = 1) {
     state.subscriberFilters.page = page;
-    await loadData('subscribers', loadSubscribers, true);
+    await loadData("subscribers", loadSubscribers, true);
   }
 
   async function refreshAuditLogs(page = 1) {
-    await loadData('auditLogs', () => loadAuditLogs(page), true);
+    await loadData("auditLogs", () => loadAuditLogs(page), true);
   }
 
   async function refreshUsers() {
-    await loadData('users', loadUsers, true);
+    await loadData("users", loadUsers, true);
     renderKpis();
     renderUsers();
     renderOrganizers();
@@ -1523,9 +2068,9 @@
   }
 
   async function refreshEvents() {
-    await loadData('events', loadEvents, true);
-    if (state.sectionLoaded.tickets) await loadData('tickets', loadTickets, true);
-    if (state.sectionLoaded.checkins) await loadData('checkIns', loadCheckIns, true);
+    await loadData("events", loadEvents, true);
+    if (state.sectionLoaded.tickets) await loadData("tickets", loadTickets, true);
+    if (state.sectionLoaded.checkins) await loadData("checkIns", loadCheckIns, true);
     renderKpis();
     renderCharts();
     renderEvents();
@@ -1534,21 +2079,21 @@
   }
 
   async function refreshVenues() {
-    await loadData('venues', loadVenues, true);
+    await loadData("venues", loadVenues, true);
     renderKpis();
     renderVenues();
     renderActivity();
   }
 
   async function refreshReservations() {
-    await loadData('reservations', loadReservations, true);
+    await loadData("reservations", loadReservations, true);
     renderKpis();
     renderReservations();
     renderActivity();
   }
 
   async function refreshPayments() {
-    await loadData('payments', loadPayments, true);
+    await loadData("payments", loadPayments, true);
     renderKpis();
     renderRevenueKpis();
     renderCharts();
@@ -1557,361 +2102,460 @@
   }
 
   async function refreshCheckIns() {
-    await loadData('checkIns', loadCheckIns, true);
+    await loadData("checkIns", loadCheckIns, true);
     renderKpis();
     renderCheckIns();
     renderActivity();
   }
 
   async function refreshTickets() {
-    await loadData('tickets', loadTickets, true);
+    await loadData("tickets", loadTickets, true);
     renderKpis();
     renderTickets();
   }
 
   function setModal(title, body) {
-    const modalEl = document.getElementById('adminDetailModal');
+    const modalEl = document.getElementById("adminDetailModal");
     if (!modalEl) return;
-    modalEl.querySelector('.modal-title').textContent = title;
-    modalEl.querySelector('.modal-body').innerHTML = body;
+    modalEl.querySelector(".modal-title").textContent = title;
+    modalEl.querySelector(".modal-body").innerHTML = body;
     bootstrap.Modal.getOrCreateInstance(modalEl).show();
   }
 
   async function showEmailLogDetail(id) {
-    setModal('Email Details', loadingPanel('Loading email...'));
+    setModal("Email Details", loadingPanel("Loading email..."));
     const { data } = await api().fetch(`/admin/email-center/${id}`);
 
-    setModal('Email Details', `
+    setModal(
+      "Email Details",
+      `
       <div class="dashboard-stack">
         <div class="row g-2">
-          <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Recipient</small><span class="fw-semibold d-block">${u().escapeHtml(data.recipient_name || '-')}</span></span></div></div>
-          <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Recipient Email</small><span class="fw-semibold d-block">${u().escapeHtml(data.recipient_email || '-')}</span></span></div></div>
-          <div class="col-md-4"><div class="dashboard-mini-row"><span><small>Module</small><span class="fw-semibold d-block">${u().escapeHtml(data.module || '-')}</span></span></div></div>
-          <div class="col-md-4"><div class="dashboard-mini-row"><span><small>Email Type</small><span class="fw-semibold d-block">${u().escapeHtml(data.email_type || '-')}</span></span></div></div>
-          <div class="col-md-4"><div class="dashboard-mini-row"><span><small>Status</small><span class="fw-semibold d-block">${badge(data.status || 'Pending')}</span></span></div></div>
-          <div class="col-12"><div class="dashboard-mini-row"><span><small>Subject</small><span class="fw-semibold d-block">${u().escapeHtml(data.subject || '-')}</span></span></div></div>
+          <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Recipient</small><span class="fw-semibold d-block">${u().escapeHtml(data.recipient_name || "-")}</span></span></div></div>
+          <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Recipient Email</small><span class="fw-semibold d-block">${u().escapeHtml(data.recipient_email || "-")}</span></span></div></div>
+          <div class="col-md-4"><div class="dashboard-mini-row"><span><small>Module</small><span class="fw-semibold d-block">${u().escapeHtml(data.module || "-")}</span></span></div></div>
+          <div class="col-md-4"><div class="dashboard-mini-row"><span><small>Email Type</small><span class="fw-semibold d-block">${u().escapeHtml(data.email_type || "-")}</span></span></div></div>
+          <div class="col-md-4"><div class="dashboard-mini-row"><span><small>Status</small><span class="fw-semibold d-block">${badge(data.status || "Pending")}</span></span></div></div>
+          <div class="col-12"><div class="dashboard-mini-row"><span><small>Subject</small><span class="fw-semibold d-block">${u().escapeHtml(data.subject || "-")}</span></span></div></div>
           <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Created At</small><span class="fw-semibold d-block">${dateTimeLabel(data.created_at)}</span></span></div></div>
           <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Sent At</small><span class="fw-semibold d-block">${dateTimeLabel(data.sent_at)}</span></span></div></div>
-          <div class="col-12"><div class="dashboard-mini-row"><span><small>Mail Class</small><span class="fw-semibold d-block">${u().escapeHtml(data.mailable_class || '-')}</span></span></div></div>
+          <div class="col-12"><div class="dashboard-mini-row"><span><small>Mail Class</small><span class="fw-semibold d-block">${u().escapeHtml(data.mailable_class || "-")}</span></span></div></div>
         </div>
         <div class="admin-empty">
           <i class="bi bi-shield-lock"></i>
           <span>Rendered email content is not stored. Password reset links, verification links, QR tokens, ticket download links, and reservation details are intentionally excluded from logs.</span>
         </div>
       </div>
-    `);
+    `,
+    );
   }
 
   function showSection(section) {
-    const target = section || 'overview';
+    const target = section || "overview";
     const exists = !!document.querySelector(`[data-admin-section="${target}"]`);
-    state.currentSection = exists ? target : 'overview';
-    document.querySelectorAll('[data-admin-section]').forEach((panel) => {
+    state.currentSection = exists ? target : "overview";
+    document.querySelectorAll("[data-admin-section]").forEach((panel) => {
       const active = panel.dataset.adminSection === state.currentSection;
-      panel.classList.toggle('active', active);
+      panel.classList.toggle("active", active);
       panel.hidden = !active;
     });
-    document.querySelectorAll('[data-admin-nav]').forEach((link) => {
-      link.classList.toggle('active', link.dataset.adminNav === state.currentSection);
+    document.querySelectorAll("[data-admin-nav]").forEach((link) => {
+      link.classList.toggle("active", link.dataset.adminNav === state.currentSection);
     });
     window.EventSphereDashboardNav?.close?.();
-    if (location.hash.replace('#', '') !== state.currentSection) {
-      history.replaceState(null, '', `#${state.currentSection}`);
+    if (location.hash.replace("#", "") !== state.currentSection) {
+      history.replaceState(null, "", `#${state.currentSection}`);
     }
     renderCharts();
     loadSection(state.currentSection).catch(() => {});
   }
 
   function bindSectionNavigation() {
-    document.querySelectorAll('[data-admin-nav]').forEach((link) => {
-      link.addEventListener('click', (event) => {
+    document.querySelectorAll("[data-admin-nav]").forEach((link) => {
+      link.addEventListener("click", (event) => {
         event.preventDefault();
         showSection(link.dataset.adminNav);
       });
     });
-    window.addEventListener('hashchange', () => showSection(location.hash.replace('#', '') || 'overview'));
-    showSection(location.hash.replace('#', '') || 'overview');
+    window.addEventListener("hashchange", () =>
+      showSection(location.hash.replace("#", "") || "overview"),
+    );
+    showSection(location.hash.replace("#", "") || "overview");
   }
 
   function detailList(items) {
-    return `<dl class="admin-detail-list">${items.map(([label, value]) => `<div><dt>${u().escapeHtml(label)}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
+    return `<dl class="admin-detail-list">${items.map(([label, value]) => `<div><dt>${u().escapeHtml(label)}</dt><dd>${value}</dd></div>`).join("")}</dl>`;
   }
 
   async function showUser(userId) {
-    setModal('User profile', loadingPanel('Loading profile...'));
+    setModal("User profile", loadingPanel("Loading profile..."));
     const res = await api().fetch(`/admin/users/${userId}`);
     const user = res.data;
     const orders = user.orders || [];
     const events = user.organized_events || [];
-    setModal(user.name || user.email, `
+    setModal(
+      user.name || user.email,
+      `
       ${detailList([
-        ['Email', u().escapeHtml(user.email)],
-        ['Role', badge(user.role)],
-        ['Status', badge(user.status)],
-        ['Organizer', badge(user.organizer_status)],
-        ['Email verification', verificationBadge(user)],
-        ['Verified at', dateTimeLabel(user.email_verified_at)],
-        ['Joined', dateLabel(user.created_at)],
-        ['Last login', dateTimeLabel(user.last_login_at)],
-        ['Orders', String(user.orders_count ?? 0)],
-        ['Tickets', String(user.tickets_count ?? 0)],
-        ['Events', String(user.organized_events_count ?? 0)],
+        ["Email", u().escapeHtml(user.email)],
+        ["Role", badge(user.role)],
+        ["Status", badge(user.status)],
+        ["Organizer", badge(user.organizer_status)],
+        ["Email verification", verificationBadge(user)],
+        ["Verified at", dateTimeLabel(user.email_verified_at)],
+        ["Joined", dateLabel(user.created_at)],
+        ["Last login", dateTimeLabel(user.last_login_at)],
+        ["Orders", String(user.orders_count ?? 0)],
+        ["Tickets", String(user.tickets_count ?? 0)],
+        ["Events", String(user.organized_events_count ?? 0)],
       ])}
       <h6 class="mt-4">Recent orders</h6>
-      ${orders.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${orders.map((order) => `<tr><td>${u().escapeHtml(order.order_number)}</td><td>${badge(order.payment_status)}</td><td>${money(order.total, order.currency)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No recent orders.</p>'}
+      ${orders.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${orders.map((order) => `<tr><td>${u().escapeHtml(order.order_number)}</td><td>${badge(order.payment_status)}</td><td>${money(order.total, order.currency)}</td></tr>`).join("")}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No recent orders.</p>'}
       <h6 class="mt-4">Organized events</h6>
-      ${events.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${events.map((event) => `<tr><td>${u().escapeHtml(event.title)}</td><td>${badge(event.status)}</td><td>${u().escapeHtml(u().formatEventDate(event.starts_at, event.timezone))}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No organized events.</p>'}
-    `);
+      ${events.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${events.map((event) => `<tr><td>${u().escapeHtml(event.title)}</td><td>${badge(event.status)}</td><td>${u().escapeHtml(u().formatEventDate(event.starts_at, event.timezone))}</td></tr>`).join("")}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No organized events.</p>'}
+    `,
+    );
   }
 
   function showEvent(eventId) {
     const event = state.events.find((item) => String(item.id) === String(eventId));
     if (!event) return;
-    setModal(event.title, `
+    setModal(
+      event.title,
+      `
       ${detailList([
-        ['Organizer', u().escapeHtml(event.organizer?.name || `#${event.organizer_id}`)],
-        ['Status', badge(event.status)],
-        ['Visibility', badge(event.visibility || 'public')],
-        ['Category', u().escapeHtml(event.category || '-')],
-        ['City', u().escapeHtml(event.city || '-')],
-        ['Starts', u().formatEventDate(event.starts_at, event.timezone)],
-        ['Tickets', String(event.tickets_count ?? 0)],
-        ['Views', String(event.views_count ?? 0)],
+        ["Organizer", u().escapeHtml(event.organizer?.name || `#${event.organizer_id}`)],
+        ["Status", badge(event.status)],
+        ["Visibility", badge(event.visibility || "public")],
+        ["Category", u().escapeHtml(event.category || "-")],
+        ["City", u().escapeHtml(event.city || "-")],
+        ["Starts", u().formatEventDate(event.starts_at, event.timezone)],
+        ["Tickets", String(event.tickets_count ?? 0)],
+        ["Views", String(event.views_count ?? 0)],
       ])}
       <h6 class="mt-4">Moderation notes</h6>
-      <p class="text-muted-pro mb-0">${u().escapeHtml(event.moderation_notes || 'No notes recorded.')}</p>
-    `);
+      <p class="text-muted-pro mb-0">${u().escapeHtml(event.moderation_notes || "No notes recorded.")}</p>
+    `,
+    );
   }
 
   async function showScannerAssignment(eventId) {
     const eventRecord = state.events.find((item) => String(item.id) === String(eventId));
-    setModal('Assign Scanner', loadingPanel('Loading scanners...'));
+    setModal("Assign Scanner", loadingPanel("Loading scanners..."));
 
     const [scannerUsers, assignedScanners] = await Promise.all([
-      api().fetch('/admin/users?role=scanner&status=active&per_page=100'),
+      api().fetch("/admin/users?role=scanner&status=active&per_page=100"),
       api().fetch(`/admin/events/${eventId}/scanners`),
     ]);
 
     const scanners = rows(scannerUsers.data);
     const assigned = rows(assignedScanners.data);
 
-    setModal('Assign Scanner', `
+    setModal(
+      "Assign Scanner",
+      `
       <form data-admin-scanner-assignment-form="${eventId}">
         <div class="mb-3">
           <div class="eyebrow mb-2">Event</div>
           <h5 class="mb-1">${u().escapeHtml(eventRecord?.title || `Event #${eventId}`)}</h5>
-          <p class="text-muted-pro mb-0">${u().escapeHtml(eventRecord?.venue_name || eventRecord?.city || '')}</p>
+          <p class="text-muted-pro mb-0">${u().escapeHtml(eventRecord?.venue_name || eventRecord?.city || "")}</p>
         </div>
         <div class="mb-3">
           <label class="form-label">Select Scanner</label>
           <select class="form-select admin-select" name="scanner_id" required>
             <option value="">Choose scanner</option>
-            ${scanners.map((scanner) => `<option value="${scanner.id}">${u().escapeHtml(scanner.name || scanner.email)} · ${u().escapeHtml(scanner.email || '')}</option>`).join('')}
+            ${scanners.map((scanner) => `<option value="${scanner.id}">${u().escapeHtml(scanner.name || scanner.email)} · ${u().escapeHtml(scanner.email || "")}</option>`).join("")}
           </select>
         </div>
         <div class="mb-3">
           <h6>Assigned scanners</h6>
           <div class="dashboard-stack">
-            ${assigned.map((scanner) => `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${u().escapeHtml(scanner.name || scanner.email)}</span><small>${u().escapeHtml(scanner.email || '')}</small></span>${badge(scanner.role)}</div>`).join('') || '<div class="dashboard-empty"><i class="bi bi-person-x"></i><span>No scanners assigned yet.</span></div>'}
+            ${assigned.map((scanner) => `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${u().escapeHtml(scanner.name || scanner.email)}</span><small>${u().escapeHtml(scanner.email || "")}</small></span>${badge(scanner.role)}</div>`).join("") || '<div class="dashboard-empty"><i class="bi bi-person-x"></i><span>No scanners assigned yet.</span></div>'}
           </div>
         </div>
         <div class="d-flex justify-content-end gap-2">
           <button class="btn btn-glass" type="button" data-bs-dismiss="modal">Cancel</button>
-          <button class="btn btn-primary-grad" type="submit" ${scanners.length ? '' : 'disabled'}>Save</button>
+          <button class="btn btn-primary-grad" type="submit" ${scanners.length ? "" : "disabled"}>Save</button>
         </div>
       </form>
-    `);
+    `,
+    );
   }
 
   function listNames(items) {
-    return (items || []).map((item) => item.name).filter(Boolean).map((name) => u().escapeHtml(name)).join(', ') || '-';
+    return (
+      (items || [])
+        .map((item) => item.name)
+        .filter(Boolean)
+        .map((name) => u().escapeHtml(name))
+        .join(", ") || "-"
+    );
   }
 
   async function showVenue(slug) {
-    setModal('Venue details', loadingPanel('Loading venue...'));
+    setModal("Venue details", loadingPanel("Loading venue..."));
     const { data: venue } = await api().fetch(`/admin/venues/${slug}`);
     const hours = venue.opening_hours || [];
-    setModal(venue.name, `
+    setModal(
+      venue.name,
+      `
       ${detailList([
-        ['Type', titleize(venue.venue_type)],
-        ['Status', badge(venue.status)],
-        ['Owner', `${u().escapeHtml(venue.owner?.name || '-')}<br><small>${u().escapeHtml(venue.owner?.email || '')}</small>`],
-        ['City', u().escapeHtml(venue.city || '-')],
-        ['Address', u().escapeHtml(venue.address || '-')],
-        ['Contact', `${u().escapeHtml(venue.phone || '-')}<br><small>${u().escapeHtml(venue.email || '')}</small>`],
-        ['Website', venue.website ? `<a href="${u().escapeHtml(venue.website)}" target="_blank" rel="noopener">${u().escapeHtml(venue.website)}</a>` : '-'],
-        ['Facilities', listNames(venue.facilities)],
-        ['Cuisine Types', listNames(venue.cuisine_types)],
-        ['Payment Methods', listNames(venue.payment_options)],
-        ['Reservation Settings', `${venue.reservation_settings?.min_guests || 1}-${venue.reservation_settings?.max_guests || 10} guests · ${venue.reservation_settings?.reservation_interval_minutes || 30} min intervals · last ${venue.reservation_settings?.last_reservation_time || '-'}`],
-        ['Social Links', [venue.social_links?.facebook_url, venue.social_links?.instagram_url, venue.social_links?.tiktok_url].filter(Boolean).map((link) => u().escapeHtml(link)).join('<br>') || '-'],
-        ['Total Reservations', String(venue.reservations_count ?? 0)],
-        ['Created', dateLabel(venue.created_at)],
+        ["Type", titleize(venue.venue_type)],
+        ["Status", badge(venue.status)],
+        [
+          "Owner",
+          `${u().escapeHtml(venue.owner?.name || "-")}<br><small>${u().escapeHtml(venue.owner?.email || "")}</small>`,
+        ],
+        ["City", u().escapeHtml(venue.city || "-")],
+        ["Address", u().escapeHtml(venue.address || "-")],
+        [
+          "Contact",
+          `${u().escapeHtml(venue.phone || "-")}<br><small>${u().escapeHtml(venue.email || "")}</small>`,
+        ],
+        [
+          "Website",
+          venue.website
+            ? `<a href="${u().escapeHtml(venue.website)}" target="_blank" rel="noopener">${u().escapeHtml(venue.website)}</a>`
+            : "-",
+        ],
+        ["Facilities", listNames(venue.facilities)],
+        ["Cuisine Types", listNames(venue.cuisine_types)],
+        ["Payment Methods", listNames(venue.payment_options)],
+        [
+          "Reservation Settings",
+          `${venue.reservation_settings?.min_guests || 1}-${venue.reservation_settings?.max_guests || 10} guests · ${venue.reservation_settings?.reservation_interval_minutes || 30} min intervals · last ${venue.reservation_settings?.last_reservation_time || "-"}`,
+        ],
+        [
+          "Social Links",
+          [
+            venue.social_links?.facebook_url,
+            venue.social_links?.instagram_url,
+            venue.social_links?.tiktok_url,
+          ]
+            .filter(Boolean)
+            .map((link) => u().escapeHtml(link))
+            .join("<br>") || "-",
+        ],
+        ["Total Reservations", String(venue.reservations_count ?? 0)],
+        ["Created", dateLabel(venue.created_at)],
       ])}
       <h6 class="mt-4">Gallery</h6>
-      ${(venue.images || []).length ? `<div class="row g-2">${venue.images.map((image, index) => `<div class="col-4"><img src="${u().escapeHtml(image.url || image.image_path)}" alt="${u().escapeHtml(`${venue.name || 'Venue'} gallery image ${index + 1}`)}" class="w-100 rounded-pro" style="aspect-ratio:4/3;object-fit:cover"/></div>`).join('')}</div>` : '<p class="text-muted-pro mb-0">No gallery images.</p>'}
+      ${(venue.images || []).length ? `<div class="row g-2">${venue.images.map((image, index) => `<div class="col-4"><img src="${u().escapeHtml(image.url || image.image_path)}" alt="${u().escapeHtml(`${venue.name || "Venue"} gallery image ${index + 1}`)}" class="w-100 rounded-pro" style="aspect-ratio:4/3;object-fit:cover"/></div>`).join("")}</div>` : '<p class="text-muted-pro mb-0">No gallery images.</p>'}
       <h6 class="mt-4">Opening Hours</h6>
-      ${hours.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${hours.map((item) => `<tr><td>Day ${item.day_of_week}</td><td>${item.is_closed ? 'Closed' : `${u().escapeHtml(String(item.opens_at || '').slice(0, 5))} - ${u().escapeHtml(String(item.closes_at || '').slice(0, 5))}`}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No opening hours configured.</p>'}
-    `);
+      ${hours.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${hours.map((item) => `<tr><td>Day ${item.day_of_week}</td><td>${item.is_closed ? "Closed" : `${u().escapeHtml(String(item.opens_at || "").slice(0, 5))} - ${u().escapeHtml(String(item.closes_at || "").slice(0, 5))}`}</td></tr>`).join("")}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No opening hours configured.</p>'}
+    `,
+    );
   }
 
   async function showReservation(reservationId) {
-    setModal('Reservation details', loadingPanel('Loading reservation...'));
+    setModal("Reservation details", loadingPanel("Loading reservation..."));
     const { data: reservation } = await api().fetch(`/admin/reservations/${reservationId}`);
     const history = reservation.email_history || [];
     const auditHistory = reservation.audit_history || [];
-    setModal(`Reservation #${reservation.id}`, `
+    setModal(
+      `Reservation #${reservation.id}`,
+      `
       <div class="admin-reservation-detail">
         <div class="admin-reservation-detail-hero">
           <div>
             <span class="reservation-status-pill">${reservationBadge(reservation.status)}</span>
-            <h4>${u().escapeHtml(reservation.venue?.name || 'Restaurant / Bar')}</h4>
-            <p>${u().escapeHtml(reservation.guest_name || reservation.user?.name || 'Guest')} · ${String(reservation.party_size || '-')} guests · ${dateLabel(reservation.reservation_date)} at ${u().escapeHtml(String(reservation.reservation_time || '').slice(0, 5) || '-')}</p>
+            <h4>${u().escapeHtml(reservation.venue?.name || "Restaurant / Bar")}</h4>
+            <p>${u().escapeHtml(reservation.guest_name || reservation.user?.name || "Guest")} · ${String(reservation.party_size || "-")} guests · ${dateLabel(reservation.reservation_date)} at ${u().escapeHtml(String(reservation.reservation_time || "").slice(0, 5) || "-")}</p>
           </div>
         </div>
         ${detailList([
-          ['Reservation ID', `#${reservation.id}`],
-          ['Venue Information', `${u().escapeHtml(reservation.venue?.name || '-')}<br><small>${u().escapeHtml([reservation.venue?.address, reservation.venue?.city, reservation.venue?.country].filter(Boolean).join(', ') || '')}</small>`],
-          ['Owner Information', `${u().escapeHtml(reservation.venue?.owner?.name || '-')}<br><small>${u().escapeHtml(reservation.venue?.owner?.email || '')}</small>`],
-          ['Guest Information', `${u().escapeHtml(reservation.guest_name || reservation.user?.name || '-')}<br><small>${u().escapeHtml(reservation.user?.email || '')}</small><br><small>${u().escapeHtml(reservation.phone || '')}</small>`],
-          ['Party Size', String(reservation.party_size || '-')],
-          ['Date', dateLabel(reservation.reservation_date)],
-          ['Time', u().escapeHtml(String(reservation.reservation_time || '').slice(0, 5) || '-')],
-          ['Status', reservationBadge(reservation.status)],
-          ['Occasion', u().escapeHtml(reservation.occasion || '-')],
-          ['Special Request', u().escapeHtml(reservation.notes || '-')],
-          ['Cancellation Reason', u().escapeHtml(reservation.cancellation_reason || '-')],
-          ['Owner Cancellation Reason', u().escapeHtml(reservation.owner_cancellation_reason || '-')],
-          ['Created', dateTimeLabel(reservation.created_at)],
-          ['Updated', dateTimeLabel(reservation.updated_at)],
+          ["Reservation ID", `#${reservation.id}`],
+          [
+            "Venue Information",
+            `${u().escapeHtml(reservation.venue?.name || "-")}<br><small>${u().escapeHtml([reservation.venue?.address, reservation.venue?.city, reservation.venue?.country].filter(Boolean).join(", ") || "")}</small>`,
+          ],
+          [
+            "Owner Information",
+            `${u().escapeHtml(reservation.venue?.owner?.name || "-")}<br><small>${u().escapeHtml(reservation.venue?.owner?.email || "")}</small>`,
+          ],
+          [
+            "Guest Information",
+            `${u().escapeHtml(reservation.guest_name || reservation.user?.name || "-")}<br><small>${u().escapeHtml(reservation.user?.email || "")}</small><br><small>${u().escapeHtml(reservation.phone || "")}</small>`,
+          ],
+          ["Party Size", String(reservation.party_size || "-")],
+          ["Date", dateLabel(reservation.reservation_date)],
+          ["Time", u().escapeHtml(String(reservation.reservation_time || "").slice(0, 5) || "-")],
+          ["Status", reservationBadge(reservation.status)],
+          ["Occasion", u().escapeHtml(reservation.occasion || "-")],
+          ["Special Request", u().escapeHtml(reservation.notes || "-")],
+          ["Cancellation Reason", u().escapeHtml(reservation.cancellation_reason || "-")],
+          [
+            "Owner Cancellation Reason",
+            u().escapeHtml(reservation.owner_cancellation_reason || "-"),
+          ],
+          ["Created", dateTimeLabel(reservation.created_at)],
+          ["Updated", dateTimeLabel(reservation.updated_at)],
         ])}
         <h6 class="mt-4">Audit History</h6>
-        ${auditHistory.length ? `<div class="dashboard-stack">${auditHistory.map((item) => `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${u().escapeHtml(item.label || item.action || 'Reservation activity')}</span><small>${u().escapeHtml(item.actor || 'System')}</small></span><small class="text-muted-pro">${dateTimeLabel(item.timestamp)}</small></div>`).join('')}</div>` : '<p class="text-muted-pro mb-0">No audit history is available.</p>'}
+        ${auditHistory.length ? `<div class="dashboard-stack">${auditHistory.map((item) => `<div class="dashboard-mini-row"><span><span class="fw-semibold d-block">${u().escapeHtml(item.label || item.action || "Reservation activity")}</span><small>${u().escapeHtml(item.actor || "System")}</small></span><small class="text-muted-pro">${dateTimeLabel(item.timestamp)}</small></div>`).join("")}</div>` : '<p class="text-muted-pro mb-0">No audit history is available.</p>'}
         <h6 class="mt-4">Email History</h6>
-        ${history.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${history.map((item) => `<tr><td>${u().escapeHtml(item.label || item.type || 'Email')}</td><td>${badge(item.status || (item.sent_at ? 'sent' : 'not_sent'))}</td><td>${dateTimeLabel(item.sent_at)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No reservation email history is available.</p>'}
+        ${history.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${history.map((item) => `<tr><td>${u().escapeHtml(item.label || item.type || "Email")}</td><td>${badge(item.status || (item.sent_at ? "sent" : "not_sent"))}</td><td>${dateTimeLabel(item.sent_at)}</td></tr>`).join("")}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No reservation email history is available.</p>'}
       </div>
-    `);
+    `,
+    );
   }
 
   async function showTicket(ticketId) {
-    setModal('Ticket details', loadingPanel('Loading ticket...'));
+    setModal("Ticket details", loadingPanel("Loading ticket..."));
     const { data: ticket } = await api().fetch(`/admin/tickets/${ticketId}`);
-    setModal(`Ticket ${ticket.ticket_code}`, `
+    setModal(
+      `Ticket ${ticket.ticket_code}`,
+      `
       ${detailList([
-        ['Ticket Type', u().escapeHtml(ticket.ticket_type?.name || '-')],
-        ['Event', u().escapeHtml(ticket.event?.title || '-')],
-        ['Attendee', `${u().escapeHtml(ticket.attendee?.name || 'Guest')}<br><small>${u().escapeHtml(ticket.attendee?.email || '')}</small>`],
-        ['Purchaser', `${u().escapeHtml(ticket.purchaser?.name || ticket.order?.purchaser?.name || '-')}<br><small>${u().escapeHtml(ticket.purchaser?.email || ticket.order?.purchaser?.email || '')}</small>`],
-        ['Order', u().escapeHtml(ticket.order?.order_number || '-')],
-        ['Status', badge(ticket.status)],
-        ['Checked in', dateTimeLabel(ticket.checked_in_at)],
+        ["Ticket Type", u().escapeHtml(ticket.ticket_type?.name || "-")],
+        ["Event", u().escapeHtml(ticket.event?.title || "-")],
+        [
+          "Attendee",
+          `${u().escapeHtml(ticket.attendee?.name || "Guest")}<br><small>${u().escapeHtml(ticket.attendee?.email || "")}</small>`,
+        ],
+        [
+          "Purchaser",
+          `${u().escapeHtml(ticket.purchaser?.name || ticket.order?.purchaser?.name || "-")}<br><small>${u().escapeHtml(ticket.purchaser?.email || ticket.order?.purchaser?.email || "")}</small>`,
+        ],
+        ["Order", u().escapeHtml(ticket.order?.order_number || "-")],
+        ["Status", badge(ticket.status)],
+        ["Checked in", dateTimeLabel(ticket.checked_in_at)],
       ])}
       <div class="d-flex gap-2 flex-wrap mt-3">
         <button class="btn btn-glass btn-sm" type="button" data-ticket-qr="${ticket.id}">View QR</button>
         <button class="btn btn-glass btn-sm" type="button" data-ticket-manual-validation="${u().escapeHtml(ticket.ticket_code)}">Manual Validation</button>
       </div>
-    `);
+    `,
+    );
   }
 
   function showTicketQr(ticketId) {
     const ticket = state.tickets.find((item) => String(item.id) === String(ticketId));
-    const url = ticket?.qr_code_url || `${window.EventSphereConfig.API_BASE_URL}/tickets/${ticketId}/qr-code`;
-    setModal('Ticket QR', `<div class="text-center"><img src="${u().escapeHtml(url)}" alt="Ticket QR code" style="max-width:280px;width:100%;background:#fff;border-radius:12px;padding:12px"/><p class="text-muted-pro mt-3 mb-0">${u().escapeHtml(ticket?.ticket_code || '')}</p></div>`);
+    const url =
+      ticket?.qr_code_url || `${window.EventSphereConfig.API_BASE_URL}/tickets/${ticketId}/qr-code`;
+    setModal(
+      "Ticket QR",
+      `<div class="text-center"><img src="${u().escapeHtml(url)}" alt="Ticket QR code" style="max-width:280px;width:100%;background:#fff;border-radius:12px;padding:12px"/><p class="text-muted-pro mt-3 mb-0">${u().escapeHtml(ticket?.ticket_code || "")}</p></div>`,
+    );
   }
 
   async function manualValidateTicket(ticketCode) {
-    const { data } = await api().fetch('/admin/tickets/validate', {
-      method: 'POST',
-      body: { ticket_code: ticketCode, method: 'admin_manual' },
+    const { data } = await api().fetch("/admin/tickets/validate", {
+      method: "POST",
+      body: { ticket_code: ticketCode, method: "admin_manual" },
     });
     const validation = data.validation || {};
-    setModal('Manual Validation', `
+    setModal(
+      "Manual Validation",
+      `
       ${detailList([
-        ['Result', badge(validation.result)],
-        ['Reason', u().escapeHtml(validation.reason || '-')],
-        ['Ticket', u().escapeHtml(data.ticket?.ticket_code || ticketCode || '-')],
-        ['Attendee', u().escapeHtml(data.ticket?.attendee?.name || '-')],
-        ['Event', u().escapeHtml(data.ticket?.event?.title || '-')],
+        ["Result", badge(validation.result)],
+        ["Reason", u().escapeHtml(validation.reason || "-")],
+        ["Ticket", u().escapeHtml(data.ticket?.ticket_code || ticketCode || "-")],
+        ["Attendee", u().escapeHtml(data.ticket?.attendee?.name || "-")],
+        ["Event", u().escapeHtml(data.ticket?.event?.title || "-")],
       ])}
-    `);
+    `,
+    );
     await refreshCheckIns();
   }
 
   function selectedEventIds() {
-    return Array.from(document.querySelectorAll('[data-admin-event-select]:checked')).map((input) => input.dataset.adminEventSelect);
+    return Array.from(document.querySelectorAll("[data-admin-event-select]:checked")).map(
+      (input) => input.dataset.adminEventSelect,
+    );
   }
 
   async function bulkEventAction(action) {
     const ids = selectedEventIds();
     if (!ids.length) {
-      window.tkToast?.('Select at least one event first.', 'info');
+      window.tkToast?.("Select at least one event first.", "info");
       return;
     }
-    if (action === 'delete' && !confirm(`Delete ${ids.length} selected events?`)) return;
-    const category = action === 'category' ? prompt('New category for selected events', '') : '';
-    if (action === 'category' && !category) return;
+    if (action === "delete" && !confirm(`Delete ${ids.length} selected events?`)) return;
+    const category = action === "category" ? prompt("New category for selected events", "") : "";
+    if (action === "category" && !category) return;
 
     for (const id of ids) {
-      if (action === 'publish') await api().fetch(`/admin/events/${id}/publish`, { method: 'POST', body: {} });
-      if (action === 'unpublish') await api().fetch(`/admin/events/${id}/unpublish`, { method: 'POST', body: { reason: 'Bulk unpublish' } });
-      if (action === 'category') await api().fetch(`/admin/events/${id}`, { method: 'PATCH', body: { category } });
-      if (action === 'delete') await api().fetch(`/admin/events/${id}`, { method: 'DELETE' });
+      if (action === "publish")
+        await api().fetch(`/admin/events/${id}/publish`, { method: "POST", body: {} });
+      if (action === "unpublish")
+        await api().fetch(`/admin/events/${id}/unpublish`, {
+          method: "POST",
+          body: { reason: "Bulk unpublish" },
+        });
+      if (action === "category")
+        await api().fetch(`/admin/events/${id}`, { method: "PATCH", body: { category } });
+      if (action === "delete") await api().fetch(`/admin/events/${id}`, { method: "DELETE" });
     }
-    window.tkToast?.('Bulk action completed');
+    window.tkToast?.("Bulk action completed");
     await refreshEvents();
   }
 
   async function showPayment(orderId) {
-    setModal('Payment details', loadingPanel('Loading payment...'));
+    setModal("Payment details", loadingPanel("Loading payment..."));
     const res = await api().fetch(`/admin/payments/${orderId}`);
     const order = res.data;
     const items = order.items || [];
     const tickets = order.tickets || [];
-    setModal(`Payment ${order.order_number}`, `
+    setModal(
+      `Payment ${order.order_number}`,
+      `
       ${detailList([
-        ['Customer', u().escapeHtml(order.user?.name || order.user?.email || order.billing_email || '-')],
-        ['Status', badge(order.payment_status)],
-        ['Order status', badge(order.status)],
-        ['Provider', u().escapeHtml(order.payment_provider || '-')],
-        ['Total', money(order.total, order.currency)],
-        ['Subtotal', money(order.subtotal, order.currency)],
-        ['Service fee', money(order.service_fee, order.currency)],
-        ['Paid at', dateTimeLabel(order.paid_at)],
-        ['Confirmation email', badge(order.order_confirmation_email_sent_at ? 'sent' : 'not sent')],
-        ['Email sent at', dateTimeLabel(order.order_confirmation_email_sent_at)],
-        ['Refunded at', dateTimeLabel(order.refunded_at)],
-        ['Reference', u().escapeHtml(order.payment_reference || '-')],
+        [
+          "Customer",
+          u().escapeHtml(order.user?.name || order.user?.email || order.billing_email || "-"),
+        ],
+        ["Status", badge(order.payment_status)],
+        ["Order status", badge(order.status)],
+        ["Provider", u().escapeHtml(order.payment_provider || "-")],
+        ["Total", money(order.total, order.currency)],
+        ["Subtotal", money(order.subtotal, order.currency)],
+        ["Service fee", money(order.service_fee, order.currency)],
+        ["Paid at", dateTimeLabel(order.paid_at)],
+        ["Confirmation email", badge(order.order_confirmation_email_sent_at ? "sent" : "not sent")],
+        ["Email sent at", dateTimeLabel(order.order_confirmation_email_sent_at)],
+        ["Refunded at", dateTimeLabel(order.refunded_at)],
+        ["Reference", u().escapeHtml(order.payment_reference || "-")],
       ])}
       <h6 class="mt-4">Items</h6>
-      ${items.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${items.map((item) => `<tr><td>${u().escapeHtml(item.event_title || item.event?.title || '-')}</td><td>${u().escapeHtml(item.ticket_type_name || item.ticket_type?.name || '-')}</td><td>x${item.quantity}</td><td><small>Ticket ${money(Number(item.unit_price || 0) * Number(item.quantity || 0), order.currency)}<br>Fee ${money(item.service_fee, order.currency)}</small></td><td>${money(item.total, order.currency)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No line items.</p>'}
+      ${items.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${items.map((item) => `<tr><td>${u().escapeHtml(item.event_title || item.event?.title || "-")}</td><td>${u().escapeHtml(item.ticket_type_name || item.ticket_type?.name || "-")}</td><td>x${item.quantity}</td><td><small>Ticket ${money(Number(item.unit_price || 0) * Number(item.quantity || 0), order.currency)}<br>Fee ${money(item.service_fee, order.currency)}</small></td><td>${money(item.total, order.currency)}</td></tr>`).join("")}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No line items.</p>'}
       <h6 class="mt-4">Tickets and attendees</h6>
-      ${tickets.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${tickets.map((ticket) => `<tr><td><div class="fw-semibold">${u().escapeHtml(ticket.attendee_name || ticket.user?.name || 'Guest')}</div><small>${u().escapeHtml(ticket.attendee_email || ticket.user?.email || '')}</small></td><td>${u().escapeHtml(ticket.event?.title || '-')}</td><td>${u().escapeHtml(ticket.ticket_type?.name || '-')}</td><td><small>Paid by ${u().escapeHtml(order.user?.name || order.billing_email || '-')}</small></td><td>${u().escapeHtml(ticket.ticket_code || '-')}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No tickets issued yet.</p>'}
-    `);
+      ${tickets.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${tickets.map((ticket) => `<tr><td><div class="fw-semibold">${u().escapeHtml(ticket.attendee_name || ticket.user?.name || "Guest")}</div><small>${u().escapeHtml(ticket.attendee_email || ticket.user?.email || "")}</small></td><td>${u().escapeHtml(ticket.event?.title || "-")}</td><td>${u().escapeHtml(ticket.ticket_type?.name || "-")}</td><td><small>Paid by ${u().escapeHtml(order.user?.name || order.billing_email || "-")}</small></td><td>${u().escapeHtml(ticket.ticket_code || "-")}</td></tr>`).join("")}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No tickets issued yet.</p>'}
+    `,
+    );
   }
 
   async function eventModeration(eventId, action) {
-    const labels = { publish: 'Approve event', reject: 'Reject event', unpublish: 'Unpublish event' };
-    const note = action === 'publish' ? '' : prompt(`${labels[action]} - add moderation notes`, '');
+    const labels = {
+      publish: "Approve event",
+      reject: "Reject event",
+      unpublish: "Unpublish event",
+    };
+    const note = action === "publish" ? "" : prompt(`${labels[action]} - add moderation notes`, "");
     if (note === null) return;
-    const body = action === 'publish' ? {} : { reason: note };
-    await api().fetch(`/admin/events/${eventId}/${action}`, { method: 'POST', body });
+    const body = action === "publish" ? {} : { reason: note };
+    await api().fetch(`/admin/events/${eventId}/${action}`, { method: "POST", body });
     window.tkToast?.(labels[action]);
     await refreshEvents();
   }
 
   async function editVenue(slug) {
     const venue = state.venues.find((item) => String(item.slug) === String(slug));
-    const name = prompt('Venue name', venue?.name || '');
+    const name = prompt("Venue name", venue?.name || "");
     if (name === null) return;
-    const city = prompt('City', venue?.city || '');
+    const city = prompt("City", venue?.city || "");
     if (city === null) return;
-    const venueType = prompt('Venue type: restaurant, bar, lounge, cafe', venue?.venue_type || 'restaurant');
+    const venueType = prompt(
+      "Venue type: restaurant, bar, lounge, cafe",
+      venue?.venue_type || "restaurant",
+    );
     if (venueType === null) return;
-    const status = prompt('Status: draft, active, inactive', venue?.status || 'active');
+    const status = prompt("Status: draft, active, inactive", venue?.status || "active");
     if (status === null) return;
 
     await api().fetch(`/admin/venues/${slug}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: {
         name,
         city,
@@ -1919,318 +2563,348 @@
         status,
       },
     });
-    window.tkToast?.('Venue updated');
+    window.tkToast?.("Venue updated");
     await refreshVenues();
     if (state.sectionLoaded.reservations) await refreshReservations();
   }
 
   async function confirmReservation(reservationId) {
-    await api().fetch(`/admin/reservations/${reservationId}/confirm`, { method: 'PATCH', body: {} });
-    window.tkToast?.('Reservation confirmed');
+    await api().fetch(`/admin/reservations/${reservationId}/confirm`, {
+      method: "PATCH",
+      body: {},
+    });
+    window.tkToast?.("Reservation confirmed");
     await refreshReservations();
   }
 
   async function completeReservation(reservationId) {
-    await api().fetch(`/admin/reservations/${reservationId}/complete`, { method: 'PATCH', body: {} });
-    window.tkToast?.('Reservation completed');
+    await api().fetch(`/admin/reservations/${reservationId}/complete`, {
+      method: "PATCH",
+      body: {},
+    });
+    window.tkToast?.("Reservation completed");
     await refreshReservations();
   }
 
   async function noShowReservation(reservationId) {
-    await api().fetch(`/admin/reservations/${reservationId}/no-show`, { method: 'PATCH', body: {} });
-    window.tkToast?.('Reservation marked no show');
+    await api().fetch(`/admin/reservations/${reservationId}/no-show`, {
+      method: "PATCH",
+      body: {},
+    });
+    window.tkToast?.("Reservation marked no show");
     await refreshReservations();
   }
 
   async function cancelReservation(reservationId) {
-    const cancellationReason = prompt('Cancellation reason', '');
+    const cancellationReason = prompt("Cancellation reason", "");
     if (cancellationReason === null) return;
     await api().fetch(`/admin/reservations/${reservationId}/cancel`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: { cancellation_reason: cancellationReason },
     });
-    window.tkToast?.('Reservation cancelled');
+    window.tkToast?.("Reservation cancelled");
     await refreshReservations();
   }
 
   function bindFilters() {
-    const userForm = document.querySelector('[data-admin-user-filters]');
-    userForm?.addEventListener('submit', async (event) => {
+    const userForm = document.querySelector("[data-admin-user-filters]");
+    userForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const fd = new FormData(userForm);
       state.userFilters = {
-        q: fd.get('q'),
-        role: fd.get('role'),
-        status: fd.get('status'),
-        organizer_status: fd.get('organizer_status'),
-        email_verification: fd.get('email_verification'),
-        sort: fd.get('sort'),
+        q: fd.get("q"),
+        role: fd.get("role"),
+        status: fd.get("status"),
+        organizer_status: fd.get("organizer_status"),
+        email_verification: fd.get("email_verification"),
+        sort: fd.get("sort"),
       };
       await refreshUsers();
     });
 
-    document.querySelector('[data-reset-admin-users]')?.addEventListener('click', async () => {
+    document.querySelector("[data-reset-admin-users]")?.addEventListener("click", async () => {
       userForm?.reset();
       state.userFilters = {};
       await refreshUsers();
     });
 
-    const eventForm = document.querySelector('[data-admin-event-filters]');
-    eventForm?.addEventListener('submit', async (event) => {
+    const eventForm = document.querySelector("[data-admin-event-filters]");
+    eventForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const fd = new FormData(eventForm);
-      state.eventFilters = { q: fd.get('q'), status: fd.get('status') };
+      state.eventFilters = { q: fd.get("q"), status: fd.get("status") };
       await refreshEvents();
     });
 
-    document.querySelector('[data-reset-admin-events]')?.addEventListener('click', async () => {
+    document.querySelector("[data-reset-admin-events]")?.addEventListener("click", async () => {
       eventForm?.reset();
       state.eventFilters = {};
       await refreshEvents();
     });
 
-    const venueForm = document.querySelector('[data-admin-venue-filters]');
-    venueForm?.addEventListener('submit', async (event) => {
+    const venueForm = document.querySelector("[data-admin-venue-filters]");
+    venueForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const fd = new FormData(venueForm);
       state.venueFilters = {
-        q: fd.get('q'),
-        venue_type: fd.get('venue_type'),
-        status: fd.get('status'),
-        city: fd.get('city'),
-        owner: fd.get('owner'),
+        q: fd.get("q"),
+        venue_type: fd.get("venue_type"),
+        status: fd.get("status"),
+        city: fd.get("city"),
+        owner: fd.get("owner"),
       };
       await refreshVenues();
     });
 
-    document.querySelector('[data-reset-admin-venues]')?.addEventListener('click', async () => {
+    document.querySelector("[data-reset-admin-venues]")?.addEventListener("click", async () => {
       venueForm?.reset();
       state.venueFilters = {};
       await refreshVenues();
     });
 
-    const reservationForm = document.querySelector('[data-admin-reservation-filters]');
-    reservationForm?.addEventListener('submit', async (event) => {
+    const reservationForm = document.querySelector("[data-admin-reservation-filters]");
+    reservationForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const fd = new FormData(reservationForm);
       state.reservationFilters = {
-        q: fd.get('q'),
-        status: fd.get('status'),
-        venue_id: fd.get('venue_id'),
-        owner_id: fd.get('owner_id'),
-        city: fd.get('city'),
-        date_from: fd.get('date_from'),
-        date_to: fd.get('date_to'),
+        q: fd.get("q"),
+        status: fd.get("status"),
+        venue_id: fd.get("venue_id"),
+        owner_id: fd.get("owner_id"),
+        city: fd.get("city"),
+        date_from: fd.get("date_from"),
+        date_to: fd.get("date_to"),
       };
       await refreshReservations();
     });
 
-    document.querySelector('[data-reset-admin-reservations]')?.addEventListener('click', async () => {
-      reservationForm?.reset();
-      state.reservationFilters = {};
-      await refreshReservations();
-    });
+    document
+      .querySelector("[data-reset-admin-reservations]")
+      ?.addEventListener("click", async () => {
+        reservationForm?.reset();
+        state.reservationFilters = {};
+        await refreshReservations();
+      });
 
-    const subscriberForm = document.querySelector('[data-admin-subscriber-filters]');
-    subscriberForm?.addEventListener('submit', async (event) => {
+    const subscriberForm = document.querySelector("[data-admin-subscriber-filters]");
+    subscriberForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const fd = new FormData(subscriberForm);
       state.subscriberFilters = {
-        q: fd.get('q'),
-        source: fd.get('source'),
-        status: fd.get('status'),
+        q: fd.get("q"),
+        source: fd.get("source"),
+        status: fd.get("status"),
       };
       await refreshSubscribers(1);
     });
 
-    document.querySelector('[data-reset-admin-subscribers]')?.addEventListener('click', async () => {
-      subscriberForm?.reset();
-      state.subscriberFilters = {};
-      await refreshSubscribers(1);
-    });
+    document
+      .querySelector("[data-reset-admin-subscribers]")
+      ?.addEventListener("click", async () => {
+        subscriberForm?.reset();
+        state.subscriberFilters = {};
+        await refreshSubscribers(1);
+      });
 
-    const paymentForm = document.querySelector('[data-admin-payment-filters]');
-    paymentForm?.addEventListener('submit', async (event) => {
+    const paymentForm = document.querySelector("[data-admin-payment-filters]");
+    paymentForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const fd = new FormData(paymentForm);
-      state.paymentFilters = { payment_status: fd.get('payment_status'), payment_provider: fd.get('payment_provider') };
+      state.paymentFilters = {
+        payment_status: fd.get("payment_status"),
+        payment_provider: fd.get("payment_provider"),
+      };
       await refreshPayments();
     });
 
-    document.querySelector('[data-reset-admin-payments]')?.addEventListener('click', async () => {
+    document.querySelector("[data-reset-admin-payments]")?.addEventListener("click", async () => {
       paymentForm?.reset();
       state.paymentFilters = {};
       await refreshPayments();
     });
 
-    const ticketForm = document.querySelector('[data-admin-ticket-filters]');
-    ticketForm?.addEventListener('submit', async (event) => {
+    const ticketForm = document.querySelector("[data-admin-ticket-filters]");
+    ticketForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const fd = new FormData(ticketForm);
-      state.ticketFilters = { status: fd.get('status'), event_id: fd.get('event_id') };
+      state.ticketFilters = { status: fd.get("status"), event_id: fd.get("event_id") };
       await refreshTickets();
     });
 
-    document.querySelector('[data-reset-admin-tickets]')?.addEventListener('click', async () => {
+    document.querySelector("[data-reset-admin-tickets]")?.addEventListener("click", async () => {
       ticketForm?.reset();
       state.ticketFilters = {};
       await refreshTickets();
     });
 
-    document.querySelector('[data-admin-default-fee-form]')?.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const form = event.currentTarget;
-      const fd = new FormData(form);
-      const button = form.querySelector('button[type="submit"]');
-      if (button) button.disabled = true;
-      try {
-        const { data } = await api().fetch('/admin/settings', {
-          method: 'PATCH',
-          body: { default_service_fee_percentage: fd.get('default_service_fee_percentage') },
-        });
-        state.settings = data;
-        renderKpis();
-        window.tkToast?.('Default service fee updated');
-      } catch (err) {
-        window.tkToast?.(err.message || 'Default fee update failed', 'error');
-      } finally {
-        if (button) button.disabled = false;
-      }
-    });
-
-    document.querySelector('[data-admin-platform-settings-form]')?.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const form = event.currentTarget;
-      const button = form.querySelector('button[type="submit"]');
-      const fd = new FormData(form);
-      const body = {};
-      fd.forEach((value, key) => {
-        body[key] = value;
+    document
+      .querySelector("[data-admin-default-fee-form]")
+      ?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const fd = new FormData(form);
+        const button = form.querySelector('button[type="submit"]');
+        if (button) button.disabled = true;
+        try {
+          const { data } = await api().fetch("/admin/settings", {
+            method: "PATCH",
+            body: { default_service_fee_percentage: fd.get("default_service_fee_percentage") },
+          });
+          state.settings = data;
+          renderKpis();
+          window.tkToast?.("Default service fee updated");
+        } catch (err) {
+          window.tkToast?.(err.message || "Default fee update failed", "error");
+        } finally {
+          if (button) button.disabled = false;
+        }
       });
-      if (button) button.disabled = true;
-      try {
-        const { data } = await api().fetch('/admin/settings', { method: 'PATCH', body });
-        state.settings = data;
-        fillSettingsForms();
-        renderKpis();
-        renderHealth();
-        window.tkToast?.('Platform settings updated');
-        await refreshAuditLogs();
-      } catch (err) {
-        window.tkToast?.(err.message || 'Settings update failed', 'error');
-      } finally {
-        if (button) button.disabled = false;
-      }
-    });
 
-    document.querySelector('[data-admin-category-form]')?.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const form = event.currentTarget;
-      const button = form.querySelector('button[type="submit"]');
-      const fd = new FormData(form);
-      if (button) button.disabled = true;
-      try {
-        await api().fetch('/admin/categories', {
-          method: 'POST',
-          body: {
-            name: fd.get('name'),
-            icon: fd.get('icon') || 'bi-tag',
-            sort_order: fd.get('sort_order') || 0,
-          },
+    document
+      .querySelector("[data-admin-platform-settings-form]")
+      ?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const button = form.querySelector('button[type="submit"]');
+        const fd = new FormData(form);
+        const body = {};
+        fd.forEach((value, key) => {
+          body[key] = value;
         });
-        form.reset();
-        window.tkToast?.('Category created');
-        await Promise.all([refreshCategories(), refreshAuditLogs()]);
-      } catch (err) {
-        window.tkToast?.(err.message || 'Category creation failed', 'error');
-      } finally {
-        if (button) button.disabled = false;
-      }
-    });
+        if (button) button.disabled = true;
+        try {
+          const { data } = await api().fetch("/admin/settings", { method: "PATCH", body });
+          state.settings = data;
+          fillSettingsForms();
+          renderKpis();
+          renderHealth();
+          window.tkToast?.("Platform settings updated");
+          await refreshAuditLogs();
+        } catch (err) {
+          window.tkToast?.(err.message || "Settings update failed", "error");
+        } finally {
+          if (button) button.disabled = false;
+        }
+      });
 
-    const templateSelect = document.querySelector('[data-email-template-select]');
-    templateSelect?.addEventListener('change', fillEmailTemplateForm);
+    document
+      .querySelector("[data-admin-category-form]")
+      ?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const button = form.querySelector('button[type="submit"]');
+        const fd = new FormData(form);
+        if (button) button.disabled = true;
+        try {
+          await api().fetch("/admin/categories", {
+            method: "POST",
+            body: {
+              name: fd.get("name"),
+              icon: fd.get("icon") || "bi-tag",
+              sort_order: fd.get("sort_order") || 0,
+            },
+          });
+          form.reset();
+          window.tkToast?.("Category created");
+          await Promise.all([refreshCategories(), refreshAuditLogs()]);
+        } catch (err) {
+          window.tkToast?.(err.message || "Category creation failed", "error");
+        } finally {
+          if (button) button.disabled = false;
+        }
+      });
 
-    const emailForm = document.querySelector('[data-admin-email-filters]');
-    emailForm?.addEventListener('submit', async (event) => {
+    const templateSelect = document.querySelector("[data-email-template-select]");
+    templateSelect?.addEventListener("change", fillEmailTemplateForm);
+
+    const emailForm = document.querySelector("[data-admin-email-filters]");
+    emailForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const fd = new FormData(emailForm);
       state.emailFilters = {
-        module: fd.get('module'),
-        status: fd.get('status'),
-        date_from: fd.get('date_from'),
-        date_to: fd.get('date_to'),
-        q: fd.get('q'),
+        module: fd.get("module"),
+        status: fd.get("status"),
+        date_from: fd.get("date_from"),
+        date_to: fd.get("date_to"),
+        q: fd.get("q"),
         page: 1,
       };
       await refreshEmailCenterPage();
     });
 
-    emailForm?.addEventListener('reset', () => {
+    emailForm?.addEventListener("reset", () => {
       state.emailFilters = { page: 1 };
       setTimeout(() => refreshEmailCenterPage(), 0);
     });
 
-    document.querySelector('[data-email-template-form]')?.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const form = event.currentTarget;
-      const template = selectedEmailTemplate();
-      if (!template) return;
-      const button = form.querySelector('button[type="submit"]');
-      const fd = new FormData(form);
-      if (button) button.disabled = true;
-      try {
-        const { data } = await api().fetch(`/admin/email-templates/${template.id}`, {
-          method: 'PATCH',
-          body: {
-            subject: fd.get('subject'),
-            html_template: fd.get('html_template'),
-            text_template: fd.get('text_template'),
-            is_active: true,
-          },
-        });
-        const templates = state.emailCenter?.templates || [];
-        const index = templates.findIndex((item) => String(item.id) === String(data.id));
-        if (index >= 0) templates[index] = data;
-        fillEmailTemplateForm();
-        window.tkToast?.('Email template updated');
-        await refreshAuditLogs();
-      } catch (err) {
-        window.tkToast?.(err.message || 'Template update failed', 'error');
-      } finally {
-        if (button) button.disabled = false;
-      }
-    });
+    document
+      .querySelector("[data-email-template-form]")
+      ?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const template = selectedEmailTemplate();
+        if (!template) return;
+        const button = form.querySelector('button[type="submit"]');
+        const fd = new FormData(form);
+        if (button) button.disabled = true;
+        try {
+          const { data } = await api().fetch(`/admin/email-templates/${template.id}`, {
+            method: "PATCH",
+            body: {
+              subject: fd.get("subject"),
+              html_template: fd.get("html_template"),
+              text_template: fd.get("text_template"),
+              is_active: true,
+            },
+          });
+          const templates = state.emailCenter?.templates || [];
+          const index = templates.findIndex((item) => String(item.id) === String(data.id));
+          if (index >= 0) templates[index] = data;
+          fillEmailTemplateForm();
+          window.tkToast?.("Email template updated");
+          await refreshAuditLogs();
+        } catch (err) {
+          window.tkToast?.(err.message || "Template update failed", "error");
+        } finally {
+          if (button) button.disabled = false;
+        }
+      });
 
-    const auditForm = document.querySelector('[data-admin-audit-filters]');
-    auditForm?.addEventListener('submit', async (event) => {
+    const auditForm = document.querySelector("[data-admin-audit-filters]");
+    auditForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const fd = new FormData(auditForm);
-      state.auditFilters = { q: fd.get('q'), action: fd.get('action') };
+      state.auditFilters = { q: fd.get("q"), action: fd.get("action") };
       await refreshAuditLogs();
     });
 
-    document.querySelector('[data-admin-checkin-event]')?.addEventListener('change', async (event) => {
-      state.checkInFilters.event_id = event.target.value;
-      await refreshCheckIns();
-    });
-    document.querySelector('[data-admin-checkin-result]')?.addEventListener('change', async (event) => {
-      state.checkInFilters.result = event.target.value;
-      await refreshCheckIns();
-    });
+    document
+      .querySelector("[data-admin-checkin-event]")
+      ?.addEventListener("change", async (event) => {
+        state.checkInFilters.event_id = event.target.value;
+        await refreshCheckIns();
+      });
+    document
+      .querySelector("[data-admin-checkin-result]")
+      ?.addEventListener("change", async (event) => {
+        state.checkInFilters.result = event.target.value;
+        await refreshCheckIns();
+      });
   }
 
   function bindActions() {
-    document.addEventListener('event-sphere:theme-changed', renderCharts);
+    document.addEventListener("event-sphere:theme-changed", renderCharts);
 
-    document.querySelector('[data-admin-select-all-events]')?.addEventListener('change', (event) => {
-      document.querySelectorAll('[data-admin-event-select]').forEach((input) => {
-        input.checked = event.target.checked;
+    document
+      .querySelector("[data-admin-select-all-events]")
+      ?.addEventListener("change", (event) => {
+        document.querySelectorAll("[data-admin-event-select]").forEach((input) => {
+          input.checked = event.target.checked;
+        });
       });
-    });
 
-    document.addEventListener('submit', async (event) => {
-      const form = event.target.closest('[data-admin-scanner-assignment-form]');
+    document.addEventListener("submit", async (event) => {
+      const form = event.target.closest("[data-admin-scanner-assignment-form]");
       if (!form) return;
       event.preventDefault();
 
@@ -2240,29 +2914,29 @@
 
       try {
         await api().fetch(`/admin/events/${eventId}/scanners`, {
-          method: 'POST',
-          body: { scanner_id: new FormData(form).get('scanner_id') },
+          method: "POST",
+          body: { scanner_id: new FormData(form).get("scanner_id") },
         });
-        window.tkToast?.('Scanner assigned');
+        window.tkToast?.("Scanner assigned");
         await showScannerAssignment(eventId);
       } catch (err) {
         button.disabled = false;
-        window.tkToast?.(err.message || 'Failed to assign scanner', 'error');
+        window.tkToast?.(err.message || "Failed to assign scanner", "error");
       }
     });
 
-    document.addEventListener('click', async (event) => {
-      const emailRow = event.target.closest('[data-email-log-id]');
-      if (emailRow && !event.target.closest('button,a,input,select,textarea')) {
+    document.addEventListener("click", async (event) => {
+      const emailRow = event.target.closest("[data-email-log-id]");
+      if (emailRow && !event.target.closest("button,a,input,select,textarea")) {
         try {
           await showEmailLogDetail(emailRow.dataset.emailLogId);
         } catch (err) {
-          window.tkToast?.(err.message || 'Failed to load email details', 'error');
+          window.tkToast?.(err.message || "Failed to load email details", "error");
         }
         return;
       }
 
-      const button = event.target.closest('button');
+      const button = event.target.closest("button");
       if (!button) return;
 
       try {
@@ -2278,8 +2952,8 @@
         if (button.dataset.retryAuditLogs !== undefined) await refreshAuditLogs();
 
         if (button.dataset.adminReport) {
-          await loadSection('reports');
-          exportReport(button.dataset.adminReport, button.dataset.reportFormat || 'csv');
+          await loadSection("reports");
+          exportReport(button.dataset.adminReport, button.dataset.reportFormat || "csv");
         }
 
         if (button.dataset.auditPage) {
@@ -2309,20 +2983,25 @@
 
         if (button.dataset.emailRetry) {
           button.disabled = true;
-          await api().fetch(`/admin/email-center/${button.dataset.emailRetry}/retry`, { method: 'POST' });
-          window.tkToast?.('Retry email sent');
-          bootstrap.Modal.getInstance(document.getElementById('adminDetailModal'))?.hide();
+          await api().fetch(`/admin/email-center/${button.dataset.emailRetry}/retry`, {
+            method: "POST",
+          });
+          window.tkToast?.("Retry email sent");
+          bootstrap.Modal.getInstance(document.getElementById("adminDetailModal"))?.hide();
           await refreshEmailCenter();
         }
 
         if (button.dataset.previewEmailTemplate !== undefined) {
           const template = selectedEmailTemplate();
-          const preview = document.querySelector('[data-email-template-preview]');
+          const preview = document.querySelector("[data-email-template-preview]");
           if (!template || !preview) return;
           button.disabled = true;
-          const { data } = await api().fetch(`/admin/email-templates/${template.id}/preview?format=html`);
+          const { data } = await api().fetch(
+            `/admin/email-templates/${template.id}/preview?format=html`,
+          );
           preview.hidden = false;
-          preview.innerHTML = data.rendered || '<p class="text-muted-pro mb-0">No preview available.</p>';
+          preview.innerHTML =
+            data.rendered || '<p class="text-muted-pro mb-0">No preview available.</p>';
         }
 
         if (button.dataset.saveCategory) {
@@ -2330,14 +3009,15 @@
           const category = state.categories.find((item) => String(item.id) === String(categoryId));
           button.disabled = true;
           await api().fetch(`/admin/categories/${categoryId}`, {
-            method: 'PATCH',
+            method: "PATCH",
             body: {
               name: document.querySelector(`[data-category-name="${categoryId}"]`)?.value,
-              icon: document.querySelector(`[data-category-icon="${categoryId}"]`)?.value || 'bi-tag',
+              icon:
+                document.querySelector(`[data-category-icon="${categoryId}"]`)?.value || "bi-tag",
               is_active: Boolean(category?.is_active),
             },
           });
-          window.tkToast?.('Category updated');
+          window.tkToast?.("Category updated");
           await Promise.all([refreshCategories(), refreshAuditLogs()]);
         }
 
@@ -2346,18 +3026,20 @@
           const category = state.categories.find((item) => String(item.id) === String(categoryId));
           button.disabled = true;
           await api().fetch(`/admin/categories/${categoryId}`, {
-            method: 'PATCH',
+            method: "PATCH",
             body: { is_active: !category?.is_active },
           });
-          window.tkToast?.(category?.is_active ? 'Category disabled' : 'Category enabled');
+          window.tkToast?.(category?.is_active ? "Category disabled" : "Category enabled");
           await Promise.all([refreshCategories(), refreshAuditLogs()]);
         }
 
         if (button.dataset.deleteCategory) {
-          if (!confirm('Delete this category? Events assigned to it must be moved first.')) return;
+          if (!confirm("Delete this category? Events assigned to it must be moved first.")) return;
           button.disabled = true;
-          await api().fetch(`/admin/categories/${button.dataset.deleteCategory}`, { method: 'DELETE' });
-          window.tkToast?.('Category deleted');
+          await api().fetch(`/admin/categories/${button.dataset.deleteCategory}`, {
+            method: "DELETE",
+          });
+          window.tkToast?.("Category deleted");
           await Promise.all([refreshCategories(), refreshAuditLogs()]);
         }
 
@@ -2367,37 +3049,47 @@
         if (button.dataset.viewReservation) await showReservation(button.dataset.viewReservation);
         if (button.dataset.viewTicket) await showTicket(button.dataset.viewTicket);
         if (button.dataset.ticketQr) showTicketQr(button.dataset.ticketQr);
-        if (button.dataset.ticketManualValidation) await manualValidateTicket(button.dataset.ticketManualValidation);
+        if (button.dataset.ticketManualValidation)
+          await manualValidateTicket(button.dataset.ticketManualValidation);
         if (button.dataset.viewPayment) await showPayment(button.dataset.viewPayment);
 
         if (button.dataset.saveRole) {
           button.disabled = true;
           const userId = button.dataset.saveRole;
           const role = document.querySelector(`[data-user-role="${userId}"]`)?.value;
-          await api().fetch(`/admin/users/${userId}/role`, { method: 'PATCH', body: { role } });
-          window.tkToast?.('User role updated');
+          await api().fetch(`/admin/users/${userId}/role`, { method: "PATCH", body: { role } });
+          window.tkToast?.("User role updated");
           await refreshUsers();
         }
 
         if (button.dataset.suspendUser) {
-          if (!confirm('Suspend this user?')) return;
+          if (!confirm("Suspend this user?")) return;
           button.disabled = true;
-          await api().fetch(`/admin/users/${button.dataset.suspendUser}/suspend`, { method: 'POST', body: {} });
-          window.tkToast?.('User suspended');
+          await api().fetch(`/admin/users/${button.dataset.suspendUser}/suspend`, {
+            method: "POST",
+            body: {},
+          });
+          window.tkToast?.("User suspended");
           await refreshUsers();
         }
 
         if (button.dataset.reactivateUser) {
           button.disabled = true;
-          await api().fetch(`/admin/users/${button.dataset.reactivateUser}/reactivate`, { method: 'POST', body: {} });
-          window.tkToast?.('User reactivated');
+          await api().fetch(`/admin/users/${button.dataset.reactivateUser}/reactivate`, {
+            method: "POST",
+            body: {},
+          });
+          window.tkToast?.("User reactivated");
           await refreshUsers();
         }
 
         if (button.dataset.approveOrganizer) {
           button.disabled = true;
-          await api().fetch(`/admin/users/${button.dataset.approveOrganizer}/approve-organizer`, { method: 'POST', body: {} });
-          window.tkToast?.('Organizer approved');
+          await api().fetch(`/admin/users/${button.dataset.approveOrganizer}/approve-organizer`, {
+            method: "POST",
+            body: {},
+          });
+          window.tkToast?.("Organizer approved");
           await refreshUsers();
         }
 
@@ -2408,26 +3100,32 @@
 
         if (button.dataset.activateVenue) {
           button.disabled = true;
-          await api().fetch(`/admin/venues/${button.dataset.activateVenue}/activate`, { method: 'POST', body: {} });
-          window.tkToast?.('Venue activated');
+          await api().fetch(`/admin/venues/${button.dataset.activateVenue}/activate`, {
+            method: "POST",
+            body: {},
+          });
+          window.tkToast?.("Venue activated");
           await refreshVenues();
           if (state.sectionLoaded.reservations) await refreshReservations();
         }
 
         if (button.dataset.deactivateVenue) {
-          if (!confirm('Deactivate this venue?')) return;
+          if (!confirm("Deactivate this venue?")) return;
           button.disabled = true;
-          await api().fetch(`/admin/venues/${button.dataset.deactivateVenue}/deactivate`, { method: 'POST', body: {} });
-          window.tkToast?.('Venue deactivated');
+          await api().fetch(`/admin/venues/${button.dataset.deactivateVenue}/deactivate`, {
+            method: "POST",
+            body: {},
+          });
+          window.tkToast?.("Venue deactivated");
           await refreshVenues();
           if (state.sectionLoaded.reservations) await refreshReservations();
         }
 
         if (button.dataset.deleteVenue) {
-          if (!confirm('Delete this venue and its reservations?')) return;
+          if (!confirm("Delete this venue and its reservations?")) return;
           button.disabled = true;
-          await api().fetch(`/admin/venues/${button.dataset.deleteVenue}`, { method: 'DELETE' });
-          window.tkToast?.('Venue deleted');
+          await api().fetch(`/admin/venues/${button.dataset.deleteVenue}`, { method: "DELETE" });
+          window.tkToast?.("Venue deleted");
           await refreshVenues();
           if (state.sectionLoaded.reservations) await refreshReservations();
         }
@@ -2453,49 +3151,59 @@
         }
 
         if (button.dataset.deleteReservation) {
-          if (!confirm('Delete this reservation?')) return;
+          if (!confirm("Delete this reservation?")) return;
           button.disabled = true;
-          await api().fetch(`/admin/reservations/${button.dataset.deleteReservation}`, { method: 'DELETE' });
-          window.tkToast?.('Reservation deleted');
+          await api().fetch(`/admin/reservations/${button.dataset.deleteReservation}`, {
+            method: "DELETE",
+          });
+          window.tkToast?.("Reservation deleted");
           await refreshReservations();
         }
 
         if (button.dataset.rejectOrganizer) {
-          const reason = prompt('Reject organizer request - add a note', '');
+          const reason = prompt("Reject organizer request - add a note", "");
           if (reason === null) return;
           button.disabled = true;
-          await api().fetch(`/admin/users/${button.dataset.rejectOrganizer}/reject-organizer`, { method: 'POST', body: { reason } });
-          window.tkToast?.('Organizer rejected');
+          await api().fetch(`/admin/users/${button.dataset.rejectOrganizer}/reject-organizer`, {
+            method: "POST",
+            body: { reason },
+          });
+          window.tkToast?.("Organizer rejected");
           await refreshUsers();
         }
 
         if (button.dataset.publishEvent) {
           button.disabled = true;
-          await eventModeration(button.dataset.publishEvent, 'publish');
+          await eventModeration(button.dataset.publishEvent, "publish");
         }
 
         if (button.dataset.rejectEvent) {
           button.disabled = true;
-          await eventModeration(button.dataset.rejectEvent, 'reject');
+          await eventModeration(button.dataset.rejectEvent, "reject");
         }
 
         if (button.dataset.unpublishEvent) {
           button.disabled = true;
-          await eventModeration(button.dataset.unpublishEvent, 'unpublish');
+          await eventModeration(button.dataset.unpublishEvent, "unpublish");
         }
 
         if (button.dataset.editEvent) {
-          const eventRecord = state.events.find((item) => String(item.id) === String(button.dataset.editEvent));
-          const title = prompt('Update event name', eventRecord?.title || '');
+          const eventRecord = state.events.find(
+            (item) => String(item.id) === String(button.dataset.editEvent),
+          );
+          const title = prompt("Update event name", eventRecord?.title || "");
           if (title) {
             button.disabled = true;
-            await api().fetch(`/admin/events/${button.dataset.editEvent}`, { method: 'PATCH', body: { title } });
+            await api().fetch(`/admin/events/${button.dataset.editEvent}`, {
+              method: "PATCH",
+              body: { title },
+            });
             window.EventSphereNotifications?.add({
-              type: 'event',
-              title: 'Event Updated',
+              type: "event",
+              title: "Event Updated",
               message: `${title} was updated successfully.`,
             });
-            window.tkToast?.('Event updated');
+            window.tkToast?.("Event updated");
             await refreshEvents();
           }
         }
@@ -2505,34 +3213,39 @@
         }
 
         if (button.dataset.featureEvent) {
-          const eventRecord = state.events.find((item) => String(item.id) === String(button.dataset.featureEvent));
+          const eventRecord = state.events.find(
+            (item) => String(item.id) === String(button.dataset.featureEvent),
+          );
           button.disabled = true;
           await api().fetch(`/admin/events/${button.dataset.featureEvent}`, {
-            method: 'PATCH',
+            method: "PATCH",
             body: { is_featured: !eventRecord?.is_featured },
           });
-          window.tkToast?.(eventRecord?.is_featured ? 'Event unfeatured' : 'Event featured');
+          window.tkToast?.(eventRecord?.is_featured ? "Event unfeatured" : "Event featured");
           await refreshEvents();
         }
 
         if (button.dataset.archiveEvent) {
-          if (!confirm('Archive this event?')) return;
+          if (!confirm("Archive this event?")) return;
           button.disabled = true;
-          await api().fetch(`/admin/events/${button.dataset.archiveEvent}`, { method: 'PATCH', body: { status: 'completed' } });
-          window.EventSphereNotifications?.add({
-            type: 'event',
-            title: 'Event Cancelled',
-            message: 'The event was archived and removed from active discovery.',
+          await api().fetch(`/admin/events/${button.dataset.archiveEvent}`, {
+            method: "PATCH",
+            body: { status: "completed" },
           });
-          window.tkToast?.('Event archived');
+          window.EventSphereNotifications?.add({
+            type: "event",
+            title: "Event Cancelled",
+            message: "The event was archived and removed from active discovery.",
+          });
+          window.tkToast?.("Event archived");
           await refreshEvents();
         }
 
         if (button.dataset.deleteEvent) {
-          if (!confirm('Delete this event?')) return;
+          if (!confirm("Delete this event?")) return;
           button.disabled = true;
-          await api().fetch(`/admin/events/${button.dataset.deleteEvent}`, { method: 'DELETE' });
-          window.tkToast?.('Event deleted');
+          await api().fetch(`/admin/events/${button.dataset.deleteEvent}`, { method: "DELETE" });
+          window.tkToast?.("Event deleted");
           await refreshEvents();
         }
 
@@ -2547,62 +3260,84 @@
           const eventId = button.dataset.saveEventFee;
           const value = document.querySelector(`[data-event-fee-input="${eventId}"]`)?.value;
           await api().fetch(`/admin/events/${eventId}/service-fee`, {
-            method: 'PATCH',
+            method: "PATCH",
             body: { service_fee_percentage: value },
           });
-          window.tkToast?.('Event service fee updated');
+          window.tkToast?.("Event service fee updated");
           await refreshEvents();
         }
 
         if (button.dataset.refundOrder) {
-          if (!confirm('Issue full refund for this order?')) return;
+          if (!confirm("Issue full refund for this order?")) return;
           button.disabled = true;
-          await api().fetch(`/admin/payments/${button.dataset.refundOrder}/refund`, { method: 'POST', body: { reason: 'requested_by_customer' } });
-          window.tkToast?.('Refund processed');
+          await api().fetch(`/admin/payments/${button.dataset.refundOrder}/refund`, {
+            method: "POST",
+            body: { reason: "requested_by_customer" },
+          });
+          window.tkToast?.("Refund processed");
           await refreshPayments();
         }
 
         if (button.dataset.adminAlerts) {
-          window.tkToast?.('No unresolved platform alerts');
+          window.tkToast?.("No unresolved platform alerts");
         }
 
         if (button.dataset.adminExport) {
-          await loadSection('reports');
+          await loadSection("reports");
           const csv = [
-            ['section', 'id', 'name', 'status'],
-            ...state.users.map((usr) => ['user', usr.id, usr.email, usr.status]),
-            ...state.events.map((evt) => ['event', evt.id, evt.title, evt.status]),
-            ...state.venues.map((venue) => ['venue', venue.id, venue.name, venue.status]),
-            ...state.reservations.map((reservation) => ['reservation', reservation.id, reservation.guest_name, reservation.status]),
-            ...state.tickets.map((ticket) => ['ticket', ticket.id, ticket.ticket_code, ticket.status]),
-            ...state.orders.map((order) => ['order', order.id, order.order_number, order.payment_status]),
-          ].map((row) => row.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
-          const blob = new Blob([csv], { type: 'text/csv' });
+            ["section", "id", "name", "status"],
+            ...state.users.map((usr) => ["user", usr.id, usr.email, usr.status]),
+            ...state.events.map((evt) => ["event", evt.id, evt.title, evt.status]),
+            ...state.venues.map((venue) => ["venue", venue.id, venue.name, venue.status]),
+            ...state.reservations.map((reservation) => [
+              "reservation",
+              reservation.id,
+              reservation.guest_name,
+              reservation.status,
+            ]),
+            ...state.tickets.map((ticket) => [
+              "ticket",
+              ticket.id,
+              ticket.ticket_code,
+              ticket.status,
+            ]),
+            ...state.orders.map((order) => [
+              "order",
+              order.id,
+              order.order_number,
+              order.payment_status,
+            ]),
+          ]
+            .map((row) =>
+              row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(","),
+            )
+            .join("\n");
+          const blob = new Blob([csv], { type: "text/csv" });
           const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
+          const link = document.createElement("a");
           link.href = url;
-          link.download = 'event-sphere-admin-export.csv';
+          link.download = "event-sphere-admin-export.csv";
           link.click();
           URL.revokeObjectURL(url);
         }
       } catch (err) {
         button.disabled = false;
-        window.tkToast?.(err.message || 'Admin action failed', 'error');
+        window.tkToast?.(err.message || "Admin action failed", "error");
       }
     });
   }
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    if (!auth().requireAuth(['admin'])) return;
+  document.addEventListener("DOMContentLoaded", async () => {
+    if (!auth().requireAuth(["admin"])) return;
 
     bindSectionNavigation();
     bindFilters();
     bindActions();
 
     try {
-      await loadSection(state.currentSection || 'overview');
+      await loadSection(state.currentSection || "overview");
     } catch (err) {
-      window.tkToast?.(err.message || 'Failed to load admin dashboard', 'error');
+      window.tkToast?.(err.message || "Failed to load admin dashboard", "error");
     }
   });
 })();

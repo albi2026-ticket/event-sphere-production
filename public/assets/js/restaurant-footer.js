@@ -1,5 +1,5 @@
 (function () {
-  'use strict';
+  "use strict";
 
   const footerHTML = `
 <footer class="footer">
@@ -56,11 +56,11 @@
 </footer>`;
 
   function inject() {
-    document.querySelectorAll('[data-restaurant-footer]').forEach((el) => {
+    document.querySelectorAll("[data-restaurant-footer]").forEach((el) => {
       el.outerHTML = footerHTML;
     });
     window.TiketaLanguage?.applyTranslations?.();
   }
 
-  document.addEventListener('DOMContentLoaded', inject);
+  document.addEventListener("DOMContentLoaded", inject);
 })();

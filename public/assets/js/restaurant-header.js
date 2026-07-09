@@ -1,5 +1,5 @@
 (function () {
-  'use strict';
+  "use strict";
 
   const headerHTML = `
 <nav class="navbar navbar-expand-lg nav-blur nav-res">
@@ -23,11 +23,11 @@
 </nav>`;
 
   function inject() {
-    document.querySelectorAll('[data-restaurant-header]').forEach((el) => {
+    document.querySelectorAll("[data-restaurant-header]").forEach((el) => {
       el.outerHTML = headerHTML;
     });
     window.TiketaLanguage?.ensureSwitcher?.();
   }
 
-  document.addEventListener('DOMContentLoaded', inject);
+  document.addEventListener("DOMContentLoaded", inject);
 })();

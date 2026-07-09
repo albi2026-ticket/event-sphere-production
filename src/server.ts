@@ -2,6 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import welcomeHtml from "../public/site/welcome.html?raw";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -50,7 +51,7 @@ const securityHeaders = {
 async function getServerEntry(): Promise<ServerEntry> {
   if (!serverEntryPromise) {
     serverEntryPromise = import("@tanstack/react-start/server-entry").then(
-      (m) => ((m as { default?: ServerEntry }).default ?? (m as unknown as ServerEntry)),
+      (m) => (m as { default?: ServerEntry }).default ?? (m as unknown as ServerEntry),
     );
   }
   return serverEntryPromise;
@@ -79,6 +80,22 @@ function brandedErrorResponse(): Response {
     status: 500,
     headers: { "content-type": "text/html; charset=utf-8" },
   });
+}
+
+function isProductionRootRequest(request: Request): boolean {
+  const url = new URL(request.url);
+
+  return (request.method === "GET" || request.method === "HEAD") && url.pathname === "/";
+}
+
+function welcomeResponse(request: Request): Response {
+  return withSecurityHeaders(
+    new Response(request.method === "HEAD" ? null : welcomeHtml, {
+      status: 200,
+      headers: { "content-type": "text/html; charset=utf-8" },
+    }),
+    request,
+  );
 }
 
 function isCatastrophicSsrErrorBody(body: string, responseStatus: number): boolean {
@@ -125,6 +142,10 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      if (isProductionRootRequest(request)) {
+        return welcomeResponse(request);
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response), request);

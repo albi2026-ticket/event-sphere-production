@@ -1,5 +1,5 @@
 (function () {
-  'use strict';
+  "use strict";
 
   const api = () => window.EventSphereApi;
   const cfg = () => window.EventSphereConfig;
@@ -11,14 +11,18 @@
   function setSession(token, user) {
     sessionStorage.setItem(cfg().TOKEN_KEY, token);
     if (user) sessionStorage.setItem(cfg().USER_KEY, JSON.stringify(user));
-    document.dispatchEvent(new CustomEvent('event-sphere:auth-changed', { detail: { user: user || null } }));
+    document.dispatchEvent(
+      new CustomEvent("event-sphere:auth-changed", { detail: { user: user || null } }),
+    );
     paintAuthNav();
   }
 
   function clearSession() {
     sessionStorage.removeItem(cfg().TOKEN_KEY);
     sessionStorage.removeItem(cfg().USER_KEY);
-    document.dispatchEvent(new CustomEvent('event-sphere:auth-changed', { detail: { user: null } }));
+    document.dispatchEvent(
+      new CustomEvent("event-sphere:auth-changed", { detail: { user: null } }),
+    );
     paintAuthNav();
   }
 
@@ -33,29 +37,33 @@
   }
 
   async function refreshUser() {
-    const { data } = await api().fetch('/user');
+    const { data } = await api().fetch("/user");
     sessionStorage.setItem(cfg().USER_KEY, JSON.stringify(data));
-    document.dispatchEvent(new CustomEvent('event-sphere:auth-changed', { detail: { user: data } }));
+    document.dispatchEvent(
+      new CustomEvent("event-sphere:auth-changed", { detail: { user: data } }),
+    );
     paintAuthNav();
     return data;
   }
 
   async function syncLanguage(language = window.TiketaLanguage?.getLanguage?.()) {
-    if (!getToken() || !['en', 'sq'].includes(language)) return null;
-    const { data } = await api().fetch('/user/language', {
-      method: 'PATCH',
+    if (!getToken() || !["en", "sq"].includes(language)) return null;
+    const { data } = await api().fetch("/user/language", {
+      method: "PATCH",
       body: { preferred_language: language },
       skipAuthRedirect: true,
     });
     sessionStorage.setItem(cfg().USER_KEY, JSON.stringify(data));
-    document.dispatchEvent(new CustomEvent('event-sphere:auth-changed', { detail: { user: data } }));
+    document.dispatchEvent(
+      new CustomEvent("event-sphere:auth-changed", { detail: { user: data } }),
+    );
     return data;
   }
 
   async function login(email, password, deviceName) {
-    const { raw } = await api().fetch('/login', {
-      method: 'POST',
-      body: { email, password, device_name: deviceName || 'tickethub-web' },
+    const { raw } = await api().fetch("/login", {
+      method: "POST",
+      body: { email, password, device_name: deviceName || "tickethub-web" },
       skipAuthRedirect: true,
     });
     setSession(raw.token, raw.user);
@@ -64,9 +72,9 @@
   }
 
   async function register(payload) {
-    const { raw } = await api().fetch('/register', {
-      method: 'POST',
-      body: { ...payload, preferred_language: window.TiketaLanguage?.getLanguage?.() || 'en' },
+    const { raw } = await api().fetch("/register", {
+      method: "POST",
+      body: { ...payload, preferred_language: window.TiketaLanguage?.getLanguage?.() || "en" },
       skipAuthRedirect: true,
     });
     setSession(raw.token, raw.user);
@@ -74,8 +82,8 @@
   }
 
   async function resendVerificationEmail() {
-    const { raw } = await api().fetch('/email/verification-notification', {
-      method: 'POST',
+    const { raw } = await api().fetch("/email/verification-notification", {
+      method: "POST",
       body: {},
     });
 
@@ -83,8 +91,8 @@
   }
 
   async function requestPasswordReset(email) {
-    const { raw } = await api().fetch('/forgot-password', {
-      method: 'POST',
+    const { raw } = await api().fetch("/forgot-password", {
+      method: "POST",
       body: { email },
       skipAuthRedirect: true,
     });
@@ -93,8 +101,8 @@
   }
 
   async function resetPassword(payload) {
-    const { raw } = await api().fetch('/reset-password', {
-      method: 'POST',
+    const { raw } = await api().fetch("/reset-password", {
+      method: "POST",
       body: payload,
       skipAuthRedirect: true,
     });
@@ -104,7 +112,7 @@
 
   async function logout() {
     try {
-      if (getToken()) await api().fetch('/logout', { method: 'POST' });
+      if (getToken()) await api().fetch("/logout", { method: "POST" });
     } catch {
       /* ignore */
     }
@@ -113,11 +121,11 @@
   }
 
   function roleHome(role) {
-    if (role === 'admin') return '/admin';
-    if (role === 'organizer') return '/organizer';
-    if (role === 'owner') return '/owner-venue';
-    if (role === 'scanner') return '/scanner-dashboard';
-    return '/dashboard';
+    if (role === "admin") return "/admin";
+    if (role === "organizer") return "/organizer";
+    if (role === "owner") return "/owner-venue";
+    if (role === "scanner") return "/scanner-dashboard";
+    return "/dashboard";
   }
 
   function redirectByRole(user) {
@@ -126,7 +134,7 @@
       location.href = cfg().LOGIN_URL;
       return;
     }
-    location.href = u.role === 'scanner' ? roleHome(u.role) : '/welcome';
+    location.href = u.role === "scanner" ? roleHome(u.role) : "/welcome";
   }
 
   function requireAuth(roles, options = {}) {
@@ -136,16 +144,20 @@
       location.href = `${cfg().LOGIN_URL}?next=${next}`;
       return null;
     }
-    if (roles?.length && !roles.includes(user.role) && user.role !== 'admin') {
-      window.tkToast?.('You do not have access to this page.', 'error');
+    if (roles?.length && !roles.includes(user.role) && user.role !== "admin") {
+      window.tkToast?.("You do not have access to this page.", "error");
       location.href = roleHome(user.role);
       return null;
     }
-    if (user.role === 'organizer' && user.organizer_status === 'pending' && options.requireApprovedOrganizer !== false) {
-      const onOrganizer = location.pathname.includes('organizer');
+    if (
+      user.role === "organizer" &&
+      user.organizer_status === "pending" &&
+      options.requireApprovedOrganizer !== false
+    ) {
+      const onOrganizer = location.pathname.includes("organizer");
       if (onOrganizer) {
-        window.tkToast?.('Organizer account pending approval.', 'info');
-        location.href = '/dashboard';
+        window.tkToast?.("Organizer account pending approval.", "info");
+        location.href = "/dashboard";
         return null;
       }
     }
@@ -154,47 +166,53 @@
 
   function setVisible(el, visible) {
     el.hidden = !visible;
-    el.style.display = visible ? '' : 'none';
+    el.style.display = visible ? "" : "none";
   }
 
   function paintAuthNav() {
     const user = getUser();
     const role = user?.role || null;
     const roleConfig = {
-      admin: { label: 'Dashboard', href: '/admin' },
-      organizer: { label: 'Manage Events', href: '/organizer' },
-      owner: { label: 'Manage Venues', href: '/owner-venue' },
-      scanner: { label: 'Scanner', href: '/scanner-dashboard' },
-      user: { label: 'My Tickets', href: '/dashboard' },
+      admin: { label: "Dashboard", href: "/admin" },
+      organizer: { label: "Manage Events", href: "/organizer" },
+      owner: { label: "Manage Venues", href: "/owner-venue" },
+      scanner: { label: "Scanner", href: "/scanner-dashboard" },
+      user: { label: "My Tickets", href: "/dashboard" },
     };
     const current = roleConfig[role] || roleConfig.user;
 
-    document.querySelectorAll('[data-auth-guest]').forEach((el) => {
+    document.querySelectorAll("[data-auth-guest]").forEach((el) => {
       setVisible(el, !user);
     });
-    document.querySelectorAll('[data-auth-user]').forEach((el) => {
+    document.querySelectorAll("[data-auth-user]").forEach((el) => {
       setVisible(el, !!user);
     });
-    document.querySelectorAll('[data-auth-role-nav]').forEach((el) => {
-      const roles = String(el.dataset.authRoleNav || '').split(',').map((item) => item.trim()).filter(Boolean);
+    document.querySelectorAll("[data-auth-role-nav]").forEach((el) => {
+      const roles = String(el.dataset.authRoleNav || "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
       setVisible(el, !!user && roles.includes(role));
     });
-    document.querySelectorAll('[data-auth-hide-role]').forEach((el) => {
-      const roles = String(el.dataset.authHideRole || '').split(',').map((item) => item.trim()).filter(Boolean);
+    document.querySelectorAll("[data-auth-hide-role]").forEach((el) => {
+      const roles = String(el.dataset.authHideRole || "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
       setVisible(el, !user || !roles.includes(role));
     });
-    document.querySelectorAll('[data-auth-dashboard-link]').forEach((el) => {
+    document.querySelectorAll("[data-auth-dashboard-link]").forEach((el) => {
       if (!user) return;
       el.textContent = current.label;
-      el.setAttribute('href', current.href);
+      el.setAttribute("href", current.href);
     });
-    document.querySelectorAll('[data-auth-name]').forEach((el) => {
+    document.querySelectorAll("[data-auth-name]").forEach((el) => {
       if (user) el.textContent = user.name || user.email;
     });
-    document.querySelectorAll('[data-logout]').forEach((el) => {
-      if (el.dataset.logoutBound === 'true') return;
-      el.dataset.logoutBound = 'true';
-      el.addEventListener('click', (e) => {
+    document.querySelectorAll("[data-logout]").forEach((el) => {
+      if (el.dataset.logoutBound === "true") return;
+      el.dataset.logoutBound = "true";
+      el.addEventListener("click", (e) => {
         e.preventDefault();
         logout();
       });
@@ -207,7 +225,7 @@
   }
 
   function paintVerificationBanner(user = getUser()) {
-    let banner = document.querySelector('[data-email-verification-banner]');
+    let banner = document.querySelector("[data-email-verification-banner]");
     const shouldShow = !!user && !hasVerifiedEmail(user);
 
     if (!shouldShow) {
@@ -216,9 +234,9 @@
     }
 
     if (!banner) {
-      banner = document.createElement('div');
-      banner.setAttribute('data-email-verification-banner', 'true');
-      banner.className = 'email-verify-banner';
+      banner = document.createElement("div");
+      banner.setAttribute("data-email-verification-banner", "true");
+      banner.className = "email-verify-banner";
       banner.innerHTML = `
         <div class="email-verify-banner-inner">
           <span><i class="bi bi-shield-exclamation me-2"></i>Please verify your email address to secure your account.</span>
@@ -231,26 +249,29 @@
       document.body.insertBefore(banner, document.body.firstChild);
     }
 
-    banner.querySelectorAll('[data-send-verification-email]').forEach((button) => {
-      if (button.dataset.verificationBound === 'true') return;
-      button.dataset.verificationBound = 'true';
-      button.addEventListener('click', async () => {
+    banner.querySelectorAll("[data-send-verification-email]").forEach((button) => {
+      if (button.dataset.verificationBound === "true") return;
+      button.dataset.verificationBound = "true";
+      button.addEventListener("click", async () => {
         button.disabled = true;
         try {
           const response = await resendVerificationEmail();
-          window.tkToast?.(response.status === 'already-verified'
-            ? 'Email already verified'
-            : 'Verification email sent. Check the Laravel log on localhost.', 'info');
-          if (response.status !== 'already-verified') {
+          window.tkToast?.(
+            response.status === "already-verified"
+              ? "Email already verified"
+              : "Verification email sent. Check the Laravel log on localhost.",
+            "info",
+          );
+          if (response.status !== "already-verified") {
             window.EventSphereNotifications?.add({
-              type: 'system',
-              title: 'Verification Email Sent',
-              message: 'Check your inbox to finish securing your account.',
+              type: "system",
+              title: "Verification Email Sent",
+              message: "Check your inbox to finish securing your account.",
             });
           }
           await refreshUser();
         } catch (err) {
-          window.tkToast?.(err.message || 'Verification email failed', 'error');
+          window.tkToast?.(err.message || "Verification email failed", "error");
         } finally {
           button.disabled = false;
         }
@@ -261,10 +282,10 @@
   async function syncAuthNav() {
     paintAuthNav();
     const params = new URLSearchParams(location.search);
-    const shouldShowVerifiedMessage = params.get('verified') === '1';
+    const shouldShowVerifiedMessage = params.get("verified") === "1";
 
     if (shouldShowVerifiedMessage && !getToken()) {
-      window.tkToast?.('Your email has been verified successfully.', 'success');
+      window.tkToast?.("Your email has been verified successfully.", "success");
       return;
     }
 
@@ -274,20 +295,20 @@
       const user = await refreshUser();
       if (shouldShowVerifiedMessage && hasVerifiedEmail(user)) {
         window.EventSphereNotifications?.add({
-          type: 'system',
-          title: 'Email Verified',
-          message: 'Your email has been verified successfully.',
+          type: "system",
+          title: "Email Verified",
+          message: "Your email has been verified successfully.",
         });
-        window.tkToast?.('Your email has been verified successfully.', 'success');
+        window.tkToast?.("Your email has been verified successfully.", "success");
       }
     } catch {
       clearSession();
     }
   }
 
-  document.addEventListener('DOMContentLoaded', syncAuthNav);
-  document.addEventListener('event-sphere:partials-loaded', syncAuthNav);
-  document.addEventListener('tiketa:language-changed', (event) => {
+  document.addEventListener("DOMContentLoaded", syncAuthNav);
+  document.addEventListener("event-sphere:partials-loaded", syncAuthNav);
+  document.addEventListener("tiketa:language-changed", (event) => {
     syncLanguage(event.detail?.language).catch(() => {});
   });
 
