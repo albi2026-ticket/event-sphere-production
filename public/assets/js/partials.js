@@ -117,18 +117,26 @@
 </footer>`;
   document.querySelectorAll('[data-partial="header"]').forEach((el) => (el.outerHTML = headerHTML));
   document.querySelectorAll('[data-partial="footer"]').forEach((el) => (el.outerHTML = footerHTML));
+  function getApiClient() {
+    if (window.EventSphereApi?.fetch) return Promise.resolve(window.EventSphereApi);
+    return new Promise((resolve) => {
+      const resolveClient = () => resolve(window.EventSphereApi);
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", resolveClient, { once: true });
+      } else {
+        setTimeout(resolveClient, 0);
+      }
+    });
+  }
+
   async function hydrateCategories() {
     const menus = document.querySelectorAll("[data-nav-categories]");
     if (!menus.length) return;
     try {
-      const base =
-        window.EventSphereConfig?.API_BASE_URL ||
-        document.querySelector('meta[name="api-base"]')?.content;
-      const response = await fetch(`${base.replace(/\/$/, "")}/categories`, {
-        headers: { Accept: "application/json" },
-      });
-      const payload = await response.json();
-      const categories = Array.isArray(payload.data) ? payload.data : [];
+      const api = await getApiClient();
+      if (!api?.fetch) return;
+      const { data } = await api.fetch("/categories");
+      const categories = Array.isArray(data) ? data : [];
       if (!categories.length) return;
       menus.forEach((menu) => {
         menu.innerHTML = categories
