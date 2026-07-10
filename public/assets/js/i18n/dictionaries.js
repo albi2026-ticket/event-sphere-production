@@ -1002,8 +1002,29 @@
       "This email is already registered. Please sign in or use another email.",
     "auth.check_input": "Please check your details and try again.",
     "auth.session_expired": "Your session has expired. Please sign in again.",
-    "auth.forbidden": "You don't have permission to view this page.",
+    "auth.forbidden": "You don’t have access to this page. Please use the right account or return to your dashboard.",
     "auth.request_failed": "Something went wrong. Please try again.",
+    "errors.403.title": "You don’t have access to this page.",
+    "errors.403.description":
+      "This area is available only to the right account type. Sign in with another account or return to your dashboard.",
+    "errors.404.title": "We couldn’t find that page.",
+    "errors.404.description":
+      "The link may be outdated, or the page may have moved. You can go home or browse events instead.",
+    "errors.500.title": "Something didn’t load correctly.",
+    "errors.500.description":
+      "We’re having trouble opening this page. Please try again, or go back home while we sort it out.",
+    "errors.offline.title": "You appear to be offline.",
+    "errors.offline.description":
+      "You appear to be offline. Check your internet connection and try again.",
+    "errors.network.title": "We couldn’t connect.",
+    "errors.network.description": "We couldn’t connect. Please check your connection and try again.",
+    "errors.api_unavailable.title": "Tiketa is taking longer than expected.",
+    "errors.api_unavailable.description":
+      "Tiketa is taking longer than expected. Please try again in a moment.",
+    "errors.try_again": "Try again",
+    "errors.go_home": "Go home",
+    "errors.go_dashboard": "Go to dashboard",
+    "errors.browse_events": "Browse events",
     "auth.welcome_back": "Welcome back to Tiketa.",
     "auth.welcome_to_tiketa": "Welcome to Tiketa.",
     "auth.password_updated": "Your password was updated successfully.",
@@ -2386,8 +2407,29 @@
         "Ky email është regjistruar tashmë. Hyni ose përdorni një email tjetër.",
       "auth.check_input": "Ju lutemi kontrolloni të dhënat dhe provoni përsëri.",
       "auth.session_expired": "Seanca juaj ka skaduar. Ju lutemi hyni përsëri.",
-      "auth.forbidden": "Nuk keni leje për ta parë këtë faqe.",
+      "auth.forbidden": "Nuk keni qasje në këtë faqe. Ju lutemi përdorni llogarinë e duhur ose kthehuni te paneli juaj.",
       "auth.request_failed": "Diçka shkoi keq. Ju lutemi provoni përsëri.",
+      "errors.403.title": "Nuk keni qasje në këtë faqe.",
+      "errors.403.description":
+        "Kjo pjesë është e disponueshme vetëm për llojin e duhur të llogarisë. Identifikohuni me një llogari tjetër ose kthehuni te paneli juaj.",
+      "errors.404.title": "Nuk mundëm ta gjejmë këtë faqe.",
+      "errors.404.description":
+        "Linku mund të jetë i vjetër ose faqja mund të jetë zhvendosur. Mund të ktheheni në ballinë ose të shfletoni eventet.",
+      "errors.500.title": "Diçka nuk u ngarkua si duhet.",
+      "errors.500.description":
+        "Po hasim vështirësi me hapjen e kësaj faqeje. Ju lutemi provoni përsëri ose kthehuni në ballinë ndërkohë.",
+      "errors.offline.title": "Duket se nuk jeni të lidhur me internetin.",
+      "errors.offline.description":
+        "Duket se nuk jeni të lidhur me internetin. Kontrolloni lidhjen tuaj dhe provoni përsëri.",
+      "errors.network.title": "Nuk mundëm të lidhemi.",
+      "errors.network.description": "Nuk mundëm të lidhemi. Ju lutemi kontrolloni lidhjen dhe provoni përsëri.",
+      "errors.api_unavailable.title": "Tiketa po vonon më shumë se zakonisht.",
+      "errors.api_unavailable.description":
+        "Tiketa po vonon më shumë se zakonisht. Ju lutemi provoni përsëri pas pak.",
+      "errors.try_again": "Provo përsëri",
+      "errors.go_home": "Shko në ballinë",
+      "errors.go_dashboard": "Shko te paneli",
+      "errors.browse_events": "Shfleto eventet",
       "auth.welcome_back": "Mirë se u kthyet në Tiketa.",
       "auth.welcome_to_tiketa": "Mirë se vini në Tiketa.",
       "auth.password_updated": "Fjalëkalimi juaj u përditësua me sukses.",

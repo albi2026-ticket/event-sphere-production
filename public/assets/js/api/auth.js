@@ -147,7 +147,10 @@
     }
     if (roles?.length && !roles.includes(user.role) && user.role !== "admin") {
       window.tkToast?.(
-        tr("auth.forbidden", "You don't have permission to view this page."),
+        tr(
+          "auth.forbidden",
+          "You don’t have access to this page. Please use the right account or return to your dashboard.",
+        ),
         "error",
       );
       location.href = roleHome(user.role);

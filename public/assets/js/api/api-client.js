@@ -76,9 +76,40 @@
       return tr("auth.session_expired", "Your session has expired. Please sign in again.");
     }
     if (status === 403) {
-      return tr("auth.forbidden", "You don't have permission to view this page.");
+      return tr(
+        "auth.forbidden",
+        "You don’t have access to this page. Please use the right account or return to your dashboard.",
+      );
+    }
+    if (status >= 500) {
+      return tr(
+        "errors.server.description",
+        "We’re having trouble loading this right now. Please try again in a moment.",
+      );
     }
     return payload?.message || tr("auth.request_failed", "Something went wrong. Please try again.");
+  }
+
+  function connectionErrorMessage(error) {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      return tr(
+        "errors.offline.description",
+        "You appear to be offline. Check your internet connection and try again.",
+      );
+    }
+
+    const message = String(error?.message || "").toLowerCase();
+    if (message.includes("failed to fetch") || message.includes("network")) {
+      return tr(
+        "errors.network.description",
+        "We couldn’t connect. Please check your connection and try again.",
+      );
+    }
+
+    return tr(
+      "errors.api_unavailable.description",
+      "Tiketa is taking longer than expected. Please try again in a moment.",
+    );
   }
 
   async function apiFetch(path, options = {}) {
@@ -116,7 +147,15 @@
       init.body = JSON.stringify(init.body);
     }
 
-    const response = await fetch(url, init);
+    let response;
+    try {
+      response = await fetch(url, init);
+    } catch (networkError) {
+      const err = new Error(connectionErrorMessage(networkError));
+      err.status = 0;
+      err.originalMessage = networkError?.message || err.message;
+      throw err;
+    }
     let payload = null;
 
     const text = await response.text();
@@ -173,7 +212,12 @@
     const token = getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
 
-    const response = await fetch(url, { method: options.method || "GET", headers });
+    let response;
+    try {
+      response = await fetch(url, { method: options.method || "GET", headers });
+    } catch (networkError) {
+      throw new Error(connectionErrorMessage(networkError));
+    }
     if (response.status === 401) {
       sessionStorage.removeItem(cfg().TOKEN_KEY);
       sessionStorage.removeItem(cfg().USER_KEY);

@@ -75,8 +75,25 @@ function withSecurityHeaders(response: Response, request: Request): Response {
   });
 }
 
-function brandedErrorResponse(): Response {
-  return new Response(renderErrorPage(), {
+function preferredLanguage(request: Request): "en" | "sq" {
+  const url = new URL(request.url);
+  const queryLanguage = url.searchParams.get("lang");
+  if (queryLanguage === "sq") return "sq";
+
+  const cookieLanguage = request.headers
+    .get("cookie")
+    ?.split(";")
+    .map((item) => item.trim())
+    .find((item) => item.startsWith("preferred_language="))
+    ?.split("=")[1];
+  if (cookieLanguage === "sq") return "sq";
+
+  const acceptLanguage = request.headers.get("accept-language") || "";
+  return acceptLanguage.toLowerCase().startsWith("sq") ? "sq" : "en";
+}
+
+function brandedErrorResponse(request: Request): Response {
+  return new Response(renderErrorPage({ kind: "server", language: preferredLanguage(request) }), {
     status: 500,
     headers: { "content-type": "text/html; charset=utf-8" },
   });
@@ -125,7 +142,7 @@ function isCatastrophicSsrErrorBody(body: string, responseStatus: number): boole
 
 // h3 swallows in-handler throws into a normal 500 Response with body
 // {"unhandled":true,"message":"HTTPError"} — try/catch alone never fires for those.
-async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
+async function normalizeCatastrophicSsrResponse(response: Response, request: Request): Promise<Response> {
   if (response.status < 500) return response;
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) return response;
@@ -136,7 +153,7 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   }
 
   console.error(consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`));
-  return brandedErrorResponse();
+  return brandedErrorResponse(request);
 }
 
 export default {
@@ -148,10 +165,10 @@ export default {
 
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response), request);
+      return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response, request), request);
     } catch (error) {
       console.error(error);
-      return withSecurityHeaders(brandedErrorResponse(), request);
+      return withSecurityHeaders(brandedErrorResponse(request), request);
     }
   },
 };
