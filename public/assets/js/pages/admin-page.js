@@ -2527,7 +2527,10 @@
       return;
     }
     if (action === "delete" && !confirm(tr("confirm.delete_selected_events", "Delete {count} selected events?").replace("{count}", ids.length))) return;
-    const category = action === "category" ? prompt("New category for selected events", "") : "";
+    const category =
+      action === "category"
+        ? prompt(tr("prompt.bulk_category", "Enter the new category for the selected events."), "")
+        : "";
     if (action === "category" && !category) return;
 
     for (const id of ids) {
@@ -2582,11 +2585,12 @@
 
   async function eventModeration(eventId, action) {
     const labels = {
-      publish: "Approve event",
-      reject: "Reject event",
-      unpublish: "Unpublish event",
+      publish: "Event approved. It is ready for publication.",
+      reject: "Event rejected. The moderation note has been saved.",
+      unpublish: "Event unpublished. It is no longer visible to guests.",
     };
-    const note = action === "publish" ? "" : prompt(`${labels[action]} - add moderation notes`, "");
+    const note =
+      action === "publish" ? "" : prompt(tr("prompt.moderation_note", "Add a short moderation note for this decision."), "");
     if (note === null) return;
     const body = action === "publish" ? {} : { reason: note };
     await api().fetch(`/admin/events/${eventId}/${action}`, { method: "POST", body });
@@ -2605,16 +2609,19 @@
 
   async function editVenue(slug) {
     const venue = state.venues.find((item) => String(item.slug) === String(slug));
-    const name = prompt("Venue name", venue?.name || "");
+    const name = prompt(tr("prompt.venue_name", "Enter the venue name."), venue?.name || "");
     if (name === null) return;
-    const city = prompt("City", venue?.city || "");
+    const city = prompt(tr("prompt.venue_city", "Enter the venue city."), venue?.city || "");
     if (city === null) return;
     const venueType = prompt(
-      "Venue type: restaurant, bar, lounge, cafe",
+      tr("prompt.venue_type", "Enter the venue type: restaurant, bar, lounge, or cafe."),
       venue?.venue_type || "restaurant",
     );
     if (venueType === null) return;
-    const status = prompt("Status: draft, active, inactive", venue?.status || "active");
+    const status = prompt(
+      tr("prompt.venue_status", "Enter the venue status: draft, active, or inactive."),
+      venue?.status || "active",
+    );
     if (status === null) return;
 
     await api().fetch(`/admin/venues/${slug}`, {
@@ -2659,7 +2666,10 @@
   }
 
   async function cancelReservation(reservationId) {
-    const cancellationReason = prompt("Cancellation reason", "");
+    const cancellationReason = prompt(
+      tr("prompt.cancellation_reason", "Add a clear cancellation reason for the guest record."),
+      "",
+    );
     if (cancellationReason === null) return;
     await api().fetch(`/admin/reservations/${reservationId}/cancel`, {
       method: "PATCH",
@@ -3229,7 +3239,13 @@
         }
 
         if (button.dataset.rejectOrganizer) {
-          const reason = prompt("Reject organizer request - add a note", "");
+          const reason = prompt(
+            tr(
+              "prompt.reject_organizer_note",
+              "Add a short note explaining why this organizer request was rejected.",
+            ),
+            "",
+          );
           if (reason === null) return;
           button.disabled = true;
           await api().fetch(`/admin/users/${button.dataset.rejectOrganizer}/reject-organizer`, {
@@ -3259,7 +3275,10 @@
           const eventRecord = state.events.find(
             (item) => String(item.id) === String(button.dataset.editEvent),
           );
-          const title = prompt("Update event name", eventRecord?.title || "");
+          const title = prompt(
+            tr("prompt.update_event_name", "Enter the updated event name."),
+            eventRecord?.title || "",
+          );
           if (title) {
             button.disabled = true;
             await api().fetch(`/admin/events/${button.dataset.editEvent}`, {

@@ -87,8 +87,8 @@
     if (err?.status === 422) return validationMessages(err).join(" ");
     if (err?.status === 403)
       return tr(
-        "toast.operation_failed",
-        "Your organizer account cannot manage this restaurant or bar.",
+        "owner.manage_forbidden",
+        "This account cannot manage the selected restaurant or bar.",
       );
     return err?.message || tr("toast.unexpected_error", "Something went wrong. Please try again.");
   }
@@ -1732,10 +1732,10 @@
     const payload = payloadFromForm();
     if (!payload.name || !payload.venue_type || !payload.city) {
       showOwnerAlert(
-        tr("toast.operation_failed", "Please add a restaurant or bar name, type, and city."),
+        tr("owner.required_profile_fields", "Add the restaurant or bar name, type, and city before saving."),
       );
       window.tkToast?.(
-        tr("toast.operation_failed", "Please add a restaurant or bar name, type, and city."),
+        tr("owner.required_profile_fields", "Add the restaurant or bar name, type, and city before saving."),
         "error",
       );
       return;
@@ -1758,8 +1758,8 @@
       await loadAvailabilityExceptions();
       window.tkToast?.(
         method === "POST"
-          ? tr("toast.saved_successfully", "Restaurant or bar created successfully.")
-          : tr("toast.updated_successfully", "Restaurant or bar updated successfully."),
+          ? tr("owner.venue_created", "Restaurant or bar created. You can now add images and availability.")
+          : tr("owner.venue_updated", "Restaurant or bar updated. Guests will see the latest details."),
         "success",
       );
     } catch (err) {
@@ -1774,7 +1774,7 @@
   async function uploadImages(files) {
     if (!state.venue) {
       window.tkToast?.(
-        tr("toast.operation_failed", "Create the restaurant or bar before uploading images."),
+        tr("owner.create_before_upload", "Create the restaurant or bar before uploading images."),
         "error",
       );
       return;
@@ -1799,8 +1799,10 @@
       fillForm();
       window.tkToast?.(
         tr(
-          "toast.saved_successfully",
-          valid.length === 1 ? "Image uploaded successfully." : "Images uploaded successfully.",
+          valid.length === 1 ? "owner.image_uploaded" : "owner.images_uploaded",
+          valid.length === 1
+            ? "Image uploaded. The public gallery has been updated."
+            : "Images uploaded. The public gallery has been updated.",
         ),
         "success",
       );
@@ -1895,7 +1897,10 @@
       clearOwnerRenderSignatures("gallery");
       renderSummary();
       fillForm();
-      window.tkToast?.(tr("toast.deleted_successfully", "Image deleted successfully."), "success");
+      window.tkToast?.(
+        tr("owner.image_deleted", "Image deleted. The public gallery has been updated."),
+        "success",
+      );
     } catch (err) {
       window.tkToast?.(friendlyError(err), "error");
     } finally {
@@ -1905,7 +1910,7 @@
 
   async function persistGalleryOrder(
     images,
-    message = tr("toast.updated_successfully", "Gallery order updated."),
+    message = tr("owner.gallery_order_updated", "Gallery order updated."),
   ) {
     if (!state.venue?.slug || !images.length) return;
     const payload = images.map((image, order) => ({ id: image.id, sort_order: order }));
@@ -1950,7 +1955,7 @@
     if (!image) return;
     await persistGalleryOrder(
       [image, ...images.filter((item) => String(item.id) !== String(imageId))],
-      tr("toast.updated_successfully", "Cover photo updated."),
+      tr("owner.cover_photo_updated", "Cover photo updated. Guests will see it first."),
     );
   }
 
@@ -1990,7 +1995,7 @@
       renderVenueFilter();
       bootstrap.Modal.getOrCreateInstance($("#ownerDeleteModal")).hide();
       window.tkToast?.(
-        tr("toast.deleted_successfully", "Restaurant or bar deleted successfully."),
+        tr("owner.venue_deleted", "Restaurant or bar deleted. Reservation history is preserved."),
         "success",
       );
     } catch (err) {
@@ -2205,7 +2210,7 @@
   async function addBlackoutDate() {
     if (!state.venue) {
       window.tkToast?.(
-        tr("toast.operation_failed", "Create the restaurant or bar before adding blackout dates."),
+        tr("owner.create_before_blackout", "Create the restaurant or bar before adding blackout dates."),
         "error",
       );
       return;
@@ -2252,7 +2257,7 @@
   async function saveSpecialHours() {
     if (!state.venue) {
       window.tkToast?.(
-        tr("toast.operation_failed", "Create the restaurant or bar before adding special hours."),
+        tr("owner.create_before_special_hours", "Create the restaurant or bar before adding special hours."),
         "error",
       );
       return;
@@ -2353,10 +2358,14 @@
       if (state.reservationView === "calendar") await loadCalendarReservations();
       const message =
         action === "complete"
-          ? tr("toast.operation_completed", "Reservation marked completed successfully.")
+          ? tr("owner.reservation_completed", "Reservation completed. The visit is now marked finished.")
           : action === "no-show"
-            ? tr("toast.operation_completed", "Reservation marked as no show successfully.")
-            : tr("toast.operation_completed", `Reservation ${action}ed successfully.`);
+            ? tr("owner.reservation_no_show", "Reservation marked as no-show. The guest record has been updated.")
+            : action === "confirm"
+              ? tr("owner.reservation_confirmed", "Reservation confirmed. The guest record has been updated.")
+              : action === "cancel"
+                ? tr("owner.reservation_cancelled", "Reservation cancelled. The guest record has been updated.")
+                : tr("toast.operation_completed", "Reservation updated.");
       window.tkToast?.(message, "success");
     } catch (err) {
       window.tkToast?.(friendlyError(err), "error");
