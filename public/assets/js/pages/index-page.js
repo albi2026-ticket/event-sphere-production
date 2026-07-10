@@ -448,7 +448,7 @@
           ? "/checkout"
           : `/login?next=${encodeURIComponent("/checkout")}`;
       } catch (err) {
-        window.tkToast?.(err.message || "Unable to start checkout.", "error");
+        window.tkToast?.(err.message || tr("checkout.checkout_failed", "Could not start checkout. Please try again."), "error");
       }
     });
 

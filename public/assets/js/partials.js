@@ -48,7 +48,7 @@
               <button type="button" data-notification-mark-all data-i18n="header.mark_all_read">Mark all read</button>
             </div>
             <div class="notification-list" data-notification-list></div>
-            <div class="notification-empty" data-notification-empty data-i18n="header.no_notifications" hidden>No notifications yet.</div>
+            <div class="notification-empty" data-notification-empty data-i18n="header.no_notifications" hidden>No notifications yet. We’ll let you know when something needs your attention.</div>
             <a class="notification-view-all" href="/notifications" data-i18n="header.view_all_notifications">View all notifications</a>
           </div>
         </div>

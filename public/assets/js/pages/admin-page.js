@@ -200,8 +200,8 @@
     return `<tr><td colspan="${cols}" class="py-4"><div class="admin-empty text-danger"><i class="bi bi-exclamation-triangle"></i><span>${u().escapeHtml(label)}</span><button class="btn btn-glass btn-sm" type="button" ${retryAttr} data-i18n="buttons.retry">${window.t?.("buttons.retry") || "Retry"}</button></div></td></tr>`;
   }
 
-  function emptyRow(cols, icon, label) {
-    return `<tr><td colspan="${cols}" class="py-4"><div class="admin-empty"><i class="bi ${icon}"></i><span>${u().escapeHtml(label)}</span></div></td></tr>`;
+  function emptyRow(cols, icon, label, copy = "") {
+    return `<tr><td colspan="${cols}" class="py-4"><div class="admin-empty"><i class="bi ${icon}"></i><span>${u().escapeHtml(label)}</span>${copy ? `<small>${u().escapeHtml(copy)}</small>` : ""}</div></td></tr>`;
   }
 
   function userNameCell(user) {
@@ -958,7 +958,13 @@
       </tr>
     `,
         )
-        .join("") || emptyRow(9, "bi-people", "No users match these filters");
+        .join("") ||
+      emptyRow(
+        9,
+        "bi-people",
+        tr("empty.no_results", "No results yet."),
+        tr("admin.empty_adjust_filters", "Adjust your filters or search for a different term."),
+      );
   }
 
   function renderOrganizers() {
@@ -1004,7 +1010,13 @@
       </tr>
     `,
         )
-        .join("") || emptyRow(7, "bi-person-check", "No organizers found");
+        .join("") ||
+      emptyRow(
+        7,
+        "bi-person-check",
+        tr("admin.no_organizers", "No organizers yet."),
+        tr("admin.no_organizers_copy", "Approved organizers will appear here when they join Tiketa."),
+      );
     renderOrganizerRanking();
   }
 
@@ -1058,7 +1070,13 @@
         </tr>
       `;
         })
-        .join("") || emptyRow(11, "bi-calendar-event", "No events match these filters");
+        .join("") ||
+      emptyRow(
+        11,
+        "bi-calendar-event",
+        tr("empty.no_events_found", "No events match your search yet."),
+        tr("admin.empty_adjust_filters", "Adjust your filters or search for a different term."),
+      );
   }
 
   function renderVenues() {
@@ -1108,7 +1126,13 @@
       </tr>
     `,
         )
-        .join("") || emptyRow(8, "bi-shop", "No venues match these filters");
+        .join("") ||
+      emptyRow(
+        8,
+        "bi-shop",
+        tr("empty.no_restaurants_found", "No restaurants or bars match your search yet."),
+        tr("admin.empty_adjust_filters", "Adjust your filters or search for a different term."),
+      );
   }
 
   function renderReservations() {
@@ -1160,7 +1184,13 @@
       </tr>
     `,
         )
-        .join("") || emptyRow(11, "bi-calendar-check", "No reservations match these filters");
+        .join("") ||
+      emptyRow(
+        11,
+        "bi-calendar-check",
+        tr("empty.no_reservations_found", "No reservations yet."),
+        tr("admin.empty_adjust_filters", "Adjust your filters or search for a different term."),
+      );
   }
 
   function renderReservationStats() {
@@ -1186,8 +1216,8 @@
     platformRoot.innerHTML = `
       <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Reservations Today</span><small>Platform-wide</small></span>${badge("active", String(platform.today || 0))}</div></div>
       <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Reservations This Month</span><small>Platform-wide</small></span>${badge("active", String(platform.this_month || 0))}</div></div>
-      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Top Venues By Reservations</span><small>${(platform.top_venues || []).map((item) => `${u().escapeHtml(item.name)} (${item.total})`).join("<br>") || "No data"}</small></span></div></div>
-      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Most Active Cities</span><small>${(platform.top_cities || []).map((item) => `${u().escapeHtml(item.city)} (${item.total})`).join("<br>") || "No data"}</small></span></div></div>
+      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Top Venues By Reservations</span><small>${(platform.top_venues || []).map((item) => `${u().escapeHtml(item.name)} (${item.total})`).join("<br>") || tr("admin.no_data_yet", "No data yet.")}</small></span></div></div>
+      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Most Active Cities</span><small>${(platform.top_cities || []).map((item) => `${u().escapeHtml(item.city)} (${item.total})`).join("<br>") || tr("admin.no_data_yet", "No data yet.")}</small></span></div></div>
     `;
   }
 
@@ -1236,7 +1266,13 @@
     `,
           ),
         )
-        .join("") || emptyRow(7, "bi-credit-card", "No payments found");
+        .join("") ||
+      emptyRow(
+        7,
+        "bi-credit-card",
+        tr("admin.no_payments", "No payments yet."),
+        tr("admin.no_payments_copy", "Completed payments will appear here after checkout."),
+      );
 
     refundsBody.innerHTML =
       refunds
@@ -1279,7 +1315,13 @@
       </tr>
     `,
         )
-        .join("") || emptyRow(6, "bi-ticket-perforated", "No tickets match these filters");
+        .join("") ||
+      emptyRow(
+        6,
+        "bi-ticket-perforated",
+        tr("empty.no_tickets_found", "No tickets yet."),
+        tr("admin.empty_adjust_filters", "Adjust your filters or search for a different term."),
+      );
   }
 
   function fillSettingsForms() {
@@ -1322,7 +1364,13 @@
       </tr>
     `,
         )
-        .join("") || emptyRow(6, "bi-tags", "No categories configured");
+        .join("") ||
+      emptyRow(
+        6,
+        "bi-tags",
+        tr("empty.no_categories", "No categories yet."),
+        tr("admin.no_categories_copy", "Create a category to help visitors browse events faster."),
+      );
   }
 
   function renderEmailCenter() {
@@ -1425,7 +1473,13 @@
       </tr>
     `,
         )
-        .join("") || emptyRow(6, "bi-envelope-heart", "No subscribers found");
+        .join("") ||
+      emptyRow(
+        6,
+        "bi-envelope-heart",
+        tr("empty.no_results", "No results yet."),
+        tr("admin.empty_adjust_filters", "Adjust your filters or search for a different term."),
+      );
 
     if (pager && state.subscriberMeta?.last_page > 1) {
       const current = Number(state.subscriberMeta.current_page || 1);
@@ -1728,11 +1782,11 @@
     if (format === "pdf") {
       const win = window.open("", "_blank");
       if (!win) {
-        window.tkToast?.("Popup blocked. Allow popups to export PDF.", "error");
+        window.tkToast?.(tr("toast.popup_blocked_export_pdf", "Please allow popups to export the PDF."), "error");
         return;
       }
       win.document.write(
-        `<!doctype html><html><head><title>${u().escapeHtml(report.title)}</title><style>body{font-family:Arial,sans-serif;color:#111827;padding:28px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border-bottom:1px solid #e5e7eb;padding:10px;text-align:left;font-size:12px}th{background:#f8fafc}.brand{font-weight:700;color:#2563eb}</style></head><body><div class="brand">Tiketa</div><h1>${u().escapeHtml(report.title)}</h1><p>Generated ${u().escapeHtml(dateTimeLabel(new Date().toISOString()))}</p><table><thead><tr>${report.headers.map((header) => `<th>${u().escapeHtml(header)}</th>`).join("")}</tr></thead><tbody>${report.rows.map((row) => `<tr>${row.map((cell) => `<td>${u().escapeHtml(cell)}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${report.headers.length}">No data</td></tr>`}</tbody></table></body></html>`,
+        `<!doctype html><html><head><title>${u().escapeHtml(report.title)}</title><style>body{font-family:Arial,sans-serif;color:#111827;padding:28px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border-bottom:1px solid #e5e7eb;padding:10px;text-align:left;font-size:12px}th{background:#f8fafc}.brand{font-weight:700;color:#2563eb}</style></head><body><div class="brand">Tiketa</div><h1>${u().escapeHtml(report.title)}</h1><p>Generated ${u().escapeHtml(dateTimeLabel(new Date().toISOString()))}</p><table><thead><tr>${report.headers.map((header) => `<th>${u().escapeHtml(header)}</th>`).join("")}</tr></thead><tbody>${report.rows.map((row) => `<tr>${row.map((cell) => `<td>${u().escapeHtml(cell)}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${report.headers.length}">${u().escapeHtml(tr("admin.no_data_yet", "No data yet."))}</td></tr>`}</tbody></table></body></html>`,
       );
       win.document.close();
       win.focus();
@@ -2026,7 +2080,7 @@
         return result;
       })
       .catch((err) => {
-        window.tkToast?.(err.message || "Failed to load admin section", "error");
+        window.tkToast?.(err.message || tr("toast.admin_section_load_failed", "Could not load this admin section. Please try again."), "error");
         throw err;
       })
       .finally(() => {
@@ -2469,10 +2523,10 @@
   async function bulkEventAction(action) {
     const ids = selectedEventIds();
     if (!ids.length) {
-      window.tkToast?.("Select at least one event first.", "info");
+      window.tkToast?.(tr("toast.select_event_first", "Select at least one event first."), "info");
       return;
     }
-    if (action === "delete" && !confirm(`Delete ${ids.length} selected events?`)) return;
+    if (action === "delete" && !confirm(tr("confirm.delete_selected_events", "Delete {count} selected events?").replace("{count}", ids.length))) return;
     const category = action === "category" ? prompt("New category for selected events", "") : "";
     if (action === "category" && !category) return;
 
@@ -2488,7 +2542,7 @@
         await api().fetch(`/admin/events/${id}`, { method: "PATCH", body: { category } });
       if (action === "delete") await api().fetch(`/admin/events/${id}`, { method: "DELETE" });
     }
-    window.tkToast?.("Bulk action completed");
+    window.tkToast?.(tr("toast.bulk_action_completed", "Bulk action completed."));
     await refreshEvents();
   }
 
@@ -2519,9 +2573,9 @@
         ["Reference", u().escapeHtml(order.payment_reference || "-")],
       ])}
       <h6 class="mt-4">Items</h6>
-      ${items.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${items.map((item) => `<tr><td>${u().escapeHtml(item.event_title || item.event?.title || "-")}</td><td>${u().escapeHtml(item.ticket_type_name || item.ticket_type?.name || "-")}</td><td>x${item.quantity}</td><td><small>Ticket ${money(Number(item.unit_price || 0) * Number(item.quantity || 0), order.currency)}<br>Fee ${money(item.service_fee, order.currency)}</small></td><td>${money(item.total, order.currency)}</td></tr>`).join("")}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No line items.</p>'}
+      ${items.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${items.map((item) => `<tr><td>${u().escapeHtml(item.event_title || item.event?.title || "-")}</td><td>${u().escapeHtml(item.ticket_type_name || item.ticket_type?.name || "-")}</td><td>x${item.quantity}</td><td><small>Ticket ${money(Number(item.unit_price || 0) * Number(item.quantity || 0), order.currency)}<br>Fee ${money(item.service_fee, order.currency)}</small></td><td>${money(item.total, order.currency)}</td></tr>`).join("")}</tbody></table></div>` : `<p class="text-muted-pro mb-0">${u().escapeHtml(tr("orders.no_line_items", "No items are listed for this order yet."))}</p>`}
       <h6 class="mt-4">Tickets and attendees</h6>
-      ${tickets.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${tickets.map((ticket) => `<tr><td><div class="fw-semibold">${u().escapeHtml(ticket.attendee_name || ticket.user?.name || "Guest")}</div><small>${u().escapeHtml(ticket.attendee_email || ticket.user?.email || "")}</small></td><td>${u().escapeHtml(ticket.event?.title || "-")}</td><td>${u().escapeHtml(ticket.ticket_type?.name || "-")}</td><td><small>Paid by ${u().escapeHtml(order.user?.name || order.billing_email || "-")}</small></td><td>${u().escapeHtml(ticket.ticket_code || "-")}</td></tr>`).join("")}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No tickets issued yet.</p>'}
+      ${tickets.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${tickets.map((ticket) => `<tr><td><div class="fw-semibold">${u().escapeHtml(ticket.attendee_name || ticket.user?.name || "Guest")}</div><small>${u().escapeHtml(ticket.attendee_email || ticket.user?.email || "")}</small></td><td>${u().escapeHtml(ticket.event?.title || "-")}</td><td>${u().escapeHtml(ticket.ticket_type?.name || "-")}</td><td><small>Paid by ${u().escapeHtml(order.user?.name || order.billing_email || "-")}</small></td><td>${u().escapeHtml(ticket.ticket_code || "-")}</td></tr>`).join("")}</tbody></table></div>` : `<p class="text-muted-pro mb-0">${u().escapeHtml(tr("empty.no_tickets_found", "No tickets yet."))}</p>`}
     `,
     );
   }
@@ -2536,7 +2590,16 @@
     if (note === null) return;
     const body = action === "publish" ? {} : { reason: note };
     await api().fetch(`/admin/events/${eventId}/${action}`, { method: "POST", body });
-    window.tkToast?.(labels[action]);
+    window.tkToast?.(
+      tr(
+        action === "publish"
+          ? "toast.event_approved"
+          : action === "reject"
+            ? "toast.event_rejected"
+            : "toast.event_unpublished",
+        labels[action],
+      ),
+    );
     await refreshEvents();
   }
 
@@ -2563,7 +2626,7 @@
         status,
       },
     });
-    window.tkToast?.("Venue updated");
+    window.tkToast?.(tr("toast.venue_updated", "Venue updated."));
     await refreshVenues();
     if (state.sectionLoaded.reservations) await refreshReservations();
   }
@@ -2573,7 +2636,7 @@
       method: "PATCH",
       body: {},
     });
-    window.tkToast?.("Reservation confirmed");
+    window.tkToast?.(tr("toast.reservation_confirmed", "Reservation confirmed."));
     await refreshReservations();
   }
 
@@ -2582,7 +2645,7 @@
       method: "PATCH",
       body: {},
     });
-    window.tkToast?.("Reservation completed");
+    window.tkToast?.(tr("toast.reservation_completed", "Reservation completed."));
     await refreshReservations();
   }
 
@@ -2591,7 +2654,7 @@
       method: "PATCH",
       body: {},
     });
-    window.tkToast?.("Reservation marked no show");
+    window.tkToast?.(tr("toast.reservation_no_show", "Reservation marked as no-show."));
     await refreshReservations();
   }
 
@@ -2602,7 +2665,7 @@
       method: "PATCH",
       body: { cancellation_reason: cancellationReason },
     });
-    window.tkToast?.("Reservation cancelled");
+    window.tkToast?.(tr("toast.reservation_cancelled", "Reservation cancelled."));
     await refreshReservations();
   }
 
@@ -2752,9 +2815,9 @@
           });
           state.settings = data;
           renderKpis();
-          window.tkToast?.("Default service fee updated");
+          window.tkToast?.(tr("toast.default_fee_updated", "Default service fee updated."));
         } catch (err) {
-          window.tkToast?.(err.message || "Default fee update failed", "error");
+          window.tkToast?.(err.message || tr("toast.default_fee_update_failed", "Could not update the default fee. Please try again."), "error");
         } finally {
           if (button) button.disabled = false;
         }
@@ -2778,10 +2841,10 @@
           fillSettingsForms();
           renderKpis();
           renderHealth();
-          window.tkToast?.("Platform settings updated");
+          window.tkToast?.(tr("toast.platform_settings_updated", "Platform settings updated."));
           await refreshAuditLogs();
         } catch (err) {
-          window.tkToast?.(err.message || "Settings update failed", "error");
+          window.tkToast?.(err.message || tr("toast.settings_update_failed", "Could not update settings. Please try again."), "error");
         } finally {
           if (button) button.disabled = false;
         }
@@ -2805,10 +2868,10 @@
             },
           });
           form.reset();
-          window.tkToast?.("Category created");
+          window.tkToast?.(tr("toast.category_created", "Category created."));
           await Promise.all([refreshCategories(), refreshAuditLogs()]);
         } catch (err) {
-          window.tkToast?.(err.message || "Category creation failed", "error");
+          window.tkToast?.(err.message || tr("toast.category_creation_failed", "Could not create the category. Please try again."), "error");
         } finally {
           if (button) button.disabled = false;
         }
@@ -2861,10 +2924,10 @@
           const index = templates.findIndex((item) => String(item.id) === String(data.id));
           if (index >= 0) templates[index] = data;
           fillEmailTemplateForm();
-          window.tkToast?.("Email template updated");
+          window.tkToast?.(tr("toast.email_template_updated", "Email template updated."));
           await refreshAuditLogs();
         } catch (err) {
-          window.tkToast?.(err.message || "Template update failed", "error");
+          window.tkToast?.(err.message || tr("toast.template_update_failed", "Could not update the template. Please try again."), "error");
         } finally {
           if (button) button.disabled = false;
         }
@@ -2917,11 +2980,11 @@
           method: "POST",
           body: { scanner_id: new FormData(form).get("scanner_id") },
         });
-        window.tkToast?.("Scanner assigned");
+        window.tkToast?.(tr("toast.scanner_assigned", "Scanner assigned."));
         await showScannerAssignment(eventId);
       } catch (err) {
         button.disabled = false;
-        window.tkToast?.(err.message || "Failed to assign scanner", "error");
+        window.tkToast?.(err.message || tr("toast.scanner_assign_failed", "Could not assign the scanner. Please try again."), "error");
       }
     });
 
@@ -2931,7 +2994,7 @@
         try {
           await showEmailLogDetail(emailRow.dataset.emailLogId);
         } catch (err) {
-          window.tkToast?.(err.message || "Failed to load email details", "error");
+          window.tkToast?.(err.message || tr("toast.email_details_failed", "Could not load email details. Please try again."), "error");
         }
         return;
       }
@@ -2986,7 +3049,7 @@
           await api().fetch(`/admin/email-center/${button.dataset.emailRetry}/retry`, {
             method: "POST",
           });
-          window.tkToast?.("Retry email sent");
+          window.tkToast?.(tr("toast.retry_email_sent", "Email sent again."));
           bootstrap.Modal.getInstance(document.getElementById("adminDetailModal"))?.hide();
           await refreshEmailCenter();
         }
@@ -3001,7 +3064,8 @@
           );
           preview.hidden = false;
           preview.innerHTML =
-            data.rendered || '<p class="text-muted-pro mb-0">No preview available.</p>';
+            data.rendered ||
+            `<p class="text-muted-pro mb-0">${u().escapeHtml(tr("admin.no_data_yet", "No data yet."))}</p>`;
         }
 
         if (button.dataset.saveCategory) {
@@ -3017,7 +3081,7 @@
               is_active: Boolean(category?.is_active),
             },
           });
-          window.tkToast?.("Category updated");
+          window.tkToast?.(tr("toast.category_updated", "Category updated."));
           await Promise.all([refreshCategories(), refreshAuditLogs()]);
         }
 
@@ -3029,17 +3093,21 @@
             method: "PATCH",
             body: { is_active: !category?.is_active },
           });
-          window.tkToast?.(category?.is_active ? "Category disabled" : "Category enabled");
+          window.tkToast?.(
+            category?.is_active
+              ? tr("toast.category_disabled", "Category disabled.")
+              : tr("toast.category_enabled", "Category enabled."),
+          );
           await Promise.all([refreshCategories(), refreshAuditLogs()]);
         }
 
         if (button.dataset.deleteCategory) {
-          if (!confirm("Delete this category? Events assigned to it must be moved first.")) return;
+          if (!confirm(tr("confirm.delete_category", "Delete this category? Move assigned events first."))) return;
           button.disabled = true;
           await api().fetch(`/admin/categories/${button.dataset.deleteCategory}`, {
             method: "DELETE",
           });
-          window.tkToast?.("Category deleted");
+          window.tkToast?.(tr("toast.category_deleted", "Category deleted."));
           await Promise.all([refreshCategories(), refreshAuditLogs()]);
         }
 
@@ -3058,18 +3126,18 @@
           const userId = button.dataset.saveRole;
           const role = document.querySelector(`[data-user-role="${userId}"]`)?.value;
           await api().fetch(`/admin/users/${userId}/role`, { method: "PATCH", body: { role } });
-          window.tkToast?.("User role updated");
+          window.tkToast?.(tr("toast.user_role_updated", "User role updated."));
           await refreshUsers();
         }
 
         if (button.dataset.suspendUser) {
-          if (!confirm("Suspend this user?")) return;
+          if (!confirm(tr("confirm.suspend_user", "Suspend this user?"))) return;
           button.disabled = true;
           await api().fetch(`/admin/users/${button.dataset.suspendUser}/suspend`, {
             method: "POST",
             body: {},
           });
-          window.tkToast?.("User suspended");
+          window.tkToast?.(tr("toast.user_suspended", "User suspended."));
           await refreshUsers();
         }
 
@@ -3079,7 +3147,7 @@
             method: "POST",
             body: {},
           });
-          window.tkToast?.("User reactivated");
+          window.tkToast?.(tr("toast.user_reactivated", "User reactivated."));
           await refreshUsers();
         }
 
@@ -3089,7 +3157,7 @@
             method: "POST",
             body: {},
           });
-          window.tkToast?.("Organizer approved");
+          window.tkToast?.(tr("toast.organizer_approved", "Organizer approved."));
           await refreshUsers();
         }
 
@@ -3104,28 +3172,28 @@
             method: "POST",
             body: {},
           });
-          window.tkToast?.("Venue activated");
+          window.tkToast?.(tr("toast.venue_activated", "Venue activated."));
           await refreshVenues();
           if (state.sectionLoaded.reservations) await refreshReservations();
         }
 
         if (button.dataset.deactivateVenue) {
-          if (!confirm("Deactivate this venue?")) return;
+          if (!confirm(tr("confirm.deactivate_venue", "Deactivate this venue?"))) return;
           button.disabled = true;
           await api().fetch(`/admin/venues/${button.dataset.deactivateVenue}/deactivate`, {
             method: "POST",
             body: {},
           });
-          window.tkToast?.("Venue deactivated");
+          window.tkToast?.(tr("toast.venue_deactivated", "Venue deactivated."));
           await refreshVenues();
           if (state.sectionLoaded.reservations) await refreshReservations();
         }
 
         if (button.dataset.deleteVenue) {
-          if (!confirm("Delete this venue and its reservations?")) return;
+          if (!confirm(tr("confirm.delete_venue", "Delete this venue and its reservations?"))) return;
           button.disabled = true;
           await api().fetch(`/admin/venues/${button.dataset.deleteVenue}`, { method: "DELETE" });
-          window.tkToast?.("Venue deleted");
+          window.tkToast?.(tr("toast.venue_deleted", "Venue deleted."));
           await refreshVenues();
           if (state.sectionLoaded.reservations) await refreshReservations();
         }
@@ -3151,12 +3219,12 @@
         }
 
         if (button.dataset.deleteReservation) {
-          if (!confirm("Delete this reservation?")) return;
+          if (!confirm(tr("confirm.delete_reservation", "Delete this reservation?"))) return;
           button.disabled = true;
           await api().fetch(`/admin/reservations/${button.dataset.deleteReservation}`, {
             method: "DELETE",
           });
-          window.tkToast?.("Reservation deleted");
+          window.tkToast?.(tr("toast.reservation_deleted", "Reservation deleted."));
           await refreshReservations();
         }
 
@@ -3168,7 +3236,7 @@
             method: "POST",
             body: { reason },
           });
-          window.tkToast?.("Organizer rejected");
+          window.tkToast?.(tr("toast.organizer_rejected", "Organizer rejected."));
           await refreshUsers();
         }
 
@@ -3200,10 +3268,10 @@
             });
             window.EventSphereNotifications?.add({
               type: "event",
-              title: "Event Updated",
-              message: `${title} was updated successfully.`,
+              title: tr("notifications.event_updated_title", "Event updated"),
+              message: tr("notifications.event_updated_message", "{event} was updated.").replace("{event}", title),
             });
-            window.tkToast?.("Event updated");
+            window.tkToast?.(tr("toast.event_updated", "Event updated."));
             await refreshEvents();
           }
         }
@@ -3221,12 +3289,16 @@
             method: "PATCH",
             body: { is_featured: !eventRecord?.is_featured },
           });
-          window.tkToast?.(eventRecord?.is_featured ? "Event unfeatured" : "Event featured");
+          window.tkToast?.(
+            eventRecord?.is_featured
+              ? tr("toast.event_unfeatured", "Event unfeatured.")
+              : tr("toast.event_featured", "Event featured."),
+          );
           await refreshEvents();
         }
 
         if (button.dataset.archiveEvent) {
-          if (!confirm("Archive this event?")) return;
+          if (!confirm(tr("confirm.archive_event", "Archive this event?"))) return;
           button.disabled = true;
           await api().fetch(`/admin/events/${button.dataset.archiveEvent}`, {
             method: "PATCH",
@@ -3234,18 +3306,18 @@
           });
           window.EventSphereNotifications?.add({
             type: "event",
-            title: "Event Cancelled",
-            message: "The event was archived and removed from active discovery.",
+            title: tr("notifications.event_cancelled_title", "Event cancelled"),
+            message: tr("notifications.event_cancelled_message", "The event was removed from active discovery."),
           });
-          window.tkToast?.("Event archived");
+          window.tkToast?.(tr("toast.event_archived", "Event archived."));
           await refreshEvents();
         }
 
         if (button.dataset.deleteEvent) {
-          if (!confirm("Delete this event?")) return;
+          if (!confirm(tr("confirm.delete_event", "Delete this event?"))) return;
           button.disabled = true;
           await api().fetch(`/admin/events/${button.dataset.deleteEvent}`, { method: "DELETE" });
-          window.tkToast?.("Event deleted");
+          window.tkToast?.(tr("toast.event_deleted", "Event deleted."));
           await refreshEvents();
         }
 
@@ -3263,23 +3335,23 @@
             method: "PATCH",
             body: { service_fee_percentage: value },
           });
-          window.tkToast?.("Event service fee updated");
+          window.tkToast?.(tr("toast.event_service_fee_updated", "Event service fee updated."));
           await refreshEvents();
         }
 
         if (button.dataset.refundOrder) {
-          if (!confirm("Issue full refund for this order?")) return;
+          if (!confirm(tr("confirm.refund_order", "Issue a full refund for this order?"))) return;
           button.disabled = true;
           await api().fetch(`/admin/payments/${button.dataset.refundOrder}/refund`, {
             method: "POST",
             body: { reason: "requested_by_customer" },
           });
-          window.tkToast?.("Refund processed");
+          window.tkToast?.(tr("toast.refund_processed", "Refund processed."));
           await refreshPayments();
         }
 
         if (button.dataset.adminAlerts) {
-          window.tkToast?.("No unresolved platform alerts");
+          window.tkToast?.(tr("toast.no_platform_alerts", "No unresolved platform alerts."));
         }
 
         if (button.dataset.adminExport) {
@@ -3322,7 +3394,7 @@
         }
       } catch (err) {
         button.disabled = false;
-        window.tkToast?.(err.message || "Admin action failed", "error");
+        window.tkToast?.(err.message || tr("toast.admin_action_failed", "Could not complete the admin action. Please try again."), "error");
       }
     });
   }
@@ -3337,7 +3409,7 @@
     try {
       await loadSection(state.currentSection || "overview");
     } catch (err) {
-      window.tkToast?.(err.message || "Failed to load admin dashboard", "error");
+      window.tkToast?.(err.message || tr("toast.admin_dashboard_load_failed", "Could not load the admin dashboard. Please refresh the page."), "error");
     }
   });
 })();

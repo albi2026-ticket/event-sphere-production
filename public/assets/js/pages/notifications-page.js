@@ -103,7 +103,7 @@
     `,
           )
           .join("")
-      : `<div class="dashboard-empty"><i class="bi bi-bell"></i><span data-i18n="notifications.no_notifications">${tr("notifications.no_notifications", "No notifications")}</span></div>`;
+      : `<div class="dashboard-empty"><i class="bi bi-bell"></i><strong data-i18n="notifications.no_notifications">${tr("notifications.no_notifications", "No notifications yet.")}</strong><span data-i18n="notifications.empty_copy">${tr("notifications.empty_copy", "Order confirmations, event reminders, and helpful updates will appear here.")}</span></div>`;
 
     if (pager && state.meta?.last_page > 1) {
       const current = Number(state.meta.current_page || state.page);
@@ -123,7 +123,8 @@
       state.meta = res.meta || res.raw?.meta || null;
       state.page = page;
     } catch (err) {
-      state.error = err.message || tr("notifications.load_failed", "Failed to load notifications");
+      state.error =
+        err.message || tr("notifications.load_failed", "Could not load notifications. Please try again.");
     } finally {
       state.loading = false;
       render();
@@ -161,7 +162,8 @@
         } catch (err) {
           read.disabled = false;
           window.tkToast?.(
-            err.message || tr("notifications.update_failed", "Notification update failed"),
+            err.message ||
+              tr("notifications.update_failed", "Could not update the notification. Please try again."),
             "error",
           );
         }
@@ -180,7 +182,8 @@
         } catch (err) {
           open.disabled = false;
           window.tkToast?.(
-            err.message || tr("notifications.update_failed", "Notification update failed"),
+            err.message ||
+              tr("notifications.update_failed", "Could not update the notification. Please try again."),
             "error",
           );
         }
@@ -197,7 +200,8 @@
           render();
         } catch (err) {
           window.tkToast?.(
-            err.message || tr("notifications.update_failed", "Notification update failed"),
+            err.message ||
+              tr("notifications.update_failed", "Could not update the notification. Please try again."),
             "error",
           );
         } finally {

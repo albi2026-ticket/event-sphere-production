@@ -389,7 +389,10 @@
     if (!text) {
       root.classList.add("text-muted-pro");
       const empty = document.createElement("p");
-      empty.textContent = "No event description has been added yet.";
+      empty.textContent = tr(
+        "events.no_description",
+        "No description yet. Check the event details above or contact the organizer for more information.",
+      );
       root.appendChild(empty);
       return;
     }
@@ -708,7 +711,7 @@
             window.tkToast?.(
               tr(
                 "events.no_tickets_available",
-                "No tickets are currently available for this event.",
+                "Tickets are not available right now. Check back soon or explore other events.",
               ),
               "error",
             );
@@ -731,7 +734,7 @@
             window.tkToast?.(
               tr(
                 "events.no_tickets_available",
-                "No tickets are currently available for this event.",
+                "Tickets are not available right now. Check back soon or explore other events.",
               ),
               "error",
             );

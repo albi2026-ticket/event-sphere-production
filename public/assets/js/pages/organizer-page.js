@@ -358,7 +358,7 @@
 
     const orders = rows(state.summary?.recent_orders).map((order) => ({
       icon: "bi-ticket-perforated",
-      title: "New ticket purchased",
+      title: tr("notifications.ticket_purchased_title", "New ticket purchased"),
       detail: `${order.order_number || "Order"} · ${u().formatMoney(order.total || 0, order.currency || "USD")}`,
       time: order.created_at,
     }));
@@ -366,7 +366,7 @@
       .filter((ticket) => ticket.checked_in_at)
       .map((ticket) => ({
         icon: "bi-check2-circle",
-        title: "New attendee checked in",
+        title: tr("notifications.attendee_checked_in_title", "New attendee checked in"),
         detail: `${ticket.attendee_name || ticket.attendee?.name || "Attendee"} · ${ticket.ticket_code || ""}`,
         time: ticket.checked_in_at,
       }));
@@ -375,7 +375,7 @@
       if (event.status === "published") {
         activity.push({
           icon: "bi-broadcast",
-          title: "Event published",
+          title: tr("notifications.event_published_title", "Event published"),
           detail: event.title,
           time: event.updated_at || event.created_at,
         });
@@ -383,7 +383,7 @@
       if (organizerEventState(event).key === "sold_out") {
         activity.push({
           icon: "bi-lightning-charge",
-          title: "Event sold out",
+          title: tr("notifications.event_sold_out_title", "Event sold out"),
           detail: event.title,
           time: event.updated_at || event.starts_at,
         });
@@ -538,8 +538,8 @@
       emptyRow(
         8,
         "bi-calendar-event",
-        "No events found",
-        "Create an event or adjust your filters.",
+        tr("empty.no_events_found", "No events match your search yet."),
+        tr("organizer.create_event_or_adjust_filters", "Create a new event or adjust your filters."),
       );
   }
 
@@ -646,8 +646,8 @@
       emptyRow(
         7,
         "bi-people",
-        "No attendees found",
-        "Attendees appear here after tickets are issued.",
+        tr("organizer.no_attendees", "No attendees yet."),
+        tr("organizer.no_attendees_copy", "Attendees will appear here after tickets are issued."),
       );
     if (pager) pager.innerHTML = pagination(state.attendeeMeta, "data-attendee-page");
   }
@@ -680,7 +680,12 @@
     `,
         )
         .join("") ||
-      emptyRow(4, "bi-cash-stack", "No revenue yet", "Paid orders will populate this table.");
+      emptyRow(
+        4,
+        "bi-cash-stack",
+        tr("organizer.no_revenue_yet", "No revenue yet."),
+        tr("organizer.no_revenue_copy", "Paid orders will appear here as guests buy tickets."),
+      );
   }
 
   function renderRevenueChart() {
@@ -708,8 +713,8 @@
       if (empty)
         empty.innerHTML = emptyBlock(
           "bi-graph-up",
-          "No revenue trend yet",
-          "Revenue trends appear after paid orders.",
+          tr("organizer.no_revenue_trend", "No revenue trend yet."),
+          tr("organizer.no_revenue_trend_copy", "Revenue trends will appear after paid orders."),
         );
       return;
     }
@@ -758,8 +763,8 @@
       if (empty)
         empty.innerHTML = emptyBlock(
           "bi-pie-chart",
-          "No event revenue yet",
-          "Revenue by event appears after sales.",
+          tr("organizer.no_event_revenue", "No event revenue yet."),
+          tr("organizer.no_event_revenue_copy", "Revenue by event will appear after sales."),
         );
       return;
     }
@@ -828,8 +833,8 @@
       if (empty)
         empty.innerHTML = emptyBlock(
           "bi-bar-chart",
-          `No ${label.toLowerCase()} yet`,
-          "Ticket sales charts appear after paid orders.",
+          tr("organizer.no_sales_chart", "No sales chart yet."),
+          tr("organizer.no_sales_chart_copy", "Ticket sales charts will appear after paid orders."),
         );
       return;
     }
@@ -890,8 +895,11 @@
         .join("") ||
       emptyBlock(
         "bi-trophy",
-        "No top events yet",
-        "Best selling and highest revenue events will appear after sales.",
+        tr("organizer.no_top_events", "No top events yet."),
+        tr(
+          "organizer.no_top_events_copy",
+          "Your best-selling and highest-revenue events will appear here after sales.",
+        ),
       );
   }
 
@@ -1030,7 +1038,7 @@
         return result;
       })
       .catch((err) => {
-        window.tkToast?.(err.message || "Failed to load organizer section", "error");
+        window.tkToast?.(err.message || tr("toast.organizer_section_load_failed", "Could not load this organizer section. Please try again."), "error");
         throw err;
       })
       .finally(() => {
@@ -1180,7 +1188,7 @@
       });
       state.checkInResult = { ...data, payload: state.checkInResult.payload };
       renderCheckInResult(state.checkInResult);
-      window.tkToast?.("Ticket checked in");
+      window.tkToast?.(tr("toast.ticket_checked_in", "Ticket checked in."));
       await Promise.all([
         loadCheckInStats(),
         loadCheckInLogs(),
@@ -1193,7 +1201,7 @@
         state.checkInResult = { ...data, payload: state.checkInResult.payload };
         renderCheckInResult(state.checkInResult);
       }
-      window.tkToast?.(err.message || "Check-in failed", "error");
+      window.tkToast?.(err.message || tr("toast.check_in_failed", "Could not check in this ticket. Please try again."), "error");
       await Promise.all([loadCheckInStats(), loadCheckInLogs()]);
     }
   }
@@ -1221,8 +1229,11 @@
         .join("") ||
       emptyBlock(
         "bi-search",
-        tr("empty.no_tickets_found", "No tickets found."),
-        "Try a ticket code, attendee name, email, or order number.",
+        tr("empty.no_tickets_found", "No tickets yet."),
+        tr(
+          "organizer.ticket_lookup_empty_copy",
+          "Try a ticket code, attendee name, email, or order number.",
+        ),
       );
   }
 
@@ -1252,7 +1263,7 @@
         if (!raw || raw === state.lastScannedPayload) return;
         state.lastScannedPayload = raw;
         await validateTicket(parseScannerPayload(raw), "mobile_scanner").catch((err) =>
-          window.tkToast?.(err.message || "Scan failed", "error"),
+          window.tkToast?.(err.message || tr("toast.scan_failed", "Could not read this ticket. Please try again."), "error"),
         );
       }, 700);
     } catch (err) {
@@ -1382,17 +1393,20 @@
         savedEvent = data;
         window.EventSphereNotifications?.add({
           type: "event",
-          title: "Event Updated",
-          message: `${savedEvent.title || "Your event"} was updated successfully.`,
+          title: tr("notifications.event_updated_title", "Event updated"),
+          message: tr("notifications.event_updated_message", "{event} was updated.").replace(
+            "{event}",
+            savedEvent.title || "Your event",
+          ),
         });
-        window.tkToast?.("Event updated");
+        window.tkToast?.(tr("toast.event_updated", "Event updated."));
       } else {
         const { data } = await api().fetch("/organizer/events", {
           method: "POST",
           body: { ...basePayload, status: "draft" },
         });
         savedEvent = data;
-        if (!shouldDeferPublish) window.tkToast?.("Draft event created");
+        if (!shouldDeferPublish) window.tkToast?.(tr("toast.draft_event_created", "Draft event created."));
       }
       await syncTicketTiers(savedEvent.id, tiers);
       await uploadPendingImages(savedEvent);
@@ -1403,10 +1417,13 @@
         });
         window.EventSphereNotifications?.add({
           type: "event",
-          title: "Event Published",
-          message: `${savedEvent.title || "Your event"} is now published.`,
+          title: tr("notifications.event_published_title", "Event published"),
+          message: tr("notifications.event_published_message", "{event} is now published.").replace(
+            "{event}",
+            savedEvent.title || "Your event",
+          ),
         });
-        window.tkToast?.("Event published");
+        window.tkToast?.(tr("toast.event_published", "Event published."));
       }
       bootstrap.Modal.getOrCreateInstance($("#organizerEventModal")).hide();
       await refreshEventsAndAnalytics();
@@ -1427,27 +1444,27 @@
         type: "event",
         title:
           status === "published"
-            ? "Event Published"
+            ? tr("notifications.event_published_title", "Event published")
             : status === "cancelled"
-              ? "Event Cancelled"
-              : "Event Updated",
+              ? tr("notifications.event_cancelled_title", "Event cancelled")
+              : tr("notifications.event_updated_title", "Event updated"),
         message:
           status === "published"
-            ? "Your event is now published."
+            ? tr("notifications.event_published_message", "{event} is now published.").replace("{event}", "Your event")
             : status === "cancelled"
-              ? "Your event was cancelled."
-              : "Your event status was updated.",
+              ? tr("notifications.event_cancelled_message", "The event was removed from active discovery.")
+              : tr("notifications.event_updated_message", "{event} was updated.").replace("{event}", "Your event"),
       });
       window.tkToast?.(
         status === "published"
-          ? "Event published"
+          ? tr("toast.event_published", "Event published.")
           : status === "cancelled"
-            ? "Event cancelled"
-            : "Event unpublished",
+            ? tr("toast.event_cancelled", "Event cancelled.")
+            : tr("toast.event_unpublished", "Event unpublished."),
       );
       await refreshEventsAndAnalytics();
     } catch (err) {
-      window.tkToast?.(err.originalMessage || err.message || "Event status update failed", "error");
+      window.tkToast?.(err.originalMessage || err.message || tr("toast.event_status_update_failed", "Could not update the event status. Please try again."), "error");
     } finally {
       setBusy(false);
     }
@@ -1568,7 +1585,7 @@
       </div>`,
           )
           .join("")
-      : '<div class="col-12 small text-muted-pro">No uploaded images yet.</div>';
+      : `<div class="col-12 small text-muted-pro" data-i18n="empty.no_images">${tr("empty.no_images", "No images yet.")} ${tr("organizer.no_images_copy", "Upload a cover photo to make this event stand out.")}</div>`;
   }
 
   async function refreshSelectedEventImages() {
@@ -1595,7 +1612,11 @@
     });
     await refreshSelectedEventImages();
     await refreshEventsAndAnalytics();
-    window.tkToast?.(role === "primary" ? "Primary image updated" : "Banner image updated");
+    window.tkToast?.(
+      role === "primary"
+        ? tr("toast.primary_image_updated", "Primary image updated.")
+        : tr("toast.banner_image_updated", "Banner image updated."),
+    );
   }
 
   function updateImageName(files) {
@@ -1605,7 +1626,7 @@
       ? files.length === 1
         ? files[0].name
         : `${files.length} images selected`
-      : "No images selected";
+      : tr("organizer.no_images_selected", "No images selected yet.");
   }
 
   function setPurchaseLimitValue(limit) {
@@ -1830,7 +1851,7 @@
       .join("");
     const win = window.open("", "_blank");
     if (!win) {
-      window.tkToast?.("Popup blocked. Allow popups to export PDF.", "error");
+      window.tkToast?.(tr("toast.popup_blocked_export_pdf", "Please allow popups to export the PDF."), "error");
       return;
     }
     win.document.write(`<!doctype html><html><head><title>${esc(report.title)}</title><style>
@@ -1905,7 +1926,7 @@
         file.type.startsWith("image/"),
       );
       if (files.some((file) => file.size > 5 * 1024 * 1024)) {
-        window.tkToast?.("Images must be 5MB or smaller.", "error");
+        window.tkToast?.(tr("toast.image_size_limit", "Images must be 5 MB or smaller."), "error");
         return;
       }
       state.pendingImages = files;
@@ -1930,22 +1951,22 @@
         const row = tierDelete.closest("[data-tier-row]");
         const id = row?.dataset.ticketTypeId;
         if (id) {
-          if (!confirm("Delete this ticket type?")) return;
+          if (!confirm(tr("confirm.delete_ticket_type", "Delete this ticket type?"))) return;
           try {
             setBusy(true);
             await api().fetch(`/organizer/ticket-types/${id}`, { method: "DELETE" });
             row.remove();
-            window.tkToast?.("Ticket type deleted");
+            window.tkToast?.(tr("toast.ticket_type_deleted", "Ticket type deleted."));
             await refreshEventsAndAnalytics();
           } catch (err) {
-            window.tkToast?.(err.message || "Ticket type delete failed", "error");
+            window.tkToast?.(err.message || tr("toast.ticket_type_delete_failed", "Could not delete the ticket type. Please try again."), "error");
           } finally {
             setBusy(false);
           }
           return;
         }
         if ($$("[data-tier-row]").length <= 1) {
-          window.tkToast?.("At least one ticket type is required.", "info");
+          window.tkToast?.(tr("toast.ticket_type_required", "At least one ticket type is required."), "info");
           return;
         }
         row?.remove();
@@ -1954,7 +1975,7 @@
 
       const imageDelete = event.target.closest("[data-image-delete]");
       if (imageDelete) {
-        if (!confirm("Delete this event image?")) return;
+        if (!confirm(tr("confirm.delete_event_image", "Delete this event image?"))) return;
         try {
           setBusy(true);
           await api().fetch(`/organizer/event-images/${imageDelete.dataset.imageDelete}`, {
@@ -1962,9 +1983,9 @@
           });
           await refreshSelectedEventImages();
           await refreshEventsAndAnalytics();
-          window.tkToast?.("Image deleted");
+          window.tkToast?.(tr("toast.image_deleted", "Image deleted."));
         } catch (err) {
-          window.tkToast?.(err.message || "Image delete failed", "error");
+          window.tkToast?.(err.message || tr("toast.image_delete_failed", "Could not delete the image. Please try again."), "error");
         } finally {
           setBusy(false);
         }
@@ -1977,7 +1998,7 @@
           setBusy(true);
           await setEventImageRole(imageRole.dataset.imageId, imageRole.dataset.imageRole);
         } catch (err) {
-          window.tkToast?.(err.message || "Image role update failed", "error");
+          window.tkToast?.(err.message || tr("toast.image_role_update_failed", "Could not update the image role. Please try again."), "error");
         } finally {
           setBusy(false);
         }
@@ -2073,7 +2094,7 @@
 
       const cancel = event.target.closest("[data-event-cancel]");
       if (cancel) {
-        if (confirm("Cancel this event? Tickets will no longer be valid for check-in.")) {
+        if (confirm(tr("confirm.cancel_event", "Cancel this event? Tickets will no longer be valid for check-in."))) {
           await quickStatus(cancel.dataset.eventCancel, "cancelled");
         }
         return;
@@ -2098,7 +2119,7 @@
           exportReportPdf(type);
         } else {
           downloadCsv(type);
-          window.tkToast?.("Report CSV exported");
+          window.tkToast?.(tr("toast.report_csv_exported", "Report exported."));
         }
       }
     });
@@ -2108,7 +2129,7 @@
       const search = String(new FormData(event.currentTarget).get("q") || "").trim();
       if (!search) return;
       await lookupTickets(search).catch((err) =>
-        window.tkToast?.(err.message || "Lookup failed", "error"),
+        window.tkToast?.(err.message || tr("toast.lookup_failed", "Could not find matching tickets. Please try again."), "error"),
       );
     });
     $("[data-checkin-start-camera]")?.addEventListener("click", startScanner);
@@ -2166,7 +2187,7 @@
     try {
       await loadSection(state.currentSection || "overview");
     } catch (err) {
-      window.tkToast?.(err.message || "Failed to load organizer dashboard", "error");
+      window.tkToast?.(err.message || tr("toast.organizer_dashboard_load_failed", "Could not load the organizer dashboard. Please refresh the page."), "error");
     }
   });
 })();

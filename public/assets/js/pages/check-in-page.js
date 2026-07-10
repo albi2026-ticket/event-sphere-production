@@ -181,12 +181,15 @@
       renderResult(state.result);
       await Promise.all([loadStats(), loadLogs()]);
     } catch (err) {
-      const message = err.originalMessage || err.message || "Scan failed";
+      const message =
+        err.originalMessage ||
+        err.message ||
+        tr("toast.scan_failed", "Could not read this ticket. Please try again.");
       state.result = {
         payload: body,
         validation: {
           result: "invalid",
-          title: "Invalid Ticket",
+          title: tr("notifications.invalid_ticket_title", "Ticket not valid"),
           can_check_in: false,
           reason: message,
         },
@@ -209,25 +212,31 @@
       renderResult(state.result);
       window.EventSphereNotifications?.add({
         type: "system",
-        title: "Check-In Completed",
-        message: "Ticket check-in was completed successfully.",
+        title: tr("notifications.check_in_completed_title", "Check-in completed"),
+        message: tr(
+          "notifications.check_in_completed_message",
+          "The ticket was checked in successfully.",
+        ),
       });
-      window.tkToast?.("Ticket checked in");
+      window.tkToast?.(tr("toast.ticket_checked_in", "Ticket checked in."));
     } catch (err) {
       if (err.payload?.data?.validation) renderResult(err.payload.data);
       else {
-        const message = err.originalMessage || err.message || "Check-in failed";
+        const message =
+          err.originalMessage ||
+          err.message ||
+          tr("toast.check_in_failed", "Could not check in this ticket. Please try again.");
         renderResult({
           validation: {
             result: "invalid",
-            title: "Invalid Ticket",
+            title: tr("notifications.invalid_ticket_title", "Ticket not valid"),
             can_check_in: false,
             reason: message,
           },
           ticket: null,
         });
       }
-      window.tkToast?.(err.message || "Check-in failed", "error");
+      window.tkToast?.(err.message || tr("toast.check_in_failed", "Could not check in this ticket. Please try again."), "error");
     }
     await Promise.all([loadStats(), loadLogs()]);
   }
@@ -250,7 +259,7 @@
     `,
         )
         .join("") ||
-      `<div class="dashboard-empty"><i class="bi bi-search"></i><span data-i18n="empty.no_tickets_found">${window.t?.("empty.no_tickets_found") || "No tickets found."}</span></div>`;
+      `<div class="dashboard-empty"><i class="bi bi-search"></i><strong data-i18n="empty.no_tickets_found">${window.t?.("empty.no_tickets_found") || "No tickets yet."}</strong><span data-i18n="organizer.ticket_lookup_empty_copy">${window.t?.("organizer.ticket_lookup_empty_copy") || "Try a ticket code, attendee name, email, or order number."}</span></div>`;
   }
 
   async function startCamera() {
@@ -276,7 +285,7 @@
       if (!raw || raw === state.lastPayload) return;
       state.lastPayload = raw;
       await validateTicket(parsePayload(raw), "mobile_scanner").catch((err) =>
-        window.tkToast?.(err.message || "Scan failed", "error"),
+        window.tkToast?.(err.message || tr("toast.scan_failed", "Could not read this ticket. Please try again."), "error"),
       );
     }, 700);
   }
@@ -302,7 +311,7 @@
       await Promise.all([loadStats(), loadLogs()]);
     });
     $("[data-scanner-start]")?.addEventListener("click", () =>
-      startCamera().catch((err) => window.tkToast?.(err.message || "Camera unavailable", "error")),
+      startCamera().catch((err) => window.tkToast?.(err.message || tr("toast.camera_unavailable", "Camera is unavailable. Use manual lookup."), "error")),
     );
     $("[data-scanner-stop]")?.addEventListener("click", stopCamera);
     $("[data-scanner-manual-form]")?.addEventListener("submit", async (event) => {
@@ -310,7 +319,7 @@
       const search = String(new FormData(event.currentTarget).get("q") || "").trim();
       if (search)
         await lookup(search).catch((err) =>
-          window.tkToast?.(err.message || "Lookup failed", "error"),
+          window.tkToast?.(err.message || tr("toast.lookup_failed", "Could not find matching tickets. Please try again."), "error"),
         );
     });
     document.addEventListener("click", async (event) => {

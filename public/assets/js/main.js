@@ -330,7 +330,8 @@
       if (markAll) {
         markAllNotificationsRead().catch(() =>
           window.tkToast?.(
-            window.t?.("toast.notification_update_failed") || "Notification update failed",
+            window.t?.("toast.notification_update_failed") ||
+              "Could not update the notification. Please try again.",
             "error",
           ),
         );
@@ -347,7 +348,8 @@
           })
           .catch(() =>
             window.tkToast?.(
-              window.t?.("toast.notification_update_failed") || "Notification update failed",
+              window.t?.("toast.notification_update_failed") ||
+                "Could not update the notification. Please try again.",
               "error",
             ),
           );
@@ -418,7 +420,9 @@
         );
       } catch (err) {
         window.tkToast(
-          err.message || window.t?.("toast.favorite_update_failed") || "Favorite update failed",
+          err.message ||
+            window.t?.("toast.favorite_update_failed") ||
+            "Could not update your favorites. Please try again.",
           "error",
         );
       }
@@ -435,7 +439,7 @@
       );
     } else {
       list.push(id);
-      window.tkToast(window.t?.("toast.saved_to_favorites") || "Saved to favorites");
+      window.tkToast(window.t?.("toast.saved_to_favorites") || "Saved to favorites.");
     }
     setFavs(list);
     paintFavs();
@@ -601,7 +605,7 @@
               `<div class="px-3 py-2 rounded" data-ac-value="${h.replace(/"/g, "&quot;")}" style="cursor:pointer" onmouseover="this.style.background='var(--card-2)'" onmouseout="this.style.background=''"><i class="bi bi-search me-2 text-muted-pro"></i>${h}</div>`,
           )
           .join("")
-      : `<div class="px-3 py-2 text-muted-pro" data-i18n="empty.no_matches">${window.t?.("empty.no_matches") || "No matches"}</div>`;
+      : `<div class="px-3 py-2 text-muted-pro" data-i18n="empty.no_matches">${window.t?.("empty.no_matches") || "No matches yet."}</div>`;
   });
   document.addEventListener("click", (e) => {
     const suggestion = e.target.closest("[data-ac-value]");

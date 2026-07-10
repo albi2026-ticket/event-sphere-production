@@ -234,15 +234,15 @@
 
     if (emptyTitle) {
       emptyTitle.textContent = state.filters.q
-        ? window.t?.("empty.no_matching_places") || "No matching places found for your search."
-        : window.t?.("empty.no_restaurants_found") || "No Restaurants & Bars found.";
+        ? window.t?.("empty.no_matching_places") || "No places match your search yet."
+        : window.t?.("empty.no_restaurants_found") || "No restaurants or bars match your search yet.";
     }
     if (emptyCopy) {
       emptyCopy.textContent = state.filters.q
         ? window.t?.("empty.try_another_place") ||
-          "Try searching another restaurant, bar, café, lounge, or city."
+          "Try another restaurant, bar, café, lounge, or city."
         : window.t?.("empty.check_back_restaurants") ||
-          "Check back soon for new restaurants and bars.";
+          "New restaurants and bars will appear here as they join Tiketa.";
     }
 
     $("[data-venue-count]")?.replaceChildren(

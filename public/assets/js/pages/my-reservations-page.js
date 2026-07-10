@@ -192,7 +192,7 @@
               labels[status],
             ),
           )}</h3>
-          <p class="mb-0" data-i18n="empty.no_reservations_found">${tr("empty.no_reservations_found", "No reservations found.")}</p>
+          <p class="mb-0" data-i18n="empty.no_reservations_found">${tr("empty.no_reservations_found", "No reservations yet.")}</p>
         </div>
       </div>
     `;

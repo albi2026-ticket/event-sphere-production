@@ -114,7 +114,7 @@
     `,
         )
         .join("") ||
-      `<tr><td colspan="5" class="text-muted-pro">${esc(tr("scanner.no_scans_yet", "No scans yet."))}</td></tr>`;
+      `<tr><td colspan="5" class="text-muted-pro">${esc(tr("scanner.no_scans_yet", "No scans yet. Open an assigned event to start checking in guests."))}</td></tr>`;
   }
 
   document.addEventListener("tiketa:language-changed", () => {
@@ -136,7 +136,7 @@
       window.__scannerDashboardScans = data.recent_scans || [];
       renderScans(window.__scannerDashboardScans);
     } catch (err) {
-      window.tkToast?.(err.message || "Failed to load scanner dashboard", "error");
+      window.tkToast?.(err.message || tr("toast.scanner_dashboard_load_failed", "Could not load the scanner dashboard. Please refresh the page."), "error");
     }
   });
 })();

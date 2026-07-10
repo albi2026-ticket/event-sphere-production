@@ -543,7 +543,7 @@
           window.tkToast?.(
             tr(
               "owner.no_matching_address",
-              "No matching address found. Try a more specific search.",
+              "No matching address yet. Try a more specific street, city, or venue name.",
             ),
             "error",
           );
@@ -603,7 +603,10 @@
 
       if (!result) {
         window.tkToast?.(
-          tr("owner.no_matching_address", "No matching address found. Try a more specific search."),
+          tr(
+            "owner.no_matching_address",
+            "No matching address yet. Try a more specific street, city, or venue name.",
+          ),
           "error",
         );
         return;
@@ -892,7 +895,7 @@
     `,
           )
           .join("")
-      : `<div class="col-12"><div class="owner-gallery-empty">${tr("empty.nothing_here", "No uploaded images yet. Add a cover photo and a few ambience shots to make the public page feel alive.")}</div></div>`;
+      : `<div class="col-12"><div class="owner-gallery-empty">${tr("empty.no_images", "No images yet.")} ${tr("organizer.no_images_copy", "Upload a cover photo to make this event stand out.")}</div></div>`;
   }
 
   function hasOpeningHours(venue) {
@@ -1300,7 +1303,7 @@
           <strong>${date.getDate()}</strong>
         </div>
         <div class="owner-calendar-day-items">
-          ${reservations.length ? reservations.map(calendarReservationCard).join("") : `<div class="owner-calendar-empty" data-i18n="empty.no_reservations_found">${tr("empty.no_reservations_found", "No reservations")}</div>`}
+          ${reservations.length ? reservations.map(calendarReservationCard).join("") : `<div class="owner-calendar-empty" data-i18n="empty.no_reservations_found">${tr("empty.no_reservations_found", "No reservations yet.")}</div>`}
         </div>
       </section>
     `;
@@ -1576,7 +1579,7 @@
     if (trendEmpty)
       trendEmpty.innerHTML = trend.some((item) => Number(item.total) > 0)
         ? ""
-        : `<div class="availability-empty mt-3" data-i18n="owner.no_reservations_range">${tr("owner.no_reservations_range", "No reservations in this range.")}</div>`;
+        : `<div class="availability-empty mt-3" data-i18n="owner.no_reservations_range">${tr("owner.no_reservations_range", "No reservations in this range. Try a different date or filter.")}</div>`;
     if (trendCanvas) {
       window._ownerReservationTrendChart = new Chart(trendCanvas, {
         type: "line",

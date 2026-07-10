@@ -268,7 +268,10 @@
             // Backend payment handlers may have already released the reservation.
           }
         }
-        window.tkToast?.(err.message || tr("checkout.checkout_failed", "Checkout failed"), "error");
+        window.tkToast?.(
+          err.message || tr("checkout.checkout_failed", "Could not start checkout. Please try again."),
+          "error",
+        );
         checkoutInFlight = false;
         els.payBtn.disabled = false;
         els.payBtn.textContent = `${tr("checkout.pay", "Pay")} ${formattedTotal}`;

@@ -465,7 +465,7 @@
     }
     el.innerHTML = state.tickets.length
       ? state.tickets.map((ticket) => ticketsApi().renderTicketCard(ticket)).join("")
-      : `<div class="col-12">${emptyState("bi-ticket-perforated", tr("empty.no_tickets_found", "No tickets found."), tr("tickets.try_filter_or_browse", "Try another filter or browse events to buy tickets."), `<a class="btn btn-glass btn-sm mt-2" href="/events/list" data-i18n="buttons.browse_events">${tr("buttons.browse_events", "Browse Events")}</a>`)}</div>`;
+      : `<div class="col-12">${emptyState("bi-ticket-perforated", tr("empty.no_tickets_found", "No tickets yet."), tr("tickets.try_filter_or_browse", "Browse events and choose the tickets you want."), `<a class="btn btn-glass btn-sm mt-2" href="/events/list" data-i18n="buttons.browse_events">${tr("buttons.browse_events", "Browse Events")}</a>`)}</div>`;
     ticketsApi().hydrateQrImages(el);
     if (pager) pager.innerHTML = pagination(state.ticketMeta, "data-ticket-page");
   }
@@ -507,7 +507,7 @@
     `,
         )
         .join("") ||
-      `<tr><td colspan="7">${emptyState("bi-receipt", tr("orders.no_orders_found", "No Orders Found"), tr("orders.completed_orders_appear", "Completed orders will appear here after checkout."))}</td></tr>`;
+      `<tr><td colspan="7">${emptyState("bi-receipt", tr("orders.no_orders_found", "No orders yet."), tr("orders.completed_orders_appear", "Complete checkout and your orders will appear here."))}</td></tr>`;
     if (pager) pager.innerHTML = pagination(state.orderMeta, "data-order-page");
   }
 
@@ -570,7 +570,7 @@
     }
     el.innerHTML = state.favorites.length
       ? state.favorites.map(renderFavoriteCard).join("")
-      : `<div class="col-12">${emptyState("bi-heart", tr("dashboard.no_favorites_yet", "No favorites yet"), tr("dashboard.saved_events_appear", "Save events you like and they will appear here."), `<a class="btn btn-glass btn-sm mt-2" href="/events/list" data-i18n="buttons.browse_events">${tr("buttons.browse_events", "Browse events")}</a>`)}</div>`;
+      : `<div class="col-12">${emptyState("bi-heart", tr("dashboard.no_favorites_yet", "No favorites yet."), tr("dashboard.saved_events_appear", "Browse events and save the ones you love."), `<a class="btn btn-glass btn-sm mt-2" href="/events/list" data-i18n="buttons.browse_events">${tr("buttons.browse_events", "Browse events")}</a>`)}</div>`;
     if (pager) pager.innerHTML = pagination(state.favoriteMeta, "data-favorite-page");
   }
 
@@ -756,8 +756,11 @@
         .join("") ||
       emptyState(
         "bi-bell",
-        "No notifications",
-        "Order confirmations, event reminders, and system notices will appear here.",
+        tr("notifications.no_notifications", "No notifications yet."),
+        tr(
+          "notifications.empty_copy",
+          "Order confirmations, event reminders, and helpful updates will appear here.",
+        ),
       );
   }
 
@@ -894,7 +897,7 @@
         return result;
       })
       .catch((err) => {
-        window.tkToast?.(err.message || "Failed to load dashboard section", "error");
+        window.tkToast?.(err.message || tr("toast.dashboard_section_load_failed", "Could not load this dashboard section. Please try again."), "error");
         throw err;
       })
       .finally(() => {
@@ -964,10 +967,10 @@
       await auth().refreshUser();
       renderGreeting();
       hydrateProfileForm();
-      window.tkToast?.("Profile updated");
+      window.tkToast?.(tr("toast.profile_updated", "Profile updated."));
     } catch (err) {
-      showProfileError(err.message || "Profile update failed");
-      window.tkToast?.(err.message || "Profile update failed", "error");
+      showProfileError(err.message || tr("toast.profile_update_failed", "Could not update your profile. Please try again."));
+      window.tkToast?.(err.message || tr("toast.profile_update_failed", "Could not update your profile. Please try again."), "error");
     } finally {
       if (button) button.disabled = false;
     }
@@ -1143,7 +1146,7 @@
       </div>
       <h6 class="mt-4" data-i18n="orders.items">${tr("orders.items", "Items")}</h6>
       <div class="table-responsive"><table class="table table-borderless dashboard-table mb-0"><tbody>
-        ${items.map((item) => `<tr><td data-label="${tr("tickets.event", "Event")}">${escape(item.event_title || item.event?.title || tr("events.event", "Event"))}</td><td data-label="${tr("forms.ticket", "Ticket")}">${escape(item.ticket_type_name || item.ticket_type?.name || tr("forms.ticket", "Ticket"))}</td><td data-label="${tr("events.quantity", "Qty")}">x${item.quantity}</td><td data-label="${tr("tickets.ticket_price", "Ticket Price")}">${u().formatMoney(Number(item.unit_price || 0) * Number(item.quantity || 0), order.currency)}</td><td data-label="${tr("checkout.service_fee", "Service Fee")}">${u().formatMoney(item.service_fee, order.currency)}</td><td data-label="${tr("checkout.total", "Total")}">${u().formatMoney(item.total, order.currency)}</td></tr>`).join("") || `<tr><td colspan="6" data-i18n="orders.no_line_items">${tr("orders.no_line_items", "No line items")}</td></tr>`}
+        ${items.map((item) => `<tr><td data-label="${tr("tickets.event", "Event")}">${escape(item.event_title || item.event?.title || tr("events.event", "Event"))}</td><td data-label="${tr("forms.ticket", "Ticket")}">${escape(item.ticket_type_name || item.ticket_type?.name || tr("forms.ticket", "Ticket"))}</td><td data-label="${tr("events.quantity", "Qty")}">x${item.quantity}</td><td data-label="${tr("tickets.ticket_price", "Ticket Price")}">${u().formatMoney(Number(item.unit_price || 0) * Number(item.quantity || 0), order.currency)}</td><td data-label="${tr("checkout.service_fee", "Service Fee")}">${u().formatMoney(item.service_fee, order.currency)}</td><td data-label="${tr("checkout.total", "Total")}">${u().formatMoney(item.total, order.currency)}</td></tr>`).join("") || `<tr><td colspan="6" data-i18n="orders.no_line_items">${tr("orders.no_line_items", "No items are listed for this order yet.")}</td></tr>`}
       </tbody></table></div>
       <h6 class="mt-4" data-i18n="orders.ticket_access">${tr("orders.ticket_access", "Ticket access")}</h6>
       <div class="dashboard-stack">
@@ -1237,7 +1240,7 @@
         try {
           await showTicketDetails(ticketDetails.dataset.ticketDetails);
         } catch (err) {
-          window.tkToast?.(err.message || "Ticket details failed", "error");
+          window.tkToast?.(err.message || tr("toast.ticket_details_failed", "Could not load ticket details. Please try again."), "error");
         }
         return;
       }
@@ -1255,7 +1258,7 @@
         try {
           await showOrderDetails(orderDetails.dataset.orderDetails);
         } catch (err) {
-          window.tkToast?.(err.message || "Order details failed", "error");
+          window.tkToast?.(err.message || tr("toast.order_details_failed", "Could not load order details. Please try again."), "error");
         }
         return;
       }
@@ -1292,7 +1295,7 @@
           renderActivity();
         } catch (err) {
           window.tkToast?.(
-            err.message || tr("toast.favorite_update_failed", "Favorite update failed"),
+            err.message || tr("toast.favorite_update_failed", "Could not update your favorites. Please try again."),
             "error",
           );
         }
@@ -1326,7 +1329,7 @@
     try {
       await loadSection(state.currentSection || "overview");
     } catch (err) {
-      window.tkToast?.(err.message || "Failed to load dashboard", "error");
+      window.tkToast?.(err.message || tr("toast.dashboard_load_failed", "Could not load your dashboard. Please refresh the page."), "error");
     }
   });
 })();

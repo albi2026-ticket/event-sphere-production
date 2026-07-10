@@ -398,7 +398,7 @@
 
   function renderPage(events, meta, grid, pagination) {
     if (!events.length) {
-      grid.innerHTML = `<div class="col-12 text-center text-muted-pro py-5" data-i18n="empty.no_events_found">${window.t?.("empty.no_events_found") || "No events found."}</div>`;
+      grid.innerHTML = `<div class="col-12 text-center text-muted-pro py-5"><strong class="d-block" data-i18n="empty.no_events_found">${window.t?.("empty.no_events_found") || "No events match your search yet."}</strong><span data-i18n="empty.try_different_search">${window.t?.("empty.try_different_search") || "Try a different date, city, or category."}</span></div>`;
     } else {
       grid.innerHTML = renderEvents(events);
     }
