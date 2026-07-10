@@ -26,7 +26,7 @@ class ReservationController extends Controller
         $user = $request->user();
         $reservation = app(ReservationCreationService::class)->create($user, $request->validated());
 
-        $reservation = $reservation->fresh(['venue.owner', 'user']);
+        $reservation = $reservation->fresh(['venue.images', 'venue.owner', 'user']);
         $venue = $reservation->venue;
 
         Mail::to($user->email, $reservation->guest_name)

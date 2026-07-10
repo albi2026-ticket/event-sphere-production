@@ -46,10 +46,10 @@ class OrderEmailService
 
         $order = $order->fresh([
             'user',
-            'items.event',
+            'items.event.images',
             'items.ticketType',
             'tickets' => fn ($query) => $query->orderBy('order_item_id')->orderBy('id'),
-            'tickets.event',
+            'tickets.event.images',
             'tickets.ticketType',
         ]);
 
@@ -78,7 +78,7 @@ class OrderEmailService
 
     protected function sendOrganizerTicketSaleEmails(Order $order): void
     {
-        $order->loadMissing(['items.event.organizer', 'items.ticketType']);
+        $order->loadMissing(['items.event.organizer', 'items.event.images', 'items.ticketType']);
 
         $order->items
             ->filter(fn (OrderItem $item): bool => $item->event?->organizer?->email !== null)

@@ -97,7 +97,7 @@ class OwnerReservationController extends Controller
         $this->ensureVerifiedOwner($request);
         $this->authorizeOwner($request, $reservation);
 
-        return new ReservationResource($reservation->load(['venue', 'user']));
+        return new ReservationResource($reservation->load(['venue.images', 'user']));
     }
 
     public function confirm(Request $request, Reservation $reservation): ReservationResource
@@ -107,7 +107,7 @@ class OwnerReservationController extends Controller
         $this->ensureTransition($reservation, [Reservation::STATUS_PENDING], __('validation.custom.only_pending_confirmed'));
 
         $reservation->update(['status' => Reservation::STATUS_CONFIRMED]);
-        $reservation = $reservation->fresh(['venue', 'user']);
+        $reservation = $reservation->fresh(['venue.images', 'user']);
 
         Mail::to($reservation->user->email, $reservation->guest_name)
             ->locale($reservation->user->preferred_language ?: 'en')
@@ -140,7 +140,7 @@ class OwnerReservationController extends Controller
             'owner_cancellation_reason' => $payload['owner_cancellation_reason'],
             'cancelled_at' => now(),
         ]);
-        $reservation = $reservation->fresh(['venue', 'user']);
+        $reservation = $reservation->fresh(['venue.images', 'user']);
 
         Mail::to($reservation->user->email, $reservation->guest_name)
             ->locale($reservation->user->preferred_language ?: 'en')
@@ -169,7 +169,7 @@ class OwnerReservationController extends Controller
         $this->ensureTransition($reservation, [Reservation::STATUS_CONFIRMED], __('validation.custom.only_confirmed_completed'));
 
         $reservation->update(['status' => Reservation::STATUS_COMPLETED]);
-        $reservation = $reservation->fresh(['venue', 'user']);
+        $reservation = $reservation->fresh(['venue.images', 'user']);
 
         Mail::to($reservation->user->email, $reservation->guest_name)
             ->locale($reservation->user->preferred_language ?: 'en')
@@ -195,7 +195,7 @@ class OwnerReservationController extends Controller
         $this->ensureTransition($reservation, [Reservation::STATUS_CONFIRMED], __('validation.custom.only_confirmed_no_show'));
 
         $reservation->update(['status' => Reservation::STATUS_NO_SHOW]);
-        $reservation = $reservation->fresh(['venue', 'user']);
+        $reservation = $reservation->fresh(['venue.images', 'user']);
 
         Mail::to($reservation->user->email, $reservation->guest_name)
             ->locale($reservation->user->preferred_language ?: 'en')

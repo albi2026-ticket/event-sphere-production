@@ -45,7 +45,7 @@ class EventCancellationNotificationService
             ];
         }
 
-        $event = $event->fresh(['organizer']);
+        $event = $event->fresh(['organizer', 'images']);
         $orders = $this->paidOrders($event);
         $eventItems = $orders->flatMap(fn (Order $order) => $order->items);
         $ticketsSold = (int) $eventItems->sum('quantity');
