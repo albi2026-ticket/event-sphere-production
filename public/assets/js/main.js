@@ -1,4 +1,4 @@
-/* TicketHub — shared frontend logic */
+/* Tiketa — shared frontend logic */
 (function () {
   "use strict";
   document.documentElement.classList.add("micro-interactions-ready");

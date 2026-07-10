@@ -1,6 +1,8 @@
 (function () {
   "use strict";
 
+  const tr = (key, fallback) => window.t?.(key) || fallback;
+
   function resetLinkData() {
     const rawSearch = String(location.search || "").replace(/&amp;/g, "&");
     const params = new URLSearchParams(rawSearch);
@@ -25,7 +27,7 @@
 
     if (!reset.token || !reset.email) {
       error.textContent =
-        "This reset link is missing required information. Please request a new password reset link.";
+        tr("auth.reset_link_invalid", "This reset link is not valid. Please request a new password reset link.");
       error.classList.remove("d-none");
       form.querySelector('button[type="submit"]').disabled = true;
     }
@@ -44,13 +46,13 @@
       };
 
       if (payload.password !== payload.password_confirmation) {
-        error.textContent = "Passwords do not match.";
+        error.textContent = tr("auth.passwords_do_not_match", "Passwords do not match.");
         error.classList.remove("d-none");
         if (btn) btn.disabled = false;
         return;
       }
       if (payload.password.length < 8) {
-        error.textContent = "Password is too short.";
+        error.textContent = tr("auth.password_too_short", "Password must contain at least 8 characters.");
         error.classList.remove("d-none");
         if (btn) btn.disabled = false;
         return;
@@ -60,16 +62,16 @@
         await window.EventSphereAuth.resetPassword(payload);
         window.EventSphereNotifications?.add({
           type: "system",
-          title: "Password Changed",
-          message: "Your password was updated successfully.",
+          title: tr("auth.password_changed_title", "Password changed"),
+          message: tr("auth.password_updated", "Your password was updated successfully."),
         });
-        window.tkToast?.("Your password has been updated successfully.", "success");
+        window.tkToast?.(tr("auth.password_updated", "Your password was updated successfully."), "success");
         window.setTimeout(() => {
           location.href = "/login?reset=1";
         }, 700);
       } catch (err) {
         error.textContent =
-          err.message || "Unable to reset password. Please request a new reset link.";
+          err.message || tr("auth.reset_failed", "We couldn't reset your password. Please request a new reset link.");
         error.classList.remove("d-none");
         window.tkToast?.(error.textContent, "error");
         if (btn) btn.disabled = false;

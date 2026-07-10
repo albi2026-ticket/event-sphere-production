@@ -1372,8 +1372,8 @@
         const response = await window.EventSphereAuth?.resendVerificationEmail?.();
         window.tkToast?.(
           response?.status === "already-verified"
-            ? "Email already verified"
-            : "Verification email sent. Please check your inbox.",
+            ? tr("auth.email_already_verified", "Your email is already verified.")
+            : tr("auth.verification_sent", "Verification email sent. Please check your inbox."),
           "info",
         );
         await window.EventSphereAuth?.refreshUser?.();
@@ -1381,7 +1381,10 @@
           bootstrap.Modal.getOrCreateInstance($("#reservationVerifyEmailModal")).hide();
         }
       } catch (err) {
-        window.tkToast?.(err?.message || "Verification email failed", "error");
+        window.tkToast?.(
+          err?.message || tr("auth.verification_failed", "We couldn't send the verification email. Please try again."),
+          "error",
+        );
       } finally {
         button.disabled = false;
         button.innerHTML = original;

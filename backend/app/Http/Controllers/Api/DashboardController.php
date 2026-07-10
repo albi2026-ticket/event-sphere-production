@@ -70,7 +70,7 @@ class DashboardController extends Controller
 
         return [
             'scope' => 'platform',
-            'message' => 'Admin dashboard API access granted.',
+            'message' => __('validation.custom.admin_dashboard_ready'),
             'checkout_reservations' => [
                 'active' => (int) ($checkoutReservationStats[CheckoutReservation::STATUS_ACTIVE] ?? 0),
                 'expired' => (int) ($checkoutReservationStats[CheckoutReservation::STATUS_EXPIRED] ?? 0),

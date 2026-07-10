@@ -14,7 +14,7 @@ class EnsureUserHasRole
         $user = $request->user();
 
         if (! $user || $user->status !== User::STATUS_ACTIVE) {
-            abort(403, 'This account is not allowed to access this resource.');
+            abort(403, __('validation.custom.forbidden'));
         }
 
         if ($user->isAdmin()) {
@@ -22,13 +22,13 @@ class EnsureUserHasRole
         }
 
         if (! in_array($user->role, $roles, true)) {
-            abort(403, 'Your account role is not allowed to access this resource.');
+            abort(403, __('validation.custom.forbidden'));
         }
 
         if (in_array(User::ROLE_ORGANIZER, $roles, true)
             && $user->role === User::ROLE_ORGANIZER
             && ! $user->isOrganizer()) {
-            abort(403, 'Organizer access requires admin approval.');
+            abort(403, __('validation.custom.organizer_pending_approval'));
         }
 
         return $next($request);

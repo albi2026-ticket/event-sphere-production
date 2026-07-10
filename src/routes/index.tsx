@@ -4,7 +4,7 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "TicketHub — Premium Ticket Marketplace" },
+      { title: "Tiketa — Premium Ticket Marketplace" },
       {
         name: "description",
         content:
@@ -90,7 +90,7 @@ function Index() {
             letterSpacing: "-0.02em",
           }}
         >
-          TicketHub —{" "}
+          Tiketa —{" "}
           <span
             style={{
               background: "linear-gradient(135deg,#5B8CFF,#8B5CF6)",

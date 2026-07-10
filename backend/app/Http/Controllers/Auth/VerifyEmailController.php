@@ -19,7 +19,7 @@ class VerifyEmailController extends Controller
         $user = User::query()->findOrFail($id);
 
         if (! hash_equals($hash, sha1($user->getEmailForVerification()))) {
-            abort(403, 'Invalid verification link.');
+            abort(403, __('validation.custom.invalid_verification_link'));
         }
 
         if (! $user->hasVerifiedEmail() && $user->markEmailAsVerified()) {

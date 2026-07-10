@@ -22,6 +22,10 @@
     });
   }
 
+  function tr(key, fallback, replacements = {}) {
+    return window.t?.(key, replacements) || fallback;
+  }
+
   function userFriendlyMessage(payload, status) {
     const original = [
       payload?.message,
@@ -33,39 +37,48 @@
     const fields = flattenErrors(payload?.errors).map((item) => item.field);
 
     if (original.includes("credentials") || original.includes("auth.failed")) {
-      return "Incorrect email or password. Please try again.";
+      return tr(
+        "auth.error_sign_in",
+        "We couldn't sign you in. Please check your email and password and try again.",
+      );
     }
     if (
       original.includes("email has already been taken") ||
       (original.includes("email") && original.includes("already been taken"))
     ) {
-      return "This email is already registered. Please use another email or login.";
+      return tr(
+        "auth.email_already_registered",
+        "This email is already registered. Please sign in or use another email.",
+      );
     }
     if (
       fields.includes("email") &&
       (original.includes("valid email") || original.includes("email field must be a valid"))
     ) {
-      return "Please enter a valid email address.";
+      return tr("auth.email_invalid", "Please enter a valid email address.");
     }
     if (
       fields.includes("password") &&
       (original.includes("confirmation") || original.includes("match"))
     ) {
-      return "Passwords do not match.";
+      return tr("auth.passwords_do_not_match", "Passwords do not match.");
     }
     if (
       fields.includes("password") &&
       (original.includes("at least") || original.includes("min") || original.includes("8"))
     ) {
-      return "Password is too short.";
+      return tr("auth.password_too_short", "Password must contain at least 8 characters.");
     }
     if (status === 422 || payload?.errors) {
-      return "Please check your input and try again.";
+      return tr("auth.check_input", "Please check your details and try again.");
     }
     if (status === 401) {
-      return "Please sign in to continue.";
+      return tr("auth.session_expired", "Your session has expired. Please sign in again.");
     }
-    return payload?.message || `Request failed (${status})`;
+    if (status === 403) {
+      return tr("auth.forbidden", "You don't have permission to view this page.");
+    }
+    return payload?.message || tr("auth.request_failed", "Something went wrong. Please try again.");
   }
 
   async function apiFetch(path, options = {}) {
@@ -127,7 +140,8 @@
       const err = new Error(userFriendlyMessage(payload, response.status));
       err.status = 401;
       err.payload = payload;
-      err.originalMessage = payload?.message || "Unauthorized";
+      err.originalMessage =
+        payload?.message || tr("auth.session_expired", "Your session has expired. Please sign in again.");
       throw err;
     }
 
@@ -164,9 +178,9 @@
       sessionStorage.removeItem(cfg().TOKEN_KEY);
       sessionStorage.removeItem(cfg().USER_KEY);
       location.href = cfg().LOGIN_URL;
-      throw new Error("Unauthorized");
+      throw new Error(tr("auth.session_expired", "Your session has expired. Please sign in again."));
     }
-    if (!response.ok) throw new Error(`Request failed (${response.status})`);
+    if (!response.ok) throw new Error(tr("auth.request_failed", "Something went wrong. Please try again."));
     return response.blob();
   }
 

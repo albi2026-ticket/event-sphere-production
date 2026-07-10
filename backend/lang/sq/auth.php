@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'failed' => 'Emaili ose fjalëkalimi është i pavlefshëm.',
-    'password' => 'Fjalëkalim i pavlefshëm.',
-    'throttle' => 'Shumë kërkesa. Ju lutemi provoni përsëri pas :seconds sekondash.',
+    'failed' => 'Nuk mundëm t\'ju identifikojmë. Kontrolloni emailin dhe fjalëkalimin dhe provoni përsëri.',
+    'password' => 'Ju lutemi kontrolloni fjalëkalimin dhe provoni përsëri.',
+    'throttle' => 'Ka pasur shumë tentativa hyrjeje. Ju lutemi provoni përsëri pas :seconds sekondash.',
 ];

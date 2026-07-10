@@ -3,6 +3,7 @@
 
   const api = () => window.EventSphereApi;
   const cfg = () => window.EventSphereConfig;
+  const tr = (key, fallback, replacements = {}) => window.t?.(key, replacements) || fallback;
 
   function getToken() {
     return sessionStorage.getItem(cfg().TOKEN_KEY);
@@ -63,7 +64,7 @@
   async function login(email, password, deviceName) {
     const { raw } = await api().fetch("/login", {
       method: "POST",
-      body: { email, password, device_name: deviceName || "tickethub-web" },
+      body: { email, password, device_name: deviceName || "tiketa-web" },
       skipAuthRedirect: true,
     });
     setSession(raw.token, raw.user);
@@ -145,7 +146,10 @@
       return null;
     }
     if (roles?.length && !roles.includes(user.role) && user.role !== "admin") {
-      window.tkToast?.("You do not have access to this page.", "error");
+      window.tkToast?.(
+        tr("auth.forbidden", "You don't have permission to view this page."),
+        "error",
+      );
       location.href = roleHome(user.role);
       return null;
     }
@@ -156,7 +160,10 @@
     ) {
       const onOrganizer = location.pathname.includes("organizer");
       if (onOrganizer) {
-        window.tkToast?.("Organizer account pending approval.", "info");
+        window.tkToast?.(
+          tr("auth.organizer_pending", "Your organizer account is waiting for approval."),
+          "info",
+        );
         location.href = "/dashboard";
         return null;
       }
@@ -239,10 +246,10 @@
       banner.className = "email-verify-banner";
       banner.innerHTML = `
         <div class="email-verify-banner-inner">
-          <span><i class="bi bi-shield-exclamation me-2"></i>Please verify your email address to secure your account.</span>
+          <span><i class="bi bi-shield-exclamation me-2"></i><span data-i18n="auth.verify_account_banner">${tr("auth.verify_account_banner", "Please verify your email address to secure your account.")}</span></span>
           <div class="email-verify-actions">
-            <button class="btn btn-primary-grad btn-sm" type="button" data-send-verification-email>Verify Email</button>
-            <button class="btn btn-glass btn-sm" type="button" data-send-verification-email>Resend Verification Email</button>
+            <button class="btn btn-primary-grad btn-sm" type="button" data-send-verification-email data-i18n="auth.verify_email_button">${tr("auth.verify_email_button", "Verify email")}</button>
+            <button class="btn btn-glass btn-sm" type="button" data-send-verification-email data-i18n="auth.resend_verification_email">${tr("auth.resend_verification_email", "Resend verification email")}</button>
           </div>
         </div>
       `;
@@ -258,20 +265,23 @@
           const response = await resendVerificationEmail();
           window.tkToast?.(
             response.status === "already-verified"
-              ? "Email already verified"
-              : "Verification email sent. Check the Laravel log on localhost.",
+              ? tr("auth.email_already_verified", "Your email is already verified.")
+              : tr("auth.verification_sent", "Verification email sent. Please check your inbox."),
             "info",
           );
           if (response.status !== "already-verified") {
             window.EventSphereNotifications?.add({
               type: "system",
-              title: "Verification Email Sent",
-              message: "Check your inbox to finish securing your account.",
+              title: tr("auth.verification_sent_title", "Verification email sent"),
+              message: tr("auth.verification_sent_body", "Check your inbox to finish securing your account."),
             });
           }
           await refreshUser();
         } catch (err) {
-          window.tkToast?.(err.message || "Verification email failed", "error");
+          window.tkToast?.(
+            err.message || tr("auth.verification_failed", "We couldn't send the verification email. Please try again."),
+            "error",
+          );
         } finally {
           button.disabled = false;
         }
@@ -285,7 +295,10 @@
     const shouldShowVerifiedMessage = params.get("verified") === "1";
 
     if (shouldShowVerifiedMessage && !getToken()) {
-      window.tkToast?.("Your email has been verified successfully.", "success");
+      window.tkToast?.(
+        tr("auth.email_verified_success", "Your email has been verified successfully."),
+        "success",
+      );
       return;
     }
 
@@ -296,10 +309,13 @@
       if (shouldShowVerifiedMessage && hasVerifiedEmail(user)) {
         window.EventSphereNotifications?.add({
           type: "system",
-          title: "Email Verified",
-          message: "Your email has been verified successfully.",
+          title: tr("auth.email_verified_title", "Email verified"),
+          message: tr("auth.email_verified_success", "Your email has been verified successfully."),
         });
-        window.tkToast?.("Your email has been verified successfully.", "success");
+        window.tkToast?.(
+          tr("auth.email_verified_success", "Your email has been verified successfully."),
+          "success",
+        );
       }
     } catch {
       clearSession();

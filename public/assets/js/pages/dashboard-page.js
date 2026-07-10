@@ -995,11 +995,17 @@
       button.disabled = true;
       try {
         await auth().resendVerificationEmail();
-        window.tkToast?.("Verification email sent. Check the Laravel log on localhost.", "info");
+        window.tkToast?.(
+          tr("auth.verification_sent", "Verification email sent. Please check your inbox."),
+          "info",
+        );
         state.profile = await auth().refreshUser();
         hydrateProfileForm();
       } catch (err) {
-        window.tkToast?.(err.message || "Verification email failed", "error");
+        window.tkToast?.(
+          err.message || tr("auth.verification_failed", "We couldn't send the verification email. Please try again."),
+          "error",
+        );
       } finally {
         button.disabled = false;
       }
