@@ -25,7 +25,7 @@ class PasswordResetTest extends TestCase
         Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use ($user) {
             $mail = $notification->toMail($user);
 
-            $this->assertSame('Reset your Event Sphere password', $mail->subject);
+            $this->assertSame('Reset your Tiketa password', $mail->subject);
             $this->assertSame([
                 'html' => 'emails.auth.reset-password',
                 'text' => 'emails.auth.reset-password-text',
@@ -42,6 +42,8 @@ class PasswordResetTest extends TestCase
             $this->assertSame('/site/reset-password.html', $parts['path'] ?? null);
             $this->assertSame($notification->token, $query['token'] ?? null);
             $this->assertSame($user->email, $query['email'] ?? null);
+            $this->assertStringContainsString('token=', $resetUrl);
+            $this->assertStringContainsString('email='.rawurlencode($user->email), $resetUrl);
 
             return true;
         });

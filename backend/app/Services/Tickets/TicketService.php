@@ -85,7 +85,7 @@ class TicketService
 
         if (! $ticket) {
             throw ValidationException::withMessages([
-                'ticket' => 'Ticket could not be found.',
+                'ticket' => __('validation.custom.ticket_not_found'),
             ]);
         }
 
@@ -114,18 +114,18 @@ class TicketService
         return [
             'result' => $result,
             'title' => match ($result) {
-                TicketValidationLog::RESULT_VALID => 'VALID TICKET',
-                TicketValidationLog::RESULT_ALREADY_USED => 'TICKET ALREADY USED',
-                default => 'INVALID TICKET',
+                TicketValidationLog::RESULT_VALID => __('validation.custom.ticket_valid'),
+                TicketValidationLog::RESULT_ALREADY_USED => __('validation.custom.already_checked_in'),
+                default => __('validation.custom.invalid_ticket'),
             },
             'is_valid' => $ticket->status === Ticket::STATUS_VALID,
             'can_check_in' => $ticket->status === Ticket::STATUS_VALID,
             'reason' => match ($ticket->status) {
-                Ticket::STATUS_VALID => 'Ticket is valid and ready for check-in.',
-                Ticket::STATUS_CHECKED_IN => 'Ticket has already been checked in.',
-                Ticket::STATUS_CANCELLED => 'Ticket was cancelled.',
-                Ticket::STATUS_REFUNDED => 'Ticket was refunded.',
-                default => 'Ticket is not valid for check-in.',
+                Ticket::STATUS_VALID => __('validation.custom.ticket_ready_check_in'),
+                Ticket::STATUS_CHECKED_IN => __('validation.custom.ticket_already_checked_in'),
+                Ticket::STATUS_CANCELLED => __('validation.custom.ticket_cancelled'),
+                Ticket::STATUS_REFUNDED => __('validation.custom.ticket_refunded'),
+                default => __('validation.custom.ticket_not_valid_check_in'),
             },
             'ticket_status' => $ticket->status,
             'event_status' => $ticket->event?->status,
@@ -167,7 +167,7 @@ class TicketService
             $this->logValidation($locked, $checker, [
                 'result' => TicketValidationLog::RESULT_VALID,
                 'method' => $method ?: 'manual',
-                'message' => 'Ticket checked in successfully.',
+                'message' => __('validation.custom.ticket_checked_in_successfully'),
             ]);
 
             return $locked->fresh(['user', 'event.organizer', 'ticketType', 'order.user']);
@@ -193,24 +193,24 @@ class TicketService
             'published' => null,
             'cancelled' => [
                 'result' => TicketValidationLog::RESULT_INVALID,
-                'title' => 'EVENT CANCELLED',
+                'title' => __('validation.custom.event_cancelled_title'),
                 'is_valid' => false,
                 'can_check_in' => false,
-                'reason' => 'Event cancelled.',
+                'reason' => __('validation.custom.event_cancelled_reason'),
             ],
             'completed', 'ended' => [
                 'result' => TicketValidationLog::RESULT_INVALID,
-                'title' => 'INVALID EVENT',
+                'title' => __('validation.custom.invalid_event_title'),
                 'is_valid' => false,
                 'can_check_in' => false,
-                'reason' => 'Event has ended.',
+                'reason' => __('validation.custom.event_ended_reason'),
             ],
             default => [
                 'result' => TicketValidationLog::RESULT_INVALID,
-                'title' => 'EVENT NOT PUBLISHED',
+                'title' => __('validation.custom.event_not_published_title'),
                 'is_valid' => false,
                 'can_check_in' => false,
-                'reason' => 'Event is not published.',
+                'reason' => __('validation.custom.event_not_published_reason'),
             ],
         };
     }
@@ -270,7 +270,7 @@ class TicketService
 
         return '<!doctype html><html><head><meta charset="utf-8"><title>Ticket '.$ticket->ticket_code.'</title></head><body style="font-family:Arial,sans-serif;margin:32px;color:#111827;">'
             .'<main style="max-width:720px;margin:0 auto;border:1px solid #d1d5db;padding:28px;border-radius:8px;">'
-            .'<p style="text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin:0 0 8px;">Event Sphere Digital Ticket</p>'
+            .'<p style="text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin:0 0 8px;">Tiketa Digital Ticket</p>'
             .'<h1 style="margin:0 0 8px;font-size:28px;">'.e($ticket->event->title).'</h1>'
             .'<p style="margin:0 0 20px;color:#374151;">'.e($ticket->event->venue_name).' · '.e($ticket->event->city).'</p>'
             .'<img src="'.$qr.'" alt="Ticket QR code" style="width:280px;height:280px;display:block;margin:0 0 20px;">'
@@ -291,6 +291,7 @@ class TicketService
     public function logValidation(?Ticket $ticket, ?User $scanner, array $context = []): TicketValidationLog
     {
         $token = $context['token'] ?? $ticket?->qr_token;
+        $ticketUuid = $context['ticket_uuid'] ?? $ticket?->ticket_uuid;
 
         return TicketValidationLog::query()->create([
             'event_id' => $context['event_id'] ?? $ticket?->event_id,
@@ -302,7 +303,7 @@ class TicketService
             'attendee_name' => $context['attendee_name'] ?? $ticket?->attendee_name ?? $ticket?->user?->name,
             'attendee_email' => $context['attendee_email'] ?? $ticket?->attendee_email ?? $ticket?->user?->email,
             'ticket_code' => $context['ticket_code'] ?? $ticket?->ticket_code,
-            'ticket_uuid' => $context['ticket_uuid'] ?? $ticket?->ticket_uuid,
+            'ticket_uuid' => $this->maskQrIdentifier($ticketUuid),
             'token_hash' => $token ? hash('sha256', (string) $token) : null,
             'ip_address' => $context['ip_address'] ?? null,
             'user_agent' => $context['user_agent'] ?? null,
@@ -326,5 +327,20 @@ class TicketService
         } while (Ticket::query()->where('qr_token', $token)->exists());
 
         return $token;
+    }
+
+    public function maskQrIdentifier(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = (string) $value;
+
+        if (strlen($value) <= 10) {
+            return str_repeat('*', strlen($value));
+        }
+
+        return substr($value, 0, 6).'...'.substr($value, -4);
     }
 }

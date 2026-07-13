@@ -53,6 +53,14 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        if ($user->status !== User::STATUS_ACTIVE) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => __('validation.custom.account_suspended'),
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

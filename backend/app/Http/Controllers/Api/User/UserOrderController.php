@@ -45,7 +45,7 @@ class UserOrderController extends Controller
 
         $html = '<!doctype html><html><head><meta charset="utf-8"><title>Receipt '.$order->order_number.'</title></head><body style="font-family:Arial,sans-serif;margin:32px;color:#111827;">'
             .'<main style="max-width:760px;margin:0 auto;border:1px solid #d1d5db;padding:28px;border-radius:8px;">'
-            .'<p style="text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin:0 0 8px;">Event Sphere Receipt</p>'
+            .'<p style="text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin:0 0 8px;">Tiketa Receipt</p>'
             .'<h1 style="margin:0 0 12px;font-size:28px;">Order '.e($order->order_number).'</h1>'
             .'<p><strong>Payment:</strong> '.e($order->payment_status).' · <strong>Status:</strong> '.e($order->status).'</p>'
             .'<p><strong>Customer:</strong> '.e($order->billing_first_name).' '.e($order->billing_last_name).' · '.e($order->billing_email).'</p>'

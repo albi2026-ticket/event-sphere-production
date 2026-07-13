@@ -26,7 +26,7 @@ class EventCancelledUserMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Event Cancelled - {$this->event->title}",
+            subject: __('emails.event_cancelled').' - '.$this->event->title,
         );
     }
 

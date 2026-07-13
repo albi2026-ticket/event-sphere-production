@@ -261,7 +261,7 @@ class CheckoutReservationTest extends TestCase
             'title' => 'Checkout Hold Event',
             'slug' => 'checkout-hold-event-'.strtolower(fake()->bothify('????-####')),
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'status' => 'published',

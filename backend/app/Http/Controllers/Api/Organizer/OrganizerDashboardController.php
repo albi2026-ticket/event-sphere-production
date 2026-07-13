@@ -64,16 +64,17 @@ class OrganizerDashboardController extends Controller
     public function eventAnalytics(OrganizerDashboardRequest $request, Event $event): JsonResponse
     {
         $filters = array_merge($request->validated(), ['event_id' => $event->id]);
-        $performance = $this->dashboard->eventPerformance($request->user(), $filters)->first();
+        $eventPerformance = $this->dashboard->eventPerformance($request->user(), $filters);
+        $performance = $eventPerformance->first();
 
         return response()->json([
             'data' => [
-                'summary' => $this->dashboard->summary($request->user(), $filters)['cards'],
+                'summary' => $this->dashboard->summaryCards($request->user(), $filters),
                 'performance' => $performance ? new EventPerformanceResource($performance) : null,
                 'revenue' => $this->dashboard->revenueByEvent($request->user(), $filters)->first(),
                 'sales_trends' => $this->dashboard->salesTrends($request->user(), $filters),
                 'inventory' => $this->dashboard->inventorySummary($request->user(), $filters),
-                'conversion_metrics' => $this->dashboard->conversionMetrics($request->user(), $filters)->first(),
+                'conversion_metrics' => $this->dashboard->conversionMetricsFromPerformance($eventPerformance)->first(),
             ],
         ]);
     }

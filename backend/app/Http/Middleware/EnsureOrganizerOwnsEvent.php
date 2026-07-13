@@ -14,7 +14,7 @@ class EnsureOrganizerOwnsEvent
         $event = $request->route('event');
 
         if ($event instanceof Event) {
-            abort_unless($request->user()?->canManageEvent($event), 403, 'You can only access your own event data.');
+            abort_unless($request->user()?->canManageEvent($event), 403, __('validation.custom.forbidden'));
         }
 
         return $next($request);

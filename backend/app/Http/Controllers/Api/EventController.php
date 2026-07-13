@@ -11,6 +11,7 @@ use App\Models\CheckoutReservation;
 use App\Models\Event;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Cache;
 
 class EventController extends Controller
 {
@@ -18,6 +19,8 @@ class EventController extends Controller
 
     public function index(EventIndexRequest $request): AnonymousResourceCollection
     {
+        $sort = $request->validated()['sort'] ?? 'soonest';
+
         $query = Event::query()
             ->select([
                 'events.id',
@@ -36,13 +39,17 @@ class EventController extends Controller
                 'events.currency',
                 'events.views_count',
             ])
-            ->with(['images:id,event_id,disk,path,url,is_primary,sort_order'])
+            ->with(['images:id,event_id,disk,path,url,type,is_primary,is_banner,sort_order'])
             ->withMin([
                 'ticketTypes as minimum_price' => fn (Builder $query) => $query->where('status', 'active'),
             ], 'price')
-            ->withCount('favorites')
-            ->withDiscoveryMetrics()
             ->publicDiscovery();
+
+        if ($sort === 'trending') {
+            $query
+                ->withCount('favorites')
+                ->withDiscoveryMetrics();
+        }
 
         $this->applyEventFilters($query, $request);
 
@@ -57,7 +64,11 @@ class EventController extends Controller
 
         return new EventDetailResource($event->load([
             'organizer:id,name,role',
-            'images',
+            'images' => fn ($query) => $query
+                ->orderByDesc('is_primary')
+                ->orderByDesc('is_banner')
+                ->orderBy('sort_order')
+                ->orderBy('id'),
             'ticketTypes' => fn ($query) => $query
                 ->whereIn('status', ['active', 'sold_out'])
                 ->withSum([
@@ -73,7 +84,21 @@ class EventController extends Controller
     {
         abort_unless($event->status === 'published' && $event->visibility === 'public', 404);
 
-        $query = Event::query()
+        $cacheKey = "events.related.{$event->id}.{$event->updated_at?->timestamp}";
+
+        $eventIds = Cache::remember($cacheKey, now()->addSeconds(60), fn () => Event::query()
+            ->select([
+                'events.id',
+            ])
+            ->whereKeyNot($event->id)
+            ->where('events.category', $event->category)
+            ->publicDiscovery()
+            ->orderBy('events.starts_at')
+            ->limit(6)
+            ->pluck('events.id')
+            ->all());
+
+        $events = Event::query()
             ->select([
                 'events.id',
                 'events.title',
@@ -91,18 +116,15 @@ class EventController extends Controller
                 'events.currency',
                 'events.views_count',
             ])
-            ->whereKeyNot($event->id)
-            ->where('events.category', $event->category)
-            ->with(['images:id,event_id,disk,path,url,is_primary,sort_order'])
+            ->whereKey($eventIds)
+            ->with(['images:id,event_id,disk,path,url,type,is_primary,is_banner,sort_order'])
             ->withMin([
                 'ticketTypes as minimum_price' => fn (Builder $query) => $query->where('status', 'active'),
             ], 'price')
-            ->withCount('favorites')
-            ->withDiscoveryMetrics()
             ->publicDiscovery()
             ->orderBy('events.starts_at')
-            ->limit(6);
+            ->get();
 
-        return EventListingResource::collection($query->get());
+        return EventListingResource::collection($events);
     }
 }

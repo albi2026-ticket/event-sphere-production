@@ -33,7 +33,7 @@ class EmailVerificationTest extends TestCase
 
         Event::assertDispatched(Verified::class);
         $this->assertTrue($user->fresh()->hasVerifiedEmail());
-        $response->assertRedirect(rtrim((string) config('services.frontend.url'), '/').'/site/dashboard.html?verified=1');
+        $response->assertRedirect(rtrim((string) config('services.frontend.url'), '/').'/site/welcome.html?verified=1');
     }
 
     public function test_email_is_not_verified_with_invalid_hash(): void
@@ -73,9 +73,13 @@ class EmailVerificationTest extends TestCase
         Notification::assertSentTo($user, EventSphereVerifyEmail::class, function (EventSphereVerifyEmail $notification) use ($user) {
             $mail = $notification->toMail($user);
             $verificationUrl = $mail->viewData['verificationUrl'];
+            $textBody = view($mail->view[1], $mail->viewData)->render();
 
             $this->assertStringStartsWith(rtrim((string) config('app.url'), '/').'/verify-email/', $verificationUrl);
             $this->assertStringContainsString('signature=', $verificationUrl);
+            $this->assertStringContainsString($verificationUrl, $textBody);
+            $this->assertStringContainsString('&signature=', $textBody);
+            $this->assertStringNotContainsString('&amp;signature=', $textBody);
 
             return true;
         });

@@ -1,11 +1,11 @@
 (function () {
-  'use strict';
+  "use strict";
 
   const cfg = () => window.EventSphereConfig;
 
   function getCart() {
     try {
-      return JSON.parse(sessionStorage.getItem(cfg().CART_KEY) || 'null') || null;
+      return JSON.parse(sessionStorage.getItem(cfg().CART_KEY) || "null") || null;
     } catch {
       return null;
     }
@@ -17,18 +17,23 @@
   }
 
   function setFromEvent(event, ticketTypeId, quantity) {
-    const tt = event.ticket_types?.find((t) => t.id === ticketTypeId) ||
+    const tt =
+      event.ticket_types?.find((t) => t.id === ticketTypeId) ||
       event.ticketTypes?.find((t) => t.id === ticketTypeId);
-    if (!tt) throw new Error('Ticket type not found');
+    if (!tt) throw new Error("We couldn’t find that ticket type. Refresh the event and choose a ticket again.");
     const maxTicketsPerUser = Number(event.max_tickets_per_user || 0);
     if (maxTicketsPerUser > 0 && quantity > maxTicketsPerUser) {
-      throw new Error(`This event has a limit of ${maxTicketsPerUser} ticket${maxTicketsPerUser === 1 ? '' : 's'} per user.`);
+      throw new Error(
+        `This event has a limit of ${maxTicketsPerUser} ticket${maxTicketsPerUser === 1 ? "" : "s"} per user.`,
+      );
     }
 
     setCart({
       event_slug: event.slug,
       event_id: event.id,
-      source_url: `event-details.html?slug=${encodeURIComponent(event.slug)}`,
+      source_url:
+        window.EventSphereRoutes?.eventUrl?.(event.slug) ||
+        `/event/${encodeURIComponent(event.slug)}`,
       event_title: event.title,
       event_image: window.EventSphereUtils.eventImage(event),
       venue_name: event.venue_name,

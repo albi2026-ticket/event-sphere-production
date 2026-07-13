@@ -23,11 +23,12 @@ class UpdateEventImageRequest extends FormRequest
     {
         return [
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120'],
-            'url' => ['nullable', 'url', 'max:2048'],
+            'url' => ['prohibited'],
             'alt_text' => ['nullable', 'string', 'max:255'],
             'type' => ['sometimes', Rule::in(['banner', 'card', 'gallery', 'thumbnail'])],
             'sort_order' => ['sometimes', 'integer', 'min:0'],
             'is_primary' => ['sometimes', 'boolean'],
+            'is_banner' => ['sometimes', 'boolean'],
         ];
     }
 }

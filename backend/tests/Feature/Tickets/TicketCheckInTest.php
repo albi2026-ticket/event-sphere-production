@@ -86,6 +86,12 @@ class TicketCheckInTest extends TestCase
             'event_id' => $ticket->event_id,
             'scanned_by' => $organizer->id,
             'result' => TicketValidationLog::RESULT_VALID,
+            'ticket_uuid' => $this->maskQrIdentifier($ticket->ticket_uuid),
+            'token_hash' => hash('sha256', $ticket->qr_token),
+        ]);
+        $this->assertDatabaseMissing('ticket_validation_logs', [
+            'ticket_id' => $ticket->id,
+            'ticket_uuid' => $ticket->ticket_uuid,
         ]);
         $this->assertDatabaseHas('ticket_validation_logs', [
             'ticket_id' => $ticket->id,
@@ -215,11 +221,13 @@ class TicketCheckInTest extends TestCase
     public function test_invalid_qr_scan_returns_invalid_result_and_creates_log(): void
     {
         [, $organizer, $event] = $this->createOrder(quantity: 1);
+        $invalidToken = 'not-a-real-token';
+        $invalidUuid = (string) Str::uuid();
 
         $this->actingAs($organizer, 'sanctum')
             ->postJson('/api/organizer/tickets/validate', [
-                'token' => 'not-a-real-token',
-                'ticket_uuid' => (string) Str::uuid(),
+                'token' => $invalidToken,
+                'ticket_uuid' => $invalidUuid,
                 'event_id' => $event->id,
                 'method' => 'mobile_scanner',
             ])
@@ -233,7 +241,141 @@ class TicketCheckInTest extends TestCase
             'scanned_by' => $organizer->id,
             'result' => TicketValidationLog::RESULT_INVALID,
             'method' => 'mobile_scanner',
+            'ticket_uuid' => $this->maskQrIdentifier($invalidUuid),
+            'token_hash' => hash('sha256', $invalidToken),
         ]);
+        $this->assertDatabaseMissing('ticket_validation_logs', [
+            'ticket_uuid' => $invalidUuid,
+        ]);
+    }
+
+    public function test_assigned_scanner_can_view_dashboard_validate_and_check_in_ticket(): void
+    {
+        [, , $event, , $order] = $this->createOrder(quantity: 1);
+        [, , $secondEvent] = $this->createOrder(quantity: 1);
+        $ticket = app(TicketService::class)->generateForPaidOrder($order)[0];
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+        $scanner = User::factory()->create([
+            'role' => User::ROLE_SCANNER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/admin/events/{$event->id}/scanners", ['scanner_id' => $scanner->id])
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $scanner->id);
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/admin/events/{$secondEvent->id}/scanners", ['scanner_id' => $scanner->id])
+            ->assertOk();
+
+        $this->assertDatabaseHas('scanner_event', [
+            'scanner_id' => $scanner->id,
+            'event_id' => $event->id,
+        ]);
+        $this->assertDatabaseHas('scanner_event', [
+            'scanner_id' => $scanner->id,
+            'event_id' => $secondEvent->id,
+        ]);
+
+        $payload = [
+            'token' => $ticket->qr_token,
+            'ticket_uuid' => $ticket->ticket_uuid,
+            'event_id' => $event->id,
+            'method' => 'qr',
+        ];
+
+        $this->actingAs($scanner, 'sanctum')
+            ->getJson('/api/scanner/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.assigned_event', null)
+            ->assertJsonCount(2, 'data.assigned_events')
+            ->assertJsonPath('data.total_scanned_today', 0);
+
+        $this->actingAs($scanner, 'sanctum')
+            ->getJson('/api/scanner/events')
+            ->assertOk()
+            ->assertJsonCount(2, 'data');
+
+        $this->actingAs($scanner, 'sanctum')
+            ->postJson('/api/scanner/tickets/validate', array_merge($payload, ['event_id' => $secondEvent->id]))
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'This ticket belongs to another event.');
+
+        $this->actingAs($scanner, 'sanctum')
+            ->postJson('/api/scanner/tickets/validate', $payload)
+            ->assertOk()
+            ->assertJsonPath('data.validation.title', 'Ticket Valid')
+            ->assertJsonPath('data.validation.result', TicketValidationLog::RESULT_VALID)
+            ->assertJsonPath('data.validation.can_check_in', true);
+
+        $this->actingAs($scanner, 'sanctum')
+            ->postJson('/api/scanner/tickets/check-in', $payload)
+            ->assertOk()
+            ->assertJsonPath('data.validation.title', 'Already Checked In')
+            ->assertJsonPath('data.ticket.status', Ticket::STATUS_CHECKED_IN)
+            ->assertJsonPath('data.ticket.scanner_id', $scanner->id)
+            ->assertJsonPath('data.ticket.device', 'qr');
+
+        $ticket->refresh();
+        $this->assertSame($scanner->id, $ticket->checked_in_by);
+        $this->assertNotNull($ticket->checked_in_at);
+        $this->assertSame('qr', $ticket->checked_in_method);
+        $this->assertDatabaseHas('ticket_validation_logs', [
+            'ticket_id' => $ticket->id,
+            'event_id' => $event->id,
+            'scanned_by' => $scanner->id,
+            'result' => TicketValidationLog::RESULT_VALID,
+            'ticket_uuid' => $this->maskQrIdentifier($ticket->ticket_uuid),
+            'token_hash' => hash('sha256', $ticket->qr_token),
+        ]);
+    }
+
+    public function test_scanner_cannot_scan_unassigned_events_or_access_management_dashboards(): void
+    {
+        [, , $event, , $order] = $this->createOrder(quantity: 1);
+        $ticket = app(TicketService::class)->generateForPaidOrder($order)[0];
+        $scanner = User::factory()->create([
+            'role' => User::ROLE_SCANNER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $payload = [
+            'token' => $ticket->qr_token,
+            'ticket_uuid' => $ticket->ticket_uuid,
+            'event_id' => $event->id,
+            'method' => 'qr',
+        ];
+
+        $this->actingAs($scanner, 'sanctum')
+            ->postJson('/api/scanner/tickets/validate', $payload)
+            ->assertForbidden()
+            ->assertJsonPath('message', 'This ticket belongs to another event.');
+
+        $this->assertDatabaseHas('ticket_validation_logs', [
+            'ticket_id' => $ticket->id,
+            'event_id' => $event->id,
+            'scanned_by' => $scanner->id,
+            'result' => TicketValidationLog::RESULT_INVALID,
+            'message' => 'This ticket belongs to another event.',
+            'ticket_uuid' => $this->maskQrIdentifier($ticket->ticket_uuid),
+            'token_hash' => hash('sha256', $ticket->qr_token),
+        ]);
+
+        $this->actingAs($scanner, 'sanctum')
+            ->getJson('/api/organizer/dashboard')
+            ->assertForbidden();
+
+        $this->actingAs($scanner, 'sanctum')
+            ->getJson('/api/owner/venues')
+            ->assertForbidden();
+
+        $this->actingAs($scanner, 'sanctum')
+            ->getJson('/api/admin/dashboard')
+            ->assertForbidden();
     }
 
     /**
@@ -257,7 +399,7 @@ class TicketCheckInTest extends TestCase
             'title' => 'QR Validation Event',
             'slug' => 'qr-validation-event-'.Str::random(6),
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addWeek(),
             'status' => 'published',
@@ -310,5 +452,14 @@ class TicketCheckInTest extends TestCase
         ]);
 
         return [$user, $organizer, $event, $ticketType, $order];
+    }
+
+    private function maskQrIdentifier(string $value): string
+    {
+        if (strlen($value) <= 10) {
+            return str_repeat('*', strlen($value));
+        }
+
+        return substr($value, 0, 6).'...'.substr($value, -4);
     }
 }

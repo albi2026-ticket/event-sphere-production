@@ -15,7 +15,7 @@ class UserRoleController extends Controller
     public function update(Request $request, User $user): JsonResponse
     {
         $validated = $request->validate([
-            'role' => ['required', Rule::in([User::ROLE_USER, User::ROLE_ORGANIZER, User::ROLE_ADMIN])],
+            'role' => ['required', Rule::in([User::ROLE_USER, User::ROLE_ORGANIZER, User::ROLE_OWNER, User::ROLE_SCANNER, User::ROLE_ADMIN])],
             'status' => ['sometimes', Rule::in([User::STATUS_ACTIVE, User::STATUS_SUSPENDED, User::STATUS_BANNED])],
         ]);
 

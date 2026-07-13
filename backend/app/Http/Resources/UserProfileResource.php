@@ -22,6 +22,7 @@ class UserProfileResource extends JsonResource
             'phone' => $this->phone,
             'avatar_url' => $this->avatar_url,
             'default_city' => $this->default_city,
+            'preferred_language' => $this->preferred_language ?: 'en',
             'status' => $this->status,
             'organizer_status' => $this->organizer_status,
             'organizer_approved_at' => $this->organizer_approved_at,

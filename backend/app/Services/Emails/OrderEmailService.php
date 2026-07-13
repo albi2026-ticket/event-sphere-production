@@ -3,7 +3,10 @@
 namespace App\Services\Emails;
 
 use App\Mail\OrderConfirmationMail;
+use App\Mail\OrganizerTicketSaleMail;
+use App\Models\Event;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Support\AppUrls;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Log;
@@ -43,16 +46,18 @@ class OrderEmailService
 
         $order = $order->fresh([
             'user',
-            'items.event',
+            'items.event.images',
             'items.ticketType',
             'tickets' => fn ($query) => $query->orderBy('order_item_id')->orderBy('id'),
-            'tickets.event',
+            'tickets.event.images',
             'tickets.ticketType',
         ]);
 
         try {
             Mail::to($order->billing_email, $this->purchaserName($order))
+                ->locale($order->user?->preferred_language ?: 'en')
                 ->send(new OrderConfirmationMail($order, $this->emailData($order)));
+            $this->sendOrganizerTicketSaleEmails($order);
         } catch (Throwable $exception) {
             Order::query()
                 ->whereKey($order->id)
@@ -71,6 +76,89 @@ class OrderEmailService
         return true;
     }
 
+    protected function sendOrganizerTicketSaleEmails(Order $order): void
+    {
+        $order->loadMissing(['items.event.organizer', 'items.event.images', 'items.ticketType']);
+
+        $order->items
+            ->filter(fn (OrderItem $item): bool => $item->event?->organizer?->email !== null)
+            ->groupBy('event_id')
+            ->each(function ($items) use ($order): void {
+                /** @var OrderItem $first */
+                $first = $items->first();
+                $event = $first->event;
+
+                if (! $event instanceof Event || ! $event->organizer?->email) {
+                    return;
+                }
+
+                try {
+                    Mail::to($event->organizer->email, $event->organizer->name)
+                        ->locale($event->organizer->preferred_language ?: 'en')
+                        ->send(new OrganizerTicketSaleMail($event, $order, $this->organizerSaleEmailData($order, $event, $items)));
+                } catch (Throwable $exception) {
+                    Log::warning('Organizer ticket sale email failed.', [
+                        'order_id' => $order->id,
+                        'order_number' => $order->order_number,
+                        'event_id' => $event->id,
+                        'organizer_id' => $event->organizer_id,
+                        'exception' => $exception::class,
+                        'message' => $exception->getMessage(),
+                    ]);
+                }
+            });
+    }
+
+    protected function organizerSaleEmailData(Order $order, Event $event, $items): array
+    {
+        $orderTotal = (float) $items->sum(fn (OrderItem $item): float => (float) $item->total);
+        $eventStats = $this->eventSalesStats($event);
+
+        return [
+            'event_name' => $event->title,
+            'event_date' => $event->starts_at
+                ? $event->starts_at->copy()->setTimezone($this->calculationTimezone($event->timezone))->format('M j, Y g:i A T')
+                : 'Date to be announced',
+            'venue' => $this->eventVenueLabel($event),
+            'buyer_name' => $this->purchaserName($order),
+            'buyer_email' => $order->billing_email,
+            'order_id' => $order->order_number,
+            'purchase_date' => $this->dateTimeLabel($order->paid_at ?: $order->created_at),
+            'tickets' => $items->map(fn (OrderItem $item): array => [
+                'name' => $item->ticket_type_name ?: $item->ticketType?->name ?: 'Ticket',
+                'quantity' => $item->quantity,
+                'price' => $this->money($item->unit_price, $order->currency),
+                'subtotal' => $this->money($item->total, $order->currency),
+            ])->values()->all(),
+            'order_total' => $this->money($orderTotal, $order->currency),
+            'tickets_sold' => $eventStats['tickets_sold'],
+            'tickets_remaining' => $eventStats['tickets_remaining'],
+            'gross_revenue' => $this->money($eventStats['gross_revenue'], $order->currency),
+            'currency' => strtoupper($order->currency ?: 'USD'),
+            'view_orders_url' => AppUrls::frontend('/site/organizer.html'),
+            'view_analytics_url' => AppUrls::frontend('/site/organizer.html'),
+        ];
+    }
+
+    /**
+     * @return array{tickets_sold: int, tickets_remaining: int, gross_revenue: float}
+     */
+    protected function eventSalesStats(Event $event): array
+    {
+        $paidItems = OrderItem::query()
+            ->where('event_id', $event->id)
+            ->whereHas('order', fn ($query) => $query->where('payment_status', Order::PAYMENT_STATUS_PAID))
+            ->get();
+
+        $ticketTypes = $event->ticketTypes()->get();
+
+        return [
+            'tickets_sold' => (int) $paidItems->sum('quantity'),
+            'tickets_remaining' => (int) $ticketTypes->sum(fn ($type): int => $type->availableQuantity()),
+            'gross_revenue' => (float) $paidItems->sum(fn (OrderItem $item): float => (float) $item->total),
+        ];
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -79,7 +167,7 @@ class OrderEmailService
         $dashboardUrl = AppUrls::frontend('/site/dashboard.html#tickets');
 
         return [
-            'brand' => 'Event Sphere',
+            'brand' => 'Tiketa',
             'purchaser_name' => $this->purchaserName($order),
             'purchaser_email' => $order->billing_email,
             'purchase_date' => $this->dateTimeLabel($order->paid_at ?: $order->created_at),
@@ -124,7 +212,7 @@ class OrderEmailService
     {
         $name = trim($order->billing_first_name.' '.$order->billing_last_name);
 
-        return $name !== '' ? $name : (string) ($order->user?->name ?: 'Event Sphere customer');
+        return $name !== '' ? $name : (string) ($order->user?->name ?: 'Tiketa customer');
     }
 
     /**
@@ -187,6 +275,18 @@ class OrderEmailService
             $event?->address,
             $event?->city,
             $event?->country,
+        ]);
+
+        return $parts ? implode(', ', $parts) : 'Venue to be announced';
+    }
+
+    protected function eventVenueLabel(Event $event): string
+    {
+        $parts = array_filter([
+            $event->venue_name,
+            $event->address,
+            $event->city,
+            $event->country,
         ]);
 
         return $parts ? implode(', ', $parts) : 'Venue to be announced';

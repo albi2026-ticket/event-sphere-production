@@ -24,6 +24,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call([
+            VenueFacilitySeeder::class,
+            CuisineTypeSeeder::class,
+            PaymentOptionSeeder::class,
+        ]);
+
         DB::transaction(function (): void {
             $password = Hash::make('Password123!');
 
@@ -191,6 +197,7 @@ class DatabaseSeeder extends Seeder
                         'url' => $data['image'],
                         'alt_text' => $data['title'],
                         'is_primary' => true,
+                        'is_banner' => true,
                     ],
                 );
 

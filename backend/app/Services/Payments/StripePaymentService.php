@@ -7,6 +7,7 @@ use App\Models\StripeWebhookEvent;
 use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Services\Emails\OrderEmailService;
+use App\Services\Notifications\NotificationService;
 use App\Services\Orders\OrderService;
 use App\Services\Tickets\TicketInventoryService;
 use App\Services\Tickets\TicketService;
@@ -27,6 +28,7 @@ class StripePaymentService
         private readonly TicketService $tickets,
         private readonly OrderService $orders,
         private readonly OrderEmailService $emails,
+        private readonly NotificationService $notifications,
     ) {}
 
     public function createCheckoutSession(Order $order): Session
@@ -54,7 +56,7 @@ class StripePaymentService
                     'currency' => strtolower($order->currency ?: config('services.stripe.currency', 'USD')),
                     'unit_amount' => $this->decimalToMinorUnits((string) $order->total, (string) $order->currency),
                     'product_data' => [
-                        'name' => "Event Sphere order {$order->order_number}",
+                        'name' => "Tiketa order {$order->order_number}",
                         'description' => $this->checkoutDescription($order),
                     ],
                 ],
@@ -224,6 +226,7 @@ class StripePaymentService
         ])->save();
 
         $this->emails->sendOrderConfirmation($locked);
+        $this->notifications->ticketPurchased($locked);
     }
 
     protected function markCheckoutSessionFailed(mixed $session): void

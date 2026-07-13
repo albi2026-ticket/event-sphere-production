@@ -1,5 +1,5 @@
 (function () {
-  'use strict';
+  "use strict";
 
   const api = () => window.EventSphereApi;
   const auth = () => window.EventSphereAuth;
@@ -11,15 +11,15 @@
   }
 
   async function toggleFavorite(eventId) {
-    const { data } = await api().fetch('/me/favorites/toggle', {
-      method: 'POST',
+    const { data } = await api().fetch("/me/favorites/toggle", {
+      method: "POST",
       body: { event_id: eventId },
     });
     return data;
   }
 
   async function removeFavorite(eventId) {
-    await api().fetch(`/me/favorites/${eventId}`, { method: 'DELETE' });
+    await api().fetch(`/me/favorites/${eventId}`, { method: "DELETE" });
     return { event_id: eventId, is_favorited: false };
   }
 
@@ -29,14 +29,14 @@
   }
 
   function paintFavoriteButton(btn, isFavorited) {
-    btn.classList.toggle('active', !!isFavorited);
-    const icon = btn.querySelector('i');
+    btn.classList.toggle("active", !!isFavorited);
+    const icon = btn.querySelector("i");
     if (icon) {
-      icon.classList.toggle('bi-heart-fill', !!isFavorited);
-      icon.classList.toggle('bi-heart', !isFavorited);
+      icon.classList.toggle("bi-heart-fill", !!isFavorited);
+      icon.classList.toggle("bi-heart", !isFavorited);
     }
-    btn.setAttribute('aria-pressed', isFavorited ? 'true' : 'false');
-    btn.setAttribute('title', isFavorited ? 'Remove from favorites' : 'Save to favorites');
+    btn.setAttribute("aria-pressed", isFavorited ? "true" : "false");
+    btn.setAttribute("title", isFavorited ? "Remove from favorites" : "Save to favorites");
   }
 
   function updateFavoriteButtons(eventId, isFavorited) {
@@ -46,11 +46,13 @@
   }
 
   async function syncFavoriteButtons() {
-    const buttons = Array.from(document.querySelectorAll('[data-event-id][data-fav]'));
+    const buttons = Array.from(document.querySelectorAll("[data-event-id][data-fav]"));
     buttons.forEach((btn) => paintFavoriteButton(btn, false));
     if (!auth().isLoggedIn()) return;
     try {
-      const uniqueIds = [...new Set(buttons.map((btn) => btn.getAttribute('data-event-id')).filter(Boolean))];
+      const uniqueIds = [
+        ...new Set(buttons.map((btn) => btn.getAttribute("data-event-id")).filter(Boolean)),
+      ];
       if (uniqueIds.length === 1) {
         const status = await getFavoriteStatus(uniqueIds[0]);
         updateFavoriteButtons(uniqueIds[0], status?.is_favorited);
@@ -60,7 +62,7 @@
       const favs = await listFavorites();
       const ids = new Set(favs.map((f) => String(f.event_id || f.id)));
       buttons.forEach((btn) => {
-        const id = btn.getAttribute('data-event-id');
+        const id = btn.getAttribute("data-event-id");
         paintFavoriteButton(btn, ids.has(String(id)));
       });
     } catch {
@@ -68,5 +70,12 @@
     }
   }
 
-  window.EventSphereFavorites = { listFavorites, getFavoriteStatus, toggleFavorite, removeFavorite, syncFavoriteButtons, updateFavoriteButtons };
+  window.EventSphereFavorites = {
+    listFavorites,
+    getFavoriteStatus,
+    toggleFavorite,
+    removeFavorite,
+    syncFavoriteButtons,
+    updateFavoriteButtons,
+  };
 })();

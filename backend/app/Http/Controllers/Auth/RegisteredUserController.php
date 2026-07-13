@@ -30,6 +30,9 @@ class RegisteredUserController extends Controller
             'role' => $requestedRole,
             'phone' => $validated['phone'] ?? null,
             'default_city' => $validated['default_city'] ?? null,
+            'preferred_language' => in_array($request->input('preferred_language'), ['en', 'sq'], true)
+                ? $request->input('preferred_language')
+                : 'en',
             'organizer_status' => $requestedRole === User::ROLE_ORGANIZER
                 ? User::ORGANIZER_STATUS_PENDING
                 : User::ORGANIZER_STATUS_NONE,

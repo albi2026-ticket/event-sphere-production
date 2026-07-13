@@ -74,7 +74,7 @@ return new class extends Migration
             [
                 'key' => 'order_confirmation',
                 'name' => 'Order Confirmation Email',
-                'subject' => 'Your Event Sphere tickets for order {{ $order->order_number }}',
+                'subject' => 'Your Tiketa tickets for order {{ $order->order_number }}',
                 'html_template' => null,
                 'text_template' => null,
             ],
@@ -88,9 +88,9 @@ return new class extends Migration
             [
                 'key' => 'verification_email',
                 'name' => 'Verification Email',
-                'subject' => 'Verify your Event Sphere email',
-                'html_template' => '<p>Welcome to Event Sphere, {{ $user_name ?? "there" }}.</p><p>Please verify your email address.</p>',
-                'text_template' => 'Welcome to Event Sphere, {{ $user_name ?? "there" }}.\n\nPlease verify your email address.',
+                'subject' => 'Verify your Tiketa email',
+                'html_template' => '<p>Welcome to Tiketa, {{ $user_name ?? "there" }}.</p><p>Please verify your email address.</p>',
+                'text_template' => 'Welcome to Tiketa, {{ $user_name ?? "there" }}.\n\nPlease verify your email address.',
             ],
             [
                 'key' => 'event_cancelled',
@@ -109,9 +109,9 @@ return new class extends Migration
             [
                 'key' => 'marketing_email',
                 'name' => 'Marketing Email',
-                'subject' => 'Latest from Event Sphere',
-                'html_template' => '<p>Discover new events on Event Sphere.</p>',
-                'text_template' => 'Discover new events on Event Sphere.',
+                'subject' => 'Latest from Tiketa',
+                'html_template' => '<p>Discover new events on Tiketa.</p>',
+                'text_template' => 'Discover new events on Tiketa.',
             ],
         ];
 
@@ -127,9 +127,9 @@ return new class extends Migration
         }
 
         $settings = [
-            'platform_name' => 'Event Sphere',
+            'platform_name' => 'Tiketa',
             'support_email' => 'support@eventsphere.com',
-            'contact_information' => 'Event Sphere Support',
+            'contact_information' => 'Tiketa Support',
             'default_purchase_limit' => 10,
             'default_event_status' => 'draft',
             'auto_archive_days_after_event' => 7,

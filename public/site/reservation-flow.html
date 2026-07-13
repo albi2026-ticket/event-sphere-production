@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Reserve a Table — Tiketa</title>
+<link rel="canonical" href="/reservation-flow" />
+<meta name="robots" content="noindex,nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="../assets/css/style.css" rel="stylesheet">
+<link href="../assets/css/reservations.css" rel="stylesheet">
+</head>
+<body class="restaurant-experience-page reservation-flow-premium-page">
+
+<nav class="navbar navbar-expand-lg nav-blur nav-res">
+  <div class="container-xxl">
+    <a class="brand" href="/welcome"><span class="brand-logo" style="background:var(--grad-res)"><i class="bi bi-cup-hot-fill"></i></span>Tiketa</a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#resNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
+    <div class="collapse navbar-collapse" id="resNav">
+      <ul class="navbar-nav mx-auto gap-1">
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="/restaurants" data-i18n="header.home">Home</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="/my-reservations" data-auth-role-nav="user" data-i18n="header.my_reservations" hidden>My Reservations</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-pro" href="/owner-venue" data-auth-role-nav="owner" data-i18n="header.venue_reservations" hidden>Venue Reservations</a></li>
+      </ul>
+      <div class="d-flex align-items-center gap-2">
+        <a class="btn btn-ghost" href="/login" data-auth-guest data-i18n="header.login">Login</a>
+        <a class="btn btn-gold" href="/register" data-auth-guest data-i18n="header.register">Register</a>
+        <div class="notification-root" data-notification-root data-auth-user hidden>
+          <button class="icon-btn notification-toggle" type="button" data-notification-toggle aria-label="Notifications" data-i18n-attr="aria-label:header.notifications" aria-expanded="false">
+            <i class="bi bi-bell"></i>
+            <span class="notification-badge" data-notification-count hidden>0</span>
+          </button>
+          <div class="notification-panel" data-notification-panel hidden>
+            <div class="notification-head">
+              <div><strong data-i18n="header.notifications">Notifications</strong><span data-i18n="header.notifications_copy">In-app updates</span></div>
+              <button type="button" data-notification-mark-all data-i18n="header.mark_all_read">Mark all read</button>
+            </div>
+            <div class="notification-list" data-notification-list></div>
+            <div class="notification-empty" data-notification-empty data-i18n="header.no_notifications" hidden>You’re all caught up. Important Tiketa updates will appear here.</div>
+            <a class="notification-view-all" href="/notifications" data-i18n="header.view_all_notifications">View all notifications</a>
+          </div>
+        </div>
+        <a class="btn btn-gold" href="#" data-auth-user data-logout data-i18n="header.logout" hidden>Logout</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container-xxl py-5 reservation-flow-shell">
+  <div class="row g-5">
+
+    <!-- LEFT -->
+    <div class="col-lg-8 reservation-flow-main">
+      <h1 style="font-family:'Cormorant Garamond',serif;font-weight:600">Reserve your table</h1>
+      <p style="color:var(--muted)">Aurora Rooftop · Shoreditch, London</p>
+
+      <!-- Stepper -->
+      <div class="res-stepper mt-4" id="stepper">
+        <div class="step active" data-step="1"><div class="n">1</div> Date</div>
+        <div class="step" data-step="2"><div class="n">2</div> Time</div>
+        <div class="step" data-step="3"><div class="n">3</div> Guests</div>
+        <div class="step" data-step="4"><div class="n">4</div> Details</div>
+        <div class="step" data-step="5"><div class="n">5</div> Review and confirm</div>
+      </div>
+
+      <!-- STEP 1 — DATE -->
+      <div class="card-pro p-4 step-panel reservation-step-card" data-panel="1" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Choose a date</h4>
+        <p class="text-muted-pro small">Select the day you'd like to dine with us.</p>
+        <div class="chip-grid mt-3" id="dateGrid"></div>
+        <div class="d-flex justify-content-end mt-4">
+          <button class="btn btn-gold next-step" data-next="2"><span data-i18n="buttons.continue">Continue</span> <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+      </div>
+
+      <!-- STEP 2 — TIME -->
+      <div class="card-pro p-4 step-panel d-none reservation-step-card" data-panel="2" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Choose a time</h4>
+        <p class="text-muted-pro small">Available windows for your party.</p>
+        <div class="chip-grid mt-3">
+          <div class="chip-select">6:00<small>PM</small></div>
+          <div class="chip-select">6:30<small>PM</small></div>
+          <div class="chip-select active">7:00<small>PM</small></div>
+          <div class="chip-select">7:30<small>PM</small></div>
+          <div class="chip-select">8:00<small>PM</small></div>
+          <div class="chip-select disabled">8:30<small>PM</small></div>
+          <div class="chip-select">9:00<small>PM</small></div>
+          <div class="chip-select">9:30<small>PM</small></div>
+        </div>
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-ghost prev-step" data-prev="1"><i class="bi bi-arrow-left me-1"></i> <span data-i18n="buttons.back">Back</span></button>
+          <button class="btn btn-gold next-step" data-next="3"><span data-i18n="buttons.continue">Continue</span> <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+      </div>
+
+      <!-- STEP 3 — GUESTS -->
+      <div class="card-pro p-4 step-panel d-none reservation-step-card" data-panel="3" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">How many guests?</h4>
+        <p class="text-muted-pro small">Parties larger than 8 require a private booking.</p>
+        <div class="chip-grid mt-3" style="grid-template-columns:repeat(8,1fr)">
+          <div class="chip-select">1</div><div class="chip-select active">2</div><div class="chip-select">3</div><div class="chip-select">4</div>
+          <div class="chip-select">5</div><div class="chip-select">6</div><div class="chip-select">7</div><div class="chip-select">8</div>
+        </div>
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-ghost prev-step" data-prev="2"><i class="bi bi-arrow-left me-1"></i> <span data-i18n="buttons.back">Back</span></button>
+          <button class="btn btn-gold next-step" data-next="4"><span data-i18n="buttons.continue">Continue</span> <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+      </div>
+
+      <!-- STEP 4 — DETAILS -->
+      <div class="card-pro p-4 step-panel d-none reservation-step-card" data-panel="4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Your details</h4>
+        <p class="text-muted-pro small">We'll send your confirmation to this email and phone.</p>
+        <div class="row g-3 mt-1">
+          <div class="col-md-6">
+            <label class="form-label small text-muted-pro">Full name</label>
+            <input type="text" class="form-control" placeholder="Full name for the reservation" style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small text-muted-pro">Phone</label>
+            <input type="tel" class="form-control" placeholder="+44 ..." style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)" />
+          </div>
+          <div class="col-12">
+            <label class="form-label small text-muted-pro">Email</label>
+            <input type="email" class="form-control" placeholder="Email for reservation updates" style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)" />
+          </div>
+          <div class="col-12">
+            <label class="form-label small text-muted-pro">Special requests (optional)</label>
+            <textarea rows="3" class="form-control" placeholder="Allergies, occasion, seating preference…" style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)"></textarea>
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="terms" checked />
+              <label class="form-check-label small text-muted-pro" for="terms">I agree to the venue's cancellation policy.</label>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-between mt-4">
+          <button class="btn btn-ghost prev-step" data-prev="3"><i class="bi bi-arrow-left me-1"></i> <span data-i18n="buttons.back">Back</span></button>
+          <button class="btn btn-gold next-step" data-next="5"><i class="bi bi-check2-circle me-1"></i> <span data-i18n="buttons.confirm_reservation">Confirm reservation</span></button>
+        </div>
+      </div>
+
+      <!-- STEP 5 — CONFIRMATION -->
+      <div class="step-panel d-none reservation-confirmation-panel" data-panel="5">
+        <div class="confirm-card">
+          <div class="confirm-check"><i class="bi bi-check2"></i></div>
+          <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600">Reservation confirmed</h3>
+          <p style="color:var(--muted)">We've sent the details to your email. The venue is expecting you.</p>
+
+          <div class="text-start mt-4 mx-auto" style="max-width:480px">
+            <div class="confirm-detail"><span>Reservation #</span><span class="text-gold">ESP-RES-928374</span></div>
+            <div class="confirm-detail"><span>Venue</span><span>Aurora Rooftop</span></div>
+            <div class="confirm-detail"><span>Date</span><span id="confDate">Sat, Mar 15 2026</span></div>
+            <div class="confirm-detail"><span>Time</span><span>7:00 PM</span></div>
+            <div class="confirm-detail"><span>Guests</span><span>2</span></div>
+            <div class="confirm-detail"><span>Status</span><span style="color:#86efac">✓ Confirmed</span></div>
+          </div>
+
+          <div class="d-flex flex-wrap gap-2 justify-content-center mt-4">
+            <a href="/restaurants" class="btn btn-ghost"><i class="bi bi-search me-1"></i> Discover more</a>
+            <a href="/restaurant" class="btn btn-gold-outline"><i class="bi bi-geo-alt me-1"></i> View restaurant details</a>
+            <button class="btn btn-gold" onclick="window.print()"><i class="bi bi-download me-1"></i> Print confirmation</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT — Summary -->
+    <aside class="col-lg-4">
+      <div style="position:sticky;top:90px">
+        <div class="card-pro reservation-summary-card p-0" style="background:var(--card);border:1px solid var(--border);border-radius:22px;overflow:hidden">
+          <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80" style="width:100%;height:160px;object-fit:cover" alt="Restaurant table prepared for a reservation" loading="lazy" decoding="async" width="800" height="533" sizes="100vw" />
+          <div class="p-4">
+            <span class="chip-gold mb-2"><i class="bi bi-award-fill"></i> Editor's pick</span>
+            <h5 class="m-0 mt-2" style="font-family:'Cormorant Garamond',serif;font-weight:600">Aurora Rooftop</h5>
+            <div class="small text-muted-pro mt-1"><i class="bi bi-geo-alt"></i> Shoreditch, London · Modern European</div>
+            <div class="rating text-gold mt-2"><i class="bi bi-star-fill"></i> 4.9 <span class="text-muted-pro small">(1,284)</span></div>
+
+            <hr style="border-color:var(--border)" />
+            <div class="d-flex justify-content-between small mb-2"><span class="text-muted-pro">Date</span><span id="sumDate">Saturday, Mar 15</span></div>
+            <div class="d-flex justify-content-between small mb-2"><span class="text-muted-pro">Time</span><span>7:00 PM</span></div>
+            <div class="d-flex justify-content-between small mb-2"><span class="text-muted-pro">Guests</span><span>2</span></div>
+            <div class="d-flex justify-content-between small"><span class="text-muted-pro">Hold fee</span><span class="text-gold">Free</span></div>
+          </div>
+        </div>
+
+        <div class="mt-3 small" style="color:var(--muted)">
+          <i class="bi bi-shield-check text-gold"></i> Free cancellation up to 2 hours before your reservation.
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script defer src="../assets/js/i18n/dictionaries.js"></script>
+<script defer src="../assets/js/i18n/language-service.js"></script>
+<script defer src="../assets/js/main.js"></script>
+<script defer src="../assets/js/api/config.js"></script>
+<script defer src="../assets/js/api/api-client.js"></script>
+<script defer src="../assets/js/api/auth.js"></script>
+<script defer src="../assets/js/pages/reservation-flow-page.js"></script>
+</body>
+</html>

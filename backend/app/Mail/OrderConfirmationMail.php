@@ -25,7 +25,7 @@ class OrderConfirmationMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $subject = "Your Event Sphere tickets for order {$this->order->order_number}";
+        $subject = __('emails.ticket_order_subject', ['order' => $this->order->order_number]);
         $template = $this->template();
 
         if ($template?->subject) {

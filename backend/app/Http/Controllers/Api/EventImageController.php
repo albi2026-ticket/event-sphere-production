@@ -37,16 +37,26 @@ class EventImageController extends Controller
 
     public function store(StoreEventImageRequest $request, Event $event): EventImageResource
     {
+        $isFirstImage = ! $event->images()->exists();
         $payload = $this->imagePayload($request, $event);
+        $payload['is_primary'] = $request->boolean('is_primary') || $isFirstImage;
+        $payload['is_banner'] = $request->boolean('is_banner')
+            || $request->input('type') === 'banner'
+            || $isFirstImage;
+        $payload['type'] = $payload['is_banner'] ? 'banner' : ($payload['type'] ?? 'gallery');
 
-        if ($request->boolean('is_primary')) {
+        if ($payload['is_primary']) {
             $event->images()->update(['is_primary' => false]);
         }
 
-        $image = $event->images()->create($payload);
-        $this->syncEventBanner($image);
+        if ($payload['is_banner']) {
+            $event->images()->update(['is_banner' => false]);
+        }
 
-        return new EventImageResource($image);
+        $image = $event->images()->create($payload);
+        $this->normalizeEventImageRoles($event);
+
+        return new EventImageResource($image->fresh());
     }
 
     public function update(UpdateEventImageRequest $request, EventImage $eventImage): EventImageResource
@@ -56,26 +66,21 @@ class EventImageController extends Controller
         if ($request->hasFile('image')) {
             $this->deleteStoredFile($eventImage);
             $payload = array_merge($payload, $this->storedFilePayload($request->file('image'), $eventImage->event));
-        } elseif ($request->filled('url')) {
-            $this->deleteStoredFile($eventImage);
-            $payload = array_merge($payload, [
-                'disk' => null,
-                'path' => null,
-                'url' => $request->string('url')->toString(),
-                'original_name' => null,
-                'mime_type' => null,
-                'size' => null,
-                'width' => null,
-                'height' => null,
-            ]);
         }
 
         if ($request->boolean('is_primary')) {
+            $payload['is_primary'] = true;
             $eventImage->event->images()->whereKeyNot($eventImage->id)->update(['is_primary' => false]);
         }
 
+        if ($request->boolean('is_banner') || $request->input('type') === 'banner') {
+            $payload['is_banner'] = true;
+            $payload['type'] = 'banner';
+            $eventImage->event->images()->whereKeyNot($eventImage->id)->update(['is_banner' => false]);
+        }
+
         $eventImage->update($payload);
-        $this->syncEventBanner($eventImage->fresh());
+        $this->normalizeEventImageRoles($eventImage->event);
 
         return new EventImageResource($eventImage->fresh());
     }
@@ -86,16 +91,9 @@ class EventImageController extends Controller
 
         $this->deleteStoredFile($eventImage);
         $event = $eventImage->event;
-        $wasBanner = $event->banner_image_url === $eventImage->url;
 
         $eventImage->delete();
-
-        if ($wasBanner) {
-            $replacement = $event->images()->where('is_primary', true)->first()
-                ?? $event->images()->orderBy('sort_order')->first();
-
-            $event->update(['banner_image_url' => $replacement?->url]);
-        }
+        $this->normalizeEventImageRoles($event);
 
         return response()->json(['message' => 'Event image deleted.']);
     }
@@ -107,24 +105,10 @@ class EventImageController extends Controller
                 'alt_text' => $request->input('alt_text'),
                 'type' => $request->input('type', 'gallery'),
                 'sort_order' => $request->integer('sort_order', 0),
-                'is_primary' => $request->boolean('is_primary'),
             ]);
         }
 
-        return [
-            'disk' => null,
-            'path' => null,
-            'url' => $request->string('url')->toString(),
-            'original_name' => null,
-            'mime_type' => null,
-            'size' => null,
-            'width' => null,
-            'height' => null,
-            'alt_text' => $request->input('alt_text'),
-            'type' => $request->input('type', 'gallery'),
-            'sort_order' => $request->integer('sort_order', 0),
-            'is_primary' => $request->boolean('is_primary'),
-        ];
+        abort(422, 'Image upload is required.');
     }
 
     protected function storedFilePayload(UploadedFile $file, Event $event): array
@@ -136,7 +120,7 @@ class EventImageController extends Controller
         return [
             'disk' => $disk,
             'path' => $path,
-            'url' => Storage::disk($disk)->url($path),
+            'url' => null,
             'original_name' => $file->getClientOriginalName(),
             'mime_type' => $file->getMimeType(),
             'size' => $file->getSize(),
@@ -152,10 +136,32 @@ class EventImageController extends Controller
         }
     }
 
-    protected function syncEventBanner(EventImage $eventImage): void
+    protected function normalizeEventImageRoles(Event $event): void
     {
-        if ($eventImage->is_primary || $eventImage->type === 'banner') {
-            $eventImage->event->update(['banner_image_url' => $eventImage->publicUrl()]);
+        $images = $event->images()->get()->sortBy([
+            ['sort_order', 'asc'],
+            ['id', 'asc'],
+        ])->values();
+
+        if ($images->isEmpty()) {
+            $event->update(['banner_image_url' => null]);
+
+            return;
         }
+
+        $primary = $images->firstWhere('is_primary', true) ?? $images->first();
+        $banner = $images->firstWhere('is_banner', true)
+            ?? $images->firstWhere('type', 'banner')
+            ?? $primary;
+
+        $event->images()->whereKeyNot($primary->id)->update(['is_primary' => false]);
+        $event->images()->whereKey($primary->id)->update(['is_primary' => true]);
+        $event->images()->whereKeyNot($banner->id)->update(['is_banner' => false]);
+        $event->images()->whereKey($banner->id)->update([
+            'is_banner' => true,
+            'type' => 'banner',
+        ]);
+
+        $event->update(['banner_image_url' => $banner->fresh()?->publicUrl()]);
     }
 }

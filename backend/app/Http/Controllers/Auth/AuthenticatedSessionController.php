@@ -45,6 +45,6 @@ class AuthenticatedSessionController extends Controller
             Auth::guard('web')->logout();
         }
 
-        return response()->json(['message' => 'Logged out.']);
+        return response()->json(['message' => __('validation.custom.logged_out')]);
     }
 }

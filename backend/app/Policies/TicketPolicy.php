@@ -25,6 +25,7 @@ class TicketPolicy
 
     public function checkIn(User $user, Ticket $ticket): bool
     {
-        return $this->manage($user, $ticket);
+        return $this->manage($user, $ticket)
+            || ($ticket->event && $user->canScanEvent($ticket->event));
     }
 }

@@ -1,26 +1,26 @@
 (function () {
-  'use strict';
+  "use strict";
 
   const api = () => window.EventSphereApi;
 
   async function createOrder(payload) {
-    const { data } = await api().fetch('/orders', { method: 'POST', body: payload });
+    const { data } = await api().fetch("/orders", { method: "POST", body: payload });
     return data;
   }
 
   async function startCheckout(orderId) {
-    const { data } = await api().fetch(`/orders/${orderId}/checkout-session`, { method: 'POST' });
+    const { data } = await api().fetch(`/orders/${orderId}/checkout-session`, { method: "POST" });
     return data;
   }
 
   async function cancelOrder(orderId) {
-    const { data } = await api().fetch(`/orders/${orderId}/cancel`, { method: 'POST' });
+    const { data } = await api().fetch(`/orders/${orderId}/cancel`, { method: "POST" });
     return data;
   }
 
   async function createCheckoutReservation(ticketTypeId, quantity) {
-    const { data } = await api().fetch('/checkout-reservations', {
-      method: 'POST',
+    const { data } = await api().fetch("/checkout-reservations", {
+      method: "POST",
       body: { ticket_type_id: ticketTypeId, quantity },
     });
     return data;
@@ -31,17 +31,17 @@
     return data;
   }
 
-  async function cancelCheckoutReservation(reservationId, status = 'cancelled') {
+  async function cancelCheckoutReservation(reservationId, status = "cancelled") {
     const { data } = await api().fetch(`/checkout-reservations/${reservationId}`, {
-      method: 'DELETE',
+      method: "DELETE",
       body: { status },
     });
     return data;
   }
 
   async function completeMockPayment(orderId) {
-    const { data } = await api().fetch('/payment/mock-success', {
-      method: 'POST',
+    const { data } = await api().fetch("/payment/mock-success", {
+      method: "POST",
       body: { order_id: orderId },
     });
     return data;
@@ -60,7 +60,7 @@
   async function downloadReceipt(orderId, orderNumber) {
     const blob = await api().fetchBlob(`/me/orders/${orderId}/receipt`);
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `receipt-${orderNumber || orderId}.html`;
     a.click();
@@ -69,7 +69,7 @@
 
   async function listMyOrders(params = {}) {
     const qs = new URLSearchParams(params).toString();
-    const { data, meta } = await api().fetch(`/me/orders${qs ? `?${qs}` : ''}`);
+    const { data, meta } = await api().fetch(`/me/orders${qs ? `?${qs}` : ""}`);
     return { orders: Array.isArray(data) ? data : [], meta };
   }
 

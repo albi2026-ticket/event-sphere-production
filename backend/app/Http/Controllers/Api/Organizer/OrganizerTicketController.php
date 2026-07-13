@@ -38,17 +38,17 @@ class OrganizerTicketController extends Controller
         try {
             $ticket = $this->tickets->findByScannerPayload($request->input('token'), $request->input('ticket_code'), $request->input('ticket_uuid'));
         } catch (ValidationException) {
-            $this->logInvalidScan($request, 'Ticket could not be found.');
+            $this->logInvalidScan($request, __('validation.custom.ticket_not_found'));
 
             return response()->json([
                 'data' => [
-                    'validation' => $this->invalidValidation('Ticket could not be found.'),
+                    'validation' => $this->invalidValidation(__('validation.custom.ticket_not_found')),
                     'ticket' => null,
                 ],
             ]);
         }
 
-        abort_unless($request->user()->can('manage', $ticket), 403);
+        $this->ensureCanScanTicket($request, $ticket);
         $this->ensureEventMatchesRequest($request, $ticket);
         $validation = $this->tickets->validationResult($ticket);
         $this->tickets->logValidation($ticket, $request->user(), $this->logContext($request, [
@@ -69,18 +69,18 @@ class OrganizerTicketController extends Controller
         try {
             $ticket = $this->tickets->findByScannerPayload($request->input('token'), $request->input('ticket_code'), $request->input('ticket_uuid'));
         } catch (ValidationException) {
-            $this->logInvalidScan($request, 'Ticket could not be found.');
+            $this->logInvalidScan($request, __('validation.custom.ticket_not_found'));
 
             return response()->json([
-                'message' => 'Invalid ticket.',
+                'message' => __('validation.custom.invalid_ticket'),
                 'data' => [
-                    'validation' => $this->invalidValidation('Ticket could not be found.'),
+                    'validation' => $this->invalidValidation(__('validation.custom.ticket_not_found')),
                     'ticket' => null,
                 ],
             ], 422);
         }
 
-        abort_unless($request->user()->can('checkIn', $ticket), 403);
+        $this->ensureCanScanTicket($request, $ticket);
         $this->ensureEventMatchesRequest($request, $ticket);
 
         try {
@@ -122,7 +122,11 @@ class OrganizerTicketController extends Controller
 
         $tickets = Ticket::query()
             ->with(['user', 'event', 'ticketType', 'order.user', 'checkedInBy'])
-            ->whereHas('event', fn ($query) => $query->where('organizer_id', $request->user()->id))
+            ->when(
+                $request->user()->isScanner(),
+                fn ($query) => $query->whereHas('event.scanners', fn ($eventQuery) => $eventQuery->whereKey($request->user()->id)),
+                fn ($query) => $query->whereHas('event', fn ($eventQuery) => $eventQuery->where('organizer_id', $request->user()->id))
+            )
             ->when($eventId, fn ($query) => $query->where('event_id', $eventId))
             ->when($search !== '', function ($query) use ($search): void {
                 $needle = '%'.$search.'%';
@@ -146,7 +150,7 @@ class OrganizerTicketController extends Controller
 
     public function checkInStats(Request $request, Event $event): JsonResponse
     {
-        abort_unless($event->organizer_id === $request->user()->id, 403);
+        abort_unless($request->user()->canScanEvent($event), 403);
 
         $sold = Ticket::query()->where('event_id', $event->id)->count();
         $checkedIn = Ticket::query()
@@ -168,7 +172,11 @@ class OrganizerTicketController extends Controller
     {
         $logs = TicketValidationLog::query()
             ->with(['event', 'ticket', 'scanner'])
-            ->whereHas('event', fn ($query) => $query->where('organizer_id', $request->user()->id))
+            ->when(
+                $request->user()->isScanner(),
+                fn ($query) => $query->where('scanned_by', $request->user()->id),
+                fn ($query) => $query->whereHas('event', fn ($eventQuery) => $eventQuery->where('organizer_id', $request->user()->id))
+            )
             ->when($request->filled('event_id'), fn ($query) => $query->where('event_id', $request->integer('event_id')))
             ->latest('scanned_at')
             ->paginate($request->integer('per_page', 20));
@@ -178,7 +186,40 @@ class OrganizerTicketController extends Controller
 
     protected function ensureEventMatchesRequest(Request $request, Ticket $ticket): void
     {
-        abort_if($request->filled('event_id') && (int) $request->input('event_id') !== $ticket->event_id, 422, 'Ticket does not belong to the selected event.');
+        if (! $request->filled('event_id') || (int) $request->input('event_id') === $ticket->event_id) {
+            return;
+        }
+
+        $message = __('validation.custom.ticket_wrong_event');
+        if ($request->user()->isScanner()) {
+            $this->tickets->logValidation($ticket, $request->user(), $this->logContext($request, [
+                'event_id' => $ticket->event_id,
+                'result' => TicketValidationLog::RESULT_INVALID,
+                'message' => $message,
+            ]));
+        }
+
+        abort(422, $message);
+    }
+
+    protected function ensureCanScanTicket(Request $request, Ticket $ticket): void
+    {
+        if ($request->user()->can('checkIn', $ticket)) {
+            return;
+        }
+
+        if ($request->user()->isScanner()) {
+            $message = __('validation.custom.ticket_wrong_event');
+            $this->tickets->logValidation($ticket, $request->user(), $this->logContext($request, [
+                'event_id' => $ticket->event_id,
+                'result' => TicketValidationLog::RESULT_INVALID,
+                'message' => $message,
+            ]));
+
+            abort(403, $message);
+        }
+
+        abort(403, __('validation.custom.scan_not_allowed'));
     }
 
     /**
@@ -213,7 +254,7 @@ class OrganizerTicketController extends Controller
     {
         return [
             'result' => TicketValidationLog::RESULT_INVALID,
-            'title' => 'INVALID TICKET',
+            'title' => __('validation.custom.invalid_ticket'),
             'is_valid' => false,
             'can_check_in' => false,
             'reason' => $message,

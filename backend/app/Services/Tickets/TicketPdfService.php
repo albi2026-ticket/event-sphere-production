@@ -134,7 +134,7 @@ class TicketPdfService
         $pdf->setTextColor(15, 23, 42);
         $pdf->text(318, 514, 'Scan this QR code at the venue entrance.', 12, true, 222, 'center');
         $pdf->setTextColor(71, 85, 105);
-        $pdf->text(318, 536, 'Event Sphere Verification', 9, true, 222, 'center');
+        $pdf->text(318, 536, 'Tiketa Verification', 9, true, 222, 'center');
         $pdf->text(318, 558, $data['ticket_uuid'], 7, false, 222, 'center');
 
         $pdf->setStrokeColor(226, 232, 240);
@@ -143,7 +143,7 @@ class TicketPdfService
         $pdf->text(58, 670, 'Present this page at entry. Keep the QR code bright, flat, and unobstructed for scanning.', 10, false, 450);
         $pdf->text(58, 704, 'Valid for one entry only. Duplicate, altered, cancelled, refunded, or already checked-in tickets are not valid.', 10, false, 450);
         $pdf->setTextColor(15, 23, 42);
-        $pdf->text(58, 744, 'Event Sphere', 10, true);
+        $pdf->text(58, 744, 'Tiketa', 10, true);
         $pdf->setTextColor(100, 116, 139);
         $pdf->text(448, 744, 'Page 1 of 2', 9);
     }
@@ -161,7 +161,7 @@ class TicketPdfService
         $this->pageBackground($pdf);
 
         $pdf->setTextColor(15, 23, 42);
-        $pdf->text(42, 54, 'Event Sphere', 15, true);
+        $pdf->text(42, 54, 'Tiketa', 15, true);
         $pdf->setTextColor(37, 99, 235);
         $pdf->text(42, 82, 'Ticket Purchase Receipt', 26, true);
         $pdf->setTextColor(100, 116, 139);
@@ -230,7 +230,7 @@ class TicketPdfService
         $pdf->setStrokeColor(226, 232, 240);
         $pdf->line(42, 782, 554, 782);
         $pdf->setTextColor(15, 23, 42);
-        $pdf->text(42, 808, 'Event Sphere', 10, true);
+        $pdf->text(42, 808, 'Tiketa', 10, true);
         $pdf->setTextColor(100, 116, 139);
         $pdf->text(152, 808, 'This receipt was generated automatically.', 9);
         $pdf->text(470, 808, 'Page 2 of 2', 9);

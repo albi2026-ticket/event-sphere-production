@@ -12,6 +12,7 @@ use App\Http\Resources\EventResource;
 use App\Models\Event;
 use App\Models\PlatformSetting;
 use App\Models\TicketType;
+use App\Services\Notifications\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -21,6 +22,8 @@ use Illuminate\Validation\ValidationException;
 class OrganizerEventController extends Controller
 {
     use FiltersEvents;
+
+    public function __construct(private readonly NotificationService $notifications) {}
 
     public function index(EventIndexRequest $request): AnonymousResourceCollection
     {
@@ -76,6 +79,8 @@ class OrganizerEventController extends Controller
 
         if ($wasPublished && $isCancelling) {
             event(new EventCancelled($event->fresh(['organizer']), $request->user(), $request->ip()));
+        } elseif ($wasPublished) {
+            $this->notifications->eventUpdated($event->fresh());
         }
 
         return new EventResource($event->fresh()->load(['images', 'ticketTypes']));

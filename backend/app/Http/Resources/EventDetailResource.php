@@ -10,10 +10,12 @@ class EventDetailResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $primaryImage = $this->whenLoaded('images', fn () => $this->images->firstWhere('is_primary', true) ?? $this->images->first());
-        $bannerImageUrl = $primaryImage instanceof EventImage
-            ? $primaryImage->publicUrl()
-            : $this->banner_image_url;
+        $primaryImage = $this->primaryImage();
+        $bannerImage = $this->bannerImage();
+        $primaryImageUrl = $primaryImage instanceof EventImage ? $primaryImage->publicUrl() : null;
+        $bannerImageUrl = $bannerImage instanceof EventImage
+            ? $bannerImage->publicUrl()
+            : ($this->banner_image_url ?: $primaryImageUrl);
         $ticketTypes = $this->relationLoaded('ticketTypes') ? $this->ticketTypes : collect();
         $availableInventory = (int) $ticketTypes->sum(function ($type): int {
             $checkoutReserved = (int) ($type->active_checkout_reserved_quantity ?? $type->activeCheckoutReservedQuantity());
@@ -44,6 +46,10 @@ class EventDetailResource extends JsonResource
             'visibility' => $this->visibility,
             'banner_image_url' => $bannerImageUrl,
             'image' => $bannerImageUrl,
+            'primary_image_url' => $primaryImageUrl,
+            'primary_image' => $primaryImage instanceof EventImage ? new EventImageResource($primaryImage) : null,
+            'banner_image' => $bannerImage instanceof EventImage ? new EventImageResource($bannerImage) : null,
+            'gallery_images' => EventImageResource::collection($this->galleryImages()),
             'max_tickets_per_user' => $this->max_tickets_per_user,
             'service_fee_percentage' => $this->service_fee_percentage ?? 10,
             'base_price' => $this->base_price,

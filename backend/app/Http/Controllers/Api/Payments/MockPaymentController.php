@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\CheckoutReservation;
 use App\Services\Checkout\CheckoutReservationService;
 use App\Services\Emails\OrderEmailService;
+use App\Services\Notifications\NotificationService;
 use App\Services\Orders\OrderService;
 use App\Services\Tickets\TicketInventoryService;
 use App\Services\Tickets\TicketService;
@@ -23,6 +24,7 @@ class MockPaymentController extends Controller
         private readonly OrderService $orders,
         private readonly OrderEmailService $emails,
         private readonly CheckoutReservationService $checkoutReservations,
+        private readonly NotificationService $notifications,
     ) {}
 
     public function store(Request $request): JsonResponse
@@ -74,6 +76,7 @@ class MockPaymentController extends Controller
 
         $this->checkoutReservations->completeForOrder($order);
         $this->emails->sendOrderConfirmation($order);
+        $this->notifications->ticketPurchased($order);
 
         return response()->json([
             'data' => [
@@ -83,7 +86,7 @@ class MockPaymentController extends Controller
                 'payment_status' => $order->payment_status,
                 'payment_provider' => $order->payment_provider,
                 'paid_at' => $order->paid_at,
-                'checkout_url' => "checkout-success.html?order_id={$order->id}&mock=1",
+                'checkout_url' => "/checkout-success?order_id={$order->id}&mock=1",
                 'tickets_count' => $order->tickets->count(),
             ],
         ]);

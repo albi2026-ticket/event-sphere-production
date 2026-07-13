@@ -1,12 +1,12 @@
-Event Sphere
+Tiketa
 
-Welcome to Event Sphere, {{ $user->name ?: 'there' }}.
+{{ __('emails.verify_email_welcome', ['name' => $user->name ?: __('emails.there')]) }}
 
-Please verify your email address to secure your account and keep ticket, order, and organizer notifications connected to the right inbox.
+{{ __('emails.verify_email_copy') }}
 
-Verify Email:
-{{ $verificationUrl }}
+{{ __('emails.verify_email_button') }}:
+{!! $verificationUrl !!}
 
-This verification link expires in {{ $expirationMinutes }} minutes.
+{{ __('emails.verify_email_expiry', ['minutes' => $expirationMinutes]) }}
 
-If you did not create an Event Sphere account, you can ignore this email.
+{{ __('emails.verify_email_ignore') }}

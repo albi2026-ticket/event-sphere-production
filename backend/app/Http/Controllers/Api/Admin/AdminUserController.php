@@ -14,7 +14,7 @@ class AdminUserController extends Controller
     {
         $validated = $request->validate([
             'q' => ['nullable', 'string', 'max:255'],
-            'role' => ['nullable', Rule::in([User::ROLE_USER, User::ROLE_ORGANIZER, User::ROLE_ADMIN])],
+            'role' => ['nullable', Rule::in([User::ROLE_USER, User::ROLE_ORGANIZER, User::ROLE_OWNER, User::ROLE_SCANNER, User::ROLE_ADMIN])],
             'status' => ['nullable', Rule::in([User::STATUS_ACTIVE, User::STATUS_SUSPENDED, User::STATUS_BANNED])],
             'organizer_status' => ['nullable', Rule::in([
                 User::ORGANIZER_STATUS_NONE,

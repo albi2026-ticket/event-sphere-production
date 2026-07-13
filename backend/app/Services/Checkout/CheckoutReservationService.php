@@ -101,7 +101,7 @@ class CheckoutReservationService
 
         if ($reservation->order_id !== null) {
             throw ValidationException::withMessages([
-                'checkout_reservation_id' => 'This reservation has already been used.',
+                'checkout_reservation_id' => __('validation.custom.checkout_reservation_used'),
             ]);
         }
 
@@ -109,7 +109,7 @@ class CheckoutReservationService
             || (int) ($items[0]['ticket_type_id'] ?? 0) !== $reservation->ticket_type_id
             || (int) ($items[0]['quantity'] ?? 0) !== $reservation->quantity) {
             throw ValidationException::withMessages([
-                'checkout_reservation_id' => 'Reservation does not match the selected tickets.',
+                'checkout_reservation_id' => __('validation.custom.checkout_reservation_mismatch'),
             ]);
         }
 
@@ -145,7 +145,7 @@ class CheckoutReservationService
 
         if ((int) $reservation->order_id !== (int) $order->id) {
             throw ValidationException::withMessages([
-                'reservation' => 'Reservation does not belong to this order.',
+                'reservation' => __('validation.custom.checkout_reservation_wrong_order'),
             ]);
         }
 
@@ -190,7 +190,7 @@ class CheckoutReservationService
     {
         if ($reservation->status !== CheckoutReservation::STATUS_ACTIVE) {
             throw ValidationException::withMessages([
-                'reservation' => 'This reservation is no longer active.',
+                'reservation' => __('validation.custom.checkout_reservation_inactive'),
             ]);
         }
 
@@ -198,7 +198,7 @@ class CheckoutReservationService
             $reservation->forceFill(['status' => CheckoutReservation::STATUS_EXPIRED])->save();
 
             throw ValidationException::withMessages([
-                'reservation' => 'Your reservation has expired.',
+                'reservation' => __('validation.custom.checkout_reservation_expired'),
             ]);
         }
     }

@@ -20,6 +20,8 @@ class OrganizerDashboardTest extends TestCase
 
     public function test_organizer_can_create_ticket_and_publish_complete_event_workflow(): void
     {
+        Storage::fake('public');
+
         $organizer = User::factory()->create([
             'role' => User::ROLE_ORGANIZER,
             'status' => User::STATUS_ACTIVE,
@@ -31,7 +33,7 @@ class OrganizerDashboardTest extends TestCase
                 'title' => 'Complete Creation Event',
                 'category' => 'Concert',
                 'description' => 'A fully configured organizer event.',
-                'venue_name' => 'Event Sphere Hall',
+                'venue_name' => 'Tiketa Hall',
                 'city' => 'New York',
                 'address' => '100 Main Street',
                 'starts_at' => now()->addMonth()->toIso8601String(),
@@ -39,7 +41,6 @@ class OrganizerDashboardTest extends TestCase
                 'status' => 'draft',
                 'visibility' => 'public',
                 'max_tickets_per_user' => 5,
-                'banner_image_url' => 'https://example.test/cover.jpg',
                 'currency' => 'USD',
             ])
             ->assertCreated()
@@ -50,8 +51,8 @@ class OrganizerDashboardTest extends TestCase
         $eventId = $eventResponse->json('data.id');
 
         $this->actingAs($organizer, 'sanctum')
-            ->postJson("/api/organizer/events/{$eventId}/images", [
-                'url' => 'https://example.test/gallery.jpg',
+            ->post("/api/organizer/events/{$eventId}/images", [
+                'image' => UploadedFile::fake()->image('complete-cover.jpg', 1200, 675),
                 'type' => 'banner',
                 'is_primary' => true,
                 'alt_text' => 'Complete Creation Event',
@@ -185,7 +186,7 @@ class OrganizerDashboardTest extends TestCase
             ->postJson('/api/organizer/events', [
                 'title' => 'Pristina Time Event',
                 'category' => 'Concert',
-                'venue_name' => 'Event Sphere Hall',
+                'venue_name' => 'Tiketa Hall',
                 'city' => 'Pristina',
                 'starts_at' => '2026-06-10T19:00',
                 'ends_at' => '2026-06-10T22:00',
@@ -233,7 +234,7 @@ class OrganizerDashboardTest extends TestCase
             'title' => 'Sold Out Restock Event',
             'slug' => 'sold-out-restock-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'ends_at' => now()->addMonth()->addHours(3),
@@ -304,7 +305,7 @@ class OrganizerDashboardTest extends TestCase
             'title' => 'Organizer Dashboard Event',
             'slug' => 'organizer-dashboard-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'status' => 'draft',
@@ -451,6 +452,27 @@ class OrganizerDashboardTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_owner_role_cannot_access_organizer_event_management_routes(): void
+    {
+        $owner = User::factory()->create([
+            'role' => User::ROLE_OWNER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_NONE,
+        ]);
+
+        $this->actingAs($owner, 'sanctum')
+            ->getJson('/api/organizer/dashboard')
+            ->assertForbidden();
+
+        $this->actingAs($owner, 'sanctum')
+            ->getJson('/api/organizer/events')
+            ->assertForbidden();
+
+        $this->actingAs($owner, 'sanctum')
+            ->getJson('/api/me/tickets')
+            ->assertForbidden();
+    }
+
     private function createOrganizerEventWithInventory(User $organizer, string $title, string $slug, string $status, mixed $startsAt, mixed $endsAt, int $total, int $sold): Event
     {
         $event = Event::query()->create([
@@ -458,7 +480,7 @@ class OrganizerDashboardTest extends TestCase
             'title' => $title,
             'slug' => $slug,
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => $startsAt,
             'ends_at' => $endsAt,

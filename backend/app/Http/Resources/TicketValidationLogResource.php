@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\Tickets\TicketService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -30,7 +31,7 @@ class TicketValidationLogResource extends JsonResource
             'ticket' => $this->whenLoaded('ticket', fn () => $this->ticket ? [
                 'id' => $this->ticket->id,
                 'ticket_code' => $this->ticket->ticket_code,
-                'ticket_uuid' => $this->ticket->ticket_uuid,
+                'ticket_uuid' => app(TicketService::class)->maskQrIdentifier($this->ticket->ticket_uuid),
                 'status' => $this->ticket->status,
                 'checked_in_at' => $this->ticket->checked_in_at,
             ] : null),

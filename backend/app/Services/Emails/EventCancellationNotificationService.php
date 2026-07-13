@@ -9,6 +9,7 @@ use App\Models\AuditLog;
 use App\Models\Event;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\Notifications\NotificationService;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -17,6 +18,8 @@ use Throwable;
 class EventCancellationNotificationService
 {
     private const EVENT_DISPLAY_TIMEZONE = 'Europe/Pristina';
+
+    public function __construct(private readonly NotificationService $notifications) {}
 
     /**
      * @return array{sent: bool, user_notifications: int, admin_notifications: int, organizer_notified: bool, tickets_sold: int, revenue_generated: float}
@@ -42,7 +45,7 @@ class EventCancellationNotificationService
             ];
         }
 
-        $event = $event->fresh(['organizer']);
+        $event = $event->fresh(['organizer', 'images']);
         $orders = $this->paidOrders($event);
         $eventItems = $orders->flatMap(fn (Order $order) => $order->items);
         $ticketsSold = (int) $eventItems->sum('quantity');
@@ -53,18 +56,22 @@ class EventCancellationNotificationService
         foreach ($orders as $order) {
             try {
                 Mail::to($order->billing_email, $this->purchaserName($order))
+                    ->locale($order->user?->preferred_language ?: 'en')
                     ->send(new EventCancelledUserMail($event, $order, $this->eventData($event)));
                 $userNotifications++;
             } catch (Throwable $exception) {
                 $this->logFailure('Event cancellation user email failed.', $event, $exception, ['order_id' => $order->id]);
             }
         }
+        $this->notifications->eventCancelled($event);
 
         $adminNotifications = 0;
         $adminData = $this->adminData($event, $ticketsSold, $revenue, $cancelledAt);
         foreach ($this->admins() as $admin) {
             try {
-                Mail::to($admin->email, $admin->name)->send(new EventCancelledAdminMail($event, $adminData));
+                Mail::to($admin->email, $admin->name)
+                    ->locale($admin->preferred_language ?: 'en')
+                    ->send(new EventCancelledAdminMail($event, $adminData));
                 $adminNotifications++;
             } catch (Throwable $exception) {
                 $this->logFailure('Event cancellation admin email failed.', $event, $exception, ['admin_id' => $admin->id]);
@@ -75,6 +82,7 @@ class EventCancellationNotificationService
         if ($event->organizer?->email) {
             try {
                 Mail::to($event->organizer->email, $event->organizer->name)
+                    ->locale($event->organizer->preferred_language ?: 'en')
                     ->send(new EventCancelledOrganizerMail($event, [
                         'ticket_holders_notified' => $userNotifications,
                         'cancelled_at' => $this->dateTimeLabel($cancelledAt),
@@ -161,7 +169,7 @@ class EventCancellationNotificationService
     {
         $name = trim($order->billing_first_name.' '.$order->billing_last_name);
 
-        return $name !== '' ? $name : (string) ($order->user?->name ?: 'Event Sphere customer');
+        return $name !== '' ? $name : (string) ($order->user?->name ?: 'Tiketa customer');
     }
 
     protected function eventDateLabel(Event $event): string

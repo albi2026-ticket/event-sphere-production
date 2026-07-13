@@ -12,10 +12,12 @@ class EventSphereVerifyEmail extends VerifyEmail
 
     public function toMail($notifiable): MailMessage
     {
+        app()->setLocale($notifiable->preferred_language ?? 'en');
+
         $verificationUrl = $this->verificationUrl($notifiable);
 
         return (new MailMessage)
-            ->subject('Verify your Event Sphere email address')
+            ->subject(__('emails.verify_email_title'))
             ->view(
                 ['emails.auth.verify-email', 'emails.auth.verify-email-text'],
                 [

@@ -1,26 +1,42 @@
 (function () {
-  'use strict';
+  "use strict";
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const form = document.querySelector('[data-reset-password-form]');
-    const error = document.querySelector('[data-reset-error]');
+  const tr = (key, fallback) => window.t?.(key) || fallback;
+
+  function resetLinkData() {
+    const rawSearch = String(location.search || "").replace(/&amp;/g, "&");
+    const params = new URLSearchParams(rawSearch);
+    const pathParts = location.pathname.split("/").filter(Boolean);
+    const pathToken =
+      pathParts[pathParts.length - 1] !== "/reset-password" ? pathParts[pathParts.length - 1] : "";
+
+    return {
+      token: params.get("token") || pathToken || "",
+      email: params.get("email") || params.get("amp;email") || "",
+    };
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.querySelector("[data-reset-password-form]");
+    const error = document.querySelector("[data-reset-error]");
     if (!form) return;
 
-    const params = new URLSearchParams(location.search);
-    form.querySelector('[name="token"]').value = params.get('token') || '';
-    form.querySelector('[name="email"]').value = params.get('email') || '';
+    const reset = resetLinkData();
+    form.querySelector('[name="token"]').value = reset.token;
+    form.querySelector('[name="email"]').value = reset.email;
 
-    if (!params.get('token') || !params.get('email')) {
-      error.textContent = 'This reset link is missing required information. Please request a new password reset link.';
-      error.classList.remove('d-none');
+    if (!reset.token || !reset.email) {
+      error.textContent =
+        tr("auth.reset_link_invalid", "This reset link is not valid. Please request a new password reset link.");
+      error.classList.remove("d-none");
       form.querySelector('button[type="submit"]').disabled = true;
     }
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const btn = form.querySelector('button[type="submit"]');
       if (btn) btn.disabled = true;
-      error?.classList.add('d-none');
+      error?.classList.add("d-none");
 
       const payload = {
         token: form.querySelector('[name="token"]').value,
@@ -30,14 +46,14 @@
       };
 
       if (payload.password !== payload.password_confirmation) {
-        error.textContent = 'Passwords do not match.';
-        error.classList.remove('d-none');
+        error.textContent = tr("auth.passwords_do_not_match", "Passwords do not match.");
+        error.classList.remove("d-none");
         if (btn) btn.disabled = false;
         return;
       }
       if (payload.password.length < 8) {
-        error.textContent = 'Password is too short.';
-        error.classList.remove('d-none');
+        error.textContent = tr("auth.password_too_short", "Password must contain at least 8 characters.");
+        error.classList.remove("d-none");
         if (btn) btn.disabled = false;
         return;
       }
@@ -45,18 +61,19 @@
       try {
         await window.EventSphereAuth.resetPassword(payload);
         window.EventSphereNotifications?.add({
-          type: 'system',
-          title: 'Password Changed',
-          message: 'Your password was updated successfully.',
+          type: "system",
+          title: tr("auth.password_changed_title", "Password updated"),
+          message: tr("auth.password_updated", "Password updated. Your account is secure."),
         });
-        window.tkToast?.('Your password has been updated successfully.', 'success');
+        window.tkToast?.(tr("auth.password_updated", "Password updated. Your account is secure."), "success");
         window.setTimeout(() => {
-          location.href = 'login.html?reset=1';
+          location.href = "/login?reset=1";
         }, 700);
       } catch (err) {
-        error.textContent = err.message || 'Unable to reset password. Please request a new reset link.';
-        error.classList.remove('d-none');
-        window.tkToast?.(error.textContent, 'error');
+        error.textContent =
+          err.message || tr("auth.reset_failed", "We couldn’t reset your password. The link may have expired, so request a new one.");
+        error.classList.remove("d-none");
+        window.tkToast?.(error.textContent, "error");
         if (btn) btn.disabled = false;
       }
     });

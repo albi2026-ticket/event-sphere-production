@@ -3,6 +3,7 @@
 namespace Tests\Feature\Payments;
 
 use App\Mail\OrderConfirmationMail;
+use App\Mail\OrganizerTicketSaleMail;
 use App\Models\Event;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -38,7 +39,7 @@ class MockPaymentTest extends TestCase
             'title' => 'Mock Checkout Event',
             'slug' => 'mock-checkout-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'status' => 'published',
@@ -80,6 +81,35 @@ class MockPaymentTest extends TestCase
             'unit_price' => 25,
             'service_fee' => 2.50,
             'total' => 52.50,
+            'ticket_type_name' => 'General Admission',
+            'event_title' => $event->title,
+            'event_starts_at' => $event->starts_at,
+        ]);
+
+        $refundedOrder = Order::query()->create([
+            'user_id' => $user->id,
+            'order_number' => 'ES-2026-REFUND',
+            'status' => Order::STATUS_REFUNDED,
+            'payment_status' => Order::PAYMENT_STATUS_REFUNDED,
+            'subtotal' => 100,
+            'service_fee' => 0,
+            'total' => 100,
+            'currency' => 'USD',
+            'billing_email' => $user->email,
+            'billing_first_name' => 'Refunded',
+            'billing_last_name' => 'Buyer',
+            'paid_at' => now()->subDay(),
+            'refunded_at' => now(),
+        ]);
+
+        OrderItem::query()->create([
+            'order_id' => $refundedOrder->id,
+            'event_id' => $event->id,
+            'ticket_type_id' => $ticketType->id,
+            'quantity' => 4,
+            'unit_price' => 25,
+            'service_fee' => 0,
+            'total' => 100,
             'ticket_type_name' => 'General Admission',
             'event_title' => $event->title,
             'event_starts_at' => $event->starts_at,
@@ -138,12 +168,43 @@ class MockPaymentTest extends TestCase
 
             return true;
         });
+        Mail::assertSent(OrganizerTicketSaleMail::class, function (OrganizerTicketSaleMail $mail) use ($organizer, $event, $order) {
+            $emailData = $mail->emailData;
+            $frontendUrl = rtrim((string) config('services.frontend.url'), '/');
+
+            $this->assertTrue($mail->hasTo($organizer->email));
+            $this->assertFalse($mail->hasTo($order->billing_email));
+            $this->assertSame($event->id, $mail->event->id);
+            $this->assertSame($order->id, $mail->order->id);
+            $this->assertSame('Mock Checkout Event', $emailData['event_name']);
+            $this->assertSame('Tiketa Hall, New York', $emailData['venue']);
+            $this->assertSame('Test Buyer', $emailData['buyer_name']);
+            $this->assertSame($order->billing_email, $emailData['buyer_email']);
+            $this->assertSame('ES-2026-000001', $emailData['order_id']);
+            $this->assertSame('USD 52.50', $emailData['order_total']);
+            $this->assertSame(2, $emailData['tickets_sold']);
+            $this->assertSame(8, $emailData['tickets_remaining']);
+            $this->assertSame('USD 52.50', $emailData['gross_revenue']);
+            $this->assertSame('USD', $emailData['currency']);
+            $this->assertSame($frontendUrl.'/site/organizer.html', $emailData['view_orders_url']);
+            $this->assertSame($frontendUrl.'/site/organizer.html', $emailData['view_analytics_url']);
+            $this->assertCount(1, $emailData['tickets']);
+            $this->assertSame('General Admission', $emailData['tickets'][0]['name']);
+            $this->assertSame(2, $emailData['tickets'][0]['quantity']);
+            $this->assertSame('USD 25.00', $emailData['tickets'][0]['price']);
+            $this->assertSame('USD 52.50', $emailData['tickets'][0]['subtotal']);
+            $this->assertStringContainsString('View Orders', $mail->render());
+            $this->assertStringContainsString('Go to Organizer Dashboard', $mail->render());
+
+            return $mail->envelope()->subject === 'New Ticket Sold • Mock Checkout Event';
+        });
 
         $this->actingAs($user, 'sanctum')->postJson('/api/payment/mock-success', [
             'order_id' => $order->id,
         ])->assertOk();
 
         Mail::assertSent(OrderConfirmationMail::class, 1);
+        Mail::assertSent(OrganizerTicketSaleMail::class, 1);
     }
 
     public function test_checkout_enforces_event_max_tickets_per_user(): void
@@ -164,7 +225,7 @@ class MockPaymentTest extends TestCase
             'title' => 'Limited Checkout Event',
             'slug' => 'limited-checkout-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'status' => 'published',
@@ -258,7 +319,7 @@ class MockPaymentTest extends TestCase
             'title' => 'Pristina Summer Event',
             'slug' => 'pristina-summer-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'Pristina',
             'country' => 'Kosovo',
             'starts_at' => '2026-07-10 18:00:00',
@@ -360,7 +421,7 @@ class MockPaymentTest extends TestCase
             'title' => 'No Limit Checkout Event',
             'slug' => 'no-limit-checkout-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'status' => 'published',
@@ -412,7 +473,7 @@ class MockPaymentTest extends TestCase
             'title' => 'Large Limit Checkout Event',
             'slug' => 'large-limit-checkout-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'status' => 'published',
@@ -477,7 +538,7 @@ class MockPaymentTest extends TestCase
             'title' => 'Cancelled Checkout Event',
             'slug' => 'cancelled-checkout-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'status' => 'published',
@@ -546,7 +607,7 @@ class MockPaymentTest extends TestCase
             'title' => 'Local Checkout Event',
             'slug' => 'local-checkout-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'status' => 'published',
@@ -616,7 +677,7 @@ class MockPaymentTest extends TestCase
             'title' => 'Expired Reservation Event',
             'slug' => 'expired-reservation-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'status' => 'published',
@@ -702,7 +763,7 @@ class MockPaymentTest extends TestCase
             'title' => 'Fee Managed Checkout Event',
             'slug' => 'fee-managed-checkout-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->addMonth(),
             'status' => 'published',
@@ -763,7 +824,7 @@ class MockPaymentTest extends TestCase
             'title' => 'Started Checkout Event',
             'slug' => 'started-checkout-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->subMinute(),
             'ends_at' => now()->addHour(),
@@ -818,7 +879,7 @@ class MockPaymentTest extends TestCase
             'title' => 'Ended Checkout Event',
             'slug' => 'ended-checkout-event',
             'category' => 'Concerts',
-            'venue_name' => 'Event Sphere Hall',
+            'venue_name' => 'Tiketa Hall',
             'city' => 'New York',
             'starts_at' => now()->subHours(2),
             'ends_at' => now()->subMinute(),

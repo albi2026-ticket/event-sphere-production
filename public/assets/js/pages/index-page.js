@@ -1,36 +1,64 @@
 (function () {
-  'use strict';
+  "use strict";
 
   const categoryAliases = {
-    concert: { key: 'concerts', label: 'Concerts' },
-    concerts: { key: 'concerts', label: 'Concerts' },
-    music: { key: 'concerts', label: 'Concerts' },
-    sport: { key: 'sports', label: 'Sports' },
-    sports: { key: 'sports', label: 'Sports' },
-    festival: { key: 'festivals', label: 'Festivals' },
-    festivals: { key: 'festivals', label: 'Festivals' },
-    conference: { key: 'conferences', label: 'Conferences' },
-    conferences: { key: 'conferences', label: 'Conferences' },
-    theatre: { key: 'theater', label: 'Theater' },
-    theater: { key: 'theater', label: 'Theater' },
-    comedy: { key: 'comedy', label: 'Comedy' },
-    family: { key: 'family', label: 'Family' },
-    nightlife: { key: 'nightlife', label: 'Nightlife' },
+    concert: { key: "concerts", label: "Concerts" },
+    concerts: { key: "concerts", label: "Concerts" },
+    music: { key: "concerts", label: "Concerts" },
+    sport: { key: "sports", label: "Sports" },
+    sports: { key: "sports", label: "Sports" },
+    festival: { key: "festivals", label: "Festivals" },
+    festivals: { key: "festivals", label: "Festivals" },
+    conference: { key: "conferences", label: "Conferences" },
+    conferences: { key: "conferences", label: "Conferences" },
+    theatre: { key: "theater", label: "Theater" },
+    theater: { key: "theater", label: "Theater" },
+    comedy: { key: "comedy", label: "Comedy" },
+    family: { key: "family", label: "Family" },
+    nightlife: { key: "nightlife", label: "Nightlife" },
   };
 
-  const categoryPriority = ['sports', 'concerts', 'festivals', 'comedy', 'theater', 'conferences', 'family', 'nightlife'];
+  const categoryPriority = [
+    "sports",
+    "concerts",
+    "festivals",
+    "comedy",
+    "theater",
+    "conferences",
+    "family",
+    "nightlife",
+  ];
+  let homepageData = null;
+
+  function tr(key, fallback, params = {}) {
+    const value = window.t?.(key, params);
+    if (value && value !== key) return value;
+    return Object.entries(params).reduce(
+      (text, [param, replacement]) => text.replaceAll(`{${param}}`, replacement),
+      fallback,
+    );
+  }
 
   async function hydrateNavCategories() {
-    const menus = document.querySelectorAll('[data-nav-categories]');
+    const menus = document.querySelectorAll("[data-nav-categories]");
     if (!menus.length) return;
     try {
-      const base = window.EventSphereConfig?.API_BASE_URL || document.querySelector('meta[name="api-base"]')?.content;
-      const response = await fetch(`${base.replace(/\/$/, '')}/categories`, { headers: { Accept: 'application/json' } });
+      const base =
+        window.EventSphereConfig?.API_BASE_URL ||
+        document.querySelector('meta[name="api-base"]')?.content;
+      const response = await fetch(`${base.replace(/\/$/, "")}/categories`, {
+        headers: { Accept: "application/json" },
+      });
       const payload = await response.json();
       const categories = Array.isArray(payload.data) ? payload.data : [];
       if (!categories.length) return;
       menus.forEach((menu) => {
-        menu.innerHTML = categories.map((category) => `<li><a class="dropdown-item text-white-50" href="${window.EventSphereCategories.href(category.slug || category.name)}"><i class="bi ${category.icon || 'bi-tag'} me-2"></i>${category.name}</a></li>`).join('');
+        menu.innerHTML = categories
+          .map(
+            (category) =>
+              `<li><a class="dropdown-item text-white-50" href="${window.EventSphereCategories.href(category.slug || category.name)}"><i class="bi ${category.icon || "bi-tag"} me-2"></i>${category.name}</a></li>`,
+          )
+          .join("");
       });
     } catch {
       /* keep static fallback */
@@ -48,50 +76,60 @@
 
   function isPublicActiveEvent(event) {
     const status = window.EventSphereEvents.salesStatus(event);
-    if (status.key === 'ended' || event.event_state?.key === 'ended') return false;
-    return event.status === 'published' && (!event.visibility || event.visibility === 'public');
+    if (status.key === "ended" || event.event_state?.key === "ended") return false;
+    return event.status === "published" && (!event.visibility || event.visibility === "public");
   }
 
   function sortByHeroPriority(events) {
     return [...events].sort((a, b) => {
-      return (Number(Boolean(b.is_featured)) - Number(Boolean(a.is_featured)))
-        || (Number(Boolean(b.is_trending)) - Number(Boolean(a.is_trending)))
-        || (discoveryScore(b) - discoveryScore(a))
-        || (Number(hasEventImage(b)) - Number(hasEventImage(a)))
-        || (eventTimestamp(b, 'created_at') - eventTimestamp(a, 'created_at'))
-        || (eventTimestamp(a, 'starts_at') - eventTimestamp(b, 'starts_at'));
+      return (
+        Number(Boolean(b.is_featured)) - Number(Boolean(a.is_featured)) ||
+        Number(Boolean(b.is_trending)) - Number(Boolean(a.is_trending)) ||
+        discoveryScore(b) - discoveryScore(a) ||
+        Number(hasEventImage(b)) - Number(hasEventImage(a)) ||
+        eventTimestamp(b, "created_at") - eventTimestamp(a, "created_at") ||
+        eventTimestamp(a, "starts_at") - eventTimestamp(b, "starts_at")
+      );
     });
   }
 
   function discoveryScore(event) {
-    return Number(event.popularity_score || 0)
-      || (Number(event.recent_tickets_sold_count || 0) * 5)
-      + (Number(event.tickets_sold_count || event.sold_tickets || 0) * 3)
-      + (Number(event.favorites_count || 0) * 2)
-      + Math.floor(Number(event.views_count || 0) / 10);
+    return (
+      Number(event.popularity_score || 0) ||
+      Number(event.recent_tickets_sold_count || 0) * 5 +
+        Number(event.tickets_sold_count || event.sold_tickets || 0) * 3 +
+        Number(event.favorites_count || 0) * 2 +
+        Math.floor(Number(event.views_count || 0) / 10)
+    );
   }
 
   function sortByTrending(events) {
     return [...events].sort((a, b) => {
-      return (discoveryScore(b) - discoveryScore(a))
-        || (Number(Boolean(b.is_trending)) - Number(Boolean(a.is_trending)))
-        || (eventTimestamp(a, 'starts_at') - eventTimestamp(b, 'starts_at'));
+      return (
+        discoveryScore(b) - discoveryScore(a) ||
+        Number(Boolean(b.is_trending)) - Number(Boolean(a.is_trending)) ||
+        eventTimestamp(a, "starts_at") - eventTimestamp(b, "starts_at")
+      );
     });
   }
 
   function sortByNewest(events) {
-    return [...events].sort((a, b) => eventTimestamp(b, 'created_at') - eventTimestamp(a, 'created_at'));
+    return [...events].sort(
+      (a, b) => eventTimestamp(b, "created_at") - eventTimestamp(a, "created_at"),
+    );
   }
 
   function sortBySoonest(events) {
-    return [...events].sort((a, b) => eventTimestamp(a, 'starts_at') - eventTimestamp(b, 'starts_at'));
+    return [...events].sort(
+      (a, b) => eventTimestamp(a, "starts_at") - eventTimestamp(b, "starts_at"),
+    );
   }
 
   function countdownLabel(startsAt) {
     const start = startsAt ? new Date(startsAt) : null;
-    if (!start || Number.isNaN(start.getTime())) return 'Date TBA';
+    if (!start || Number.isNaN(start.getTime())) return "Date TBA";
     const diff = start.getTime() - Date.now();
-    if (diff <= 0) return 'Live now';
+    if (diff <= 0) return "Live now";
 
     const minute = 60 * 1000;
     const hour = 60 * minute;
@@ -100,17 +138,19 @@
     const hours = Math.floor((diff % day) / hour);
     const minutes = Math.floor((diff % hour) / minute);
 
-    if (days >= 1) return `${days} Day${days === 1 ? '' : 's'}${hours ? ` ${hours} Hr` : ''}`;
+    if (days >= 1) return `${days} Day${days === 1 ? "" : "s"}${hours ? ` ${hours} Hr` : ""}`;
     if (hours >= 1) return `${hours} Hr ${minutes} Min`;
     return `${Math.max(1, minutes)} Min`;
   }
 
   function locationLabel(event) {
-    return [event.venue_name, event.city, event.country].filter(Boolean).join(', ') || 'Location TBA';
+    return (
+      [event.venue_name, event.city, event.country].filter(Boolean).join(", ") || "Location TBA"
+    );
   }
 
   function categoryInfo(category) {
-    const raw = String(category || 'Other').trim() || 'Other';
+    const raw = String(category || "Other").trim() || "Other";
     const normalized = raw.toLowerCase();
     return categoryAliases[normalized] || { key: normalized, label: raw };
   }
@@ -140,16 +180,10 @@
       .sort(categorySort);
   }
 
-  async function fetchHomepageSection(path, params = {}) {
-    const qs = new URLSearchParams({ limit: 8, ...params });
-    const result = await window.EventSphereApi.fetch(`${path}?${qs.toString()}`);
-    return result.data;
-  }
-
   function uniqueEvents(...groups) {
     const seen = new Set();
     return groups.flat().filter((event) => {
-      const key = String(event?.id || '');
+      const key = String(event?.id || "");
       if (!key || seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -157,12 +191,18 @@
   }
 
   async function fetchHomepageData() {
-    const [featured, trending, upcoming, categories] = await Promise.all([
-      fetchHomepageSection('/homepage/featured-events', { limit: 8 }),
-      fetchHomepageSection('/homepage/trending-events', { limit: 8 }),
-      fetchHomepageSection('/homepage/upcoming-events', { limit: 8 }),
-      fetchHomepageSection('/homepage/categories', { limit: 3 }),
-    ]);
+    const qs = new URLSearchParams({
+      featured_limit: 8,
+      trending_limit: 8,
+      upcoming_limit: 8,
+      category_limit: 3,
+    });
+    const result = await window.EventSphereApi.fetch(`/homepage?${qs.toString()}`);
+    const payload = result.data || {};
+    const featured = payload.featured_events;
+    const trending = payload.trending_events;
+    const upcoming = payload.upcoming_events;
+    const categories = payload.categories;
 
     return {
       featured: Array.isArray(featured) ? featured.filter(isPublicActiveEvent) : [],
@@ -174,42 +214,116 @@
 
   function preloadImage(src) {
     if (!src) return;
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
+    if (
+      [...document.querySelectorAll('link[rel="preload"][as="image"]')].some(
+        (link) => link.href === src || link.getAttribute("href") === src,
+      )
+    )
+      return;
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    link.fetchPriority = "high";
     link.href = src;
     document.head.appendChild(link);
     const img = new Image();
     img.src = src;
   }
 
+  function absoluteUrl(path) {
+    try {
+      const origin = ["localhost", "127.0.0.1", "::1"].includes(location.hostname)
+        ? "https://tiketa.example"
+        : location.origin;
+      return new URL(path || "/", origin).href;
+    } catch {
+      return new URL(path || "/", "https://tiketa.example").href;
+    }
+  }
+
+  function eventListItem(event, position) {
+    const slug = event.slug || event.id;
+    const url = absoluteUrl(
+      window.EventSphereRoutes?.eventUrl?.(slug) || `/event/${encodeURIComponent(slug)}`,
+    );
+    return {
+      "@type": "ListItem",
+      position,
+      url,
+      item: {
+        "@type": "Event",
+        name: event.title,
+        url,
+        image: window.EventSphereUtils.eventImage(event),
+        startDate: event.starts_at,
+        location: {
+          "@type": "Place",
+          name: event.venue_name || event.city || "Venue",
+          address: [event.venue_name, event.city, event.country].filter(Boolean).join(", "),
+        },
+      },
+    };
+  }
+
+  function setItemListSchema(key, name, events) {
+    const items = (events || [])
+      .filter(Boolean)
+      .slice(0, 12)
+      .map((event, index) => eventListItem(event, index + 1));
+    let script = document.querySelector(
+      `script[type="application/ld+json"][data-itemlist-schema="${key}"]`,
+    );
+    if (!items.length) {
+      script?.remove();
+      return;
+    }
+    if (!script) {
+      script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.dataset.itemlistSchema = key;
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name,
+      itemListElement: items,
+      inLanguage: window.TiketaLanguage?.getLanguage?.() || "en",
+    });
+    window.TiketaLanguage?.applyInternationalSeo?.();
+  }
+
   function renderHeroSlide(event, index) {
     const u = window.EventSphereUtils;
-    const img = u.eventImage(event);
-    const detailsHref = `event-details.html?slug=${encodeURIComponent(event.slug)}`;
+    const img = u.eventBannerImage(event);
+    const detailsHref =
+      window.EventSphereRoutes?.eventUrl?.(event.slug) ||
+      `/event/${encodeURIComponent(event.slug)}`;
     const status = window.EventSphereEvents.salesStatus(event);
     const ticketType = window.EventSphereEvents.availableTicketTypes(event)[0];
-    const buyDisabled = !status.canBuy || (!ticketType && event.price_from === undefined && event.base_price === undefined);
-    const statusLabel = status.key === 'sold_out' || status.key === 'live' ? status.label : '';
+    const buyDisabled =
+      !status.canBuy ||
+      (!ticketType && event.price_from === undefined && event.base_price === undefined);
+    const statusLabel = status.key === "sold_out" || status.key === "live" ? status.label : "";
 
-    return `<article class="hero-slide${index === 0 ? ' active' : ''}" data-hero-slide data-index="${index}" aria-hidden="${index === 0 ? 'false' : 'true'}">
-      <div class="hero-slide-bg"><img src="${u.escapeHtml(img)}" alt="" ${index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'}></div>
+    return `<article class="hero-slide${index === 0 ? " active" : ""}" data-hero-slide data-index="${index}" aria-hidden="${index === 0 ? "false" : "true"}">
+      <div class="hero-slide-bg"><img src="${u.escapeHtml(img)}" alt="${u.escapeHtml(`${event.title} at ${locationLabel(event)}`)}" width="1600" height="900" sizes="100vw" ${index === 0 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'} decoding="async"></div>
       <div class="hero-slide-overlay"></div>
       <div class="container-xxl hero-slide-content">
         <div class="hero-slide-copy">
           <div class="hero-badges">
-            <span class="hero-eyebrow"><span style="width:8px;height:8px;border-radius:50%;background:var(--success)"></span>${u.escapeHtml(event.category || 'Featured Event')}</span>
-            ${statusLabel ? `<span class="status-badge status-${u.escapeHtml(status.key)}">${u.escapeHtml(statusLabel)}</span>` : ''}
+            <span class="hero-eyebrow"><span style="width:8px;height:8px;border-radius:50%;background:var(--success)"></span>${u.escapeHtml(event.category || "Featured Event")}</span>
+            ${statusLabel ? `<span class="status-badge status-${u.escapeHtml(status.key)}">${u.escapeHtml(statusLabel)}</span>` : ""}
           </div>
           <h1 class="mt-3">${u.escapeHtml(event.title)}</h1>
           <div class="hero-slide-meta">
             <span><i class="bi bi-calendar3"></i>${u.escapeHtml(u.formatEventDate(event.starts_at, event.timezone))}</span>
             <span><i class="bi bi-geo-alt"></i>${u.escapeHtml(locationLabel(event))}</span>
           </div>
-          <div class="hero-countdown"><i class="bi bi-clock"></i><span>Starts In</span><strong data-hero-countdown="${u.escapeHtml(event.starts_at || '')}">${u.escapeHtml(countdownLabel(event.starts_at))}</strong></div>
+          <div class="hero-countdown"><i class="bi bi-clock"></i><span>Starts In</span><strong data-hero-countdown="${u.escapeHtml(event.starts_at || "")}">${u.escapeHtml(countdownLabel(event.starts_at))}</strong></div>
           <div class="hero-actions">
-            <a class="btn btn-primary-grad btn-lg${buyDisabled ? ' disabled' : ''}" href="${detailsHref}" data-hero-buy="${u.escapeHtml(String(event.id))}" aria-disabled="${buyDisabled ? 'true' : 'false'}"><i class="bi bi-ticket-perforated"></i>Buy Tickets</a>
-            <a class="btn btn-glass btn-lg" href="${detailsHref}"><i class="bi bi-info-circle"></i>View Details</a>
+            <a class="btn btn-primary-grad btn-lg${buyDisabled ? " disabled" : ""}" href="${detailsHref}" data-hero-buy="${u.escapeHtml(String(event.id))}" aria-disabled="${buyDisabled ? "true" : "false"}"><i class="bi bi-ticket-perforated"></i><span data-i18n="buttons.buy_tickets">${window.t?.("buttons.buy_tickets") || "Buy Tickets"}</span></a>
+            <a class="btn btn-glass btn-lg" href="${detailsHref}"><i class="bi bi-info-circle"></i><span data-i18n="buttons.view_details">${window.t?.("buttons.view_details") || "View Details"}</span></a>
           </div>
         </div>
       </div>
@@ -217,27 +331,33 @@
   }
 
   function setupHeroSlider(events) {
-    const root = document.querySelector('[data-hero-slider]');
-    const slidesWrap = document.querySelector('[data-hero-slides]');
-    const loading = document.querySelector('[data-hero-loading]');
-    const dotsWrap = document.querySelector('[data-hero-dots]');
-    const prev = document.querySelector('[data-hero-prev]');
-    const next = document.querySelector('[data-hero-next]');
+    const root = document.querySelector("[data-hero-slider]");
+    const slidesWrap = document.querySelector("[data-hero-slides]");
+    const loading = document.querySelector("[data-hero-loading]");
+    const dotsWrap = document.querySelector("[data-hero-dots]");
+    const prev = document.querySelector("[data-hero-prev]");
+    const next = document.querySelector("[data-hero-next]");
     if (!root || !slidesWrap || !dotsWrap) return;
 
     const preferredEvents = events.filter((event) => event.is_featured || event.is_trending);
-    const heroEvents = sortByHeroPriority(preferredEvents.length ? preferredEvents : events).slice(0, 5);
+    const heroEvents = sortByHeroPriority(preferredEvents.length ? preferredEvents : events).slice(
+      0,
+      5,
+    );
     if (loading) loading.hidden = true;
     if (!heroEvents.length) {
-      root.innerHTML = '<div class="hero-empty"><div><h1>No upcoming events yet</h1><p class="text-muted-pro mb-0">Published events will appear here as organizers add them.</p></div></div>';
+      root.innerHTML = `<div class="hero-empty"><div><h1 data-i18n="empty.no_upcoming_events">${window.t?.("empty.no_upcoming_events") || "No upcoming events yet"}</h1><p class="text-muted-pro mb-0" data-i18n="empty.published_events_appear">${window.t?.("empty.published_events_appear") || "Published events will appear here as organizers add them."}</p></div></div>`;
       return;
     }
 
-    preloadImage(window.EventSphereUtils.eventImage(heroEvents[0]));
-    slidesWrap.innerHTML = heroEvents.map(renderHeroSlide).join('');
-    dotsWrap.innerHTML = heroEvents.map((event, index) =>
-      `<button class="hero-dot${index === 0 ? ' active' : ''}" type="button" data-hero-dot="${index}" aria-label="Show ${window.EventSphereUtils.escapeHtml(event.title)}"></button>`,
-    ).join('');
+    preloadImage(window.EventSphereUtils.eventBannerImage(heroEvents[0]));
+    slidesWrap.innerHTML = heroEvents.map(renderHeroSlide).join("");
+    dotsWrap.innerHTML = heroEvents
+      .map(
+        (event, index) =>
+          `<button class="hero-dot${index === 0 ? " active" : ""}" type="button" data-hero-dot="${index}" aria-label="Show ${window.EventSphereUtils.escapeHtml(event.title)}"></button>`,
+      )
+      .join("");
 
     const controlsHidden = heroEvents.length < 2;
     if (prev) prev.hidden = controlsHidden;
@@ -247,17 +367,17 @@
     let active = 0;
     let timer = null;
     let touchStartX = 0;
-    const slides = () => [...root.querySelectorAll('[data-hero-slide]')];
-    const dots = () => [...root.querySelectorAll('[data-hero-dot]')];
+    const slides = () => [...root.querySelectorAll("[data-hero-slide]")];
+    const dots = () => [...root.querySelectorAll("[data-hero-dot]")];
 
     const show = (index) => {
       active = (index + heroEvents.length) % heroEvents.length;
       slides().forEach((slide, slideIndex) => {
         const isActive = slideIndex === active;
-        slide.classList.toggle('active', isActive);
-        slide.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+        slide.classList.toggle("active", isActive);
+        slide.setAttribute("aria-hidden", isActive ? "false" : "true");
       });
-      dots().forEach((dot, dotIndex) => dot.classList.toggle('active', dotIndex === active));
+      dots().forEach((dot, dotIndex) => dot.classList.toggle("active", dotIndex === active));
     };
     const stop = () => {
       if (timer) window.clearInterval(timer);
@@ -272,43 +392,63 @@
       start();
     };
 
-    prev?.addEventListener('click', () => { show(active - 1); restart(); });
-    next?.addEventListener('click', () => { show(active + 1); restart(); });
-    dotsWrap.addEventListener('click', (event) => {
-      const dot = event.target.closest('[data-hero-dot]');
+    prev?.addEventListener("click", () => {
+      show(active - 1);
+      restart();
+    });
+    next?.addEventListener("click", () => {
+      show(active + 1);
+      restart();
+    });
+    dotsWrap.addEventListener("click", (event) => {
+      const dot = event.target.closest("[data-hero-dot]");
       if (!dot) return;
       show(Number(dot.dataset.heroDot || 0));
       restart();
     });
-    root.addEventListener('mouseenter', stop);
-    root.addEventListener('mouseleave', start);
-    root.addEventListener('touchstart', (event) => {
-      touchStartX = event.changedTouches?.[0]?.clientX || 0;
-    }, { passive: true });
-    root.addEventListener('touchend', (event) => {
-      const endX = event.changedTouches?.[0]?.clientX || 0;
-      const delta = endX - touchStartX;
-      if (Math.abs(delta) < 48) return;
-      show(active + (delta < 0 ? 1 : -1));
-      restart();
-    }, { passive: true });
-    root.addEventListener('click', (event) => {
-      const buy = event.target.closest('[data-hero-buy]');
-      if (!buy || buy.getAttribute('aria-disabled') === 'true') return;
+    root.addEventListener("mouseenter", stop);
+    root.addEventListener("mouseleave", start);
+    root.addEventListener(
+      "touchstart",
+      (event) => {
+        touchStartX = event.changedTouches?.[0]?.clientX || 0;
+      },
+      { passive: true },
+    );
+    root.addEventListener(
+      "touchend",
+      (event) => {
+        const endX = event.changedTouches?.[0]?.clientX || 0;
+        const delta = endX - touchStartX;
+        if (Math.abs(delta) < 48) return;
+        show(active + (delta < 0 ? 1 : -1));
+        restart();
+      },
+      { passive: true },
+    );
+    root.addEventListener("click", (event) => {
+      const buy = event.target.closest("[data-hero-buy]");
+      if (!buy || buy.getAttribute("aria-disabled") === "true") return;
       event.preventDefault();
       const featuredEvent = heroEvents.find((item) => String(item.id) === buy.dataset.heroBuy);
-      const ticketType = featuredEvent ? window.EventSphereEvents.availableTicketTypes(featuredEvent)[0] : null;
+      const ticketType = featuredEvent
+        ? window.EventSphereEvents.availableTicketTypes(featuredEvent)[0]
+        : null;
       if (!featuredEvent || !ticketType) {
         location.href = buy.href;
         return;
       }
       try {
-        window.EventSphereCart.setFromEvent(featuredEvent, Number(ticketType.id), Number(ticketType.min_per_order || 1));
+        window.EventSphereCart.setFromEvent(
+          featuredEvent,
+          Number(ticketType.id),
+          Number(ticketType.min_per_order || 1),
+        );
         location.href = window.EventSphereAuth?.isLoggedIn?.()
-          ? 'checkout.html'
-          : `login.html?next=${encodeURIComponent('checkout.html')}`;
+          ? "/checkout"
+          : `/login?next=${encodeURIComponent("/checkout")}`;
       } catch (err) {
-        window.tkToast?.(err.message || 'Unable to start checkout.', 'error');
+        window.tkToast?.(err.message || tr("checkout.checkout_failed", "We couldn’t start secure checkout. Your card was not charged; review your cart and try again."), "error");
       }
     });
 
@@ -321,91 +461,139 @@
     if (!section || !grid) return;
     const visibleEvents = events.slice(0, limit);
     section.hidden = !visibleEvents.length;
-    grid.innerHTML = visibleEvents.map((event, index) => window.EventSphereEvents.renderEventCard(event, index)).join('');
+    grid.innerHTML = visibleEvents
+      .map((event, index) => window.EventSphereEvents.renderEventCard(event, index))
+      .join("");
+    setItemListSchema(
+      gridSelector
+        .replace(/[^a-z0-9]+/gi, "-")
+        .replace(/^-|-$/g, "")
+        .toLowerCase(),
+      sectionSelector.includes("trending") ? "Trending Events" : "Upcoming Events",
+      visibleEvents,
+    );
   }
 
   function renderTrending(events) {
     const trending = sortByTrending(events);
-    renderEventGrid('[data-home-trending-section]', '[data-home-trending]', trending, 4);
+    renderEventGrid("[data-home-trending-section]", "[data-home-trending]", trending, 4);
   }
 
   function renderUpcomingWeek(events) {
     const now = Date.now();
-    const weekEnd = now + (7 * 24 * 60 * 60 * 1000);
-    const weekEvents = sortBySoonest(events.filter((event) => {
-      const start = eventTimestamp(event, 'starts_at');
-      const status = window.EventSphereEvents.salesStatus(event);
-      return (start >= now && start <= weekEnd) || (status.key === 'live' && start <= weekEnd);
-    }));
-    renderEventGrid('[data-home-week-section]', '[data-home-week]', weekEvents, 4);
+    const weekEnd = now + 7 * 24 * 60 * 60 * 1000;
+    const weekEvents = sortBySoonest(
+      events.filter((event) => {
+        const start = eventTimestamp(event, "starts_at");
+        const status = window.EventSphereEvents.salesStatus(event);
+        return (start >= now && start <= weekEnd) || (status.key === "live" && start <= weekEnd);
+      }),
+    );
+    renderEventGrid("[data-home-week-section]", "[data-home-week]", weekEvents, 4);
   }
 
   function renderCategorySections(categories) {
-    const wrap = document.querySelector('[data-home-category-sections]');
+    const wrap = document.querySelector("[data-home-category-sections]");
     if (!wrap) return;
     const categoryGroups = categories?.length
-      ? categories.map((category) => ({
-        key: category.slug || category.key || categoryInfo(category.name).key,
-        label: category.name || category.label || category.slug || 'Events',
-        events: Array.isArray(category.events) ? category.events.filter(isPublicActiveEvent) : [],
-      })).filter((category) => category.events.length)
+      ? categories
+          .map((category) => ({
+            key: category.slug || category.key || categoryInfo(category.name).key,
+            label: category.name || category.label || category.slug || "Events",
+            events: Array.isArray(category.events)
+              ? category.events.filter(isPublicActiveEvent)
+              : [],
+          }))
+          .filter((category) => category.events.length)
       : [];
 
-    wrap.innerHTML = categoryGroups.map((category) => {
-      const cards = category.events.slice(0, 3).map((event, index) => window.EventSphereEvents.renderEventCard(event, index)).join('');
-      return `<section class="section-sm" data-home-category-section="${window.EventSphereUtils.escapeHtml(category.key)}">
+    wrap.innerHTML = categoryGroups
+      .map((category) => {
+        const cards = category.events
+          .slice(0, 3)
+          .map((event, index) => window.EventSphereEvents.renderEventCard(event, index))
+          .join("");
+        return `<section class="section-sm home-section home-category-section" data-home-category-section="${window.EventSphereUtils.escapeHtml(category.key)}">
         <div class="container-xxl">
           <div class="section-title fade-up in">
-            <div><div class="eyebrow">${window.EventSphereUtils.escapeHtml(category.label)}</div><h2 class="mt-2">${category.key === 'sports' ? 'Game day, every day' : `Newest ${window.EventSphereUtils.escapeHtml(category.label)} events`}</h2></div>
-            <a class="btn btn-ghost" href="${window.EventSphereCategories.href(category.key)}">Browse ${window.EventSphereUtils.escapeHtml(category.label)} <i class="bi bi-arrow-right ms-1"></i></a>
+            <div><div class="eyebrow">${window.EventSphereUtils.escapeHtml(category.label)}</div><h2 class="mt-2">${window.EventSphereUtils.escapeHtml(category.key === "sports" ? tr("homepage.game_day_title", "Game day, every day") : tr("homepage.newest_category_events", "Newest {category} events", { category: category.label }))}</h2></div>
+            <a class="btn btn-ghost" href="${window.EventSphereCategories.href(category.key)}">${window.EventSphereUtils.escapeHtml(tr("homepage.browse_category", "Browse {category}", { category: category.label }))} <i class="bi bi-arrow-right ms-1"></i></a>
           </div>
           <div class="row g-4 fade-up in">${cards}</div>
         </div>
       </section>`;
-    }).join('');
+      })
+      .join("");
+    categoryGroups.forEach((category) => {
+      setItemListSchema(
+        `category-${category.key}`,
+        `${category.label} Events`,
+        category.events.slice(0, 8),
+      );
+    });
   }
 
   function startHeroCountdowns() {
     window.setInterval(() => {
-      document.querySelectorAll('[data-hero-countdown]').forEach((el) => {
+      document.querySelectorAll("[data-hero-countdown]").forEach((el) => {
         el.textContent = countdownLabel(el.dataset.heroCountdown);
       });
     }, 1000);
   }
 
   function setNewsletterMessage(form, type, message) {
-    const el = form?.querySelector('[data-newsletter-message]');
+    const el = form?.querySelector("[data-newsletter-message]");
     if (!el) return;
-    el.className = `newsletter-message ${type ? `is-${type}` : ''}`;
-    el.textContent = message || '';
+    el.className = `newsletter-message ${type ? `is-${type}` : ""}`;
+    el.textContent = message || "";
   }
 
   function setupNewsletter() {
-    document.querySelectorAll('[data-newsletter-form]').forEach((form) => {
-      const input = form.querySelector('[data-newsletter-email]');
-      const submit = form.querySelector('[data-newsletter-submit]');
+    document.querySelectorAll("[data-newsletter-form]").forEach((form) => {
+      const input = form.querySelector("[data-newsletter-email]");
+      const submit = form.querySelector("[data-newsletter-submit]");
       if (!input || !submit) return;
 
-      form.addEventListener('submit', async (event) => {
+      form.addEventListener("submit", async (event) => {
         event.preventDefault();
         const email = input.value.trim();
         if (!email || !input.checkValidity()) {
-          setNewsletterMessage(form, 'error', 'Enter a valid email address.');
+          setNewsletterMessage(
+            form,
+            "error",
+            tr("homepage.newsletter_invalid", "Enter a valid email address."),
+          );
           input.focus();
           return;
         }
 
         submit.disabled = true;
-        setNewsletterMessage(form, '', 'Subscribing...');
+        setNewsletterMessage(form, "", tr("homepage.newsletter_subscribing", "Subscribing..."));
         try {
-          await window.EventSphereApi.fetch('/newsletter-subscriptions', {
-            method: 'POST',
-            body: { email, source: form.dataset.newsletterSource || 'homepage' },
+          await window.EventSphereApi.fetch("/newsletter-subscriptions", {
+            method: "POST",
+            body: {
+              email,
+              source: form.dataset.newsletterSource || "events",
+              language: window.TiketaLanguage?.getLanguage?.() || "en",
+            },
           });
           form.reset();
-          setNewsletterMessage(form, 'success', 'You are subscribed. Watch your inbox for Event Sphere updates.');
+          setNewsletterMessage(
+            form,
+            "success",
+            tr(
+              "homepage.newsletter_success",
+              "You are subscribed. Watch your inbox for Tiketa updates.",
+            ),
+          );
         } catch (err) {
-          setNewsletterMessage(form, 'error', err.message || 'Subscription failed. Please try again.');
+          setNewsletterMessage(
+            form,
+            "error",
+            err.message ||
+              tr("homepage.newsletter_failed", "We couldn’t add you to the newsletter. Check your email address and try again."),
+          );
         } finally {
           submit.disabled = false;
         }
@@ -413,23 +601,43 @@
     });
   }
 
-  document.addEventListener('DOMContentLoaded', async () => {
+  document.addEventListener("DOMContentLoaded", async () => {
     setupNewsletter();
     hydrateNavCategories();
+    document
+      .querySelector("[data-home-trending]")
+      ?.insertAdjacentHTML(
+        "beforeend",
+        window.EventSphereSkeleton?.eventCards?.(4, "col-md-6 col-xl-3") || "",
+      );
+    document
+      .querySelector("[data-home-week]")
+      ?.insertAdjacentHTML(
+        "beforeend",
+        window.EventSphereSkeleton?.eventCards?.(4, "col-md-6 col-xl-3") || "",
+      );
 
     try {
       const data = await fetchHomepageData();
+      homepageData = data;
       setupHeroSlider(uniqueEvents(data.featured, data.trending, data.upcoming));
+      setItemListSchema("featured-events", "Featured Events", data.featured);
       renderTrending(data.trending);
       renderUpcomingWeek(data.upcoming);
       renderCategorySections(data.categories);
       window.EventSphereFavorites?.syncFavoriteButtons();
       startHeroCountdowns();
+      document.addEventListener("tiketa:language-changed", () => {
+        if (homepageData?.categories) {
+          renderCategorySections(homepageData.categories);
+          window.EventSphereFavorites?.syncFavoriteButtons();
+        }
+      });
     } catch {
-      document.querySelector('[data-hero-loading]')?.replaceChildren();
-      document.querySelector('[data-home-trending-section]')?.setAttribute('hidden', '');
-      document.querySelector('[data-home-week-section]')?.setAttribute('hidden', '');
-      document.querySelector('[data-home-category-sections]')?.replaceChildren();
+      document.querySelector("[data-hero-loading]")?.replaceChildren();
+      document.querySelector("[data-home-trending-section]")?.setAttribute("hidden", "");
+      document.querySelector("[data-home-week-section]")?.setAttribute("hidden", "");
+      document.querySelector("[data-home-category-sections]")?.replaceChildren();
     }
   });
 })();
