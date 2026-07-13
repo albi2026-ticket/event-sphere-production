@@ -103,7 +103,7 @@
     `,
           )
           .join("")
-      : `<div class="dashboard-empty"><i class="bi bi-bell"></i><strong data-i18n="notifications.no_notifications">${tr("notifications.no_notifications", "No notifications yet.")}</strong><span data-i18n="notifications.empty_copy">${tr("notifications.empty_copy", "Order confirmations, event reminders, and helpful updates will appear here.")}</span></div>`;
+      : `<div class="dashboard-empty"><i class="bi bi-bell"></i><div><strong data-i18n="empty.no_notifications">${tr("empty.no_notifications", "You’re all caught up.")}</strong><span class="d-block" data-i18n="empty.no_notifications_copy">${tr("empty.no_notifications_copy", "Important updates, reminders, confirmations, and admin notes will land here.")}</span><button class="btn btn-glass btn-sm mt-2" type="button" data-notifications-retry data-i18n="empty.refresh_action">${tr("empty.refresh_action", "Refresh")}</button></div></div>`;
 
     if (pager && state.meta?.last_page > 1) {
       const current = Number(state.meta.current_page || state.page);
@@ -124,7 +124,7 @@
       state.page = page;
     } catch (err) {
       state.error =
-        err.message || tr("notifications.load_failed", "Could not load notifications. Please try again.");
+        err.message || tr("notifications.load_failed", "We couldn’t load your notifications. Check your connection and refresh.");
     } finally {
       state.loading = false;
       render();
@@ -163,7 +163,7 @@
           read.disabled = false;
           window.tkToast?.(
             err.message ||
-              tr("notifications.update_failed", "Could not update the notification. Please try again."),
+              tr("notifications.update_failed", "We couldn’t update that notification. Refresh your notifications and try again."),
             "error",
           );
         }
@@ -183,7 +183,7 @@
           open.disabled = false;
           window.tkToast?.(
             err.message ||
-              tr("notifications.update_failed", "Could not update the notification. Please try again."),
+              tr("notifications.update_failed", "We couldn’t update that notification. Refresh your notifications and try again."),
             "error",
           );
         }
@@ -201,7 +201,7 @@
         } catch (err) {
           window.tkToast?.(
             err.message ||
-              tr("notifications.update_failed", "Could not update the notification. Please try again."),
+              tr("notifications.update_failed", "We couldn’t update that notification. Refresh your notifications and try again."),
             "error",
           );
         } finally {

@@ -18,7 +18,7 @@
     const params = new URLSearchParams(location.search);
     if (params.get("reset") === "1") {
       window.tkToast?.(
-        tr("auth.password_updated", "Your password has been updated successfully."),
+        tr("auth.password_updated", "Password updated. Your account is secure."),
         "success",
       );
     }
@@ -40,7 +40,7 @@
         window.EventSphereAuth.redirectByRole(user);
       } catch (err) {
         window.tkToast?.(
-          err.message || tr("auth.sign_in_failed", "We couldn't sign you in. Please try again."),
+          err.message || tr("auth.sign_in_failed", "We couldn’t sign you in. Check your email and password, then try again."),
           "error",
         );
         if (btn) btn.disabled = false;

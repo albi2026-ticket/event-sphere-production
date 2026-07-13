@@ -1,9 +1,9 @@
 <?php
 
 return [
-    'reset' => 'Fjalëkalimi juaj u përditësua me sukses.',
-    'sent' => 'Linku për rivendosjen e fjalëkalimit u dërgua. Kontrolloni emailin.',
-    'throttled' => 'Ju lutemi prisni para se të kërkoni një link tjetër rivendosjeje.',
-    'token' => 'Ky link rivendosjeje nuk është i vlefshëm. Ju lutemi kërkoni një link të ri.',
-    'user' => 'Nuk gjetëm llogari Tiketa me atë adresë emaili.',
+    'reset' => 'Fjalëkalimi u përditësua. Llogaria juaj është e sigurt dhe mund të hyni me fjalëkalimin e ri.',
+    'sent' => 'Linku i rivendosjes u dërgua. Kontrolloni inbox-in për të vazhduar.',
+    'throttled' => 'Një link rivendosjeje është kërkuar së fundi. Prisni pak para se të kërkoni një tjetër.',
+    'token' => 'Ky link rivendosjeje ka skaduar ose nuk është më i vlefshëm. Kërkoni një link të ri.',
+    'user' => 'Asnjë llogari Tiketa nuk përdor atë adresë emaili. Kontrolloni emailin ose krijoni një llogari të re.',
 ];

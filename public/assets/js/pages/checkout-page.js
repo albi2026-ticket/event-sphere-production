@@ -181,15 +181,15 @@
       startCountdown();
     } catch (err) {
       window.tkToast?.(
-        err.message || tr("checkout.unable_reserve_tickets", "Unable to reserve these tickets."),
+        err.message || tr("checkout.unable_reserve_tickets", "We couldn’t hold those tickets. They may have just sold, so choose another quantity or ticket type."),
         "error",
       );
       if (els.payBtn) {
         els.payBtn.disabled = true;
-        els.payBtn.textContent = "Tickets unavailable";
+        els.payBtn.textContent = tr("checkout.tickets_unavailable", "Choose different tickets");
       }
       reservationMessage?.replaceChildren(
-        document.createTextNode("Unable to reserve these tickets."),
+        document.createTextNode(tr("checkout.unable_reserve_tickets", "We couldn’t hold those tickets. They may have just sold, so choose another quantity or ticket type.")),
       );
       reservationCountdown?.replaceChildren(document.createTextNode("--:--"));
       return;
@@ -269,7 +269,7 @@
           }
         }
         window.tkToast?.(
-          err.message || tr("checkout.checkout_failed", "Could not start checkout. Please try again."),
+          err.message || tr("checkout.checkout_failed", "We couldn’t start secure checkout. Your card was not charged; review your cart and try again."),
           "error",
         );
         checkoutInFlight = false;

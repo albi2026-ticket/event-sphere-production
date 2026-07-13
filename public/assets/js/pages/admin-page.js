@@ -200,8 +200,8 @@
     return `<tr><td colspan="${cols}" class="py-4"><div class="admin-empty text-danger"><i class="bi bi-exclamation-triangle"></i><span>${u().escapeHtml(label)}</span><button class="btn btn-glass btn-sm" type="button" ${retryAttr} data-i18n="buttons.retry">${window.t?.("buttons.retry") || "Retry"}</button></div></td></tr>`;
   }
 
-  function emptyRow(cols, icon, label, copy = "") {
-    return `<tr><td colspan="${cols}" class="py-4"><div class="admin-empty"><i class="bi ${icon}"></i><span>${u().escapeHtml(label)}</span>${copy ? `<small>${u().escapeHtml(copy)}</small>` : ""}</div></td></tr>`;
+  function emptyRow(cols, icon, label, copy = "", action = "") {
+    return `<tr><td colspan="${cols}" class="py-4"><div class="admin-empty"><i class="bi ${icon}"></i><span>${u().escapeHtml(label)}</span>${copy ? `<small>${u().escapeHtml(copy)}</small>` : ""}${action ? `<div class="mt-2">${action}</div>` : ""}</div></td></tr>`;
   }
 
   function userNameCell(user) {
@@ -247,7 +247,7 @@
       const res = await api().fetch(`/admin/payments${query ? `?${query}` : ""}`);
       state.orders = rows(res.data);
     } catch (err) {
-      state.errors.payments = err.message || "Failed to load payments";
+      state.errors.payments = err.message || tr("toast.admin_section_load_failed", "We couldn’t load payments. Refresh this section or try again in a moment.");
     } finally {
       state.loading.payments = false;
       renderKpis();
@@ -265,7 +265,7 @@
       state.settings = data;
       fillSettingsForms();
     } catch (err) {
-      state.errors.settings = err.message || "Failed to load platform settings";
+      state.errors.settings = err.message || tr("toast.admin_section_load_failed", "We couldn’t load platform settings. Refresh this section or try again in a moment.");
     } finally {
       state.loading.settings = false;
     }
@@ -280,7 +280,7 @@
       state.categories = rows(data);
       hydrateReportFilters();
     } catch (err) {
-      state.errors.categories = err.message || "Failed to load categories";
+      state.errors.categories = err.message || tr("toast.admin_section_load_failed", "We couldn’t load categories. Refresh this section or try again in a moment.");
     } finally {
       state.loading.categories = false;
       renderCategories();
@@ -297,7 +297,7 @@
       state.emailCenter = data;
       state.emailMeta = data.meta || null;
     } catch (err) {
-      state.errors.emailCenter = err.message || "Failed to load email center";
+      state.errors.emailCenter = err.message || tr("toast.admin_section_load_failed", "We couldn’t load the email center. Refresh this section or try again in a moment.");
     } finally {
       state.loading.emailCenter = false;
       renderEmailCenter();
@@ -319,7 +319,7 @@
       state.subscriberSummary = data.summary || null;
       state.subscriberMeta = data.meta || null;
     } catch (err) {
-      state.errors.subscribers = err.message || "Failed to load subscribers";
+      state.errors.subscribers = err.message || tr("toast.admin_section_load_failed", "We couldn’t load subscribers. Refresh this section or try again in a moment.");
     } finally {
       state.loading.subscribers = false;
       renderSubscribers();
@@ -336,7 +336,7 @@
       state.auditLogs = rows(res.data);
       state.auditMeta = res.meta || res.raw?.meta || res.raw;
     } catch (err) {
-      state.errors.auditLogs = err.message || "Failed to load audit logs";
+      state.errors.auditLogs = err.message || tr("toast.admin_section_load_failed", "We couldn’t load audit logs. Refresh this section or try again in a moment.");
     } finally {
       state.loading.auditLogs = false;
       renderAuditLogs();
@@ -353,7 +353,7 @@
       const res = await api().fetch(`/admin/users${query ? `?${query}` : ""}`);
       state.users = rows(res.data);
     } catch (err) {
-      state.errors.users = err.message || "Failed to load users";
+      state.errors.users = err.message || tr("toast.admin_section_load_failed", "We couldn’t load users. Refresh this section or try again in a moment.");
     } finally {
       state.loading.users = false;
       hydrateReportFilters();
@@ -376,7 +376,7 @@
       hydrateTicketEvents();
       hydrateReportFilters();
     } catch (err) {
-      state.errors.events = err.message || "Failed to load events";
+      state.errors.events = err.message || tr("toast.admin_section_load_failed", "We couldn’t load events. Refresh this section or try again in a moment.");
     } finally {
       state.loading.events = false;
       renderKpis();
@@ -396,7 +396,7 @@
       state.venues = rows(res.data);
       hydrateReservationFilters();
     } catch (err) {
-      state.errors.venues = err.message || "Failed to load venues";
+      state.errors.venues = err.message || tr("toast.admin_section_load_failed", "We couldn’t load restaurants and bars. Refresh this section or try again in a moment.");
     } finally {
       state.loading.venues = false;
       renderKpis();
@@ -415,7 +415,7 @@
       state.reservations = rows(res.data);
       state.reservationMeta = res.meta || null;
     } catch (err) {
-      state.errors.reservations = err.message || "Failed to load reservations";
+      state.errors.reservations = err.message || tr("toast.admin_section_load_failed", "We couldn’t load reservations. Refresh this section or try again in a moment.");
       state.reservationMeta = null;
     } finally {
       state.loading.reservations = false;
@@ -434,7 +434,7 @@
       const res = await api().fetch(`/admin/tickets${query ? `?${query}` : ""}`);
       state.tickets = rows(res.data);
     } catch (err) {
-      state.errors.tickets = err.message || "Failed to load tickets";
+      state.errors.tickets = err.message || tr("toast.admin_section_load_failed", "We couldn’t load tickets. Refresh this section or try again in a moment.");
     } finally {
       state.loading.tickets = false;
       renderKpis();
@@ -457,7 +457,7 @@
       state.checkInStats = stats.data;
       state.checkInLogs = rows(logs.data);
     } catch (err) {
-      state.errors.checkIns = err.message || "Failed to load check-in monitoring";
+      state.errors.checkIns = err.message || tr("toast.admin_section_load_failed", "We couldn’t load check-in monitoring. Refresh this section or try again in a moment.");
     } finally {
       state.loading.checkIns = false;
       renderCheckIns();
@@ -962,8 +962,9 @@
       emptyRow(
         9,
         "bi-people",
-        tr("empty.no_results", "No results yet."),
-        tr("admin.empty_adjust_filters", "Adjust your filters or search for a different term."),
+        tr("empty.no_search_results", "No search results for that query."),
+        tr("empty.no_customers_copy", "Customers and attendees will appear here after tickets are issued or reservations are created."),
+        `<a class="btn btn-glass btn-sm" href="/admin#users" data-i18n="empty.refresh_action">${tr("empty.refresh_action", "Refresh")}</a>`,
       );
   }
 
@@ -999,7 +1000,7 @@
           <div class="admin-actions">
             ${buttonIcon("bi-eye", "View profile", `data-view-user="${usr.id}"`)}
             ${buttonIcon("bi-pencil", "Edit organizer", `data-view-user="${usr.id}"`)}
-            <button class="btn btn-glass btn-sm" type="button" data-approve-organizer="${usr.id}" ${usr.organizer_status === "approved" ? "disabled" : ""}>Approve</button>
+            <button class="btn btn-glass btn-sm" type="button" data-approve-organizer="${usr.id}" ${usr.organizer_status === "approved" ? "disabled" : ""}>Approve organizer</button>
             ${
               usr.status === "suspended"
                 ? `<button class="btn btn-glass btn-sm" type="button" data-reactivate-user="${usr.id}">Reactivate</button>`
@@ -1016,6 +1017,7 @@
         "bi-person-check",
         tr("admin.no_organizers", "No organizers yet."),
         tr("admin.no_organizers_copy", "Approved organizers will appear here when they join Tiketa."),
+        `<a class="btn btn-glass btn-sm" href="/admin#users" data-i18n="empty.refresh_action">${tr("empty.refresh_action", "Refresh")}</a>`,
       );
     renderOrganizerRanking();
   }
@@ -1051,7 +1053,7 @@
           <td data-label="Service Fee">
             <div class="d-flex gap-2 align-items-center">
               <input class="form-control form-control-sm admin-select" style="max-width:84px" type="number" min="0" max="30" step="0.01" value="${Number(event.service_fee_percentage ?? 10)}" data-event-fee-input="${event.id}"/>
-              <button class="btn btn-glass btn-sm" type="button" data-save-event-fee="${event.id}">Save</button>
+              <button class="btn btn-glass btn-sm" type="button" data-save-event-fee="${event.id}">Save event fee</button>
             </div>
           </td>
           <td data-label="Created">${dateLabel(event.created_at)}</td>
@@ -1059,11 +1061,11 @@
             <div class="admin-actions">
               ${buttonIcon("bi-eye", "View event", `data-view-event="${event.id}"`)}
               ${buttonIcon("bi-pencil", "Edit event", `data-edit-event="${event.id}"`)}
-              <button class="btn btn-glass btn-sm" type="button" data-assign-scanner="${event.id}"><i class="bi bi-qr-code-scan me-1"></i>Assign Scanner</button>
-              <button class="btn btn-glass btn-sm" type="button" data-publish-event="${event.id}" ${event.status === "published" ? "disabled" : ""}>Publish</button>
-              <button class="btn btn-glass btn-sm" type="button" data-unpublish-event="${event.id}" ${event.status !== "published" ? "disabled" : ""}>Unpublish</button>
-              <button class="btn btn-glass btn-sm" type="button" data-feature-event="${event.id}">${event.is_featured ? "Unfeature" : "Feature"}</button>
-              <button class="btn btn-glass btn-sm" type="button" data-archive-event="${event.id}">Archive</button>
+              <button class="btn btn-glass btn-sm" type="button" data-assign-scanner="${event.id}"><i class="bi bi-qr-code-scan me-1"></i>Assign scanner</button>
+              <button class="btn btn-glass btn-sm" type="button" data-publish-event="${event.id}" ${event.status === "published" ? "disabled" : ""}>Publish event</button>
+              <button class="btn btn-glass btn-sm" type="button" data-unpublish-event="${event.id}" ${event.status !== "published" ? "disabled" : ""}>Unpublish event</button>
+              <button class="btn btn-glass btn-sm" type="button" data-feature-event="${event.id}">${event.is_featured ? "Remove feature" : "Feature event"}</button>
+              <button class="btn btn-glass btn-sm" type="button" data-archive-event="${event.id}">Archive event</button>
               ${buttonIcon("bi-trash", "Delete event", `data-delete-event="${event.id}"`)}
             </div>
           </td>
@@ -1074,8 +1076,9 @@
       emptyRow(
         11,
         "bi-calendar-event",
-        tr("empty.no_events_found", "No events match your search yet."),
-        tr("admin.empty_adjust_filters", "Adjust your filters or search for a different term."),
+        tr("empty.no_events_found", "No events match this view yet."),
+        tr("empty.no_events_copy", "Tiketa will show fresh experiences here as soon as they match your filters."),
+        `<a class="btn btn-glass btn-sm" href="/admin#events" data-i18n="empty.refresh_action">${tr("empty.refresh_action", "Refresh")}</a>`,
       );
   }
 
@@ -1083,7 +1086,7 @@
     const body = document.querySelector("[data-admin-venues]");
     if (!body) return;
     if (state.loading.venues) {
-      body.innerHTML = loadingRow(8, "Loading venues...");
+      body.innerHTML = loadingRow(8, "Loading restaurants and bars...");
       return;
     }
     if (state.errors.venues) {
@@ -1096,31 +1099,31 @@
         .map(
           (venue) => `
       <tr>
-        <td data-label="Venue Name"><div class="fw-semibold">${u().escapeHtml(venue.name)}</div><small class="text-muted-pro">${u().escapeHtml(venue.slug || "")}</small></td>
+        <td data-label="Restaurant name"><div class="fw-semibold">${u().escapeHtml(venue.name)}</div><small class="text-muted-pro">${u().escapeHtml(venue.slug || "")}</small></td>
         <td data-label="Type">${titleize(venue.venue_type)}</td>
         <td data-label="Owner"><div>${u().escapeHtml(venue.owner?.name || `#${venue.user_id}`)}</div><small class="text-muted-pro">${u().escapeHtml(venue.owner?.email || "")}</small></td>
         <td data-label="City">${u().escapeHtml(venue.city || "-")}</td>
         <td data-label="Status">${badge(venue.status)}</td>
-        <td data-label="Created Date">${dateLabel(venue.created_at)}</td>
-        <td data-label="Total Reservations">${venue.reservations_count ?? 0}</td>
+        <td data-label="Created date">${dateLabel(venue.created_at)}</td>
+        <td data-label="Total reservations">${venue.reservations_count ?? 0}</td>
         <td data-label="Actions" class="text-end">
           <div class="admin-actions">
-            ${buttonIcon("bi-eye", "View venue", `data-view-venue="${venue.slug}"`)}
-            ${buttonIcon("bi-pencil", "Edit venue", `data-edit-venue="${venue.slug}"`)}
+            ${buttonIcon("bi-eye", "View restaurant or bar", `data-view-venue="${venue.slug}"`)}
+            ${buttonIcon("bi-pencil", "Edit restaurant or bar", `data-edit-venue="${venue.slug}"`)}
             ${
               venue.status === "active"
                 ? buttonIcon(
                     "bi-pause-circle",
-                    "Deactivate venue",
+                    "Deactivate restaurant or bar",
                     `data-deactivate-venue="${venue.slug}"`,
                   )
                 : buttonIcon(
                     "bi-play-circle",
-                    "Activate venue",
+                    "Activate restaurant or bar",
                     `data-activate-venue="${venue.slug}"`,
                   )
             }
-            ${buttonIcon("bi-trash", "Delete venue", `data-delete-venue="${venue.slug}"`)}
+            ${buttonIcon("bi-trash", "Delete restaurant or bar", `data-delete-venue="${venue.slug}"`)}
           </div>
         </td>
       </tr>
@@ -1130,8 +1133,9 @@
       emptyRow(
         8,
         "bi-shop",
-        tr("empty.no_restaurants_found", "No restaurants or bars match your search yet."),
-        tr("admin.empty_adjust_filters", "Adjust your filters or search for a different term."),
+        tr("empty.no_restaurants_found", "No restaurants or bars match this view yet."),
+        tr("empty.no_restaurants_copy", "Restaurants, bars, cafés, and lounges will appear here when they match your search."),
+        `<a class="btn btn-glass btn-sm" href="/admin#venues" data-i18n="empty.refresh_action">${tr("empty.refresh_action", "Refresh")}</a>`,
       );
   }
 
@@ -1174,10 +1178,10 @@
         <td data-label="Actions" class="text-end">
           <div class="admin-actions">
             ${buttonIcon("bi-eye", "View reservation", `data-view-reservation="${reservation.id}"`)}
-            <button class="btn btn-glass btn-sm" type="button" data-confirm-reservation="${reservation.id}" ${reservation.status !== "pending" ? "disabled" : ""}>Confirm</button>
-            <button class="btn btn-glass btn-sm" type="button" data-cancel-reservation="${reservation.id}" ${!["pending", "confirmed"].includes(reservation.status) ? "disabled" : ""}>Cancel</button>
-            <button class="btn btn-glass btn-sm" type="button" data-complete-reservation="${reservation.id}" ${reservation.status !== "confirmed" ? "disabled" : ""}>Complete</button>
-            <button class="btn btn-glass btn-sm" type="button" data-no-show-reservation="${reservation.id}" ${reservation.status !== "confirmed" ? "disabled" : ""}>No Show</button>
+            <button class="btn btn-glass btn-sm" type="button" data-confirm-reservation="${reservation.id}" ${reservation.status !== "pending" ? "disabled" : ""}>Confirm reservation</button>
+            <button class="btn btn-glass btn-sm" type="button" data-cancel-reservation="${reservation.id}" ${!["pending", "confirmed"].includes(reservation.status) ? "disabled" : ""}>Cancel reservation</button>
+            <button class="btn btn-glass btn-sm" type="button" data-complete-reservation="${reservation.id}" ${reservation.status !== "confirmed" ? "disabled" : ""}>Mark completed</button>
+            <button class="btn btn-glass btn-sm" type="button" data-no-show-reservation="${reservation.id}" ${reservation.status !== "confirmed" ? "disabled" : ""}>Mark no-show</button>
             ${buttonIcon("bi-trash", "Delete reservation", `data-delete-reservation="${reservation.id}"`)}
           </div>
         </td>
@@ -1188,8 +1192,9 @@
       emptyRow(
         11,
         "bi-calendar-check",
-        tr("empty.no_reservations_found", "No reservations yet."),
-        tr("admin.empty_adjust_filters", "Adjust your filters or search for a different term."),
+        tr("empty.no_reservations_found", "No reservations on the list yet."),
+        tr("empty.no_reservations_copy", "Table requests and status updates will appear here once guests start booking."),
+        `<a class="btn btn-glass btn-sm" href="/admin#reservations" data-i18n="empty.refresh_action">${tr("empty.refresh_action", "Refresh")}</a>`,
       );
   }
 
@@ -1214,10 +1219,10 @@
 
     const platform = state.reservationMeta?.platform || {};
     platformRoot.innerHTML = `
-      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Reservations Today</span><small>Platform-wide</small></span>${badge("active", String(platform.today || 0))}</div></div>
-      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Reservations This Month</span><small>Platform-wide</small></span>${badge("active", String(platform.this_month || 0))}</div></div>
-      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Top Venues By Reservations</span><small>${(platform.top_venues || []).map((item) => `${u().escapeHtml(item.name)} (${item.total})`).join("<br>") || tr("admin.no_data_yet", "No data yet.")}</small></span></div></div>
-      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Most Active Cities</span><small>${(platform.top_cities || []).map((item) => `${u().escapeHtml(item.city)} (${item.total})`).join("<br>") || tr("admin.no_data_yet", "No data yet.")}</small></span></div></div>
+      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Reservations today</span><small>Platform-wide</small></span>${badge("active", String(platform.today || 0))}</div></div>
+      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Reservations this month</span><small>Platform-wide</small></span>${badge("active", String(platform.this_month || 0))}</div></div>
+      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Top restaurants by reservations</span><small>${(platform.top_venues || []).map((item) => `${u().escapeHtml(item.name)} (${item.total})`).join("<br>") || tr("admin.no_data_yet", "No data yet.")}</small></span></div></div>
+      <div class="col-md-6 col-xl-3"><div class="dashboard-mini-row h-100"><span><span class="fw-semibold d-block">Most active cities</span><small>${(platform.top_cities || []).map((item) => `${u().escapeHtml(item.city)} (${item.total})`).join("<br>") || tr("admin.no_data_yet", "No data yet.")}</small></span></div></div>
     `;
   }
 
@@ -1272,6 +1277,7 @@
         "bi-credit-card",
         tr("admin.no_payments", "No payments yet."),
         tr("admin.no_payments_copy", "Completed payments will appear here after checkout."),
+        `<a class="btn btn-glass btn-sm" href="/events/list" data-i18n="empty.browse_events_action">${tr("empty.browse_events_action", "Browse events")}</a>`,
       );
 
     refundsBody.innerHTML =
@@ -1281,7 +1287,14 @@
             buttonIcon("bi-receipt", "Refund details", `data-view-payment="${o.id}"`),
           ),
         )
-        .join("") || emptyRow(7, "bi-arrow-counterclockwise", "No refunded orders yet");
+        .join("") ||
+      emptyRow(
+        7,
+        "bi-arrow-counterclockwise",
+        tr("admin.no_refunds", "No refunded orders yet."),
+        tr("admin.no_refunds_copy", "Refunded payments will appear here when a refund is processed."),
+        `<a class="btn btn-glass btn-sm" href="/admin#payments" data-i18n="empty.refresh_action">${tr("empty.refresh_action", "Refresh")}</a>`,
+      );
   }
 
   function renderTickets() {
@@ -1308,8 +1321,8 @@
         <td data-label="Actions" class="text-end">
           <div class="admin-actions">
             ${buttonIcon("bi-eye", "View ticket", `data-view-ticket="${ticket.id}"`)}
-            ${buttonIcon("bi-qr-code", "View QR", `data-ticket-qr="${ticket.id}"`)}
-            <button class="btn btn-glass btn-sm" type="button" data-ticket-manual-validation="${ticket.ticket_code}">Manual Validation</button>
+            ${buttonIcon("bi-qr-code", "View ticket QR", `data-ticket-qr="${ticket.id}"`)}
+            <button class="btn btn-glass btn-sm" type="button" data-ticket-manual-validation="${ticket.ticket_code}">Validate ticket manually</button>
           </div>
         </td>
       </tr>
@@ -1319,8 +1332,9 @@
       emptyRow(
         6,
         "bi-ticket-perforated",
-        tr("empty.no_tickets_found", "No tickets yet."),
-        tr("admin.empty_adjust_filters", "Adjust your filters or search for a different term."),
+        tr("empty.no_tickets_found", "No tickets are ready yet."),
+        tr("empty.no_tickets_copy", "Confirmed tickets and QR codes will appear here after checkout."),
+        `<a class="btn btn-glass btn-sm" href="/admin#tickets" data-i18n="empty.refresh_action">${tr("empty.refresh_action", "Refresh")}</a>`,
       );
   }
 
@@ -1360,7 +1374,7 @@
         <td data-label="Icon"><input class="form-control form-control-sm" value="${u().escapeHtml(category.icon || "")}" data-category-icon="${category.id}"></td>
         <td data-label="Events">${category.events_count ?? 0}</td>
         <td data-label="Status">${badge(category.is_active ? "active" : "inactive")}</td>
-        <td data-label="Actions" class="text-end"><div class="admin-actions"><button class="btn btn-glass btn-sm" data-save-category="${category.id}">Save</button><button class="btn btn-glass btn-sm" data-toggle-category="${category.id}">${category.is_active ? "Disable" : "Enable"}</button><button class="btn btn-glass btn-sm" data-delete-category="${category.id}">Delete</button></div></td>
+        <td data-label="Actions" class="text-end"><div class="admin-actions"><button class="btn btn-glass btn-sm" data-save-category="${category.id}">Save category</button><button class="btn btn-glass btn-sm" data-toggle-category="${category.id}">${category.is_active ? "Disable category" : "Enable category"}</button><button class="btn btn-glass btn-sm" data-delete-category="${category.id}">Delete category</button></div></td>
       </tr>
     `,
         )
@@ -1368,8 +1382,9 @@
       emptyRow(
         6,
         "bi-tags",
-        tr("empty.no_categories", "No categories yet."),
+        tr("empty.no_categories", "No event categories have been created yet."),
         tr("admin.no_categories_copy", "Create a category to help visitors browse events faster."),
+        `<a class="btn btn-primary-grad btn-sm" href="/admin#categories" data-i18n="buttons.create_category">${tr("buttons.create_category", "Create category")}</a>`,
       );
   }
 
@@ -1395,14 +1410,21 @@
             <td data-label="Recipient"><div class="fw-semibold">${u().escapeHtml(email.recipient_name || "-")}</div></td>
             <td data-label="Email">${u().escapeHtml(email.recipient_email || "-")}</td>
             <td data-label="Module">${badge(email.module || "System")}</td>
-            <td data-label="Email Type">${u().escapeHtml(email.email_type || "-")}</td>
+            <td data-label="Email type">${u().escapeHtml(email.email_type || "-")}</td>
             <td data-label="Subject">${u().escapeHtml(email.subject || "-")}</td>
             <td data-label="Status">${badge(email.status || "Pending")}</td>
-            <td data-label="Sent At">${dateTimeLabel(email.sent_at || email.created_at)}</td>
+            <td data-label="Sent at">${dateTimeLabel(email.sent_at || email.created_at)}</td>
           </tr>
         `,
             )
-            .join("") || emptyRow(7, "bi-envelope", "No email logs yet");
+            .join("") ||
+          emptyRow(
+            7,
+            "bi-envelope",
+            tr("emails.no_logs", "No email logs yet."),
+            tr("emails.no_logs_copy", "Delivery attempts, retries, and template activity will appear here."),
+            `<a class="btn btn-glass btn-sm" href="/admin#emails" data-i18n="empty.refresh_action">${tr("empty.refresh_action", "Refresh")}</a>`,
+          );
 
         if (pager && state.emailMeta?.last_page > 1) {
           const current = Number(state.emailMeta.current_page || 1);
@@ -1435,10 +1457,10 @@
     };
 
     row.innerHTML = `
-      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Emails Sent Today</div><div class="value">${summary.emails_sent_today ?? 0}</div></div></div>
-      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Emails Failed Today</div><div class="value">${summary.emails_failed_today ?? 0}</div></div></div>
-      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Pending Emails</div><div class="value">${summary.pending_emails ?? 0}</div></div></div>
-      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Success Rate</div><div class="value">${Number(summary.success_rate ?? 0).toFixed(1)}%</div></div></div>
+      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Emails sent today</div><div class="value">${summary.emails_sent_today ?? 0}</div></div></div>
+      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Emails failed today</div><div class="value">${summary.emails_failed_today ?? 0}</div></div></div>
+      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Pending emails</div><div class="value">${summary.pending_emails ?? 0}</div></div></div>
+      <div class="col-md-6 col-xl-3"><div class="kpi"><div class="label">Success rate</div><div class="value">${Number(summary.success_rate ?? 0).toFixed(1)}%</div></div></div>
     `;
   }
 
@@ -1570,15 +1592,15 @@
         .filter((order) => predicate(new Date(order.created_at || order.paid_at || 0)))
         .reduce((sum, order) => sum + Number(order.total || 0), 0);
     row.innerHTML = `
-      <div class="col-md-3"><div class="kpi"><div class="label">Total Revenue</div><div class="value">${money(
+      <div class="col-md-3"><div class="kpi"><div class="label">Total revenue</div><div class="value">${money(
         revenueFor(() => true),
         "USD",
       )}</div><div class="delta">${paid.length} paid orders</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">This Month</div><div class="value">${money(
+      <div class="col-md-3"><div class="kpi"><div class="label">This month</div><div class="value">${money(
         revenueFor((date) => date >= startOfMonth),
         "USD",
       )}</div><div class="delta">Month to date</div></div></div>
-      <div class="col-md-3"><div class="kpi"><div class="label">This Week</div><div class="value">${money(
+      <div class="col-md-3"><div class="kpi"><div class="label">This week</div><div class="value">${money(
         revenueFor((date) => date >= startOfWeek),
         "USD",
       )}</div><div class="delta">Week to date</div></div></div>
@@ -1710,8 +1732,8 @@
     const filters = reportFilters();
     if (type === "revenue") {
       return {
-        title: "Revenue Report",
-        headers: ["Order", "Customer", "Revenue", "Service Fee", "Date"],
+        title: "Revenue report",
+        headers: ["Order", "Customer", "Revenue", "Service fee", "Date"],
         rows: state.orders
           .filter((order) => order.payment_status === "paid" && orderMatchesReport(order, filters))
           .map((order) => [
@@ -1726,7 +1748,7 @@
     if (type === "attendance") {
       return {
         title: "Attendance Report",
-        headers: ["Event", "Tickets Sold", "Checked In", "Remaining"],
+        headers: ["Event", "Tickets sold", "Checked in", "Remaining"],
         rows: state.events
           .filter((event) => eventMatchesReport(event, filters))
           .map((event) => {
@@ -1744,7 +1766,7 @@
     if (type === "organizers") {
       return {
         title: "Organizer Report",
-        headers: ["Organizer", "Email", "Events", "Tickets Sold", "Revenue"],
+        headers: ["Organizer", "Email", "Events", "Tickets sold", "Revenue"],
         rows: state.users
           .filter((usr) => usr.role === "organizer" || usr.organizer_status !== "none")
           .filter((usr) => !filters.organizerId || String(usr.id) === String(filters.organizerId))
@@ -1759,7 +1781,7 @@
     }
     return {
       title: "Ticket Sales Report",
-      headers: ["Event", "Category", "Tickets Sold", "Inventory Remaining", "Revenue"],
+      headers: ["Event", "Category", "Tickets sold", "Inventory remaining", "Revenue"],
       rows: state.events
         .filter((event) => eventMatchesReport(event, filters))
         .map((event) => [
@@ -1837,7 +1859,7 @@
     if (statsRow) {
       const stats = state.checkInStats || { tickets_sold: 0, checked_in: 0, remaining: 0 };
       statsRow.innerHTML = `
-        <div class="col-md-4"><div class="kpi"><div class="label">Tickets Sold</div><div class="value">${stats.tickets_sold ?? 0}</div></div></div>
+        <div class="col-md-4"><div class="kpi"><div class="label">Tickets sold</div><div class="value">${stats.tickets_sold ?? 0}</div></div></div>
         <div class="col-md-4"><div class="kpi"><div class="label">Checked In</div><div class="value">${stats.checked_in ?? 0}</div></div></div>
         <div class="col-md-4"><div class="kpi"><div class="label">Remaining</div><div class="value">${stats.remaining ?? 0}</div></div></div>`;
     }
@@ -1914,7 +1936,7 @@
       ...state.venues.slice(0, 6).map((venue) => ({
         at: venue.created_at,
         icon: "bi-shop",
-        text: `Venue created: ${venue.name}`,
+        text: `Restaurant created: ${venue.name}`,
         status: venue.status,
       })),
       ...state.reservations.slice(0, 8).map((reservation) => ({
@@ -2080,7 +2102,7 @@
         return result;
       })
       .catch((err) => {
-        window.tkToast?.(err.message || tr("toast.admin_section_load_failed", "Could not load this admin section. Please try again."), "error");
+        window.tkToast?.(err.message || tr("toast.admin_section_load_failed", "We couldn’t load this admin section. Refresh the section or try again in a moment."), "error");
         throw err;
       })
       .finally(() => {
@@ -2177,23 +2199,23 @@
   }
 
   async function showEmailLogDetail(id) {
-    setModal("Email Details", loadingPanel("Loading email..."));
+    setModal("Email details", loadingPanel("Loading email..."));
     const { data } = await api().fetch(`/admin/email-center/${id}`);
 
     setModal(
-      "Email Details",
+      "Email details",
       `
       <div class="dashboard-stack">
         <div class="row g-2">
           <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Recipient</small><span class="fw-semibold d-block">${u().escapeHtml(data.recipient_name || "-")}</span></span></div></div>
-          <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Recipient Email</small><span class="fw-semibold d-block">${u().escapeHtml(data.recipient_email || "-")}</span></span></div></div>
+          <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Recipient email</small><span class="fw-semibold d-block">${u().escapeHtml(data.recipient_email || "-")}</span></span></div></div>
           <div class="col-md-4"><div class="dashboard-mini-row"><span><small>Module</small><span class="fw-semibold d-block">${u().escapeHtml(data.module || "-")}</span></span></div></div>
-          <div class="col-md-4"><div class="dashboard-mini-row"><span><small>Email Type</small><span class="fw-semibold d-block">${u().escapeHtml(data.email_type || "-")}</span></span></div></div>
+          <div class="col-md-4"><div class="dashboard-mini-row"><span><small>Email type</small><span class="fw-semibold d-block">${u().escapeHtml(data.email_type || "-")}</span></span></div></div>
           <div class="col-md-4"><div class="dashboard-mini-row"><span><small>Status</small><span class="fw-semibold d-block">${badge(data.status || "Pending")}</span></span></div></div>
           <div class="col-12"><div class="dashboard-mini-row"><span><small>Subject</small><span class="fw-semibold d-block">${u().escapeHtml(data.subject || "-")}</span></span></div></div>
-          <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Created At</small><span class="fw-semibold d-block">${dateTimeLabel(data.created_at)}</span></span></div></div>
-          <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Sent At</small><span class="fw-semibold d-block">${dateTimeLabel(data.sent_at)}</span></span></div></div>
-          <div class="col-12"><div class="dashboard-mini-row"><span><small>Mail Class</small><span class="fw-semibold d-block">${u().escapeHtml(data.mailable_class || "-")}</span></span></div></div>
+          <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Created at</small><span class="fw-semibold d-block">${dateTimeLabel(data.created_at)}</span></span></div></div>
+          <div class="col-md-6"><div class="dashboard-mini-row"><span><small>Sent at</small><span class="fw-semibold d-block">${dateTimeLabel(data.sent_at)}</span></span></div></div>
+          <div class="col-12"><div class="dashboard-mini-row"><span><small>Mail class</small><span class="fw-semibold d-block">${u().escapeHtml(data.mailable_class || "-")}</span></span></div></div>
         </div>
         <div class="admin-empty">
           <i class="bi bi-shield-lock"></i>
@@ -2295,7 +2317,7 @@
 
   async function showScannerAssignment(eventId) {
     const eventRecord = state.events.find((item) => String(item.id) === String(eventId));
-    setModal("Assign Scanner", loadingPanel("Loading scanners..."));
+    setModal("Assign scanner", loadingPanel("Loading scanners..."));
 
     const [scannerUsers, assignedScanners] = await Promise.all([
       api().fetch("/admin/users?role=scanner&status=active&per_page=100"),
@@ -2306,7 +2328,7 @@
     const assigned = rows(assignedScanners.data);
 
     setModal(
-      "Assign Scanner",
+      "Assign scanner",
       `
       <form data-admin-scanner-assignment-form="${eventId}">
         <div class="mb-3">
@@ -2315,7 +2337,7 @@
           <p class="text-muted-pro mb-0">${u().escapeHtml(eventRecord?.venue_name || eventRecord?.city || "")}</p>
         </div>
         <div class="mb-3">
-          <label class="form-label">Select Scanner</label>
+          <label class="form-label">Select scanner</label>
           <select class="form-select admin-select" name="scanner_id" required>
             <option value="">Choose scanner</option>
             ${scanners.map((scanner) => `<option value="${scanner.id}">${u().escapeHtml(scanner.name || scanner.email)} · ${u().escapeHtml(scanner.email || "")}</option>`).join("")}
@@ -2328,8 +2350,8 @@
           </div>
         </div>
         <div class="d-flex justify-content-end gap-2">
-          <button class="btn btn-glass" type="button" data-bs-dismiss="modal">Cancel</button>
-          <button class="btn btn-primary-grad" type="submit" ${scanners.length ? "" : "disabled"}>Save</button>
+          <button class="btn btn-glass" type="button" data-bs-dismiss="modal">Cancel assignment</button>
+          <button class="btn btn-primary-grad" type="submit" ${scanners.length ? "" : "disabled"}>Assign scanner</button>
         </div>
       </form>
     `,
@@ -2347,7 +2369,7 @@
   }
 
   async function showVenue(slug) {
-    setModal("Venue details", loadingPanel("Loading venue..."));
+    setModal("Restaurant or bar details", loadingPanel("Loading restaurant or bar..."));
     const { data: venue } = await api().fetch(`/admin/venues/${slug}`);
     const hours = venue.opening_hours || [];
     setModal(
@@ -2373,14 +2395,14 @@
             : "-",
         ],
         ["Facilities", listNames(venue.facilities)],
-        ["Cuisine Types", listNames(venue.cuisine_types)],
-        ["Payment Methods", listNames(venue.payment_options)],
+        ["Cuisine types", listNames(venue.cuisine_types)],
+        ["Payment methods", listNames(venue.payment_options)],
         [
-          "Reservation Settings",
+          "Reservation settings",
           `${venue.reservation_settings?.min_guests || 1}-${venue.reservation_settings?.max_guests || 10} guests · ${venue.reservation_settings?.reservation_interval_minutes || 30} min intervals · last ${venue.reservation_settings?.last_reservation_time || "-"}`,
         ],
         [
-          "Social Links",
+          "Social links",
           [
             venue.social_links?.facebook_url,
             venue.social_links?.instagram_url,
@@ -2390,12 +2412,12 @@
             .map((link) => u().escapeHtml(link))
             .join("<br>") || "-",
         ],
-        ["Total Reservations", String(venue.reservations_count ?? 0)],
+        ["Total reservations", String(venue.reservations_count ?? 0)],
         ["Created", dateLabel(venue.created_at)],
       ])}
       <h6 class="mt-4">Gallery</h6>
-      ${(venue.images || []).length ? `<div class="row g-2">${venue.images.map((image, index) => `<div class="col-4"><img src="${u().escapeHtml(image.url || image.image_path)}" alt="${u().escapeHtml(`${venue.name || "Venue"} gallery image ${index + 1}`)}" class="w-100 rounded-pro" loading="lazy" decoding="async" width="400" height="300" style="aspect-ratio:4/3;object-fit:cover"/></div>`).join("")}</div>` : '<p class="text-muted-pro mb-0">No gallery images.</p>'}
-      <h6 class="mt-4">Opening Hours</h6>
+      ${(venue.images || []).length ? `<div class="row g-2">${venue.images.map((image, index) => `<div class="col-4"><img src="${u().escapeHtml(image.url || image.image_path)}" alt="${u().escapeHtml(`${venue.name || "Restaurant"} gallery image ${index + 1}`)}" class="w-100 rounded-pro" loading="lazy" decoding="async" width="400" height="300" style="aspect-ratio:4/3;object-fit:cover"/></div>`).join("")}</div>` : '<p class="text-muted-pro mb-0">No gallery images.</p>'}
+      <h6 class="mt-4">Opening hours</h6>
       ${hours.length ? `<div class="table-responsive"><table class="table table-borderless admin-mini-table"><tbody>${hours.map((item) => `<tr><td>Day ${item.day_of_week}</td><td>${item.is_closed ? "Closed" : `${u().escapeHtml(String(item.opens_at || "").slice(0, 5))} - ${u().escapeHtml(String(item.closes_at || "").slice(0, 5))}`}</td></tr>`).join("")}</tbody></table></div>` : '<p class="text-muted-pro mb-0">No opening hours configured.</p>'}
     `,
     );
@@ -2413,25 +2435,25 @@
         <div class="admin-reservation-detail-hero">
           <div>
             <span class="reservation-status-pill">${reservationBadge(reservation.status)}</span>
-            <h4>${u().escapeHtml(reservation.venue?.name || "Restaurant / Bar")}</h4>
+            <h4>${u().escapeHtml(reservation.venue?.name || "Restaurant or bar")}</h4>
             <p>${u().escapeHtml(reservation.guest_name || reservation.user?.name || "Guest")} · ${String(reservation.party_size || "-")} guests · ${dateLabel(reservation.reservation_date)} at ${u().escapeHtml(String(reservation.reservation_time || "").slice(0, 5) || "-")}</p>
           </div>
         </div>
         ${detailList([
           ["Reservation ID", `#${reservation.id}`],
           [
-            "Venue Information",
+            "Restaurant information",
             `${u().escapeHtml(reservation.venue?.name || "-")}<br><small>${u().escapeHtml([reservation.venue?.address, reservation.venue?.city, reservation.venue?.country].filter(Boolean).join(", ") || "")}</small>`,
           ],
           [
-            "Owner Information",
+            "Owner information",
             `${u().escapeHtml(reservation.venue?.owner?.name || "-")}<br><small>${u().escapeHtml(reservation.venue?.owner?.email || "")}</small>`,
           ],
           [
-            "Guest Information",
+            "Guest information",
             `${u().escapeHtml(reservation.guest_name || reservation.user?.name || "-")}<br><small>${u().escapeHtml(reservation.user?.email || "")}</small><br><small>${u().escapeHtml(reservation.phone || "")}</small>`,
           ],
-          ["Party Size", String(reservation.party_size || "-")],
+          ["Party size", String(reservation.party_size || "-")],
           ["Date", dateLabel(reservation.reservation_date)],
           ["Time", u().escapeHtml(String(reservation.reservation_time || "").slice(0, 5) || "-")],
           ["Status", reservationBadge(reservation.status)],
@@ -2476,8 +2498,8 @@
         ["Checked in", dateTimeLabel(ticket.checked_in_at)],
       ])}
       <div class="d-flex gap-2 flex-wrap mt-3">
-        <button class="btn btn-glass btn-sm" type="button" data-ticket-qr="${ticket.id}">View QR</button>
-        <button class="btn btn-glass btn-sm" type="button" data-ticket-manual-validation="${u().escapeHtml(ticket.ticket_code)}">Manual Validation</button>
+        <button class="btn btn-glass btn-sm" type="button" data-ticket-qr="${ticket.id}">View ticket QR</button>
+        <button class="btn btn-glass btn-sm" type="button" data-ticket-manual-validation="${u().escapeHtml(ticket.ticket_code)}">Validate ticket manually</button>
       </div>
     `,
     );
@@ -2500,7 +2522,7 @@
     });
     const validation = data.validation || {};
     setModal(
-      "Manual Validation",
+      "Manual ticket validation",
       `
       ${detailList([
         ["Result", badge(validation.result)],
@@ -2526,10 +2548,10 @@
       window.tkToast?.(tr("toast.select_event_first", "Select at least one event first."), "info");
       return;
     }
-    if (action === "delete" && !confirm(tr("confirm.delete_selected_events", "Delete {count} selected events?").replace("{count}", ids.length))) return;
+    if (action === "delete" && !confirm(tr("confirm.delete_selected_events", "Delete {count} selected events permanently? This cannot be undone.").replace("{count}", ids.length))) return;
     const category =
       action === "category"
-        ? prompt(tr("prompt.bulk_category", "Enter the new category for the selected events."), "")
+        ? prompt(tr("prompt.bulk_category", "Type the category name to apply to the selected events."), "")
         : "";
     if (action === "category" && !category) return;
 
@@ -2585,12 +2607,12 @@
 
   async function eventModeration(eventId, action) {
     const labels = {
-      publish: "Event approved. It is ready for publication.",
+      publish: "Event approved. It’s ready to be published.",
       reject: "Event rejected. The moderation note has been saved.",
-      unpublish: "Event unpublished. It is no longer visible to guests.",
+      unpublish: "Event unpublished. Guests can no longer discover it.",
     };
     const note =
-      action === "publish" ? "" : prompt(tr("prompt.moderation_note", "Add a short moderation note for this decision."), "");
+      action === "publish" ? "" : prompt(tr("prompt.moderation_note", "Add a short note explaining this moderation decision."), "");
     if (note === null) return;
     const body = action === "publish" ? {} : { reason: note };
     await api().fetch(`/admin/events/${eventId}/${action}`, { method: "POST", body });
@@ -2609,17 +2631,17 @@
 
   async function editVenue(slug) {
     const venue = state.venues.find((item) => String(item.slug) === String(slug));
-    const name = prompt(tr("prompt.venue_name", "Enter the venue name."), venue?.name || "");
+    const name = prompt(tr("prompt.venue_name", "Type the restaurant or bar name."), venue?.name || "");
     if (name === null) return;
-    const city = prompt(tr("prompt.venue_city", "Enter the venue city."), venue?.city || "");
+    const city = prompt(tr("prompt.venue_city", "Type the city for this restaurant or bar."), venue?.city || "");
     if (city === null) return;
     const venueType = prompt(
-      tr("prompt.venue_type", "Enter the venue type: restaurant, bar, lounge, or cafe."),
+      tr("prompt.venue_type", "Choose the venue type: restaurant, bar, lounge, or cafe."),
       venue?.venue_type || "restaurant",
     );
     if (venueType === null) return;
     const status = prompt(
-      tr("prompt.venue_status", "Enter the venue status: draft, active, or inactive."),
+      tr("prompt.venue_status", "Choose the venue status: draft, active, or inactive."),
       venue?.status || "active",
     );
     if (status === null) return;
@@ -2633,7 +2655,7 @@
         status,
       },
     });
-    window.tkToast?.(tr("toast.venue_updated", "Venue updated."));
+    window.tkToast?.(tr("toast.venue_updated", "Restaurant profile updated. Guests will see the latest details."));
     await refreshVenues();
     if (state.sectionLoaded.reservations) await refreshReservations();
   }
@@ -2827,7 +2849,7 @@
           renderKpis();
           window.tkToast?.(tr("toast.default_fee_updated", "Default service fee updated."));
         } catch (err) {
-          window.tkToast?.(err.message || tr("toast.default_fee_update_failed", "Could not update the default fee. Please try again."), "error");
+          window.tkToast?.(err.message || tr("toast.default_fee_update_failed", "We couldn’t save the default fee. Check the percentage and try again."), "error");
         } finally {
           if (button) button.disabled = false;
         }
@@ -2854,7 +2876,7 @@
           window.tkToast?.(tr("toast.platform_settings_updated", "Platform settings updated."));
           await refreshAuditLogs();
         } catch (err) {
-          window.tkToast?.(err.message || tr("toast.settings_update_failed", "Could not update settings. Please try again."), "error");
+          window.tkToast?.(err.message || tr("toast.settings_update_failed", "We couldn’t save the platform settings. Review the fields and try again."), "error");
         } finally {
           if (button) button.disabled = false;
         }
@@ -2881,7 +2903,7 @@
           window.tkToast?.(tr("toast.category_created", "Category created."));
           await Promise.all([refreshCategories(), refreshAuditLogs()]);
         } catch (err) {
-          window.tkToast?.(err.message || tr("toast.category_creation_failed", "Could not create the category. Please try again."), "error");
+          window.tkToast?.(err.message || tr("toast.category_creation_failed", "We couldn’t create that category. Check the name and icon, then try again."), "error");
         } finally {
           if (button) button.disabled = false;
         }
@@ -2937,7 +2959,7 @@
           window.tkToast?.(tr("toast.email_template_updated", "Email template updated."));
           await refreshAuditLogs();
         } catch (err) {
-          window.tkToast?.(err.message || tr("toast.template_update_failed", "Could not update the template. Please try again."), "error");
+          window.tkToast?.(err.message || tr("toast.template_update_failed", "We couldn’t save the email template. Review the content and try again."), "error");
         } finally {
           if (button) button.disabled = false;
         }
@@ -2994,7 +3016,7 @@
         await showScannerAssignment(eventId);
       } catch (err) {
         button.disabled = false;
-        window.tkToast?.(err.message || tr("toast.scanner_assign_failed", "Could not assign the scanner. Please try again."), "error");
+        window.tkToast?.(err.message || tr("toast.scanner_assign_failed", "We couldn’t assign that scanner. Make sure the user is available, then try again."), "error");
       }
     });
 
@@ -3004,7 +3026,7 @@
         try {
           await showEmailLogDetail(emailRow.dataset.emailLogId);
         } catch (err) {
-          window.tkToast?.(err.message || tr("toast.email_details_failed", "Could not load email details. Please try again."), "error");
+          window.tkToast?.(err.message || tr("toast.email_details_failed", "We couldn’t load that email log. Refresh the email center and try again."), "error");
         }
         return;
       }
@@ -3112,7 +3134,7 @@
         }
 
         if (button.dataset.deleteCategory) {
-          if (!confirm(tr("confirm.delete_category", "Delete this category? Move assigned events first."))) return;
+          if (!confirm(tr("confirm.delete_category", "Delete this category? Move assigned events to another category first."))) return;
           button.disabled = true;
           await api().fetch(`/admin/categories/${button.dataset.deleteCategory}`, {
             method: "DELETE",
@@ -3141,7 +3163,7 @@
         }
 
         if (button.dataset.suspendUser) {
-          if (!confirm(tr("confirm.suspend_user", "Suspend this user?"))) return;
+          if (!confirm(tr("confirm.suspend_user", "Suspend this user? They will lose access until reactivated."))) return;
           button.disabled = true;
           await api().fetch(`/admin/users/${button.dataset.suspendUser}/suspend`, {
             method: "POST",
@@ -3182,28 +3204,28 @@
             method: "POST",
             body: {},
           });
-          window.tkToast?.(tr("toast.venue_activated", "Venue activated."));
+          window.tkToast?.(tr("toast.venue_activated", "Restaurant is live again. Guests can discover and reserve it."));
           await refreshVenues();
           if (state.sectionLoaded.reservations) await refreshReservations();
         }
 
         if (button.dataset.deactivateVenue) {
-          if (!confirm(tr("confirm.deactivate_venue", "Deactivate this venue?"))) return;
+          if (!confirm(tr("confirm.deactivate_venue", "Deactivate this restaurant or bar? Guests will no longer be able to reserve it."))) return;
           button.disabled = true;
           await api().fetch(`/admin/venues/${button.dataset.deactivateVenue}/deactivate`, {
             method: "POST",
             body: {},
           });
-          window.tkToast?.(tr("toast.venue_deactivated", "Venue deactivated."));
+          window.tkToast?.(tr("toast.venue_deactivated", "Restaurant deactivated. It’s hidden from new reservations."));
           await refreshVenues();
           if (state.sectionLoaded.reservations) await refreshReservations();
         }
 
         if (button.dataset.deleteVenue) {
-          if (!confirm(tr("confirm.delete_venue", "Delete this venue and its reservations?"))) return;
+          if (!confirm(tr("confirm.delete_venue", "Delete this restaurant or bar and all related reservations permanently?"))) return;
           button.disabled = true;
           await api().fetch(`/admin/venues/${button.dataset.deleteVenue}`, { method: "DELETE" });
-          window.tkToast?.(tr("toast.venue_deleted", "Venue deleted."));
+          window.tkToast?.(tr("toast.venue_deleted", "Restaurant profile removed. Reservation history stays preserved."));
           await refreshVenues();
           if (state.sectionLoaded.reservations) await refreshReservations();
         }
@@ -3229,7 +3251,7 @@
         }
 
         if (button.dataset.deleteReservation) {
-          if (!confirm(tr("confirm.delete_reservation", "Delete this reservation?"))) return;
+          if (!confirm(tr("confirm.delete_reservation", "Delete this reservation permanently?"))) return;
           button.disabled = true;
           await api().fetch(`/admin/reservations/${button.dataset.deleteReservation}`, {
             method: "DELETE",
@@ -3317,7 +3339,7 @@
         }
 
         if (button.dataset.archiveEvent) {
-          if (!confirm(tr("confirm.archive_event", "Archive this event?"))) return;
+          if (!confirm(tr("confirm.archive_event", "Archive this event? It will leave active discovery."))) return;
           button.disabled = true;
           await api().fetch(`/admin/events/${button.dataset.archiveEvent}`, {
             method: "PATCH",
@@ -3333,7 +3355,7 @@
         }
 
         if (button.dataset.deleteEvent) {
-          if (!confirm(tr("confirm.delete_event", "Delete this event?"))) return;
+          if (!confirm(tr("confirm.delete_event", "Delete this event permanently? Tickets and reporting may be affected."))) return;
           button.disabled = true;
           await api().fetch(`/admin/events/${button.dataset.deleteEvent}`, { method: "DELETE" });
           window.tkToast?.(tr("toast.event_deleted", "Event deleted."));
@@ -3359,7 +3381,7 @@
         }
 
         if (button.dataset.refundOrder) {
-          if (!confirm(tr("confirm.refund_order", "Issue a full refund for this order?"))) return;
+          if (!confirm(tr("confirm.refund_order", "Issue a full refund for this order? This will start the refund process."))) return;
           button.disabled = true;
           await api().fetch(`/admin/payments/${button.dataset.refundOrder}/refund`, {
             method: "POST",
@@ -3413,7 +3435,7 @@
         }
       } catch (err) {
         button.disabled = false;
-        window.tkToast?.(err.message || tr("toast.admin_action_failed", "Could not complete the admin action. Please try again."), "error");
+        window.tkToast?.(err.message || tr("toast.admin_action_failed", "We couldn’t complete the admin action. The record was not changed, so refresh and try again."), "error");
       }
     });
   }
@@ -3428,7 +3450,7 @@
     try {
       await loadSection(state.currentSection || "overview");
     } catch (err) {
-      window.tkToast?.(err.message || tr("toast.admin_dashboard_load_failed", "Could not load the admin dashboard. Please refresh the page."), "error");
+      window.tkToast?.(err.message || tr("toast.admin_dashboard_load_failed", "We couldn’t load the admin dashboard. Refresh the page; no records were changed."), "error");
     }
   });
 })();

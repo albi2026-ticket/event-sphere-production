@@ -31,7 +31,7 @@
         "error",
         () => {
           delete deferredScripts[src];
-          reject(new Error(`Failed to load ${src}`));
+          reject(new Error(`Tiketa could not load a required page file: ${src}`));
         },
         { once: true },
       );
@@ -80,6 +80,13 @@
     }
     return s;
   }
+  const TOAST_DURATIONS = {
+    success: 5000,
+    info: 5000,
+    warning: 6000,
+    error: 7000,
+  };
+  const TOAST_EXIT_MS = 400;
   window.tkToast = function (msg, type = "success") {
     const s = ensureStack();
     const t = document.createElement("div");
@@ -92,10 +99,58 @@
           : "bi-info-circle-fill";
     t.innerHTML = `<i class="bi ${icon}"></i><div>${msg}</div>`;
     s.appendChild(t);
-    setTimeout(() => {
+    const duration = TOAST_DURATIONS[type] || TOAST_DURATIONS.info;
+    let remaining = duration;
+    let startedAt = window.performance?.now?.() || Date.now();
+    let dismissTimer = null;
+    let removeTimer = null;
+    let isDismissed = false;
+
+    const clearDismissTimer = () => {
+      if (!dismissTimer) return;
+      window.clearTimeout(dismissTimer);
+      dismissTimer = null;
+    };
+    const dismiss = () => {
+      if (isDismissed) return;
+      isDismissed = true;
+      clearDismissTimer();
       t.classList.add("toast-leaving");
-    }, 2800);
-    setTimeout(() => t.remove(), 3200);
+      removeTimer = window.setTimeout(() => {
+        t.remove();
+        removeTimer = null;
+      }, TOAST_EXIT_MS);
+    };
+    const scheduleDismiss = () => {
+      clearDismissTimer();
+      startedAt = window.performance?.now?.() || Date.now();
+      dismissTimer = window.setTimeout(dismiss, remaining);
+    };
+
+    t.addEventListener("mouseenter", () => {
+      if (isDismissed) return;
+      const now = window.performance?.now?.() || Date.now();
+      remaining = Math.max(0, remaining - (now - startedAt));
+      clearDismissTimer();
+    });
+    t.addEventListener("mouseleave", () => {
+      if (isDismissed) return;
+      scheduleDismiss();
+    });
+    t.addEventListener("click", (event) => {
+      if (event.target.closest("[data-toast-close], .toast-close, .btn-close")) dismiss();
+    });
+    t.addEventListener(
+      "transitionend",
+      () => {
+        if (!isDismissed || !t.isConnected) return;
+        if (removeTimer) window.clearTimeout(removeTimer);
+        t.remove();
+        removeTimer = null;
+      },
+      { once: true },
+    );
+    scheduleDismiss();
   };
 
   /* ---------- In-app notifications ---------- */
@@ -331,7 +386,7 @@
         markAllNotificationsRead().catch(() =>
           window.tkToast?.(
             window.t?.("toast.notification_update_failed") ||
-              "Could not update the notification. Please try again.",
+              "We couldn’t update that notification. It may have changed already, so refresh and try again.",
             "error",
           ),
         );
@@ -349,7 +404,7 @@
           .catch(() =>
             window.tkToast?.(
               window.t?.("toast.notification_update_failed") ||
-                "Could not update the notification. Please try again.",
+                "We couldn’t update that notification. It may have changed already, so refresh and try again.",
               "error",
             ),
           );
@@ -422,7 +477,7 @@
         window.tkToast(
           err.message ||
             window.t?.("toast.favorite_update_failed") ||
-            "Could not update your favorites. Please try again.",
+            "We couldn’t update your favorites. Check your connection and try again.",
           "error",
         );
       }

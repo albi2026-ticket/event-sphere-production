@@ -20,18 +20,18 @@
 
   const sqContacts = {
     event: [
-      { icon: "bi-envelope", title: "Email mbeshtetjeje", value: "support@tiketa.example" },
-      { icon: "bi-clock", title: "Orari i pergjigjes", value: "E hene-E premte, 09:00-18:00" },
+      { icon: "bi-envelope", title: "Email mbështetjeje", value: "support@tiketa.example" },
+      { icon: "bi-clock", title: "Orari i përgjigjes", value: "E hënë-E premte, 09:00-18:00" },
       {
         icon: "bi-life-preserver",
-        title: "Ceshtje urgjente",
-        value: "Kerkesat per akses ne bileta diten e eventit marrin perparesi.",
+        title: "Çështje urgjente",
+        value: "Kërkesat për akses në bileta ditën e eventit marrin përparësi.",
       },
     ],
     dining: [
-      { icon: "bi-envelope", title: "Mbeshtetje per rezervime", value: "dining@tiketa.example" },
-      { icon: "bi-clock", title: "Orari i rezervimeve", value: "E hene-E diel, 10:00-22:00" },
-      { icon: "bi-shop", title: "Ekipi i partnereve", value: "partners@tiketa.example" },
+      { icon: "bi-envelope", title: "Mbështetje për rezervime", value: "dining@tiketa.example" },
+      { icon: "bi-clock", title: "Orari i rezervimeve", value: "E hënë-E diel, 10:00-22:00" },
+      { icon: "bi-shop", title: "Ekipi i partnerëve", value: "partners@tiketa.example" },
     ],
   };
 
@@ -854,39 +854,39 @@
     "event.about": {
       title: "Rreth Tiketa",
       subtitle:
-        "Nje platforme moderne biletash per zbulim eventesh, pagese te sigurt dhe operime profesionale per organizatoret.",
+        "Një platformë moderne biletash për zbulim eventesh, pagesë të sigurt dhe operime profesionale për organizatorët.",
       eyebrow: "Kompania",
-      lead: "Tiketa ndihmon fansat te gjejne eksperienca live me besim dhe u jep organizatoreve mjetet per publikim, shitje dhe validim biletash ne nje rrjedhe te qendrueshme.",
+      lead: "Tiketa i ndihmon fansat të gjejnë përvoja live me besim dhe u jep organizatorëve mjetet për publikim, shitje dhe validim biletash në një rrjedhë të qëndrueshme.",
       cards: [
         {
           icon: "bi-search",
-          title: "Zbulim i qarte eventesh",
-          body: "Fansat mund te shfletojne sipas kategorise, qytetit, dates, disponueshmerise dhe popullaritetit para blerjes.",
+          title: "Zbulim i qartë eventesh",
+          body: "Fansat mund të shfletojnë sipas kategorisë, qytetit, datës, disponueshmërisë dhe popullaritetit para blerjes.",
         },
         {
           icon: "bi-shield-lock",
-          title: "Bileta te sigurta",
-          body: "Pagesa, historiku i porosive dhe dorezimi i biletave QR jane projektuar per blerje te verifikueshme.",
+          title: "Bileta të sigurta",
+          body: "Pagesa, historiku i porosive dhe dorëzimi i biletave QR janë krijuar për blerje të lehta për t’u verifikuar.",
         },
         {
           icon: "bi-clipboard-check",
-          title: "Mjete per organizatore",
-          body: "Organizatoret mund te konfigurojne nivelet e biletave, te menaxhojne pjesemarresit, shitjet dhe check-in.",
+          title: "Mjete për organizatorë",
+          body: "Organizatorët mund të konfigurojnë nivelet e biletave, të menaxhojnë pjesëmarrësit, shitjet dhe check-in.",
         },
       ],
       sections: [
         {
-          title: "Misioni yne",
+          title: "Misioni ynë",
           body: [
-            "Blerja e nje bilete duhet te jete e thjeshte, transparente dhe e besueshme nga kerkimi i pare deri te hyrja ne venue.",
-            "Tiketa eshte ndertuar per koncerte, sport, festivale, konferenca, teater, workshop-e dhe evente komunitare ku informacioni i sakte ka rendesi.",
+            "Blerja e një bilete duhet të jetë e thjeshtë, transparente dhe e besueshme nga kërkimi i parë deri te hyrja në event.",
+            "Tiketa është ndërtuar për koncerte, sport, festivale, konferenca, teatër, workshop-e dhe evente komunitare ku informacioni i saktë ka rëndësi.",
           ],
         },
         {
-          title: "Si punojme",
+          title: "Si punojmë",
           body: [
-            "Udhetimi i klientit eshte i strukturuar: lista te qarta, pagese e mbrojtur, akses i menjehershem ne bileta dhe kanale mbeshtetjeje.",
-            "Per organizatoret, Tiketa fokusohet te publikimi, inventari, pjesemarresit, validimi QR dhe komunikimi i qarte me bleresit.",
+            "Udhëtimi i klientit është i strukturuar: lista të qarta, pagesë e mbrojtur, akses i menjëhershëm në bileta dhe kanale mbështetjeje.",
+            "Për organizatorët, Tiketa fokusohet te publikimi, inventari, pjesëmarrësit, validimi QR dhe komunikimi i qartë me blerësit.",
           ],
         },
       ],

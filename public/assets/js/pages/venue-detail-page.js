@@ -1168,7 +1168,7 @@
       panel.innerHTML = `<div class="reservation-picker-empty" data-i18n="availability.no_reservation_times">${tr("availability.no_reservation_times", "No reservation times are available for this date.")}</div>`;
       selectPickerValue("time", "", tr("common.time", "Time"));
       window.tkToast?.(
-        err?.message || tr("reservation.unable_load_times", "Unable to load reservation times."),
+        err?.message || tr("reservation.unable_load_times", "We couldn’t load reservation times. Choose another date or refresh availability."),
         "error",
       );
     }
@@ -1240,7 +1240,7 @@
     }
     return (
       err?.message ||
-      tr("reservation.unable_create", "Unable to create reservation. Please try again.")
+      tr("reservation.unable_create", "We couldn’t send your reservation request. Check the guest count, date, and time, then try again.")
     );
   }
 
@@ -1259,7 +1259,7 @@
     button.disabled = busy;
     button.innerHTML = busy
       ? `<span class="spinner-border spinner-border-sm me-1"></span>${tr("loading.saving", "Saving...")}`
-      : tr("reservation.save_request", "Save Reservation Request");
+      : tr("reservation.save_request", "Send reservation request");
   }
 
   async function submitReservation(event) {
@@ -1294,7 +1294,7 @@
       document.body.classList.add("reservation-success-burst");
       window.setTimeout(() => document.body.classList.remove("reservation-success-burst"), 900);
       window.tkToast?.(
-        tr("reservation.request_sent", "Your reservation request has been sent successfully"),
+        tr("reservation.request_sent", "Reservation request sent. The venue will review it shortly."),
         "success",
       );
     } catch (err) {
@@ -1336,7 +1336,7 @@
         ),
       );
       window.tkToast?.(
-        err?.message || tr("venue.unable_to_load", "Unable to load restaurant or bar."),
+        err?.message || tr("venue.unable_to_load", "We couldn’t load this restaurant or bar. It may be unavailable or your connection may have dropped."),
         "error",
       );
     }
@@ -1382,7 +1382,7 @@
         }
       } catch (err) {
         window.tkToast?.(
-          err?.message || tr("auth.verification_failed", "We couldn't send the verification email. Please try again."),
+          err?.message || tr("auth.verification_failed", "We couldn’t send the verification email. Check your connection and try again."),
           "error",
         );
       } finally {

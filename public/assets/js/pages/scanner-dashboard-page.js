@@ -55,7 +55,11 @@
         <div class="col-12">
           <div class="dashboard-empty">
             <i class="bi bi-calendar-x"></i>
-            <span data-i18n="empty.no_scanner_event">${window.t?.("empty.no_scanner_event") || "No event has been assigned to this scanner account."}</span>
+            <div>
+              <strong data-i18n="empty.no_scanner_event">${window.t?.("empty.no_scanner_event") || "No event is assigned yet. Ask an organizer to assign you before scanning tickets."}</strong>
+              <span class="d-block text-muted-pro" data-i18n="empty.no_scanner_event_copy">${window.t?.("empty.no_scanner_event_copy") || "Once an event is assigned, it will appear here with a direct scanner link."}</span>
+              <a class="btn btn-glass btn-sm mt-2" href="/dashboard" data-i18n="dashboard.dashboard">${window.t?.("dashboard.dashboard") || "Dashboard"}</a>
+            </div>
           </div>
         </div>`;
       scanLink?.classList.add("disabled");
@@ -114,7 +118,7 @@
     `,
         )
         .join("") ||
-      `<tr><td colspan="5" class="text-muted-pro">${esc(tr("scanner.no_scans_yet", "No scans yet. Open an assigned event to start checking in guests."))}</td></tr>`;
+      `<tr><td colspan="5"><div class="dashboard-empty"><i class="bi bi-qr-code-scan"></i><div><strong>${esc(tr("scanner.no_scans_yet", "No scans yet."))}</strong><span class="d-block text-muted-pro">${esc(tr("scanner.no_scans_copy", "Open an assigned event and start scanning ticket QR codes as guests arrive."))}</span><a class="btn btn-glass btn-sm mt-2" href="/check-in" data-i18n="empty.open_scanner_action">${esc(tr("empty.open_scanner_action", "Open scanner"))}</a></div></div></td></tr>`;
   }
 
   document.addEventListener("tiketa:language-changed", () => {
@@ -136,7 +140,7 @@
       window.__scannerDashboardScans = data.recent_scans || [];
       renderScans(window.__scannerDashboardScans);
     } catch (err) {
-      window.tkToast?.(err.message || tr("toast.scanner_dashboard_load_failed", "Could not load the scanner dashboard. Please refresh the page."), "error");
+      window.tkToast?.(err.message || tr("toast.scanner_dashboard_load_failed", "We couldn’t load the scanner dashboard. Refresh the page or ask an organizer to confirm your assignment."), "error");
     }
   });
 })();

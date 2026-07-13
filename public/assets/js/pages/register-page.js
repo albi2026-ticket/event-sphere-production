@@ -52,7 +52,7 @@
         window.EventSphereAuth.redirectByRole(user);
       } catch (err) {
         window.tkToast?.(
-          err.message || tr("auth.registration_failed", "We couldn't create your account. Please try again."),
+          err.message || tr("auth.registration_failed", "We couldn’t create your account. Review the highlighted fields and try again."),
           "error",
         );
         if (btn) btn.disabled = false;

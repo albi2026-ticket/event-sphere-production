@@ -192,7 +192,8 @@
               labels[status],
             ),
           )}</h3>
-          <p class="mb-0" data-i18n="empty.no_reservations_found">${tr("empty.no_reservations_found", "No reservations yet.")}</p>
+          <p data-i18n="empty.no_reservations_copy">${tr("empty.no_reservations_copy", "Table requests and status updates will appear here once guests start booking.")}</p>
+          <a class="btn btn-gold btn-sm" href="/restaurants" data-i18n="buttons.discover_restaurants">${tr("buttons.discover_restaurants", "Discover restaurants & bars")}</a>
         </div>
       </div>
     `;
@@ -364,7 +365,7 @@
       await reservationsRequest;
     } catch (err) {
       window.tkToast?.(
-        err?.message || tr("loading.loading_reservations", "Unable to load reservations."),
+        err?.message || tr("reservation.load_failed", "We couldn’t load your reservations. Check your connection and refresh."),
         "error",
       );
       render();
@@ -396,14 +397,14 @@
       render();
       window.tkToast?.(
         window.t?.("toast.reservation_cancelled_successfully") ||
-          "Reservation cancelled successfully.",
+          "Reservation cancelled. You’ll see the update in your reservation history.",
         "success",
       );
     } catch (err) {
       window.tkToast?.(
         err?.originalMessage ||
           err?.message ||
-          tr("toast.operation_failed", "Unable to cancel reservation."),
+          tr("toast.operation_failed", "We couldn’t cancel this reservation. It may already be cancelled or past its cancellation window."),
         "error",
       );
     } finally {

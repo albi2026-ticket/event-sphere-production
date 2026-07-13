@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'failed' => 'We couldn\'t sign you in. Please check your email and password and try again.',
-    'password' => 'Please check your password and try again.',
-    'throttle' => 'Too many sign-in attempts. Please try again in :seconds seconds.',
+    'failed' => 'We couldn\'t sign you in. The email or password does not match a Tiketa account.',
+    'password' => 'That password does not match this account. Check it and try again.',
+    'throttle' => 'There were too many sign-in attempts. Wait :seconds seconds, then try again.',
 ];

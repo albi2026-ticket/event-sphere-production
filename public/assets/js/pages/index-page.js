@@ -448,7 +448,7 @@
           ? "/checkout"
           : `/login?next=${encodeURIComponent("/checkout")}`;
       } catch (err) {
-        window.tkToast?.(err.message || tr("checkout.checkout_failed", "Could not start checkout. Please try again."), "error");
+        window.tkToast?.(err.message || tr("checkout.checkout_failed", "We couldn’t start secure checkout. Your card was not charged; review your cart and try again."), "error");
       }
     });
 
@@ -592,7 +592,7 @@
             form,
             "error",
             err.message ||
-              tr("homepage.newsletter_failed", "Subscription failed. Please try again."),
+              tr("homepage.newsletter_failed", "We couldn’t add you to the newsletter. Check your email address and try again."),
           );
         } finally {
           submit.disabled = false;

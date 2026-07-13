@@ -234,8 +234,8 @@
 
     if (emptyTitle) {
       emptyTitle.textContent = state.filters.q
-        ? window.t?.("empty.no_matching_places") || "No places match your search yet."
-        : window.t?.("empty.no_restaurants_found") || "No restaurants or bars match your search yet.";
+        ? window.t?.("empty.no_search_results") || "No search results for that query."
+        : window.t?.("empty.no_restaurants_found") || "No restaurants or bars match this view yet.";
     }
     if (emptyCopy) {
       emptyCopy.textContent = state.filters.q
@@ -295,7 +295,7 @@
       window.tkToast?.(
         err?.message ||
           window.t?.("toast.unable_load_restaurants") ||
-          "Unable to load restaurants & bars.",
+          "We couldn’t load restaurants and bars. Check your connection, then refresh.",
         "error",
       );
     } finally {
@@ -437,7 +437,7 @@
             "error",
             err.message ||
               window.t?.("homepage.newsletter_failed") ||
-              "Subscription failed. Please try again.",
+              "We couldn’t add you to the newsletter. Check your email address and try again.",
           );
         } finally {
           submit.disabled = false;

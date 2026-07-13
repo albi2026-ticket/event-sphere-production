@@ -20,7 +20,7 @@
     const tt =
       event.ticket_types?.find((t) => t.id === ticketTypeId) ||
       event.ticketTypes?.find((t) => t.id === ticketTypeId);
-    if (!tt) throw new Error("Ticket type not found");
+    if (!tt) throw new Error("We couldn’t find that ticket type. Refresh the event and choose a ticket again.");
     const maxTicketsPerUser = Number(event.max_tickets_per_user || 0);
     if (maxTicketsPerUser > 0 && quantity > maxTicketsPerUser) {
       throw new Error(

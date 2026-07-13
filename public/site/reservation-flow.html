@@ -41,7 +41,7 @@
               <button type="button" data-notification-mark-all data-i18n="header.mark_all_read">Mark all read</button>
             </div>
             <div class="notification-list" data-notification-list></div>
-            <div class="notification-empty" data-notification-empty data-i18n="header.no_notifications" hidden>No notifications yet. We’ll let you know when something needs your attention.</div>
+            <div class="notification-empty" data-notification-empty data-i18n="header.no_notifications" hidden>You’re all caught up. Important Tiketa updates will appear here.</div>
             <a class="notification-view-all" href="/notifications" data-i18n="header.view_all_notifications">View all notifications</a>
           </div>
         </div>
@@ -65,7 +65,7 @@
         <div class="step" data-step="2"><div class="n">2</div> Time</div>
         <div class="step" data-step="3"><div class="n">3</div> Guests</div>
         <div class="step" data-step="4"><div class="n">4</div> Details</div>
-        <div class="step" data-step="5"><div class="n">5</div> Confirm</div>
+        <div class="step" data-step="5"><div class="n">5</div> Review and confirm</div>
       </div>
 
       <!-- STEP 1 — DATE -->
@@ -119,7 +119,7 @@
         <div class="row g-3 mt-1">
           <div class="col-md-6">
             <label class="form-label small text-muted-pro">Full name</label>
-            <input type="text" class="form-control" placeholder="Jane Doe" style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)" />
+            <input type="text" class="form-control" placeholder="Full name for the reservation" style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)" />
           </div>
           <div class="col-md-6">
             <label class="form-label small text-muted-pro">Phone</label>
@@ -127,7 +127,7 @@
           </div>
           <div class="col-12">
             <label class="form-label small text-muted-pro">Email</label>
-            <input type="email" class="form-control" placeholder="jane@example.com" style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)" />
+            <input type="email" class="form-control" placeholder="Email for reservation updates" style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)" />
           </div>
           <div class="col-12">
             <label class="form-label small text-muted-pro">Special requests (optional)</label>
@@ -164,8 +164,8 @@
 
           <div class="d-flex flex-wrap gap-2 justify-content-center mt-4">
             <a href="/restaurants" class="btn btn-ghost"><i class="bi bi-search me-1"></i> Discover more</a>
-            <a href="/restaurant" class="btn btn-gold-outline"><i class="bi bi-geo-alt me-1"></i> View venue</a>
-            <button class="btn btn-gold" onclick="window.print()"><i class="bi bi-download me-1"></i> Save confirmation</button>
+            <a href="/restaurant" class="btn btn-gold-outline"><i class="bi bi-geo-alt me-1"></i> View restaurant details</a>
+            <button class="btn btn-gold" onclick="window.print()"><i class="bi bi-download me-1"></i> Print confirmation</button>
           </div>
         </div>
       </div>

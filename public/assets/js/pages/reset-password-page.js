@@ -62,16 +62,16 @@
         await window.EventSphereAuth.resetPassword(payload);
         window.EventSphereNotifications?.add({
           type: "system",
-          title: tr("auth.password_changed_title", "Password changed"),
-          message: tr("auth.password_updated", "Your password was updated successfully."),
+          title: tr("auth.password_changed_title", "Password updated"),
+          message: tr("auth.password_updated", "Password updated. Your account is secure."),
         });
-        window.tkToast?.(tr("auth.password_updated", "Your password was updated successfully."), "success");
+        window.tkToast?.(tr("auth.password_updated", "Password updated. Your account is secure."), "success");
         window.setTimeout(() => {
           location.href = "/login?reset=1";
         }, 700);
       } catch (err) {
         error.textContent =
-          err.message || tr("auth.reset_failed", "We couldn't reset your password. Please request a new reset link.");
+          err.message || tr("auth.reset_failed", "We couldn’t reset your password. The link may have expired, so request a new one.");
         error.classList.remove("d-none");
         window.tkToast?.(error.textContent, "error");
         if (btn) btn.disabled = false;

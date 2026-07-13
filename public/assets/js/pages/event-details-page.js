@@ -768,9 +768,9 @@
       });
     } catch (err) {
       if (els.alert)
-        els.alert.innerHTML = `<div class="alert border-pro dashboard-note text-danger"><i class="bi bi-exclamation-triangle me-2"></i>${u().escapeHtml(err.message || tr("events.failed_to_load_event", "Failed to load event"))}</div>`;
+        els.alert.innerHTML = `<div class="alert border-pro dashboard-note text-danger"><i class="bi bi-exclamation-triangle me-2"></i>${u().escapeHtml(err.message || tr("events.failed_to_load_event", "We couldn’t load this event. It may be unavailable, unpublished, or temporarily unreachable."))}</div>`;
       window.tkToast?.(
-        err.message || tr("events.failed_to_load_event", "Failed to load event"),
+        err.message || tr("events.failed_to_load_event", "We couldn’t load this event. It may be unavailable, unpublished, or temporarily unreachable."),
         "error",
       );
     }

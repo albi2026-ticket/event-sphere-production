@@ -398,7 +398,7 @@
 
   function renderPage(events, meta, grid, pagination) {
     if (!events.length) {
-      grid.innerHTML = `<div class="col-12 text-center text-muted-pro py-5"><strong class="d-block" data-i18n="empty.no_events_found">${window.t?.("empty.no_events_found") || "No events match your search yet."}</strong><span data-i18n="empty.try_different_search">${window.t?.("empty.try_different_search") || "Try a different date, city, or category."}</span></div>`;
+      grid.innerHTML = `<div class="col-12"><div class="dashboard-empty text-center py-5"><i class="bi bi-calendar2-search"></i><div><strong class="d-block" data-i18n="empty.no_events_found">${window.t?.("empty.no_events_found") || "No events match this view yet."}</strong><span class="d-block text-muted-pro" data-i18n="empty.no_events_copy">${window.t?.("empty.no_events_copy") || "Tiketa will show fresh experiences here as soon as they match your filters."}</span><a class="btn btn-primary-grad btn-sm mt-3" href="/events/list" data-events-clear-filters data-i18n="events.clear_filters">${window.t?.("events.clear_filters") || "Clear event filters"}</a></div></div></div>`;
     } else {
       grid.innerHTML = renderEvents(events);
     }

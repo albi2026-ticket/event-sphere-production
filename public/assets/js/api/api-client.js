@@ -39,7 +39,7 @@
     if (original.includes("credentials") || original.includes("auth.failed")) {
       return tr(
         "auth.error_sign_in",
-        "We couldn't sign you in. Please check your email and password and try again.",
+        "We couldn’t sign you in. The email or password does not match a Tiketa account.",
       );
     }
     if (
@@ -70,31 +70,49 @@
       return tr("auth.password_too_short", "Password must contain at least 8 characters.");
     }
     if (status === 422 || payload?.errors) {
-      return tr("auth.check_input", "Please check your details and try again.");
+      return tr("auth.check_input", "Some details need attention. Review the form and try again.");
     }
     if (status === 401) {
-      return tr("auth.session_expired", "Your session has expired. Please sign in again.");
+      return tr("auth.session_expired", "Your session expired to keep your account secure. Sign in again to continue.");
     }
     if (status === 403) {
       return tr(
         "auth.forbidden",
-        "You don’t have access to this page. Please use the right account or return to your dashboard.",
+        "This account does not have access here. Switch to the right account or return to your dashboard.",
+      );
+    }
+    if (status === 404) {
+      return tr(
+        "errors.404.description",
+        "The link may be outdated, private, or moved. Go home, browse events, or check the URL.",
+      );
+    }
+    if (status === 409) {
+      return tr(
+        "errors.conflict.description",
+        "This was changed somewhere else before Tiketa could save your update. Refresh and try again.",
+      );
+    }
+    if (status === 429) {
+      return tr(
+        "errors.rate_limited.description",
+        "Tiketa received too many requests in a short time. Wait a moment, then try again.",
       );
     }
     if (status >= 500) {
       return tr(
         "errors.server.description",
-        "We’re having trouble loading this right now. Please try again in a moment.",
+        "Something on our side stopped this from loading. Try again in a moment.",
       );
     }
-    return payload?.message || tr("auth.request_failed", "Something went wrong. Please try again.");
+    return payload?.message || tr("auth.request_failed", "We couldn’t complete the request. Check your connection and try again.");
   }
 
   function connectionErrorMessage(error) {
     if (typeof navigator !== "undefined" && !navigator.onLine) {
       return tr(
         "errors.offline.description",
-        "You appear to be offline. Check your internet connection and try again.",
+        "Tiketa needs an internet connection for this action. Reconnect, then try again.",
       );
     }
 
@@ -102,13 +120,13 @@
     if (message.includes("failed to fetch") || message.includes("network")) {
       return tr(
         "errors.network.description",
-        "We couldn’t connect. Please check your connection and try again.",
+        "Your connection may be unstable. Check Wi‑Fi or mobile data, then try again.",
       );
     }
 
     return tr(
       "errors.api_unavailable.description",
-      "Tiketa is taking longer than expected. Please try again in a moment.",
+      "The service did not respond in time. Wait a moment, then try again.",
     );
   }
 
@@ -180,7 +198,7 @@
       err.status = 401;
       err.payload = payload;
       err.originalMessage =
-        payload?.message || tr("auth.session_expired", "Your session has expired. Please sign in again.");
+        payload?.message || tr("auth.session_expired", "Your session expired to keep your account secure. Sign in again to continue.");
       throw err;
     }
 
@@ -222,9 +240,9 @@
       sessionStorage.removeItem(cfg().TOKEN_KEY);
       sessionStorage.removeItem(cfg().USER_KEY);
       location.href = cfg().LOGIN_URL;
-      throw new Error(tr("auth.session_expired", "Your session has expired. Please sign in again."));
+      throw new Error(tr("auth.session_expired", "Your session expired to keep your account secure. Sign in again to continue."));
     }
-    if (!response.ok) throw new Error(tr("auth.request_failed", "Something went wrong. Please try again."));
+    if (!response.ok) throw new Error(userFriendlyMessage(null, response.status));
     return response.blob();
   }
 

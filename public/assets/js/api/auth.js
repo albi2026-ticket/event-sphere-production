@@ -149,7 +149,7 @@
       window.tkToast?.(
         tr(
           "auth.forbidden",
-          "You don’t have access to this page. Please use the right account or return to your dashboard.",
+          "This account does not have access here. Switch to the right account or return to your dashboard.",
         ),
         "error",
       );
@@ -185,7 +185,7 @@
     const roleConfig = {
       admin: { label: "Dashboard", href: "/admin" },
       organizer: { label: "Manage Events", href: "/organizer" },
-      owner: { label: "Manage Venues", href: "/owner-venue" },
+      owner: { label: "Manage restaurants", href: "/owner-venue" },
       scanner: { label: "Scanner", href: "/scanner-dashboard" },
       user: { label: "My Tickets", href: "/dashboard" },
     };
@@ -282,7 +282,7 @@
           await refreshUser();
         } catch (err) {
           window.tkToast?.(
-            err.message || tr("auth.verification_failed", "We couldn't send the verification email. Please try again."),
+            err.message || tr("auth.verification_failed", "We couldn’t send the verification email. Check your connection and try again."),
             "error",
           );
         } finally {
@@ -299,7 +299,7 @@
 
     if (shouldShowVerifiedMessage && !getToken()) {
       window.tkToast?.(
-        tr("auth.email_verified_success", "Your email has been verified successfully."),
+        tr("auth.email_verified_success", "Email verified. Your account is ready to use."),
         "success",
       );
       return;
@@ -313,10 +313,10 @@
         window.EventSphereNotifications?.add({
           type: "system",
           title: tr("auth.email_verified_title", "Email verified"),
-          message: tr("auth.email_verified_success", "Your email has been verified successfully."),
+          message: tr("auth.email_verified_success", "Email verified. Your account is ready to use."),
         });
         window.tkToast?.(
-          tr("auth.email_verified_success", "Your email has been verified successfully."),
+          tr("auth.email_verified_success", "Email verified. Your account is ready to use."),
           "success",
         );
       }

@@ -140,7 +140,7 @@
     `,
         )
         .join("") ||
-      `<tr><td colspan="4" class="text-muted-pro">${esc(tr("empty.no_scan_history", "No scan history yet."))}</td></tr>`;
+      `<tr><td colspan="4"><div class="dashboard-empty"><i class="bi bi-clock-history"></i><div><strong data-i18n="empty.no_scan_history">${esc(tr("empty.no_scan_history", "No scan history yet."))}</strong><span class="d-block text-muted-pro" data-i18n="scanner.no_scans_copy">${esc(tr("scanner.no_scans_copy", "Open an assigned event and start scanning ticket QR codes as guests arrive."))}</span><button class="btn btn-glass btn-sm mt-2" type="button" data-scanner-start data-i18n="buttons.start_scan">${esc(tr("buttons.start_scan", "Start scanning"))}</button></div></div></td></tr>`;
   }
 
   function renderResult(data) {
@@ -184,7 +184,7 @@
       const message =
         err.originalMessage ||
         err.message ||
-        tr("toast.scan_failed", "Could not read this ticket. Please try again.");
+        tr("toast.scan_failed", "We couldn’t read this ticket. Try scanning again or use manual lookup.");
       state.result = {
         payload: body,
         validation: {
@@ -212,20 +212,20 @@
       renderResult(state.result);
       window.EventSphereNotifications?.add({
         type: "system",
-        title: tr("notifications.check_in_completed_title", "Check-in completed"),
+        title: tr("notifications.check_in_completed_title", "Check-in complete"),
         message: tr(
           "notifications.check_in_completed_message",
-          "The ticket was checked in successfully.",
+          "The ticket is checked in and ready for entry.",
         ),
       });
-      window.tkToast?.(tr("toast.ticket_checked_in", "Ticket checked in."));
+      window.tkToast?.(tr("toast.ticket_checked_in", "Ticket checked in. The guest is cleared for entry."));
     } catch (err) {
       if (err.payload?.data?.validation) renderResult(err.payload.data);
       else {
         const message =
           err.originalMessage ||
           err.message ||
-          tr("toast.check_in_failed", "Could not check in this ticket. Please try again.");
+          tr("toast.check_in_failed", "We couldn’t check in this ticket. It may already be used, cancelled, or for another event.");
         renderResult({
           validation: {
             result: "invalid",
@@ -236,7 +236,7 @@
           ticket: null,
         });
       }
-      window.tkToast?.(err.message || tr("toast.check_in_failed", "Could not check in this ticket. Please try again."), "error");
+      window.tkToast?.(err.message || tr("toast.check_in_failed", "We couldn’t check in this ticket. It may already be used, cancelled, or for another event."), "error");
     }
     await Promise.all([loadStats(), loadLogs()]);
   }
@@ -259,7 +259,7 @@
     `,
         )
         .join("") ||
-      `<div class="dashboard-empty"><i class="bi bi-search"></i><strong data-i18n="empty.no_tickets_found">${window.t?.("empty.no_tickets_found") || "No tickets yet."}</strong><span data-i18n="organizer.ticket_lookup_empty_copy">${window.t?.("organizer.ticket_lookup_empty_copy") || "Try a ticket code, attendee name, email, or order number."}</span></div>`;
+      `<div class="dashboard-empty"><i class="bi bi-search"></i><div><strong data-i18n="empty.no_search_results">${window.t?.("empty.no_search_results") || "No search results for that query."}</strong><span class="d-block" data-i18n="organizer.ticket_lookup_empty_copy">${window.t?.("organizer.ticket_lookup_empty_copy") || "Try a ticket code, attendee name, email, or order number."}</span><button class="btn btn-glass btn-sm mt-2" type="button" data-scanner-clear-search data-i18n="empty.clear_search_action">${window.t?.("empty.clear_search_action") || "Clear search"}</button></div></div>`;
   }
 
   async function startCamera() {
@@ -285,7 +285,7 @@
       if (!raw || raw === state.lastPayload) return;
       state.lastPayload = raw;
       await validateTicket(parsePayload(raw), "mobile_scanner").catch((err) =>
-        window.tkToast?.(err.message || tr("toast.scan_failed", "Could not read this ticket. Please try again."), "error"),
+        window.tkToast?.(err.message || tr("toast.scan_failed", "We couldn’t read this ticket. Try scanning again or use manual lookup."), "error"),
       );
     }, 700);
   }
@@ -310,21 +310,37 @@
       state.result = null;
       await Promise.all([loadStats(), loadLogs()]);
     });
-    $("[data-scanner-start]")?.addEventListener("click", () =>
-      startCamera().catch((err) => window.tkToast?.(err.message || tr("toast.camera_unavailable", "Camera is unavailable. Use manual lookup."), "error")),
-    );
+    $("[data-scanner-start]")?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      startCamera().catch((err) => window.tkToast?.(err.message || tr("toast.camera_unavailable", "Camera is unavailable. Use manual lookup."), "error"));
+    });
     $("[data-scanner-stop]")?.addEventListener("click", stopCamera);
     $("[data-scanner-manual-form]")?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const search = String(new FormData(event.currentTarget).get("q") || "").trim();
       if (search)
         await lookup(search).catch((err) =>
-          window.tkToast?.(err.message || tr("toast.lookup_failed", "Could not find matching tickets. Please try again."), "error"),
+          window.tkToast?.(err.message || tr("toast.lookup_failed", "No matching tickets found. Check the code, attendee name, or order number."), "error"),
         );
     });
     document.addEventListener("click", async (event) => {
       const ticket = event.target.closest("[data-scanner-ticket-code]");
       if (ticket) await validateTicket({ ticket_code: ticket.dataset.scannerTicketCode }, "manual");
+      const start = event.target.closest("[data-scanner-start]");
+      if (start) {
+        await startCamera().catch((err) => window.tkToast?.(err.message || tr("toast.camera_unavailable", "Camera is unavailable. Use manual lookup."), "error"));
+        return;
+      }
+      const clearSearch = event.target.closest("[data-scanner-clear-search]");
+      if (clearSearch) {
+        const form = $("[data-scanner-manual-form]");
+        const input = form?.querySelector("[name='q']");
+        if (input) input.value = "";
+        const results = $("[data-scanner-lookup-results]");
+        if (results) results.innerHTML = "";
+        input?.focus();
+        return;
+      }
       if (event.target.closest("[data-scanner-checkin]")) await checkIn();
     });
     window.addEventListener("beforeunload", stopCamera);

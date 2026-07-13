@@ -166,7 +166,7 @@
       const { data } = await api().fetch("/me/dashboard/summary");
       state.summary = data;
     } catch (err) {
-      state.errors.summary = err.message || "Failed to load dashboard summary";
+      state.errors.summary = err.message || tr("toast.dashboard_section_load_failed", "We couldn’t load this dashboard section. Refresh this section or try again in a moment.");
     } finally {
       state.loading.summary = false;
       renderGreeting();
@@ -183,7 +183,7 @@
       const { data } = await api().fetch("/me/profile");
       state.profile = data;
     } catch (err) {
-      state.errors.profile = err.message || "Failed to load profile";
+      state.errors.profile = err.message || tr("toast.profile_update_failed", "We couldn’t load your profile. Refresh the page and try again.");
     } finally {
       state.loading.profile = false;
       renderGreeting();
@@ -202,7 +202,7 @@
       state.upcomingEvents = rows(result.raw || result.data);
       state.upcomingTickets = rows(result.raw?.included?.tickets || []);
     } catch (err) {
-      state.errors.upcoming = err.message || "Failed to load upcoming events";
+      state.errors.upcoming = err.message || tr("toast.dashboard_section_load_failed", "We couldn’t load your upcoming events. Refresh this section or try again in a moment.");
     } finally {
       state.loading.upcoming = false;
       renderUpcomingEvents();
@@ -247,7 +247,7 @@
       state.tickets = result.tickets;
       state.ticketMeta = result.meta;
     } catch (err) {
-      state.errors.tickets = err.message || "Failed to load tickets";
+      state.errors.tickets = err.message || tr("toast.ticket_details_failed", "We couldn’t load your tickets. Refresh the page or try again in a moment.");
     } finally {
       state.loading.tickets = false;
       renderTickets();
@@ -267,7 +267,7 @@
       const result = await ticketsApi().listTicketHistory({ per_page: 100, sort: "-created_at" });
       state.historyTickets = result.tickets;
     } catch (err) {
-      state.errors.history = err.message || "Failed to load attendance history";
+      state.errors.history = err.message || tr("toast.dashboard_section_load_failed", "We couldn’t load your attendance history. Refresh this section or try again in a moment.");
     } finally {
       state.loading.history = false;
       renderAttendanceHistory();
@@ -298,7 +298,7 @@
           : result.orders;
       state.orderMeta = result.meta;
     } catch (err) {
-      state.errors.orders = err.message || "Failed to load orders";
+      state.errors.orders = err.message || tr("toast.order_details_failed", "We couldn’t load your orders. Refresh the page or try again in a moment.");
     } finally {
       state.loading.orders = false;
       renderOrders();
@@ -321,7 +321,7 @@
       state.favorites = rows(data);
       state.favoriteMeta = meta;
     } catch (err) {
-      state.errors.favorites = err.message || "Failed to load favorites";
+      state.errors.favorites = err.message || tr("toast.favorite_update_failed", "We couldn’t load your favorites. Check your connection and try again.");
     } finally {
       state.loading.favorites = false;
       renderFavorites();
@@ -406,7 +406,7 @@
       tr("dashboard.no_upcoming_events", "No upcoming events"),
       tr(
         "dashboard.future_events_appear",
-        "When you buy tickets for future events, they will appear here.",
+        "Your upcoming plans will appear here after you buy or save tickets for future events.",
       ),
       `<a class="btn btn-glass btn-sm mt-2" href="/events/list" data-i18n="buttons.browse_events">${tr("buttons.browse_events", "Browse events")}</a>`,
     );
@@ -439,7 +439,7 @@
               <span><span class="fw-semibold d-block">${escape(event.title)}</span><small>${escape(dateLabel(event.starts_at, event.timezone))} · ${escape(event.venue_name || "")}${event.city ? `, ${escape(event.city)}` : ""}</small><small class="d-block"><span data-i18n="dashboard.starts_in">${tr("dashboard.starts_in", "Starts in")}</span> ${escape(countdownLabel(event.starts_at))}</small></span>
             </div>
             <div class="dashboard-actions">
-              ${ticket ? `<button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}" data-i18n="tickets.view_ticket">${tr("tickets.view_ticket", "View Ticket")}</button><button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}" data-i18n="tickets.view_qr">${tr("tickets.view_qr", "View QR")}</button>` : `<a class="btn btn-glass btn-sm" href="${window.EventSphereRoutes?.eventUrl?.(event.slug) || `/event/${encodeURIComponent(event.slug)}`}" data-i18n="dashboard.view_event">${tr("dashboard.view_event", "View Event")}</a>`}
+              ${ticket ? `<button class="btn btn-glass btn-sm" type="button" data-ticket-details="${ticket.id}" data-i18n="tickets.view_ticket">${tr("tickets.view_ticket", "View ticket details")}</button><button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}" data-i18n="tickets.view_qr">${tr("tickets.view_qr", "View ticket QR")}</button>` : `<a class="btn btn-glass btn-sm" href="${window.EventSphereRoutes?.eventUrl?.(event.slug) || `/event/${encodeURIComponent(event.slug)}`}" data-i18n="dashboard.view_event">${tr("dashboard.view_event", "View event details")}</a>`}
             </div>
           </div>`;
           })
@@ -465,7 +465,7 @@
     }
     el.innerHTML = state.tickets.length
       ? state.tickets.map((ticket) => ticketsApi().renderTicketCard(ticket)).join("")
-      : `<div class="col-12">${emptyState("bi-ticket-perforated", tr("empty.no_tickets_found", "No tickets yet."), tr("tickets.try_filter_or_browse", "Browse events and choose the tickets you want."), `<a class="btn btn-glass btn-sm mt-2" href="/events/list" data-i18n="buttons.browse_events">${tr("buttons.browse_events", "Browse Events")}</a>`)}</div>`;
+      : `<div class="col-12">${emptyState("bi-ticket-perforated", tr("empty.no_tickets_found", "No tickets are ready yet."), tr("empty.no_tickets_copy", "Your confirmed tickets and QR codes will appear here after checkout."), `<a class="btn btn-primary-grad btn-sm mt-2" href="/events/list" data-i18n="empty.browse_events_action">${tr("empty.browse_events_action", "Browse events")}</a>`)}</div>`;
     ticketsApi().hydrateQrImages(el);
     if (pager) pager.innerHTML = pagination(state.ticketMeta, "data-ticket-page");
   }
@@ -507,7 +507,7 @@
     `,
         )
         .join("") ||
-      `<tr><td colspan="7">${emptyState("bi-receipt", tr("orders.no_orders_found", "No orders yet."), tr("orders.completed_orders_appear", "Complete checkout and your orders will appear here."))}</td></tr>`;
+      `<tr><td colspan="7">${emptyState("bi-receipt", tr("orders.no_orders_found", "No orders have been placed yet."), tr("empty.no_orders_copy", "Receipts and payment details will appear here after your first checkout."), `<a class="btn btn-primary-grad btn-sm mt-2" href="/events/list" data-i18n="empty.browse_events_action">${tr("empty.browse_events_action", "Browse events")}</a>`)}</td></tr>`;
     if (pager) pager.innerHTML = pagination(state.orderMeta, "data-order-page");
   }
 
@@ -543,7 +543,7 @@
             <div class="foot">
               <div class="price">${pricing}<div class="mt-1">${statusBadge(stateBadge)}</div></div>
               <div class="dashboard-actions">
-                <a class="btn btn-glass btn-sm" href="${window.EventSphereRoutes?.eventUrl?.(event.slug) || `/event/${encodeURIComponent(event.slug)}`}" data-i18n="dashboard.view_event">${tr("dashboard.view_event", "View Event")}</a>
+                <a class="btn btn-glass btn-sm" href="${window.EventSphereRoutes?.eventUrl?.(event.slug) || `/event/${encodeURIComponent(event.slug)}`}" data-i18n="dashboard.view_event">${tr("dashboard.view_event", "View event details")}</a>
                 <button class="btn btn-glass btn-sm" type="button" data-remove-favorite="${event.id}"><i class="bi bi-heartbreak"></i></button>
               </div>
             </div>
@@ -570,7 +570,7 @@
     }
     el.innerHTML = state.favorites.length
       ? state.favorites.map(renderFavoriteCard).join("")
-      : `<div class="col-12">${emptyState("bi-heart", tr("dashboard.no_favorites_yet", "No favorites yet."), tr("dashboard.saved_events_appear", "Browse events and save the ones you love."), `<a class="btn btn-glass btn-sm mt-2" href="/events/list" data-i18n="buttons.browse_events">${tr("buttons.browse_events", "Browse events")}</a>`)}</div>`;
+      : `<div class="col-12">${emptyState("bi-heart", tr("dashboard.no_favorites_yet", "No saved favorites yet."), tr("empty.no_favorites_copy", "Save events you like and Tiketa will keep them here for quick access."), `<a class="btn btn-primary-grad btn-sm mt-2" href="/events/list" data-i18n="empty.browse_events_action">${tr("empty.browse_events_action", "Browse events")}</a>`)}</div>`;
     if (pager) pager.innerHTML = pagination(state.favoriteMeta, "data-favorite-page");
   }
 
@@ -696,7 +696,7 @@
     `,
         )
         .join("") ||
-      `<tr><td colspan="4">${emptyState("bi-clock-history", tr("dashboard.no_attended_events", "No attended events yet"), tr("dashboard.attended_events_appear", "Checked-in tickets will appear here after events."))}</td></tr>`;
+      `<tr><td colspan="4">${emptyState("bi-clock-history", tr("dashboard.no_attended_events", "No attended events yet"), tr("dashboard.attended_events_appear", "Checked-in tickets will appear here after events."), `<a class="btn btn-glass btn-sm mt-2" href="/events/list" data-i18n="empty.browse_events_action">${tr("empty.browse_events_action", "Browse events")}</a>`)}</td></tr>`;
   }
 
   function renderProfileSummary() {
@@ -712,8 +712,8 @@
     }
     if (security) {
       security.innerHTML = `
-        <div class="dashboard-mini-row"><span><span class="fw-semibold d-block">Email verification</span><small>${auth().hasVerifiedEmail(profile) ? "Your email is verified." : "Verification is still pending."}</small></span>${auth().hasVerifiedEmail(profile) ? statusBadge("Verified") : '<button class="btn btn-glass btn-sm" type="button" data-profile-resend-verification>Resend</button>'}</div>
-        <div class="dashboard-mini-row"><span><span class="fw-semibold d-block">Password reset</span><small>Use reset links for secure password changes.</small></span><a class="btn btn-glass btn-sm" href="/forgot-password">Manage</a></div>
+        <div class="dashboard-mini-row"><span><span class="fw-semibold d-block">Email verification</span><small>${auth().hasVerifiedEmail(profile) ? "Your email is verified." : "Verification is still pending."}</small></span>${auth().hasVerifiedEmail(profile) ? statusBadge("Verified") : '<button class="btn btn-glass btn-sm" type="button" data-profile-resend-verification>Send verification email</button>'}</div>
+        <div class="dashboard-mini-row"><span><span class="fw-semibold d-block">Password reset</span><small>Use reset links for secure password changes.</small></span><a class="btn btn-glass btn-sm" href="/forgot-password">Send reset link</a></div>
         <div class="dashboard-mini-row"><span><span class="fw-semibold d-block">Account role</span><small>${escape(profile.role || "user")}</small></span>${statusBadge(profile.status || "active")}</div>`;
     }
   }
@@ -759,8 +759,9 @@
         tr("notifications.no_notifications", "No notifications yet."),
         tr(
           "notifications.empty_copy",
-          "Order confirmations, event reminders, and helpful updates will appear here.",
+          "Important updates, reminders, confirmations, and admin notes will land here.",
         ),
+        `<a class="btn btn-glass btn-sm mt-2" href="/notifications" data-i18n="header.view_all_notifications">${tr("header.view_all_notifications", "View all notifications")}</a>`,
       );
   }
 
@@ -897,7 +898,7 @@
         return result;
       })
       .catch((err) => {
-        window.tkToast?.(err.message || tr("toast.dashboard_section_load_failed", "Could not load this dashboard section. Please try again."), "error");
+        window.tkToast?.(err.message || tr("toast.dashboard_section_load_failed", "We couldn’t load this dashboard section. Refresh this section or try again in a moment."), "error");
         throw err;
       })
       .finally(() => {
@@ -969,8 +970,8 @@
       hydrateProfileForm();
       window.tkToast?.(tr("toast.profile_updated", "Profile updated."));
     } catch (err) {
-      showProfileError(err.message || tr("toast.profile_update_failed", "Could not update your profile. Please try again."));
-      window.tkToast?.(err.message || tr("toast.profile_update_failed", "Could not update your profile. Please try again."), "error");
+      showProfileError(err.message || tr("toast.profile_update_failed", "We couldn’t save your profile changes. Check the highlighted fields and try again."));
+      window.tkToast?.(err.message || tr("toast.profile_update_failed", "We couldn’t save your profile changes. Check the highlighted fields and try again."), "error");
     } finally {
       if (button) button.disabled = false;
     }
@@ -1006,7 +1007,7 @@
         hydrateProfileForm();
       } catch (err) {
         window.tkToast?.(
-          err.message || tr("auth.verification_failed", "We couldn't send the verification email. Please try again."),
+          err.message || tr("auth.verification_failed", "We couldn’t send the verification email. Check your connection and try again."),
           "error",
         );
       } finally {
@@ -1102,7 +1103,7 @@
       </div>
       <div class="d-flex gap-2 mt-4 flex-wrap">
         <button class="btn btn-primary-grad btn-sm" type="button" data-ticket-download="${ticket.id}" data-ticket-code="${escape(ticket.ticket_code)}"><i class="bi bi-download me-1"></i><span data-i18n="tickets.download_pdf">${tr("tickets.download_pdf", "Download PDF")}</span></button>
-        <button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}"><i class="bi bi-qr-code me-1"></i><span data-i18n="tickets.view_qr_code">${tr("tickets.view_qr_code", "View QR code")}</span></button>
+        <button class="btn btn-glass btn-sm" type="button" data-ticket-qr-open="${ticket.id}"><i class="bi bi-qr-code me-1"></i><span data-i18n="tickets.view_qr_code">${tr("tickets.view_qr_code", "View ticket QR code")}</span></button>
       </div>
     `,
     );
@@ -1120,7 +1121,7 @@
         `<div class="dashboard-qr-wrap"><img src="${url}" alt="${tr("tickets.ticket_qr_code", "Ticket QR code")}" width="280" height="280" loading="eager" decoding="async"/></div>`;
     } catch (err) {
       document.querySelector("[data-dashboard-detail-body]").innerHTML = errorState(
-        err.message || tr("tickets.qr_code_failed", "QR code failed to load"),
+        err.message || tr("tickets.qr_code_failed", "We couldn’t load this QR code. Refresh the ticket or open it again from your dashboard."),
         "data-retry-tickets",
       );
     }
@@ -1227,7 +1228,7 @@
           );
         } catch (err) {
           window.tkToast?.(
-            err.message || tr("tickets.download_failed", "Ticket download failed"),
+            err.message || tr("tickets.download_failed", "We couldn’t download this ticket. Check your connection and try again."),
             "error",
           );
         }
@@ -1240,7 +1241,7 @@
         try {
           await showTicketDetails(ticketDetails.dataset.ticketDetails);
         } catch (err) {
-          window.tkToast?.(err.message || tr("toast.ticket_details_failed", "Could not load ticket details. Please try again."), "error");
+          window.tkToast?.(err.message || tr("toast.ticket_details_failed", "We couldn’t load this ticket. Refresh the page or search for the ticket again."), "error");
         }
         return;
       }
@@ -1258,7 +1259,7 @@
         try {
           await showOrderDetails(orderDetails.dataset.orderDetails);
         } catch (err) {
-          window.tkToast?.(err.message || tr("toast.order_details_failed", "Could not load order details. Please try again."), "error");
+          window.tkToast?.(err.message || tr("toast.order_details_failed", "We couldn’t load this order. Refresh the page or search for the order again."), "error");
         }
         return;
       }
@@ -1273,7 +1274,7 @@
           );
         } catch (err) {
           window.tkToast?.(
-            err.message || tr("orders.receipt_download_failed", "Receipt download failed"),
+            err.message || tr("orders.receipt_download_failed", "We couldn’t download the receipt. Refresh the order and try again."),
             "error",
           );
         }
@@ -1295,7 +1296,7 @@
           renderActivity();
         } catch (err) {
           window.tkToast?.(
-            err.message || tr("toast.favorite_update_failed", "Could not update your favorites. Please try again."),
+            err.message || tr("toast.favorite_update_failed", "We couldn’t update your favorites. Check your connection and try again."),
             "error",
           );
         }
@@ -1329,7 +1330,7 @@
     try {
       await loadSection(state.currentSection || "overview");
     } catch (err) {
-      window.tkToast?.(err.message || tr("toast.dashboard_load_failed", "Could not load your dashboard. Please refresh the page."), "error");
+      window.tkToast?.(err.message || tr("toast.dashboard_load_failed", "We couldn’t load your dashboard. Refresh the page; your account data is still safe."), "error");
     }
   });
 })();

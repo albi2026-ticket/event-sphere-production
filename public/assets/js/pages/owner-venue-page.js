@@ -90,7 +90,7 @@
         "owner.manage_forbidden",
         "This account cannot manage the selected restaurant or bar.",
       );
-    return err?.message || tr("toast.unexpected_error", "Something went wrong. Please try again.");
+    return err?.message || tr("toast.unexpected_error", "Something didn’t work as expected. Refresh the page or try again in a moment.");
   }
 
   function debounceReservationLoad(delay = 250) {
@@ -125,7 +125,7 @@
       return [
         err?.originalMessage ||
           err?.message ||
-          "Please check your restaurant or bar details and try again.",
+          "Some restaurant or bar details need attention. Review the form and try again.",
       ];
     }
 
@@ -543,7 +543,7 @@
           window.tkToast?.(
             tr(
               "owner.no_matching_address",
-              "No matching address yet. Try a more specific street, city, or venue name.",
+              "No matching address yet. Try a more specific street, city, or restaurant name.",
             ),
             "error",
           );
@@ -605,7 +605,7 @@
         window.tkToast?.(
           tr(
             "owner.no_matching_address",
-            "No matching address yet. Try a more specific street, city, or venue name.",
+            "No matching address yet. Try a more specific street, city, or restaurant name.",
           ),
           "error",
         );
@@ -620,14 +620,14 @@
       window.tkToast?.(tr("owner.map_location_updated", "Map location updated."), "success");
     } catch (err) {
       window.tkToast?.(
-        tr("owner.address_search_failed", "Unable to search this address right now."),
+        tr("owner.address_search_failed", "We couldn’t search that address right now. Try a more specific street, city, or restaurant name."),
         "error",
       );
     } finally {
       if (button) {
         button.disabled = false;
         button.innerHTML =
-          button.dataset.originalLabel || '<i class="bi bi-search me-1"></i>Search Address';
+          button.dataset.originalLabel || '<i class="bi bi-search me-1"></i>Search this address';
       }
     }
   }
@@ -804,7 +804,7 @@
     `,
           )
           .join("")
-      : `<div class="availability-empty" data-i18n="availability.no_blackout_dates">${tr("availability.no_blackout_dates", "No blackout dates added.")}</div>`;
+      : `<div class="availability-empty"><strong data-i18n="availability.no_blackout_dates">${tr("availability.no_blackout_dates", "No blackout dates added.")}</strong><span class="d-block">${tr("availability.no_blackout_dates_copy", "Add a blackout date when this restaurant or bar should stop accepting reservations.")}</span></div>`;
   }
 
   function renderSpecialHours() {
@@ -831,7 +831,7 @@
     `,
           )
           .join("")
-      : `<div class="availability-empty" data-i18n="availability.no_special_hours">${tr("availability.no_special_hours", "No special hours added.")}</div>`;
+      : `<div class="availability-empty"><strong data-i18n="availability.no_special_hours">${tr("availability.no_special_hours", "No special hours added.")}</strong><span class="d-block">${tr("availability.no_special_hours_copy", "Add special hours for holidays, private events, or one-off schedule changes.")}</span></div>`;
   }
 
   function clearSpecialForm() {
@@ -880,7 +880,7 @@
           </div>
           <div class="owner-gallery-card-body">
             <div>
-              <strong>${index === 0 ? tr("venue.cover_photo", "Cover Photo") : `${tr("venue.gallery", "Gallery")} ${index + 1}`}</strong>
+              <strong>${index === 0 ? tr("venue.cover_photo", "Cover photo") : `${tr("venue.gallery", "Gallery")} ${index + 1}`}</strong>
               <small class="text-muted-pro">${tr("owner.drag_to_reorder", "Drag to reorder")}</small>
             </div>
             <div class="owner-gallery-actions">
@@ -895,7 +895,7 @@
     `,
           )
           .join("")
-      : `<div class="col-12"><div class="owner-gallery-empty">${tr("empty.no_images", "No images yet.")} ${tr("organizer.no_images_copy", "Upload a cover photo to make this event stand out.")}</div></div>`;
+      : `<div class="col-12"><div class="owner-gallery-empty"><i class="bi bi-images"></i><strong data-i18n="empty.no_images">${tr("empty.no_images", "Your gallery is waiting for its first image.")}</strong><span class="d-block" data-i18n="empty.no_images_copy">${tr("empty.no_images_copy", "Photos help guests trust the experience before they book or buy.")}</span><button class="btn btn-gold btn-sm mt-2" type="button" data-owner-image-upload-trigger data-i18n="empty.upload_image_action">${tr("empty.upload_image_action", "Upload image")}</button></div></div>`;
   }
 
   function hasOpeningHours(venue) {
@@ -915,7 +915,7 @@
     const images = venue?.images || [];
     return [
       {
-        label: "Venue Name",
+        label: "Restaurant name",
         missing: "Add Name",
         complete: Boolean(String(venue?.name || "").trim()),
       },
@@ -940,7 +940,7 @@
         missing: "Add Address",
         complete: Boolean(String(venue?.address || "").trim()),
       },
-      { label: "Opening Hours", missing: "Add Opening Hours", complete: hasOpeningHours(venue) },
+      { label: "Opening hours", missing: "Add opening hours", complete: hasOpeningHours(venue) },
       {
         label: "Facilities",
         missing: "Add Facilities",
@@ -951,7 +951,7 @@
         missing: "Add Cuisine Types",
         complete: Boolean(venue?.cuisine_types?.length),
       },
-      { label: "Social Links", missing: "Add Instagram", complete: hasSocialLinks(venue) },
+      { label: "Social links", missing: "Add Instagram", complete: hasSocialLinks(venue) },
     ];
   }
 
@@ -1059,7 +1059,7 @@
       coverEl.src = imageUrl(cover);
     }
     $("[data-owner-title]").textContent =
-      venue.name || tr("venue.profile", "Restaurant / Bar profile");
+      venue.name || tr("venue.profile", "Restaurant or bar profile");
     $("[data-owner-type]").textContent = (venue.venue_type || "restaurant / bar").replace(
       /^\w/,
       (letter) => letter.toUpperCase(),
@@ -1148,7 +1148,7 @@
       {
         label: tr("reservation.confirmed_reservations", "Confirmed Reservations"),
         value: stats.confirmed || 0,
-        description: tr("reservation.approved_by_venue", "Approved upcoming bookings"),
+        description: tr("reservation.approved_by_venue", "Reservations approved by the restaurant or bar"),
         icon: "bi-patch-check",
         tone: "confirmed",
       },
@@ -1198,7 +1198,7 @@
           <i class="bi bi-patch-check"></i><span data-i18n="owner.mark_completed">${tr("owner.mark_completed", "Mark Completed")}</span>
         </button>
         <button class="btn btn-glass btn-sm" type="button" data-owner-reservation-action="no-show" data-owner-reservation-id="${id}" ${!isConfirmed ? "disabled" : ""}>
-          <i class="bi bi-person-x"></i><span data-i18n="owner.mark_no_show">${tr("owner.mark_no_show", "Mark No Show")}</span>
+          <i class="bi bi-person-x"></i><span data-i18n="owner.mark_no_show">${tr("owner.mark_no_show", "Mark guest as no-show")}</span>
         </button>
         <button class="btn btn-outline-danger btn-sm" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${id}" ${!["pending", "confirmed"].includes(status) ? "disabled" : ""}>
           <i class="bi bi-x-circle"></i><span data-i18n="buttons.cancel">${tr("buttons.cancel", "Cancel")}</span>
@@ -1253,7 +1253,7 @@
     `,
           )
           .join("")
-      : `<tr><td colspan="7"><div class="dashboard-empty owner-reservation-empty"><i class="bi bi-calendar-check"></i><strong data-i18n="reservation.no_reservations_yet">${tr("reservation.no_reservations_yet", "No reservations yet.")}</strong><span data-i18n="owner.no_reservations_copy">${tr("owner.no_reservations_copy", "Once guests start booking tables, reservations will appear here.")}</span></div></td></tr>`;
+      : `<tr><td colspan="7"><div class="dashboard-empty owner-reservation-empty"><i class="bi bi-calendar-check"></i><div><strong data-i18n="empty.no_reservations_found">${tr("empty.no_reservations_found", "No reservations on the list yet.")}</strong><span class="d-block" data-i18n="empty.no_reservations_copy">${tr("empty.no_reservations_copy", "Table requests and status updates will appear here once guests start booking.")}</span><a class="btn btn-gold btn-sm mt-2" href="/restaurants" data-i18n="buttons.discover_restaurants">${tr("buttons.discover_restaurants", "Discover restaurants & bars")}</a></div></div></td></tr>`;
     renderReservationStats();
   }
 
@@ -1426,7 +1426,7 @@
         renderAnalyticsCharts();
         return;
       }
-      overviewRoot.innerHTML = `<div class="col-12"><div class="dashboard-empty"><i class="bi bi-graph-up"></i><span data-i18n="owner.no_analytics_loaded">${tr("owner.no_analytics_loaded", "No analytics loaded yet.")}</span></div></div>`;
+      overviewRoot.innerHTML = `<div class="col-12"><div class="dashboard-empty"><i class="bi bi-graph-up"></i><div><strong data-i18n="owner.no_analytics_loaded">${tr("owner.no_analytics_loaded", "No analytics loaded yet.")}</strong><span class="d-block text-muted-pro" data-i18n="empty.no_reservations_copy">${tr("empty.no_reservations_copy", "Table requests and status updates will appear here once guests start booking.")}</span><a class="btn btn-gold btn-sm mt-2" href="/restaurants" data-i18n="buttons.discover_restaurants">${tr("buttons.discover_restaurants", "Discover restaurants & bars")}</a></div></div></div>`;
       renderAnalyticsCharts();
       return;
     }
@@ -1458,7 +1458,7 @@
           "cancelled",
         ),
         metricCard(
-          tr("reservation.no_show_reservations", "No Show Reservations"),
+          tr("reservation.no_show_reservations", "No-show reservations"),
           overview.no_show,
           "no-show",
         ),
@@ -1469,13 +1469,13 @@
       [tr("owner.reservations_today", "Reservations Today"), "reservations"],
       [tr("owner.completed_today", "Completed Today"), "completed"],
       [tr("owner.cancelled_today_metric", "Cancelled Today"), "cancelled"],
-      [tr("owner.no_shows_today", "No Shows Today"), "no_show"],
+      [tr("owner.no_shows_today", "No-shows today"), "no_show"],
     ]);
     renderMiniMetrics("[data-owner-analytics-month]", data.month || {}, [
-      [tr("owner.reservations_month", "Reservations This Month"), "reservations"],
-      [tr("owner.completed_month", "Completed This Month"), "completed"],
-      [tr("owner.cancelled_month", "Cancelled This Month"), "cancelled"],
-      [tr("owner.no_shows_month", "No Shows This Month"), "no_show"],
+      [tr("owner.reservations_month", "Reservations this month"), "reservations"],
+      [tr("owner.completed_month", "Completed this month"), "completed"],
+      [tr("owner.cancelled_month", "Cancelled this month"), "cancelled"],
+      [tr("owner.no_shows_month", "No-shows this month"), "no_show"],
     ]);
 
     const rates = data.rates || {};
@@ -1484,7 +1484,7 @@
       ratesRoot.innerHTML = [
         [tr("owner.completion_rate", "Completion Rate"), rates.completion_rate],
         [tr("owner.cancellation_rate", "Cancellation Rate"), rates.cancellation_rate],
-        [tr("owner.no_show_rate", "No Show Rate"), rates.no_show_rate],
+        [tr("owner.no_show_rate", "No-show rate"), rates.no_show_rate],
       ]
         .map(
           ([label, value]) => `
@@ -1539,7 +1539,7 @@
     `,
           )
           .join("")
-      : `<div class="availability-empty" data-i18n="owner.no_reservation_data">${tr("owner.no_reservation_data", "No reservation data yet.")}</div>`;
+      : `<div class="availability-empty"><strong data-i18n="owner.no_reservation_data">${tr("owner.no_reservation_data", "No reservation data yet.")}</strong><span class="d-block" data-i18n="empty.no_reservations_action_copy">${tr("empty.no_reservations_action_copy", "Share your restaurant page or adjust filters to review another reservation set.")}</span></div>`;
   }
 
   function renderAnalyticsCharts() {
@@ -1579,7 +1579,7 @@
     if (trendEmpty)
       trendEmpty.innerHTML = trend.some((item) => Number(item.total) > 0)
         ? ""
-        : `<div class="availability-empty mt-3" data-i18n="owner.no_reservations_range">${tr("owner.no_reservations_range", "No reservations in this range. Try a different date or filter.")}</div>`;
+        : `<div class="availability-empty mt-3"><strong data-i18n="owner.no_reservations_range">${tr("owner.no_reservations_range", "No reservations in this range.")}</strong><span class="d-block" data-i18n="empty.no_reservations_action_copy">${tr("empty.no_reservations_action_copy", "Share your restaurant page or adjust filters to review another reservation set.")}</span></div>`;
     if (trendCanvas) {
       window._ownerReservationTrendChart = new Chart(trendCanvas, {
         type: "line",
@@ -1618,7 +1618,7 @@
     if (statusEmpty)
       statusEmpty.innerHTML = breakdown.some((item) => Number(item.total) > 0)
         ? ""
-        : `<div class="availability-empty mt-3" data-i18n="owner.no_statuses_chart">${tr("owner.no_statuses_chart", "No statuses to chart yet.")}</div>`;
+        : `<div class="availability-empty mt-3"><strong data-i18n="owner.no_statuses_chart">${tr("owner.no_statuses_chart", "No statuses to chart yet.")}</strong><span class="d-block" data-i18n="empty.no_reservations_action_copy">${tr("empty.no_reservations_action_copy", "Share your restaurant page or adjust filters to review another reservation set.")}</span></div>`;
     if (statusCanvas) {
       window._ownerReservationStatusChart = new Chart(statusCanvas, {
         type: "doughnut",
@@ -1643,7 +1643,7 @@
   function renderReservationDetail(reservation) {
     $("[data-owner-reservation-title]").textContent = tr(
       "owner.reservation_detail_title",
-      "Reservation Details",
+      tr("reservation.reservation_details", "Reservation details"),
     );
     const body = $("[data-owner-reservation-detail]");
     if (!body) return;
@@ -1655,8 +1655,8 @@
         <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.party_size">${tr("reservation.party_size", "Party Size")}</span><strong>${reservation.party_size}</strong></div></div>
         <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.date">${tr("owner.date", "Date")}</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div></div>
         <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.time">${tr("owner.time", "Time")}</span><strong>${esc(timeLabel(reservation.reservation_time))}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.created_at">${tr("reservation.created_at", "Created At")}</span><strong>${esc(dateTimeLabel(reservation.created_at))}</strong></div></div>
-        <div class="col-12"><div class="facility justify-content-between"><span data-i18n="common.restaurant_bar">${tr("common.restaurant_bar", "Restaurant / Bar")}</span><strong>${esc(reservation.venue?.name || "")}</strong></div></div>
+        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.created_at">${tr("reservation.created_at", "Created at")}</span><strong>${esc(dateTimeLabel(reservation.created_at))}</strong></div></div>
+        <div class="col-12"><div class="facility justify-content-between"><span data-i18n="common.restaurant_bar">${tr("common.restaurant_bar", "Restaurant or bar")}</span><strong>${esc(reservation.venue?.name || "")}</strong></div></div>
         <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.occasion">${tr("reservation.occasion", "Occasion")}</span><strong>${esc(occasionLabel(reservation.occasion))}</strong></div></div>
         <div class="col-12"><div class="facility"><span><span class="text-muted-pro d-block mb-1" data-i18n="reservation.special_request">${tr("reservation.special_request", "Special Request")}</span>${esc(reservation.notes || tr("reservation.no_special_request", "No special request provided."))}</span></div></div>
         ${
@@ -1758,8 +1758,8 @@
       await loadAvailabilityExceptions();
       window.tkToast?.(
         method === "POST"
-          ? tr("owner.venue_created", "Restaurant or bar created. You can now add images and availability.")
-          : tr("owner.venue_updated", "Restaurant or bar updated. Guests will see the latest details."),
+          ? tr("owner.venue_created", "Restaurant profile created. Add images and availability when you’re ready.")
+          : tr("owner.venue_updated", "Restaurant profile saved. Guests will see the latest details."),
         "success",
       );
     } catch (err) {
@@ -1801,8 +1801,8 @@
         tr(
           valid.length === 1 ? "owner.image_uploaded" : "owner.images_uploaded",
           valid.length === 1
-            ? "Image uploaded. The public gallery has been updated."
-            : "Images uploaded. The public gallery has been updated.",
+            ? "Image uploaded. The public gallery is up to date."
+            : "Images uploaded. The public gallery is up to date.",
         ),
         "success",
       );
@@ -1870,13 +1870,16 @@
           resolve(payload?.data || payload);
           return;
         }
-        const err = new Error(payload?.message || `Upload failed (${xhr.status})`);
+        const err = new Error(
+          payload?.message ||
+            tr("owner.image_upload_failed", "We couldn’t upload this image. Check the file size and try again."),
+        );
         err.status = xhr.status;
         err.payload = payload;
         reject(err);
       });
       xhr.addEventListener("error", () =>
-        reject(new Error("Unable to upload this image right now.")),
+        reject(new Error(tr("owner.image_upload_failed", "We couldn’t upload this image. Check the file size and try again."))),
       );
       xhr.send(fd);
     });
@@ -1898,7 +1901,7 @@
       renderSummary();
       fillForm();
       window.tkToast?.(
-        tr("owner.image_deleted", "Image deleted. The public gallery has been updated."),
+        tr("owner.image_deleted", "Image removed. The public gallery is up to date."),
         "success",
       );
     } catch (err) {
@@ -1995,7 +1998,7 @@
       renderVenueFilter();
       bootstrap.Modal.getOrCreateInstance($("#ownerDeleteModal")).hide();
       window.tkToast?.(
-        tr("owner.venue_deleted", "Restaurant or bar deleted. Reservation history is preserved."),
+        tr("owner.venue_deleted", "Restaurant profile removed. Reservation history stays preserved."),
         "success",
       );
     } catch (err) {
@@ -2358,14 +2361,14 @@
       if (state.reservationView === "calendar") await loadCalendarReservations();
       const message =
         action === "complete"
-          ? tr("owner.reservation_completed", "Reservation completed. The visit is now marked finished.")
+          ? tr("owner.reservation_completed", "Visit marked complete. The reservation history is up to date.")
           : action === "no-show"
-            ? tr("owner.reservation_no_show", "Reservation marked as no-show. The guest record has been updated.")
+            ? tr("owner.reservation_no_show", "No-show recorded. The guest record is up to date.")
             : action === "confirm"
-              ? tr("owner.reservation_confirmed", "Reservation confirmed. The guest record has been updated.")
+              ? tr("owner.reservation_confirmed", "Reservation confirmed. The guest can see the updated status.")
               : action === "cancel"
-                ? tr("owner.reservation_cancelled", "Reservation cancelled. The guest record has been updated.")
-                : tr("toast.operation_completed", "Reservation updated.");
+                ? tr("owner.reservation_cancelled", "Reservation cancelled. The guest record is up to date.")
+                : tr("toast.operation_completed", "Done. Your update has been applied.");
       window.tkToast?.(message, "success");
     } catch (err) {
       window.tkToast?.(friendlyError(err), "error");
@@ -2661,6 +2664,11 @@
       const down = event.target.closest("[data-owner-image-down]");
       if (down) {
         reorderImage(down.dataset.ownerImageDown, 1);
+        return;
+      }
+      const uploadTrigger = event.target.closest("[data-owner-image-upload-trigger]");
+      if (uploadTrigger) {
+        $("[data-owner-image-input]")?.click();
         return;
       }
       const reservationView = event.target.closest("[data-owner-reservation-view]");

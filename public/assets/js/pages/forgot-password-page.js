@@ -21,7 +21,7 @@
         window.tkToast?.(tr("auth.reset_link_sent", "Password reset link sent. Please check your email."), "success");
       } catch (err) {
         window.tkToast?.(
-          err.message || tr("auth.reset_link_failed", "We couldn't send a reset link. Please try again."),
+          err.message || tr("auth.reset_link_failed", "We couldn’t send a reset link. Check the email address and try again."),
           "error",
         );
       } finally {
