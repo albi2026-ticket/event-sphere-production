@@ -3,18 +3,33 @@
 
   const cfg = () => window.EventSphereConfig;
 
+  function authDebug(stage, details = {}) {
+    console.info("[Tiketa auth debug]", stage, {
+      path: location.pathname,
+      ...details,
+    });
+  }
+
   function migrateAuthStorage() {
     [cfg().TOKEN_KEY, cfg().USER_KEY].forEach((key) => {
       const existing = localStorage.getItem(key);
       const legacy = sessionStorage.getItem(key);
-      if (!existing && legacy) localStorage.setItem(key, legacy);
-      if (legacy) sessionStorage.removeItem(key);
+      if (!existing && legacy) {
+        localStorage.setItem(key, legacy);
+        authDebug("MIGRATE: copied legacy auth storage", { key });
+      }
+      if (legacy) {
+        sessionStorage.removeItem(key);
+        authDebug("MIGRATE: removed legacy sessionStorage key", { key });
+      }
     });
   }
 
   function getToken() {
     migrateAuthStorage();
-    return localStorage.getItem(cfg().TOKEN_KEY);
+    const token = localStorage.getItem(cfg().TOKEN_KEY);
+    authDebug("TOKEN READ", { tokenExists: !!token });
+    return token;
   }
 
   function unwrapJson(payload) {
@@ -164,6 +179,12 @@
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
+    authDebug("API REQUEST: Authorization header", {
+      path,
+      method: options.method || "GET",
+      hasAuthorization: !!headers.Authorization,
+      skipAuthRedirect: !!options.skipAuthRedirect,
+    });
 
     const init = {
       method: options.method || "GET",
@@ -196,6 +217,11 @@
     }
 
     if (response.status === 401) {
+      authDebug("LOGOUT: token removal triggered by API 401", {
+        path,
+        skipAuthRedirect: !!options.skipAuthRedirect,
+        tokenBeforeClear: !!localStorage.getItem(cfg().TOKEN_KEY),
+      });
       localStorage.removeItem(cfg().TOKEN_KEY);
       localStorage.removeItem(cfg().USER_KEY);
       sessionStorage.removeItem(cfg().TOKEN_KEY);
@@ -241,6 +267,12 @@
     const headers = Object.assign({ Accept: "*/*" }, options.headers || {});
     const token = getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
+    authDebug("API REQUEST: Authorization header", {
+      path,
+      method: options.method || "GET",
+      hasAuthorization: !!headers.Authorization,
+      blob: true,
+    });
 
     let response;
     try {
@@ -249,6 +281,10 @@
       throw new Error(connectionErrorMessage(networkError));
     }
     if (response.status === 401) {
+      authDebug("LOGOUT: token removal triggered by blob API 401", {
+        path,
+        tokenBeforeClear: !!localStorage.getItem(cfg().TOKEN_KEY),
+      });
       localStorage.removeItem(cfg().TOKEN_KEY);
       localStorage.removeItem(cfg().USER_KEY);
       sessionStorage.removeItem(cfg().TOKEN_KEY);

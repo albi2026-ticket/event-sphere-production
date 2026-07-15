@@ -1857,6 +1857,12 @@
       );
       xhr.setRequestHeader("Accept", "application/json");
       if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+      console.info("[Tiketa auth debug]", "API REQUEST: Authorization header", {
+        path: `/owner/venues/${state.venue.slug}/images`,
+        method: "POST",
+        hasAuthorization: !!token,
+        transport: "xhr",
+      });
       xhr.upload.addEventListener("progress", (event) => {
         if (!event.lengthComputable) return;
         onProgress?.(Math.round((event.loaded / event.total) * 100));
