@@ -39,6 +39,11 @@ return [
         'url' => env('FRONTEND_URL', 'http://localhost:8080'),
     ],
 
+    'supabase' => [
+        'storage_public_url' => env('SUPABASE_STORAGE_PUBLIC_URL'),
+        'storage_bucket' => env('SUPABASE_STORAGE_BUCKET', 'event-images'),
+    ],
+
     'tickets' => [
         'email_link_expiration_days' => env('TICKET_EMAIL_LINK_EXPIRATION_DAYS', 30),
     ],

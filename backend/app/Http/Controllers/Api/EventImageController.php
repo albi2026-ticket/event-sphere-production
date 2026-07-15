@@ -8,6 +8,7 @@ use App\Http\Requests\Api\UpdateEventImageRequest;
 use App\Http\Resources\EventImageResource;
 use App\Models\Event;
 use App\Models\EventImage;
+use App\Services\Storage\PublicStorageUrl;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -114,7 +115,8 @@ class EventImageController extends Controller
     protected function storedFilePayload(UploadedFile $file, Event $event): array
     {
         $disk = config('filesystems.event_images_disk', 'public');
-        $path = $file->store("event-images/{$event->id}", $disk);
+        $directory = $disk === 'supabase' ? (string) $event->id : "event-images/{$event->id}";
+        $path = $file->store($directory, $disk);
         [$width, $height] = @getimagesize($file->getRealPath()) ?: [null, null];
 
         return [
@@ -132,6 +134,12 @@ class EventImageController extends Controller
     protected function deleteStoredFile(EventImage $eventImage): void
     {
         if ($eventImage->disk && $eventImage->path) {
+            if ($eventImage->disk === 'public' && app(PublicStorageUrl::class)->hasSupabasePublicUrl()) {
+                Storage::disk('supabase')->delete(app(PublicStorageUrl::class)->objectPath($eventImage->path));
+
+                return;
+            }
+
             Storage::disk($eventImage->disk)->delete($eventImage->path);
         }
     }

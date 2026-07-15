@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use App\Services\Storage\PublicStorageUrl;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'venue_id',
@@ -26,15 +26,11 @@ class VenueImage extends Model
 
     public function publicUrl(): string
     {
-        if ($this->disk && $this->path) {
-            return Storage::disk($this->disk)->url($this->path);
-        }
-
-        if (str_starts_with($this->image_path, 'http://') || str_starts_with($this->image_path, 'https://') || str_starts_with($this->image_path, 'data:')) {
-            return $this->image_path;
-        }
-
-        return Storage::disk('public')->url($this->image_path);
+        return app(PublicStorageUrl::class)->imageUrl(
+            $this->disk ?: 'public',
+            $this->path ?: $this->image_path,
+            $this->image_path,
+        );
     }
 
     protected function casts(): array

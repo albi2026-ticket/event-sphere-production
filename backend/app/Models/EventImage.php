@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use App\Services\Storage\PublicStorageUrl;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
 
 #[Fillable([
     'event_id',
@@ -35,11 +35,7 @@ class EventImage extends Model
 
     public function publicUrl(): ?string
     {
-        if ($this->disk && $this->path) {
-            return Storage::disk($this->disk)->url($this->path);
-        }
-
-        return $this->url;
+        return app(PublicStorageUrl::class)->imageUrl($this->disk, $this->path, $this->url);
     }
 
     public function isExternal(): bool
