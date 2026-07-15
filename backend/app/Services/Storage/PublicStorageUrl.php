@@ -64,6 +64,10 @@ class PublicStorageUrl
 
         $parts = $this->pathParts($path);
 
+        if ($parts['bucket'] === '') {
+            return null;
+        }
+
         return rtrim($baseUrl, '/').'/'.$parts['bucket'].'/'.$parts['object_path'];
     }
 
@@ -78,36 +82,30 @@ class PublicStorageUrl
             $path = substr($path, strlen('storage/'));
         }
 
-        foreach ($this->knownBuckets() as $bucket) {
-            if (str_starts_with($path, $bucket.'/')) {
+        foreach ($this->imageBuckets() as $prefix => $bucket) {
+            if (str_starts_with($path, $prefix.'/')) {
                 return [
                     'bucket' => $bucket,
-                    'object_path' => substr($path, strlen($bucket) + 1),
+                    'object_path' => substr($path, strlen($prefix) + 1),
                 ];
             }
         }
 
         return [
-            'bucket' => trim((string) config('services.supabase.storage_bucket'), '/'),
+            'bucket' => '',
             'object_path' => $path,
         ];
     }
 
     /**
-     * @return array<int, string>
+     * @return array<string, string>
      */
-    private function knownBuckets(): array
+    private function imageBuckets(): array
     {
-        return collect([
-            config('services.supabase.event_images_bucket', 'event-images'),
-            config('services.supabase.venue_images_bucket', 'venue-images'),
-            config('services.supabase.storage_bucket', 'event-images'),
-        ])
-            ->map(fn (mixed $bucket): string => trim((string) $bucket, '/'))
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+        return [
+            'event-images' => trim((string) config('services.supabase.event_images_bucket', 'event-images'), '/'),
+            'venue-images' => trim((string) config('services.supabase.venue_images_bucket', 'venue-images'), '/'),
+        ];
     }
 
     private function isPublicUrl(?string $value): bool
