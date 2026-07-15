@@ -5,13 +5,24 @@
   const cfg = () => window.EventSphereConfig;
   const tr = (key, fallback, replacements = {}) => window.t?.(key, replacements) || fallback;
 
+  function migrateAuthStorage() {
+    [cfg().TOKEN_KEY, cfg().USER_KEY].forEach((key) => {
+      const existing = localStorage.getItem(key);
+      const legacy = sessionStorage.getItem(key);
+      if (!existing && legacy) localStorage.setItem(key, legacy);
+      if (legacy) sessionStorage.removeItem(key);
+    });
+  }
+
   function getToken() {
-    return sessionStorage.getItem(cfg().TOKEN_KEY);
+    migrateAuthStorage();
+    return localStorage.getItem(cfg().TOKEN_KEY);
   }
 
   function setSession(token, user) {
-    sessionStorage.setItem(cfg().TOKEN_KEY, token);
-    if (user) sessionStorage.setItem(cfg().USER_KEY, JSON.stringify(user));
+    migrateAuthStorage();
+    localStorage.setItem(cfg().TOKEN_KEY, token);
+    if (user) localStorage.setItem(cfg().USER_KEY, JSON.stringify(user));
     document.dispatchEvent(
       new CustomEvent("event-sphere:auth-changed", { detail: { user: user || null } }),
     );
@@ -19,6 +30,8 @@
   }
 
   function clearSession() {
+    localStorage.removeItem(cfg().TOKEN_KEY);
+    localStorage.removeItem(cfg().USER_KEY);
     sessionStorage.removeItem(cfg().TOKEN_KEY);
     sessionStorage.removeItem(cfg().USER_KEY);
     document.dispatchEvent(
@@ -28,7 +41,8 @@
   }
 
   function getUser() {
-    const raw = sessionStorage.getItem(cfg().USER_KEY);
+    migrateAuthStorage();
+    const raw = localStorage.getItem(cfg().USER_KEY);
     if (!raw) return null;
     try {
       return JSON.parse(raw);
@@ -39,7 +53,7 @@
 
   async function refreshUser() {
     const { data } = await api().fetch("/user");
-    sessionStorage.setItem(cfg().USER_KEY, JSON.stringify(data));
+    localStorage.setItem(cfg().USER_KEY, JSON.stringify(data));
     document.dispatchEvent(
       new CustomEvent("event-sphere:auth-changed", { detail: { user: data } }),
     );
@@ -54,7 +68,7 @@
       body: { preferred_language: language },
       skipAuthRedirect: true,
     });
-    sessionStorage.setItem(cfg().USER_KEY, JSON.stringify(data));
+    localStorage.setItem(cfg().USER_KEY, JSON.stringify(data));
     document.dispatchEvent(
       new CustomEvent("event-sphere:auth-changed", { detail: { user: data } }),
     );

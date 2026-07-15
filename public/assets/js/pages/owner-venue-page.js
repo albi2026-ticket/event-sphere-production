@@ -1844,7 +1844,9 @@
   function uploadVenueImage(file, onProgress) {
     return new Promise((resolve, reject) => {
       const cfg = window.EventSphereConfig;
-      const token = sessionStorage.getItem(cfg.TOKEN_KEY);
+      const token =
+        window.EventSphereApi?.getToken?.() ||
+        localStorage.getItem(cfg.TOKEN_KEY);
       const xhr = new XMLHttpRequest();
       const fd = new FormData();
       fd.append("image", file);

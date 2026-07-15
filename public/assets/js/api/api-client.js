@@ -3,8 +3,18 @@
 
   const cfg = () => window.EventSphereConfig;
 
+  function migrateAuthStorage() {
+    [cfg().TOKEN_KEY, cfg().USER_KEY].forEach((key) => {
+      const existing = localStorage.getItem(key);
+      const legacy = sessionStorage.getItem(key);
+      if (!existing && legacy) localStorage.setItem(key, legacy);
+      if (legacy) sessionStorage.removeItem(key);
+    });
+  }
+
   function getToken() {
-    return sessionStorage.getItem(cfg().TOKEN_KEY);
+    migrateAuthStorage();
+    return localStorage.getItem(cfg().TOKEN_KEY);
   }
 
   function unwrapJson(payload) {
@@ -186,6 +196,8 @@
     }
 
     if (response.status === 401) {
+      localStorage.removeItem(cfg().TOKEN_KEY);
+      localStorage.removeItem(cfg().USER_KEY);
       sessionStorage.removeItem(cfg().TOKEN_KEY);
       sessionStorage.removeItem(cfg().USER_KEY);
       if (!options.skipAuthRedirect) {
@@ -237,6 +249,8 @@
       throw new Error(connectionErrorMessage(networkError));
     }
     if (response.status === 401) {
+      localStorage.removeItem(cfg().TOKEN_KEY);
+      localStorage.removeItem(cfg().USER_KEY);
       sessionStorage.removeItem(cfg().TOKEN_KEY);
       sessionStorage.removeItem(cfg().USER_KEY);
       location.href = cfg().LOGIN_URL;
