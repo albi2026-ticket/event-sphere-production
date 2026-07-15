@@ -27,7 +27,7 @@ class VenueImage extends Model
     public function publicUrl(): string
     {
         return app(PublicStorageUrl::class)->imageUrl(
-            $this->disk ?: 'public',
+            null,
             $this->path ?: $this->image_path,
             $this->image_path,
         );

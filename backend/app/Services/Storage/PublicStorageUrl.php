@@ -2,6 +2,7 @@
 
 namespace App\Services\Storage;
 
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;
 
 class PublicStorageUrl
@@ -27,19 +28,25 @@ class PublicStorageUrl
 
     public function objectPath(string $path): string
     {
-        $path = ltrim($path, '/');
+        return $this->pathParts($path)['object_path'];
+    }
 
-        if (str_starts_with($path, 'storage/')) {
-            $path = substr($path, strlen('storage/'));
-        }
+    public function bucket(string $path): string
+    {
+        return $this->pathParts($path)['bucket'];
+    }
 
-        $bucket = trim((string) config('services.supabase.storage_bucket'), '/');
+    public function diskForBucket(string $bucket): Filesystem
+    {
+        return Storage::build(array_merge(
+            config('filesystems.disks.supabase', []),
+            ['bucket' => $bucket],
+        ));
+    }
 
-        if ($bucket !== '' && str_starts_with($path, $bucket.'/')) {
-            return substr($path, strlen($bucket) + 1);
-        }
-
-        return $path;
+    public function diskForPath(string $path): Filesystem
+    {
+        return $this->diskForBucket($this->bucket($path));
     }
 
     public function hasSupabasePublicUrl(): bool
@@ -55,19 +62,52 @@ class PublicStorageUrl
             return null;
         }
 
+        $parts = $this->pathParts($path);
+
+        return rtrim($baseUrl, '/').'/'.$parts['bucket'].'/'.$parts['object_path'];
+    }
+
+    /**
+     * @return array{bucket: string, object_path: string}
+     */
+    private function pathParts(string $path): array
+    {
         $path = ltrim($path, '/');
 
         if (str_starts_with($path, 'storage/')) {
             $path = substr($path, strlen('storage/'));
         }
 
-        $bucket = trim((string) config('services.supabase.storage_bucket'), '/');
-
-        if ($bucket !== '' && ! str_starts_with($path, $bucket.'/')) {
-            $path = $bucket.'/'.$path;
+        foreach ($this->knownBuckets() as $bucket) {
+            if (str_starts_with($path, $bucket.'/')) {
+                return [
+                    'bucket' => $bucket,
+                    'object_path' => substr($path, strlen($bucket) + 1),
+                ];
+            }
         }
 
-        return rtrim($baseUrl, '/').'/'.$path;
+        return [
+            'bucket' => trim((string) config('services.supabase.storage_bucket'), '/'),
+            'object_path' => $path,
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function knownBuckets(): array
+    {
+        return collect([
+            config('services.supabase.event_images_bucket', 'event-images'),
+            config('services.supabase.venue_images_bucket', 'venue-images'),
+            config('services.supabase.storage_bucket', 'event-images'),
+        ])
+            ->map(fn (mixed $bucket): string => trim((string) $bucket, '/'))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function isPublicUrl(?string $value): bool

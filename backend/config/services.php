@@ -42,6 +42,8 @@ return [
     'supabase' => [
         'storage_public_url' => env('SUPABASE_STORAGE_PUBLIC_URL'),
         'storage_bucket' => env('SUPABASE_STORAGE_BUCKET', 'event-images'),
+        'event_images_bucket' => env('SUPABASE_EVENT_IMAGES_BUCKET', env('SUPABASE_STORAGE_BUCKET', 'event-images')),
+        'venue_images_bucket' => env('SUPABASE_VENUE_IMAGES_BUCKET', 'venue-images'),
     ],
 
     'tickets' => [

@@ -135,7 +135,9 @@ class EventImageController extends Controller
     {
         if ($eventImage->disk && $eventImage->path) {
             if ($eventImage->disk === 'public' && app(PublicStorageUrl::class)->hasSupabasePublicUrl()) {
-                Storage::disk('supabase')->delete(app(PublicStorageUrl::class)->objectPath($eventImage->path));
+                app(PublicStorageUrl::class)
+                    ->diskForPath($eventImage->path)
+                    ->delete(app(PublicStorageUrl::class)->objectPath($eventImage->path));
 
                 return;
             }

@@ -25,8 +25,19 @@ class OwnerVenueImageController extends Controller
         ]);
 
         $disk = config('filesystems.venue_images_disk', 'public');
-        $directory = $disk === 'supabase' ? "venues/{$venue->id}" : "venue-images/{$venue->id}";
-        $path = $payload['image']->store($directory, $disk);
+
+        if ($disk === 'supabase') {
+            $bucket = (string) config('services.supabase.venue_images_bucket', 'venue-images');
+            $storedPath = app(PublicStorageUrl::class)
+                ->diskForBucket($bucket)
+                ->putFile((string) $venue->id, $payload['image'], ['visibility' => 'public']);
+
+            abort_unless($storedPath, 500, 'Venue image upload failed.');
+
+            $path = trim($bucket.'/'.$storedPath, '/');
+        } else {
+            $path = $payload['image']->store("venue-images/{$venue->id}", $disk);
+        }
 
         $venue->images()->create([
             'disk' => $disk,
@@ -66,7 +77,9 @@ class OwnerVenueImageController extends Controller
 
         if ($venueImage->disk && $venueImage->path) {
             if ($venueImage->disk === 'public' && app(PublicStorageUrl::class)->hasSupabasePublicUrl()) {
-                Storage::disk('supabase')->delete(app(PublicStorageUrl::class)->objectPath($venueImage->path));
+                app(PublicStorageUrl::class)
+                    ->diskForPath($venueImage->path)
+                    ->delete(app(PublicStorageUrl::class)->objectPath($venueImage->path));
             } else {
                 Storage::disk($venueImage->disk)->delete($venueImage->path);
             }
