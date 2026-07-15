@@ -125,12 +125,13 @@
   function socialPageUrl(path) {
     try {
       const current = new URL(window.location.href);
-      const base = ["localhost", "127.0.0.1", "::1"].includes(current.hostname)
-        ? "https://tiketa.example"
-        : current.origin;
+      const base =
+        window.EventSphereConfig?.PUBLIC_URL ||
+        window.TIKETA_CONFIG?.PUBLIC_URL ||
+        current.origin;
       return new URL(path, base).href;
     } catch (err) {
-      return new URL(path, "https://tiketa.example").href;
+      return new URL(path, "https://tiketa-staging.albi-hellocare.workers.dev").href;
     }
   }
 

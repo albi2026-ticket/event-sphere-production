@@ -232,12 +232,13 @@
 
   function absoluteUrl(path) {
     try {
-      const origin = ["localhost", "127.0.0.1", "::1"].includes(location.hostname)
-        ? "https://tiketa.example"
-        : location.origin;
+      const origin =
+        window.EventSphereConfig?.PUBLIC_URL ||
+        window.TIKETA_CONFIG?.PUBLIC_URL ||
+        location.origin;
       return new URL(path || "/", origin).href;
     } catch {
-      return new URL(path || "/", "https://tiketa.example").href;
+      return new URL(path || "/", "https://tiketa-staging.albi-hellocare.workers.dev").href;
     }
   }
 

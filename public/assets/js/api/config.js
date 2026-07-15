@@ -4,6 +4,9 @@
   const LOCAL_HOSTS = ["localhost", "127.0.0.1", "::1"];
   const DEFAULT_LOCAL_API_PORT = "8000";
   const API_PATH = "/api";
+  const DEFAULT_API_BASE_URL = "https://tiketa-api.up.railway.app/api";
+  const DEFAULT_PUBLIC_URL = "https://tiketa-staging.albi-hellocare.workers.dev";
+  const LEGACY_PUBLIC_URL = "https://tiketa.example";
 
   const meta = document.querySelector('meta[name="api-base"]');
   const metaEnv = document.querySelector('meta[name="app-env"]');
@@ -18,6 +21,12 @@
 
   function isLocalHost(hostname) {
     return LOCAL_HOSTS.includes(hostname);
+  }
+
+  function runtimeConfig() {
+    return window.TIKETA_CONFIG && typeof window.TIKETA_CONFIG === "object"
+      ? window.TIKETA_CONFIG
+      : {};
   }
 
   function environment() {
@@ -57,6 +66,13 @@
     return API_PATH;
   }
 
+  function publicFallback() {
+    const configured = clean(runtimeConfig().PUBLIC_URL);
+    if (configured) return configured;
+    if (!isLocalHost(location.hostname)) return location.origin;
+    return DEFAULT_PUBLIC_URL;
+  }
+
   function normalizeBase(value) {
     const raw = clean(value);
     if (!raw) return "";
@@ -80,21 +96,53 @@
 
   const env = environment();
   const explicitBase =
+    clean(runtimeConfig().API_BASE_URL) ||
     clean(window.__TIKETA_API_BASE_URL__) ||
     clean(window.__EVENT_SPHERE_API__) ||
     clean(meta?.getAttribute("content"));
-  const fallback = env === "local" ? localFallback() : sameOriginFallback();
+  const fallback = env === "local" ? localFallback() : DEFAULT_API_BASE_URL || sameOriginFallback();
 
   const base = normalizeBase(explicitBase || environmentBase(env) || fallback);
+  const publicBase = normalizeBase(publicFallback()).replace(/\/+$/, "");
+
+  function publicUrl(path = "/") {
+    try {
+      return new URL(path || "/", publicBase || DEFAULT_PUBLIC_URL).href;
+    } catch {
+      return new URL("/", DEFAULT_PUBLIC_URL).href;
+    }
+  }
+
+  function rewriteLegacyPublicUrl(value) {
+    const text = clean(value);
+    if (!text || !publicBase) return text;
+    return text.replaceAll(LEGACY_PUBLIC_URL, publicBase);
+  }
+
+  function normalizeStaticMetadata() {
+    document
+      .querySelectorAll('meta[property="og:url"], meta[property="og:image"], meta[name="twitter:image"]')
+      .forEach((meta) => {
+        meta.content = rewriteLegacyPublicUrl(meta.content);
+      });
+
+    document.querySelectorAll('script[type="application/ld+json"]').forEach((script) => {
+      script.textContent = rewriteLegacyPublicUrl(script.textContent || "");
+    });
+  }
 
   window.EventSphereConfig = {
     API_BASE_URL: base,
+    PUBLIC_URL: publicBase,
     API_ENV: env,
     TOKEN_KEY: "event_sphere_token",
     USER_KEY: "event_sphere_user",
     CART_KEY: "event_sphere_cart",
     LOGIN_URL: "/login",
+    publicUrl,
   };
+
+  normalizeStaticMetadata();
 
   function cleanSlug(value) {
     return String(value || "")

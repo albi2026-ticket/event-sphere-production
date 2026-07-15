@@ -1698,7 +1698,11 @@
   }
 
   function absoluteUrl(path) {
-    return new URL(path || "/", "https://tiketa.example").href;
+    const origin =
+      window.EventSphereConfig?.PUBLIC_URL ||
+      window.TIKETA_CONFIG?.PUBLIC_URL ||
+      "https://tiketa-staging.albi-hellocare.workers.dev";
+    return new URL(path || "/", origin).href;
   }
 
   function setSocialMeta(selector, attr, value) {

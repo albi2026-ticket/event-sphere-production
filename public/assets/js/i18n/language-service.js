@@ -8,7 +8,7 @@
     en: "en_US",
     sq: "sq_AL",
   };
-  const PUBLIC_BASE_URL = "https://tiketa.example";
+  const DEFAULT_PUBLIC_URL = "https://tiketa-staging.albi-hellocare.workers.dev";
 
   function dictionaries() {
     return window.TiketaDictionaries || {};
@@ -127,7 +127,11 @@
     } catch {
       /* fall back to configured public base */
     }
-    return PUBLIC_BASE_URL;
+    return (
+      window.EventSphereConfig?.PUBLIC_URL ||
+      window.TIKETA_CONFIG?.PUBLIC_URL ||
+      DEFAULT_PUBLIC_URL
+    );
   }
 
   function absolutePublicUrl(path) {
