@@ -34,11 +34,11 @@ class EventResource extends JsonResource
         return [
             'id' => $this->id,
             'organizer_id' => $this->organizer_id,
-            'organizer' => $this->whenLoaded('organizer', fn () => [
+            'organizer' => $this->whenLoaded('organizer', fn () => $this->organizer ? [
                 'id' => $this->organizer->id,
                 'name' => $this->organizer->name,
                 'role' => $this->organizer->role,
-            ]),
+            ] : null),
             'title' => $this->title,
             'slug' => $this->slug,
             'category' => $this->category,
