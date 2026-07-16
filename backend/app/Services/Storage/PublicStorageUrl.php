@@ -7,14 +7,14 @@ use Illuminate\Support\Facades\Storage;
 
 class PublicStorageUrl
 {
-    public function imageUrl(?string $disk, ?string $path, ?string $fallbackUrl = null): ?string
+    public function imageUrl(?string $disk, ?string $path, ?string $fallbackUrl = null, ?string $defaultBucket = null): ?string
     {
         if ($path) {
             if ($this->isPublicUrl($path)) {
                 return $path;
             }
 
-            if ($url = $this->supabasePublicUrl($path)) {
+            if ($url = $this->supabasePublicUrl($path, $defaultBucket)) {
                 return $url;
             }
 
@@ -26,14 +26,14 @@ class PublicStorageUrl
         return $fallbackUrl;
     }
 
-    public function objectPath(string $path): string
+    public function objectPath(string $path, ?string $defaultBucket = null): string
     {
-        return $this->pathParts($path)['object_path'];
+        return $this->pathParts($path, $defaultBucket)['object_path'];
     }
 
-    public function bucket(string $path): string
+    public function bucket(string $path, ?string $defaultBucket = null): string
     {
-        return $this->pathParts($path)['bucket'];
+        return $this->pathParts($path, $defaultBucket)['bucket'];
     }
 
     public function diskForBucket(string $bucket): Filesystem
@@ -44,9 +44,9 @@ class PublicStorageUrl
         ));
     }
 
-    public function diskForPath(string $path): Filesystem
+    public function diskForPath(string $path, ?string $defaultBucket = null): Filesystem
     {
-        return $this->diskForBucket($this->bucket($path));
+        return $this->diskForBucket($this->bucket($path, $defaultBucket));
     }
 
     public function hasSupabasePublicUrl(): bool
@@ -54,7 +54,7 @@ class PublicStorageUrl
         return trim((string) config('services.supabase.storage_public_url')) !== '';
     }
 
-    private function supabasePublicUrl(string $path): ?string
+    private function supabasePublicUrl(string $path, ?string $defaultBucket = null): ?string
     {
         $baseUrl = trim((string) config('services.supabase.storage_public_url'));
 
@@ -62,7 +62,7 @@ class PublicStorageUrl
             return null;
         }
 
-        $parts = $this->pathParts($path);
+        $parts = $this->pathParts($path, $defaultBucket);
 
         if ($parts['bucket'] === '') {
             return null;
@@ -74,7 +74,7 @@ class PublicStorageUrl
     /**
      * @return array{bucket: string, object_path: string}
      */
-    private function pathParts(string $path): array
+    private function pathParts(string $path, ?string $defaultBucket = null): array
     {
         $path = ltrim($path, '/');
 
@@ -89,6 +89,14 @@ class PublicStorageUrl
                     'object_path' => substr($path, strlen($prefix) + 1),
                 ];
             }
+        }
+
+        $defaultBucket = trim((string) $defaultBucket, '/');
+        if ($defaultBucket !== '') {
+            return [
+                'bucket' => $defaultBucket,
+                'object_path' => $path,
+            ];
         }
 
         return [

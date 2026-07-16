@@ -35,7 +35,12 @@ class EventImage extends Model
 
     public function publicUrl(): ?string
     {
-        return app(PublicStorageUrl::class)->imageUrl($this->disk, $this->path, $this->url);
+        return app(PublicStorageUrl::class)->imageUrl(
+            $this->disk,
+            $this->path,
+            $this->url,
+            trim((string) config('services.supabase.event_images_bucket', 'event-images'), '/'),
+        );
     }
 
     public function isExternal(): bool

@@ -30,6 +30,7 @@ class VenueImage extends Model
             null,
             $this->path ?: $this->image_path,
             $this->image_path,
+            trim((string) config('services.supabase.venue_images_bucket', 'venue-images'), '/'),
         );
     }
 

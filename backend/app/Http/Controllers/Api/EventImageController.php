@@ -115,8 +115,20 @@ class EventImageController extends Controller
     protected function storedFilePayload(UploadedFile $file, Event $event): array
     {
         $disk = config('filesystems.event_images_disk', 'public');
-        $directory = $disk === 'supabase' ? (string) $event->id : "event-images/{$event->id}";
-        $path = $file->store($directory, $disk);
+
+        if ($disk === 'supabase') {
+            $bucket = $this->eventImagesBucket();
+            $storedPath = app(PublicStorageUrl::class)
+                ->diskForBucket($bucket)
+                ->putFile((string) $event->id, $file, ['visibility' => 'public']);
+
+            abort_unless($storedPath, 500, 'Event image upload failed.');
+
+            $path = trim($bucket.'/'.$storedPath, '/');
+        } else {
+            $path = $file->store("event-images/{$event->id}", $disk);
+        }
+
         [$width, $height] = @getimagesize($file->getRealPath()) ?: [null, null];
 
         return [
@@ -136,14 +148,27 @@ class EventImageController extends Controller
         if ($eventImage->disk && $eventImage->path) {
             if ($eventImage->disk === 'public' && app(PublicStorageUrl::class)->hasSupabasePublicUrl()) {
                 app(PublicStorageUrl::class)
-                    ->diskForPath($eventImage->path)
-                    ->delete(app(PublicStorageUrl::class)->objectPath($eventImage->path));
+                    ->diskForPath($eventImage->path, $this->eventImagesBucket())
+                    ->delete(app(PublicStorageUrl::class)->objectPath($eventImage->path, $this->eventImagesBucket()));
+
+                return;
+            }
+
+            if ($eventImage->disk === 'supabase') {
+                app(PublicStorageUrl::class)
+                    ->diskForPath($eventImage->path, $this->eventImagesBucket())
+                    ->delete(app(PublicStorageUrl::class)->objectPath($eventImage->path, $this->eventImagesBucket()));
 
                 return;
             }
 
             Storage::disk($eventImage->disk)->delete($eventImage->path);
         }
+    }
+
+    protected function eventImagesBucket(): string
+    {
+        return trim((string) config('services.supabase.event_images_bucket', 'event-images'), '/');
     }
 
     protected function normalizeEventImageRoles(Event $event): void
