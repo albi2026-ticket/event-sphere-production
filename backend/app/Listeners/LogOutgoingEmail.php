@@ -22,9 +22,11 @@ use App\Models\Reservation;
 use App\Models\User;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
+use Throwable;
 
 class LogOutgoingEmail
 {
@@ -37,65 +39,114 @@ class LogOutgoingEmail
 
     public function handleSending(MessageSending $event): void
     {
-        if (! Schema::hasTable('email_logs')) {
+        $meta = $this->metadata($event->data, $event->message);
+        $subject = $event->message->getSubject() ?: $meta['email_type'];
+
+        Log::info('Preparing email.', $this->logContext($meta, $event->message, $subject));
+
+        if (! $this->emailLogTableExists()) {
+            Log::info('Sending email without database email log.', $this->logContext($meta, $event->message, $subject));
+
             return;
         }
 
         if ($this->logIdsFromMessage($event->message) !== []) {
+            Log::info('Sending retried email.', $this->logContext($meta, $event->message, $subject));
+
             return;
         }
 
-        $ids = [];
-        $meta = $this->metadata($event->data, $event->message);
-        $subject = $event->message->getSubject() ?: $meta['email_type'];
+        try {
+            $ids = [];
 
-        foreach ($event->message->getTo() as $recipient) {
-            $log = EmailLog::create(array_merge($meta, [
-                'recipient_name' => $recipient->getName() ?: null,
-                'recipient_email' => $recipient->getAddress(),
-                'subject' => $subject,
-                'status' => EmailLog::STATUS_PENDING,
-            ]));
+            foreach ($event->message->getTo() as $recipient) {
+                $log = EmailLog::create(array_merge($meta, [
+                    'recipient_name' => $recipient->getName() ?: null,
+                    'recipient_email' => $recipient->getAddress(),
+                    'subject' => $subject,
+                    'status' => EmailLog::STATUS_PENDING,
+                ]));
 
-            $ids[] = $log->id;
-        }
+                $ids[] = $log->id;
+            }
 
-        if ($ids !== []) {
-            $event->message->getHeaders()->addTextHeader(self::LOG_IDS_HEADER, implode(',', $ids));
+            if ($ids !== []) {
+                $event->message->getHeaders()->addTextHeader(self::LOG_IDS_HEADER, implode(',', $ids));
 
-            $messageId = spl_object_id($event->message);
-            $this->pendingByMessage[$messageId] = $ids;
+                $messageId = spl_object_id($event->message);
+                $this->pendingByMessage[$messageId] = $ids;
+                $context = $this->logContext($meta, $event->message, $subject, $ids);
 
-            app()->terminating(function () use ($ids): void {
-                EmailLog::query()
-                    ->whereIn('id', $ids)
-                    ->where('status', EmailLog::STATUS_PENDING)
-                    ->update(['status' => EmailLog::STATUS_FAILED]);
-            });
+                Log::info('Sending email.', $context);
+
+                app()->terminating(function () use ($ids, $context): void {
+                    try {
+                        $failed = EmailLog::query()
+                            ->whereIn('id', $ids)
+                            ->where('status', EmailLog::STATUS_PENDING)
+                            ->update(['status' => EmailLog::STATUS_FAILED]);
+
+                        if ($failed > 0) {
+                            Log::error('Email failed.', array_merge($context, [
+                                'reason' => 'MessageSending fired but MessageSent did not fire before termination.',
+                            ]));
+                        }
+                    } catch (Throwable $exception) {
+                        Log::warning('Email failed status could not be persisted.', array_merge($context, [
+                            'exception' => $exception::class,
+                            'message' => $exception->getMessage(),
+                        ]));
+                    }
+                });
+            }
+        } catch (Throwable $exception) {
+            Log::warning('Email database logging failed; continuing without email log row.', array_merge(
+                $this->logContext($meta, $event->message, $subject),
+                [
+                    'exception' => $exception::class,
+                    'message' => $exception->getMessage(),
+                ],
+            ));
         }
     }
 
     public function handleSent(MessageSent $event): void
     {
-        if (! Schema::hasTable('email_logs')) {
+        if (! $this->emailLogTableExists()) {
             return;
         }
 
-        $messageId = spl_object_id($event->message);
-        $ids = $this->logIdsFromMessage($event->message) ?: ($this->pendingByMessage[$messageId] ?? []);
+        try {
+            $messageId = spl_object_id($event->message);
+            $ids = $this->logIdsFromMessage($event->message) ?: ($this->pendingByMessage[$messageId] ?? []);
 
-        if ($ids === []) {
-            $ids = $this->matchingPendingLogIds($event->message);
-        }
+            if ($ids === []) {
+                $ids = $this->matchingPendingLogIds($event->message);
+            }
 
-        if ($ids !== []) {
-            EmailLog::query()
-                ->whereIn('id', $ids)
-                ->where('status', EmailLog::STATUS_PENDING)
-                ->update([
-                    'status' => EmailLog::STATUS_SUCCESS,
-                    'sent_at' => now(),
-                ]);
+            if ($ids !== []) {
+                EmailLog::query()
+                    ->whereIn('id', $ids)
+                    ->where('status', EmailLog::STATUS_PENDING)
+                    ->update([
+                        'status' => EmailLog::STATUS_SUCCESS,
+                        'sent_at' => now(),
+                    ]);
+
+                $meta = $this->metadata($event->data, $event->message);
+
+                Log::info('Email successfully sent.', $this->logContext(
+                    $meta,
+                    $event->message,
+                    $event->message->getSubject() ?: $meta['email_type'],
+                    $ids,
+                ));
+            }
+        } catch (Throwable $exception) {
+            Log::warning('Email sent status could not be persisted.', [
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
         }
     }
 
@@ -236,5 +287,55 @@ class LogOutgoingEmail
             ->filter()
             ->values()
             ->all();
+    }
+
+    /**
+     * @param  array<string, mixed>  $meta
+     * @param  array<int, int>  $emailLogIds
+     * @return array<string, mixed>
+     */
+    private function logContext(array $meta, Email $message, string $subject, array $emailLogIds = []): array
+    {
+        $mailer = (string) config('mail.default');
+
+        return [
+            'mailer' => $mailer,
+            'transport' => config("mail.mailers.{$mailer}.transport"),
+            'subject' => $subject,
+            'to' => $this->recipientEmails($message),
+            'email_type' => $meta['email_type'] ?? null,
+            'module' => $meta['module'] ?? null,
+            'mailable_class' => $meta['mailable_class'] ?? null,
+            'related_user_id' => $meta['related_user_id'] ?? null,
+            'related_event_id' => $meta['related_event_id'] ?? null,
+            'related_reservation_id' => $meta['related_reservation_id'] ?? null,
+            'related_order_id' => $meta['related_order_id'] ?? null,
+            'email_log_ids' => $emailLogIds,
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function recipientEmails(Email $message): array
+    {
+        return collect($message->getTo())
+            ->map(fn (Address $address): string => $address->getAddress())
+            ->values()
+            ->all();
+    }
+
+    private function emailLogTableExists(): bool
+    {
+        try {
+            return Schema::hasTable('email_logs');
+        } catch (Throwable $exception) {
+            Log::warning('Email log table check failed; continuing without database email log.', [
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 }

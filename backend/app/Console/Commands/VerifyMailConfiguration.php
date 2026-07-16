@@ -44,6 +44,15 @@ class VerifyMailConfiguration extends Command
             $failed = true;
         }
 
+        $queueConnection = (string) config('queue.default');
+
+        if ($queueConnection === 'sync') {
+            $this->info('[OK] QUEUE_CONNECTION is sync; queued mail will be delivered inline by the web process.');
+        } else {
+            $this->warn("[WARN] QUEUE_CONNECTION is [{$queueConnection}]. Queued mail requires a running queue worker, for example: php artisan queue:work {$queueConnection} --queue=default");
+            $this->warn('[WARN] If Railway only runs the web process, set QUEUE_CONNECTION=sync or deploy a separate worker service.');
+        }
+
         if ($failed) {
             $this->newLine();
             $this->error('Mail configuration verification failed.');
