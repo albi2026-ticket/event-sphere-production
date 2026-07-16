@@ -7,7 +7,10 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class RegisteredUserController extends Controller
 {
@@ -21,28 +24,41 @@ class RegisteredUserController extends Controller
         $firstName = $validated['first_name'] ?? null;
         $lastName = $validated['last_name'] ?? null;
 
-        $user = User::create([
-            'name' => $validated['name'] ?? trim($firstName.' '.$lastName) ?: $validated['email'],
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => $requestedRole,
-            'phone' => $validated['phone'] ?? null,
-            'default_city' => $validated['default_city'] ?? null,
-            'preferred_language' => in_array($request->input('preferred_language'), ['en', 'sq'], true)
-                ? $request->input('preferred_language')
-                : 'en',
-            'organizer_status' => $requestedRole === User::ROLE_ORGANIZER
-                ? User::ORGANIZER_STATUS_PENDING
-                : User::ORGANIZER_STATUS_NONE,
-        ]);
+        [$user, $token] = DB::transaction(function () use ($validated, $requestedRole, $firstName, $lastName, $request): array {
+            $user = User::create([
+                'name' => $validated['name'] ?? trim($firstName.' '.$lastName) ?: $validated['email'],
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role' => $requestedRole,
+                'phone' => $validated['phone'] ?? null,
+                'default_city' => $validated['default_city'] ?? null,
+                'preferred_language' => in_array($request->input('preferred_language'), ['en', 'sq'], true)
+                    ? $request->input('preferred_language')
+                    : 'en',
+                'organizer_status' => $requestedRole === User::ROLE_ORGANIZER
+                    ? User::ORGANIZER_STATUS_PENDING
+                    : User::ORGANIZER_STATUS_NONE,
+            ]);
 
-        event(new Registered($user));
+            $token = $user->createToken(
+                $request->string('device_name')->toString() ?: 'event-sphere-api'
+            )->plainTextToken;
 
-        $token = $user->createToken(
-            $request->string('device_name')->toString() ?: 'event-sphere-api'
-        )->plainTextToken;
+            return [$user, $token];
+        });
+
+        try {
+            event(new Registered($user));
+        } catch (Throwable $exception) {
+            Log::warning('Registration verification email failed after account creation.', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+        }
 
         return response()->json([
             'token' => $token,

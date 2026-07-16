@@ -16,8 +16,10 @@ use App\Services\Reservations\ReservationCreationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class ReservationController extends Controller
 {
@@ -29,14 +31,22 @@ class ReservationController extends Controller
         $reservation = $reservation->fresh(['venue.images', 'venue.owner', 'user']);
         $venue = $reservation->venue;
 
-        Mail::to($user->email, $reservation->guest_name)
-            ->locale($user->preferred_language ?: 'en')
-            ->queue(new ReservationRequestReceivedMail($reservation));
+        try {
+            Mail::to($user->email, $reservation->guest_name)
+                ->locale($user->preferred_language ?: 'en')
+                ->queue(new ReservationRequestReceivedMail($reservation));
+        } catch (Throwable $exception) {
+            $this->logReservationMailFailure('Guest reservation request email failed.', $reservation, $exception);
+        }
 
         if ($reservation->venue->owner?->email) {
-            Mail::to($reservation->venue->owner->email, $reservation->venue->owner->name)
-                ->locale($reservation->venue->owner->preferred_language ?: 'en')
-                ->queue(new NewReservationReceivedMail($reservation));
+            try {
+                Mail::to($reservation->venue->owner->email, $reservation->venue->owner->name)
+                    ->locale($reservation->venue->owner->preferred_language ?: 'en')
+                    ->queue(new NewReservationReceivedMail($reservation));
+            } catch (Throwable $exception) {
+                $this->logReservationMailFailure('Owner new reservation email failed.', $reservation, $exception);
+            }
         }
 
         $notifications = app(NotificationService::class);
@@ -151,5 +161,16 @@ class ReservationController extends Controller
         }
 
         return new ReservationResource($reservation);
+    }
+
+    private function logReservationMailFailure(string $message, Reservation $reservation, Throwable $exception): void
+    {
+        Log::warning($message, [
+            'reservation_id' => $reservation->id,
+            'venue_id' => $reservation->venue_id,
+            'user_id' => $reservation->user_id,
+            'exception' => $exception::class,
+            'message' => $exception->getMessage(),
+        ]);
     }
 }

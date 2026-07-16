@@ -64,6 +64,46 @@ class ReservationCreationTest extends TestCase
         Mail::assertNotQueued(ReservationConfirmedMail::class);
     }
 
+    public function test_immediate_duplicate_reservation_submit_returns_existing_reservation(): void
+    {
+        Mail::fake();
+
+        $owner = $this->organizer(['email' => 'owner@example.test']);
+        $user = User::factory()->create([
+            'name' => 'Jamie Guest',
+            'email' => 'guest@example.test',
+            'phone' => '+38344111222',
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+        $venue = $this->venue($owner);
+        $payload = [
+            'venue_id' => $venue->id,
+            'party_size' => 4,
+            'reservation_date' => now()->addDay()->format('Y-m-d'),
+            'reservation_time' => '19:30',
+            'notes' => 'Window table if available.',
+        ];
+
+        $firstId = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/reservations', $payload)
+            ->assertOk()
+            ->json('data.id');
+
+        $secondId = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/reservations', $payload)
+            ->assertOk()
+            ->json('data.id');
+
+        $this->assertSame($firstId, $secondId);
+        $this->assertSame(1, Reservation::query()
+            ->where('venue_id', $venue->id)
+            ->where('user_id', $user->id)
+            ->where('reservation_date', $payload['reservation_date'])
+            ->where('reservation_time', $payload['reservation_time'])
+            ->count());
+    }
+
     public function test_unverified_user_cannot_create_reservation(): void
     {
         $owner = $this->organizer();

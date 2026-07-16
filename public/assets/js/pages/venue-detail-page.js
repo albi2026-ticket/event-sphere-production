@@ -32,6 +32,7 @@
   let galleryTouchStartX = null;
   let liveStatusTimer = null;
   let renderedVenueKey = "";
+  let reservationSubmitInFlight = false;
   const availabilityCache = new Map();
   const availabilityRequests = new Map();
   const renderSignatures = new Map();
@@ -1266,6 +1267,7 @@
   async function submitReservation(event) {
     event.preventDefault();
     if (!currentVenue) return;
+    if (reservationSubmitInFlight) return;
 
     if (!userHasVerifiedEmail()) {
       showVerifyEmailModal();
@@ -1283,6 +1285,7 @@
       notes: form.elements.notes.value.trim() || null,
     };
 
+    reservationSubmitInFlight = true;
     setReservationBusy(true);
     try {
       await api().fetch("/reservations", { method: "POST", body: payload });
@@ -1301,6 +1304,7 @@
     } catch (err) {
       window.tkToast?.(reservationError(err), "error");
     } finally {
+      reservationSubmitInFlight = false;
       setReservationBusy(false);
     }
   }

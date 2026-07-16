@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use App\Notifications\Auth\EventSphereVerifyEmail;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -90,5 +91,33 @@ class EmailVerificationTest extends TestCase
         ])->assertOk();
 
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_registration_still_succeeds_when_verification_email_side_effect_fails(): void
+    {
+        Event::listen(Registered::class, function (): void {
+            throw new \RuntimeException('Simulated verification email failure.');
+        });
+
+        $response = $this->postJson('/api/register', [
+            'name' => 'Mail Failure User',
+            'email' => 'mail-failure@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('user.email', 'mail-failure@example.com')
+            ->assertJsonStructure(['token', 'token_type', 'user']);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'mail-failure@example.com',
+        ]);
+
+        $this->postJson('/api/login', [
+            'email' => 'mail-failure@example.com',
+            'password' => 'password',
+        ])->assertOk();
     }
 }
