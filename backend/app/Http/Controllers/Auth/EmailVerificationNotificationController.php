@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\Emails\MailDeliveryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 class EmailVerificationNotificationController extends Controller
 {
@@ -19,16 +18,7 @@ class EmailVerificationNotificationController extends Controller
             return response()->json(['status' => 'already-verified']);
         }
 
-        try {
-            $request->user()->sendEmailVerificationNotification();
-        } catch (Throwable $exception) {
-            Log::error('Verification email failed.', [
-                'user_id' => $request->user()->id,
-                'email' => $request->user()->email,
-                'exception' => $exception::class,
-                'message' => $exception->getMessage(),
-            ]);
-
+        if (! app(MailDeliveryService::class)->sendVerification($request->user())) {
             return response()->json([
                 'message' => 'We could not send the verification email right now. Please try again in a moment.',
             ], 503);

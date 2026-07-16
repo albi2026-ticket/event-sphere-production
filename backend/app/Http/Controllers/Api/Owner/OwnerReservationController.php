@@ -11,12 +11,12 @@ use App\Mail\ReservationNoShowMail;
 use App\Models\Notification;
 use App\Models\Reservation;
 use App\Models\Venue;
+use App\Services\Emails\MailDeliveryService;
 use App\Services\Notifications\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
@@ -109,9 +109,13 @@ class OwnerReservationController extends Controller
         $reservation->update(['status' => Reservation::STATUS_CONFIRMED]);
         $reservation = $reservation->fresh(['venue.images', 'user']);
 
-        Mail::to($reservation->user->email, $reservation->guest_name)
-            ->locale($reservation->user->preferred_language ?: 'en')
-            ->queue(new ReservationConfirmedMail($reservation));
+        app(MailDeliveryService::class)->queue(
+            $reservation->user->email,
+            $reservation->guest_name,
+            new ReservationConfirmedMail($reservation),
+            $reservation->user->preferred_language ?: 'en',
+            ['reservation_id' => $reservation->id, 'user_id' => $reservation->user_id, 'email_type' => 'Reservation Confirmed'],
+        );
 
         if ($reservation->user) {
             app(NotificationService::class)->create(
@@ -142,9 +146,13 @@ class OwnerReservationController extends Controller
         ]);
         $reservation = $reservation->fresh(['venue.images', 'user']);
 
-        Mail::to($reservation->user->email, $reservation->guest_name)
-            ->locale($reservation->user->preferred_language ?: 'en')
-            ->queue(new ReservationCancelledMail($reservation));
+        app(MailDeliveryService::class)->queue(
+            $reservation->user->email,
+            $reservation->guest_name,
+            new ReservationCancelledMail($reservation),
+            $reservation->user->preferred_language ?: 'en',
+            ['reservation_id' => $reservation->id, 'user_id' => $reservation->user_id, 'email_type' => 'Reservation Cancelled'],
+        );
 
         if ($reservation->user) {
             app(NotificationService::class)->create(
@@ -171,9 +179,13 @@ class OwnerReservationController extends Controller
         $reservation->update(['status' => Reservation::STATUS_COMPLETED]);
         $reservation = $reservation->fresh(['venue.images', 'user']);
 
-        Mail::to($reservation->user->email, $reservation->guest_name)
-            ->locale($reservation->user->preferred_language ?: 'en')
-            ->queue(new ReservationCompletedMail($reservation));
+        app(MailDeliveryService::class)->queue(
+            $reservation->user->email,
+            $reservation->guest_name,
+            new ReservationCompletedMail($reservation),
+            $reservation->user->preferred_language ?: 'en',
+            ['reservation_id' => $reservation->id, 'user_id' => $reservation->user_id, 'email_type' => 'Reservation Completed'],
+        );
 
         if ($reservation->user) {
             app(NotificationService::class)->create(
@@ -197,9 +209,13 @@ class OwnerReservationController extends Controller
         $reservation->update(['status' => Reservation::STATUS_NO_SHOW]);
         $reservation = $reservation->fresh(['venue.images', 'user']);
 
-        Mail::to($reservation->user->email, $reservation->guest_name)
-            ->locale($reservation->user->preferred_language ?: 'en')
-            ->queue(new ReservationNoShowMail($reservation));
+        app(MailDeliveryService::class)->queue(
+            $reservation->user->email,
+            $reservation->guest_name,
+            new ReservationNoShowMail($reservation),
+            $reservation->user->preferred_language ?: 'en',
+            ['reservation_id' => $reservation->id, 'user_id' => $reservation->user_id, 'email_type' => 'Reservation No Show'],
+        );
 
         if ($reservation->user) {
             app(NotificationService::class)->create(

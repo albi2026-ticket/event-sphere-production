@@ -5,12 +5,10 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
+use App\Services\Emails\MailDeliveryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 class RegisteredUserController extends Controller
 {
@@ -49,16 +47,9 @@ class RegisteredUserController extends Controller
             return [$user, $token];
         });
 
-        try {
-            event(new Registered($user));
-        } catch (Throwable $exception) {
-            Log::warning('Registration verification email failed after account creation.', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'exception' => $exception::class,
-                'message' => $exception->getMessage(),
-            ]);
-        }
+        $mail = app(MailDeliveryService::class);
+        $mail->sendWelcome($user);
+        $mail->sendVerification($user);
 
         return response()->json([
             'token' => $token,

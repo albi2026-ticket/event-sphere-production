@@ -2,12 +2,14 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Mail\WelcomeMail;
 use App\Models\User;
 use App\Notifications\Auth\EventSphereVerifyEmail;
-use Illuminate\Auth\Events\Registered;
+use App\Services\Emails\MailDeliveryService;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
@@ -54,6 +56,7 @@ class EmailVerificationTest extends TestCase
 
     public function test_registration_sends_verification_email_and_allows_login_unverified(): void
     {
+        Mail::fake();
         Notification::fake();
 
         $response = $this->postJson('/api/register', [
@@ -70,6 +73,7 @@ class EmailVerificationTest extends TestCase
 
         $user = User::query()->where('email', 'test@example.com')->firstOrFail();
 
+        Mail::assertSent(WelcomeMail::class, fn (WelcomeMail $mail) => $mail->hasTo('test@example.com'));
         Notification::assertSentTo($user, EventSphereVerifyEmail::class);
         Notification::assertSentTo($user, EventSphereVerifyEmail::class, function (EventSphereVerifyEmail $notification) use ($user) {
             $mail = $notification->toMail($user);
@@ -95,8 +99,9 @@ class EmailVerificationTest extends TestCase
 
     public function test_registration_still_succeeds_when_verification_email_side_effect_fails(): void
     {
-        Event::listen(Registered::class, function (): void {
-            throw new \RuntimeException('Simulated verification email failure.');
+        $this->mock(MailDeliveryService::class, function ($mock): void {
+            $mock->shouldReceive('sendWelcome')->once()->andReturn(false);
+            $mock->shouldReceive('sendVerification')->once()->andReturn(false);
         });
 
         $response = $this->postJson('/api/register', [
