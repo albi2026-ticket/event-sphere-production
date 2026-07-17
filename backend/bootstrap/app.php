@@ -4,6 +4,7 @@ use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\EnsureOrganizerOwnsEvent;
 use App\Http\Middleware\EnsureUserHasRole;
+use App\Http\Middleware\PerformanceProfiler;
 use App\Http\Middleware\SetApplicationLocale;
 use App\Http\Middleware\ThrottleImageUploads;
 use Illuminate\Foundation\Application;
@@ -36,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
             headers: $trustedProxyHeaders
         );
 
+        $middleware->prepend(PerformanceProfiler::class);
         $middleware->append(AddSecurityHeaders::class);
 
         $middleware->api(
