@@ -9,6 +9,7 @@ use App\Http\Resources\EventDetailResource;
 use App\Http\Resources\EventListingResource;
 use App\Models\CheckoutReservation;
 use App\Models\Event;
+use App\Support\Performance\DeepControllerProfiler as Profiler;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
@@ -19,9 +20,11 @@ class EventController extends Controller
 
     public function index(EventIndexRequest $request): AnonymousResourceCollection
     {
-        $sort = $request->validated()['sort'] ?? 'soonest';
+        Profiler::begin('EventController@index');
 
-        $query = Event::query()
+        $sort = Profiler::section('Read validated sort', fn (): string => $request->validated()['sort'] ?? 'soonest');
+
+        $query = Profiler::section('Build Event listing query', fn (): Builder => Event::query()
             ->select([
                 'events.id',
                 'events.title',
@@ -43,26 +46,33 @@ class EventController extends Controller
             ->withMin([
                 'ticketTypes as minimum_price' => fn (Builder $query) => $query->where('status', 'active'),
             ], 'price')
-            ->publicDiscovery();
+            ->publicDiscovery());
 
         if ($sort === 'trending') {
-            $query
+            Profiler::section('Apply trending metrics eager counts', fn () => $query
                 ->withCount('favorites')
-                ->withDiscoveryMetrics();
+                ->withDiscoveryMetrics());
         }
 
-        $this->applyEventFilters($query, $request);
+        Profiler::section('Apply event filters helper', function () use ($query, $request): void {
+            $this->applyEventFilters($query, $request);
+        });
 
-        return EventListingResource::collection($query->paginate($this->perPage($request)));
+        $perPage = Profiler::section('perPage helper', fn (): int => $this->perPage($request));
+        $paginated = Profiler::section('Event pagination', fn () => $query->paginate($perPage));
+
+        return Profiler::section('EventListingResource collection create', fn (): AnonymousResourceCollection => EventListingResource::collection($paginated));
     }
 
     public function show(Event $event): EventDetailResource
     {
-        abort_unless($event->status === 'published' && $event->visibility === 'public', 404);
+        Profiler::begin('EventController@show');
 
-        $event->increment('views_count');
+        Profiler::section('Assert public published event', fn () => abort_unless($event->status === 'published' && $event->visibility === 'public', 404));
 
-        return new EventDetailResource($event->load([
+        Profiler::section('Increment views_count', fn () => $event->increment('views_count'));
+
+        $event = Profiler::section('Event detail eager load', fn (): Event => $event->load([
             'organizer:id,name,role',
             'images' => fn ($query) => $query
                 ->orderByDesc('is_primary')
@@ -78,15 +88,19 @@ class EventController extends Controller
                         ->where('expires_at', '>', now()),
                 ], 'quantity'),
         ]));
+
+        return Profiler::section('EventDetailResource create', fn (): EventDetailResource => new EventDetailResource($event));
     }
 
     public function related(Event $event): AnonymousResourceCollection
     {
-        abort_unless($event->status === 'published' && $event->visibility === 'public', 404);
+        Profiler::begin('EventController@related');
 
-        $cacheKey = "events.related.{$event->id}.{$event->updated_at?->timestamp}";
+        Profiler::section('Assert public published event', fn () => abort_unless($event->status === 'published' && $event->visibility === 'public', 404));
 
-        $eventIds = Cache::remember($cacheKey, now()->addSeconds(60), fn () => Event::query()
+        $cacheKey = Profiler::section('Build related cache key', fn (): string => "events.related.{$event->id}.{$event->updated_at?->timestamp}");
+
+        $eventIds = Profiler::section('Cache::remember related event ids', fn (): array => Cache::remember($cacheKey, now()->addSeconds(60), fn () => Profiler::section('Related event id query pluck', fn (): array => Event::query()
             ->select([
                 'events.id',
             ])
@@ -96,9 +110,9 @@ class EventController extends Controller
             ->orderBy('events.starts_at')
             ->limit(6)
             ->pluck('events.id')
-            ->all());
+            ->all())));
 
-        $events = Event::query()
+        $events = Profiler::section('Load related Event collection', fn () => Event::query()
             ->select([
                 'events.id',
                 'events.title',
@@ -123,8 +137,8 @@ class EventController extends Controller
             ], 'price')
             ->publicDiscovery()
             ->orderBy('events.starts_at')
-            ->get();
+            ->get());
 
-        return EventListingResource::collection($events);
+        return Profiler::section('EventListingResource related collection create', fn (): AnonymousResourceCollection => EventListingResource::collection($events));
     }
 }

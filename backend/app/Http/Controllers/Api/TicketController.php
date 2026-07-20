@@ -8,10 +8,11 @@ use App\Models\Order;
 use App\Models\Ticket;
 use App\Services\Tickets\TicketPdfService;
 use App\Services\Tickets\TicketService;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use App\Support\Performance\DeepControllerProfiler as Profiler;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class TicketController extends Controller
 {
@@ -22,95 +23,121 @@ class TicketController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
-        return TicketResource::collection(
-            Ticket::query()
+        Profiler::begin('TicketController@index');
+
+        $paginated = Profiler::section('Ticket pagination query with eager loads', fn () => Ticket::query()
                 ->with(['user', 'event', 'ticketType', 'order.user'])
                 ->where('user_id', $request->user()->id)
                 ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
                 ->orderByDesc(Order::query()->select('created_at')->whereColumn('orders.id', 'tickets.order_id'))
                 ->orderByDesc('tickets.id')
-                ->paginate($request->integer('per_page', 15))
-        );
+                ->paginate($request->integer('per_page', 15)));
+
+        return Profiler::section('TicketResource collection create', fn (): AnonymousResourceCollection => TicketResource::collection($paginated));
     }
 
     public function show(Request $request, Ticket $ticket): TicketResource
     {
-        $ticket->load(['user', 'event', 'ticketType', 'order.user', 'checkedInBy']);
+        Profiler::begin('TicketController@show');
 
-        abort_unless($request->user()->can('view', $ticket), 403);
+        Profiler::section('Ticket eager load show relations', fn () => $ticket->load(['user', 'event', 'ticketType', 'order.user', 'checkedInBy']));
 
-        return new TicketResource($ticket);
+        Profiler::section('Ticket policy can view', fn () => abort_unless($request->user()->can('view', $ticket), 403));
+
+        return Profiler::section('TicketResource create', fn (): TicketResource => new TicketResource($ticket));
     }
 
     public function qrCode(Request $request, Ticket $ticket): Response
     {
-        $ticket->load(['event']);
+        Profiler::begin('TicketController@qrCode');
 
-        abort_unless($request->user()->can('view', $ticket) || $request->user()->can('manage', $ticket), 403);
+        Profiler::section('Ticket eager load event for QR', fn () => $ticket->load(['event']));
 
-        return response($this->tickets->qrSvg($ticket), 200, [
+        Profiler::section('Ticket policy can view/manage QR', fn () => abort_unless($request->user()->can('view', $ticket) || $request->user()->can('manage', $ticket), 403));
+
+        $svg = Profiler::section('TicketService::qrSvg', fn (): string => $this->tickets->qrSvg($ticket));
+
+        return Profiler::section('Return SVG response', fn (): Response => response($svg, 200, [
             'Content-Type' => 'image/svg+xml',
             'Cache-Control' => 'private, max-age=300',
-        ]);
+        ]));
     }
 
     public function download(Request $request, Ticket $ticket): Response
     {
-        $ticket->load(['user', 'event', 'ticketType', 'order.user', 'orderItem']);
+        Profiler::begin('TicketController@download');
 
-        abort_unless($request->user()->can('download', $ticket), 403);
+        Profiler::section('Ticket eager load download relations', fn () => $ticket->load(['user', 'event', 'ticketType', 'order.user', 'orderItem']));
 
-        $this->tickets->markDownloaded($ticket);
-        $pdf = $this->ticketPdfs->download($ticket);
+        Profiler::section('Ticket policy can download', fn () => abort_unless($request->user()->can('download', $ticket), 403));
 
-        return response($pdf['content'], 200, [
+        Profiler::section('TicketService::markDownloaded', function () use ($ticket): void {
+            $this->tickets->markDownloaded($ticket);
+        });
+        $pdf = Profiler::section('TicketPdfService::download', fn (): array => $this->ticketPdfs->download($ticket));
+
+        return Profiler::section('Return PDF response', fn (): Response => response($pdf['content'], 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="'.$pdf['filename'].'"',
-        ]);
+        ]));
     }
 
     public function emailQrCode(Ticket $ticket): Response
     {
-        $ticket->load(['event', 'order']);
+        Profiler::begin('TicketController@emailQrCode');
 
-        $this->authorizeSignedEmailTicketAccess($ticket);
+        Profiler::section('Ticket eager load event/order for email QR', fn () => $ticket->load(['event', 'order']));
 
-        return response($this->tickets->qrSvg($ticket), 200, [
+        Profiler::section('authorizeSignedEmailTicketAccess', function () use ($ticket): void {
+            $this->authorizeSignedEmailTicketAccess($ticket);
+        });
+
+        $svg = Profiler::section('TicketService::qrSvg', fn (): string => $this->tickets->qrSvg($ticket));
+
+        return Profiler::section('Return signed email SVG response', fn (): Response => response($svg, 200, [
             'Content-Type' => 'image/svg+xml',
             'Cache-Control' => 'private, max-age=300',
-        ]);
+        ]));
     }
 
     public function emailDownload(Ticket $ticket): Response
     {
-        $ticket->load(['user', 'event', 'ticketType', 'order.user', 'orderItem']);
+        Profiler::begin('TicketController@emailDownload');
 
-        $this->authorizeSignedEmailTicketAccess($ticket);
+        Profiler::section('Ticket eager load signed email download relations', fn () => $ticket->load(['user', 'event', 'ticketType', 'order.user', 'orderItem']));
 
-        $this->tickets->markDownloaded($ticket);
-        $pdf = $this->ticketPdfs->download($ticket);
+        Profiler::section('authorizeSignedEmailTicketAccess', function () use ($ticket): void {
+            $this->authorizeSignedEmailTicketAccess($ticket);
+        });
 
-        return response($pdf['content'], 200, [
+        Profiler::section('TicketService::markDownloaded', function () use ($ticket): void {
+            $this->tickets->markDownloaded($ticket);
+        });
+        $pdf = Profiler::section('TicketPdfService::download', fn (): array => $this->ticketPdfs->download($ticket));
+
+        return Profiler::section('Return signed email PDF response', fn (): Response => response($pdf['content'], 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="'.$pdf['filename'].'"',
-        ]);
+        ]));
     }
 
     public function orderTickets(Request $request, int $order): AnonymousResourceCollection
     {
-        return TicketResource::collection(
-            Ticket::query()
+        Profiler::begin('TicketController@orderTickets');
+
+        $tickets = Profiler::section('Order tickets query with eager loads', fn () => Ticket::query()
                 ->with(['user', 'event', 'ticketType', 'order.user'])
                 ->where('order_id', $order)
                 ->where('user_id', $request->user()->id)
                 ->orderByDesc('tickets.id')
-                ->get()
-        );
+                ->get());
+
+        return Profiler::section('TicketResource order tickets collection create', fn (): AnonymousResourceCollection => TicketResource::collection($tickets));
     }
 
     private function authorizeSignedEmailTicketAccess(Ticket $ticket): void
     {
-        abort_unless($ticket->order?->payment_status === Order::PAYMENT_STATUS_PAID, SymfonyResponse::HTTP_FORBIDDEN);
-        abort_if(in_array($ticket->status, [Ticket::STATUS_CANCELLED, Ticket::STATUS_REFUNDED], true), SymfonyResponse::HTTP_FORBIDDEN);
+        Profiler::section('Assert paid order for signed ticket access', fn () => abort_unless($ticket->order?->payment_status === Order::PAYMENT_STATUS_PAID, SymfonyResponse::HTTP_FORBIDDEN));
+        Profiler::section('Assert ticket not cancelled/refunded', fn () => abort_if(in_array($ticket->status, [Ticket::STATUS_CANCELLED, Ticket::STATUS_REFUNDED], true), SymfonyResponse::HTTP_FORBIDDEN));
     }
 }

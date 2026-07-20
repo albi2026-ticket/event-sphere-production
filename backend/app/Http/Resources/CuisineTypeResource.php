@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\Performance\DeepControllerProfiler as Profiler;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -9,10 +10,10 @@ class CuisineTypeResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        return [
+        return Profiler::section('CuisineTypeResource::toArray', fn (): array => [
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
-        ];
+        ]);
     }
 }
