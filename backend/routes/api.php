@@ -290,3 +290,16 @@ Route::middleware(['auth:sanctum', 'throttle:api-search'])->group(function (): v
         Route::delete('/reservations/{reservation}', [AdminReservationController::class, 'destroy']);
     });
 });
+
+
+use Illuminate\Support\Facades\DB;
+
+Route::get('/db-ping', function () {
+    $start = microtime(true);
+
+    DB::select('select 1');
+
+    return response()->json([
+        'time_ms' => round((microtime(true) - $start) * 1000, 2),
+    ]);
+});
