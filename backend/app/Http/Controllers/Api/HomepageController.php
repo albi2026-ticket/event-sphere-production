@@ -147,31 +147,20 @@ class HomepageController extends Controller
                 return [];
             }
 
-            $ranked = Event::query()
-                ->select('events.id')
+            $ranked = $this->homepageEventResourceQuery()
                 ->selectRaw('LOWER(events.category) as normalized_category')
                 ->selectRaw('ROW_NUMBER() OVER (PARTITION BY LOWER(events.category) ORDER BY events.created_at DESC, events.starts_at ASC, events.id ASC) as category_rank')
-                ->whereIn(DB::raw('LOWER(events.category)'), $values)
-                ->publicDiscovery();
+                ->whereIn(DB::raw('LOWER(events.category)'), $values);
 
-            $rankedRows = DB::query()
+            $events = Event::withoutGlobalScopes()
                 ->fromSub($ranked, 'ranked_events')
+                ->select('ranked_events.*')
                 ->where('category_rank', '<=', $limit)
+                ->with(['images:id,event_id,disk,path,url,type,is_primary,is_banner,sort_order'])
                 ->get();
 
-            $events = $this->homepageEventResourceQuery()
-                ->whereKey($rankedRows->pluck('id')->all())
-                ->get()
-                ->keyBy('id');
-
-            $eventsByCategory = $rankedRows
-                ->map(fn ($row) => [
-                    'category' => $row->normalized_category,
-                    'event' => $events->get($row->id),
-                ])
-                ->filter(fn (array $row): bool => $row['event'] instanceof Event)
-                ->groupBy('category')
-                ->map(fn ($rows) => $rows->pluck('event'));
+            $eventsByCategory = $events
+                ->groupBy('normalized_category');
 
             return $categories
                 ->map(function (EventCategory $category) use ($categoryValues, $eventsByCategory, $limit, $request): ?array {
