@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Performance\AuthPerformanceAudit;
 use Closure;
 use Illuminate\Database\Events\ConnectionEstablished;
 use Illuminate\Database\Events\QueryExecuted;
@@ -72,6 +73,7 @@ class PerformanceProfiler
                 'put_count' => 0,
                 'put_ms' => 0.0,
             ],
+            'auth_audit' => [],
         ];
 
         app()->terminating(function () use ($uuid, $request): void {
@@ -151,6 +153,24 @@ class PerformanceProfiler
         self::$profiles[$uuid]['cache'][$operation.'_ms'] += $milliseconds;
     }
 
+    public static function addAuthAuditStep(string $name, float $startedAt, float $finishedAt, float $milliseconds): void
+    {
+        $uuid = self::activeUuid();
+
+        if ($uuid === null) {
+            return;
+        }
+
+        self::$profiles[$uuid]['auth_audit'][] = [
+            'name' => $name,
+            'start_ms' => round(($startedAt - (float) self::$profiles[$uuid]['started_at']) * 1000, 2),
+            'end_ms' => round(($finishedAt - (float) self::$profiles[$uuid]['started_at']) * 1000, 2),
+            'duration_ms' => round($milliseconds, 2),
+        ];
+
+        self::addTiming('auth_audit_'.$name, $milliseconds);
+    }
+
     public static function markResponseSent(Request $request, float $milliseconds): void
     {
         $uuid = $request->attributes->get('performance_profile_uuid');
@@ -203,6 +223,7 @@ class PerformanceProfiler
             : null;
         $timings = $this->formattedTimings($profile['timings']);
         $cache = $this->formattedCacheTimings($profile['cache']);
+        $authAudit = $this->formattedAuthAudit($profile['auth_audit'] ?? []);
         $responseJsonMs = $timings['response_json']['ms'] ?? 0.0;
         $resourceTransformationMs = $resourceMs !== null
             ? round(max(0.0, $resourceMs - $responseJsonMs), 2)
@@ -263,6 +284,7 @@ class PerformanceProfiler
             'database_query_count' => (int) $profile['db_query_count'],
             'resource_ms' => $resourceMs,
             'memory_mb' => round(memory_get_peak_usage(true) / 1024 / 1024, 2),
+            'auth_audit' => $authAudit,
         ]));
 
         unset(self::$profiles[$uuid]);
@@ -298,6 +320,20 @@ class PerformanceProfiler
                 $profile['db_query_count'] = (int) $profile['db_query_count'] + 1;
                 $profile['db_query_time_ms'] = (float) $profile['db_query_time_ms'] + (float) $event->time;
             });
+
+            if (AuthPerformanceAudit::active()) {
+                $finishedAt = $this->now();
+                $startedAt = $finishedAt - ((float) $event->time / 1000);
+                $sql = strtolower($event->sql);
+                $name = match (true) {
+                    str_contains($sql, 'personal_access_tokens') => 'PersonalAccessToken SQL query',
+                    str_contains($sql, 'users') => 'User SQL query',
+                    str_contains($sql, 'sessions') => 'Session SQL query',
+                    default => 'Authentication SQL query',
+                };
+
+                self::addAuthAuditStep($name, $startedAt, $finishedAt, (float) $event->time);
+            }
         });
 
         Event::listen(RouteMatched::class, function (): void {
@@ -375,12 +411,50 @@ class PerformanceProfiler
     }
 
     /**
+     * @param  array<int, array{name: string, start_ms: float, end_ms: float, duration_ms: float}>  $steps
+     * @return array{steps: array<int, array{name: string, start_ms: float, end_ms: float, duration_ms: float}>, slowest: array{name: string, start_ms: float, end_ms: float, duration_ms: float}|null}
+     */
+    private function formattedAuthAudit(array $steps): array
+    {
+        $slowest = null;
+
+        foreach ($steps as $step) {
+            if ($slowest === null || (float) $step['duration_ms'] > (float) $slowest['duration_ms']) {
+                $slowest = $step;
+            }
+        }
+
+        return [
+            'steps' => $steps,
+            'slowest' => $slowest,
+        ];
+    }
+
+    /**
      * @param  array<string, mixed>  $profile
      */
     private function formatProfile(array $profile): string
     {
         $value = fn (mixed $value): string => $value === null ? 'n/a' : (string) $value;
         $ms = fn (mixed $value): string => $value === null ? 'n/a' : $value.' ms';
+        $authAuditLines = [];
+
+        foreach ($profile['auth_audit']['steps'] as $step) {
+            $authAuditLines[] = $step['name'].':';
+            $authAuditLines[] = 'START '.$step['start_ms'].' ms';
+            $authAuditLines[] = 'END '.$step['end_ms'].' ms';
+            $authAuditLines[] = 'DURATION '.$step['duration_ms'].' ms';
+            $authAuditLines[] = '';
+        }
+
+        if ($profile['auth_audit']['slowest'] !== null) {
+            $slowest = $profile['auth_audit']['slowest'];
+            $authAuditLines[] = 'SLOWEST AUTH FUNCTION:';
+            $authAuditLines[] = $slowest['name'].' - '.$slowest['duration_ms'].' ms';
+        } else {
+            $authAuditLines[] = 'SLOWEST AUTH FUNCTION:';
+            $authAuditLines[] = 'n/a';
+        }
 
         return implode(PHP_EOL, [
             '==============================',
@@ -425,6 +499,9 @@ class PerformanceProfiler
             '',
             'AUTHENTICATE MIDDLEWARE:',
             $ms($profile['authenticate_middleware_ms']).' ('.$profile['authenticate_middleware_count'].' calls)',
+            '',
+            'DEEP AUTHENTICATION PERFORMANCE AUDIT:',
+            ...$authAuditLines,
             '',
             'THROTTLE MIDDLEWARE:',
             $ms($profile['throttle_middleware_ms']).' ('.$profile['throttle_middleware_count'].' calls)',

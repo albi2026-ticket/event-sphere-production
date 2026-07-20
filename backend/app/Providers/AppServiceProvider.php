@@ -7,15 +7,19 @@ use App\Listeners\LogOutgoingEmail;
 use App\Listeners\SendEventCancellationNotifications;
 use App\Models\Event;
 use App\Models\EventCategory;
+use App\Models\Sanctum\ProfilingPersonalAccessToken;
 use App\Models\Ticket;
 use App\Models\Venue;
 use App\Observers\HomepageCacheObserver;
 use App\Policies\EventPolicy;
 use App\Policies\TicketPolicy;
+use App\Support\Performance\AuthPerformanceAudit;
 use App\Support\Performance\ProfilingCacheManager;
 use App\Support\Performance\ProfilingControllerDispatcher;
 use App\Support\Performance\ProfilingResponseFactory;
+use App\Support\Performance\ProfilingSanctumGuard;
 use App\Support\AppUrls;
+use Illuminate\Auth\RequestGuard;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Routing\ResponseFactory as ResponseFactoryContract;
@@ -24,12 +28,14 @@ use Illuminate\Routing\Contracts\ControllerDispatcher as ControllerDispatcherCon
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event as EventFacade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -49,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Event::class, EventPolicy::class);
         Gate::policy(Ticket::class, TicketPolicy::class);
+        $this->registerAuthenticationPerformanceAudit();
         EventFacade::listen(EventCancelledEvent::class, SendEventCancellationNotifications::class);
         EventFacade::listen(MessageSending::class, [LogOutgoingEmail::class, 'handleSending']);
         EventFacade::listen(MessageSent::class, [LogOutgoingEmail::class, 'handleSent']);
@@ -152,6 +159,50 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton('cache', fn ($app): ProfilingCacheManager => new ProfilingCacheManager($app));
 
         $this->app->singleton('cache.store', fn ($app): mixed => $app['cache']->driver());
+    }
+
+    private function registerAuthenticationPerformanceAudit(): void
+    {
+        Sanctum::usePersonalAccessTokenModel(ProfilingPersonalAccessToken::class);
+
+        Auth::extend('sanctum', function ($app, string $name, array $config): RequestGuard {
+            $guard = new RequestGuard(
+                new ProfilingSanctumGuard(
+                    $app['auth'],
+                    config('sanctum.expiration'),
+                    $config['provider'] ?? null,
+                    config('sanctum.last_used_at', true)
+                ),
+                $app['request'],
+                $app['auth']->createUserProvider($config['provider'] ?? null)
+            );
+
+            $app->refresh('request', $guard, 'setRequest');
+
+            return $guard;
+        });
+
+        Gate::before(function ($user, string $ability): null {
+            AuthPerformanceAudit::startContext();
+            $id = AuthPerformanceAudit::start("Gate / Policy [{$ability}]");
+            app()->instance('auth_performance_audit_gate_step', $id);
+
+            return null;
+        });
+
+        Gate::after(function (): null {
+            $id = app()->bound('auth_performance_audit_gate_step')
+                ? app('auth_performance_audit_gate_step')
+                : null;
+
+            if (is_int($id)) {
+                AuthPerformanceAudit::end($id);
+            }
+
+            AuthPerformanceAudit::endContext();
+
+            return null;
+        });
     }
 
     private function assertRequiredProductionEnvironment(): void

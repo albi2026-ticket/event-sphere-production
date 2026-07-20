@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureOrganizerOwnsEvent;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\PerformanceProfiler;
 use App\Http\Middleware\ProfilingAuthenticate;
+use App\Http\Middleware\ProfilingAuthorize;
 use App\Http\Middleware\ProfilingThrottleRequests;
 use App\Http\Middleware\SetApplicationLocale;
 use App\Http\Middleware\ThrottleImageUploads;
@@ -54,6 +55,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'auth' => ProfilingAuthenticate::class,
+            'can' => ProfilingAuthorize::class,
             'throttle' => ProfilingThrottleRequests::class,
             'verified' => EnsureEmailIsVerified::class,
             'role' => EnsureUserHasRole::class,
