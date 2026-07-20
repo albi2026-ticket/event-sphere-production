@@ -12,10 +12,15 @@ use App\Models\Venue;
 use App\Observers\HomepageCacheObserver;
 use App\Policies\EventPolicy;
 use App\Policies\TicketPolicy;
+use App\Support\Performance\ProfilingCacheManager;
+use App\Support\Performance\ProfilingControllerDispatcher;
+use App\Support\Performance\ProfilingResponseFactory;
 use App\Support\AppUrls;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Routing\ResponseFactory as ResponseFactoryContract;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Contracts\ControllerDispatcher as ControllerDispatcherContract;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -34,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->assertProductionEnvironmentIsSafe();
+        $this->registerPerformanceProfilingBindings();
     }
 
     /**
@@ -132,6 +138,20 @@ class AppServiceProvider extends ServiceProvider
         if ((int) config('auth.guards.web.remember') <= 0) {
             throw new \RuntimeException('Production AUTH_REMEMBER_DURATION must be greater than zero.');
         }
+    }
+
+    private function registerPerformanceProfilingBindings(): void
+    {
+        $this->app->singleton(ControllerDispatcherContract::class, fn ($app): ProfilingControllerDispatcher => new ProfilingControllerDispatcher($app));
+
+        $this->app->singleton(ResponseFactoryContract::class, fn ($app): ProfilingResponseFactory => new ProfilingResponseFactory(
+            $app[\Illuminate\Contracts\View\Factory::class],
+            $app['redirect'],
+        ));
+
+        $this->app->singleton('cache', fn ($app): ProfilingCacheManager => new ProfilingCacheManager($app));
+
+        $this->app->singleton('cache.store', fn ($app): mixed => $app['cache']->driver());
     }
 
     private function assertRequiredProductionEnvironment(): void

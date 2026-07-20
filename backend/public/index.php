@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\PerformanceProfiler;
+use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 
@@ -17,4 +19,13 @@ require __DIR__.'/../vendor/autoload.php';
 /** @var Application $app */
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
-$app->handleRequest(Request::capture());
+$request = Request::capture();
+$kernel = $app->make(HttpKernelContract::class);
+$response = $kernel->handle($request);
+
+$responseSendStartedAt = microtime(true);
+$response->send();
+PerformanceProfiler::markResponseSent($request, (microtime(true) - $responseSendStartedAt) * 1000);
+
+PerformanceProfiler::markKernelTerminateStarted($request);
+$kernel->terminate($request, $response);
