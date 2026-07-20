@@ -9,10 +9,12 @@ use App\Http\Resources\EventDetailResource;
 use App\Http\Resources\EventListingResource;
 use App\Models\CheckoutReservation;
 use App\Models\Event;
+use App\Models\Order;
 use App\Support\Performance\DeepControllerProfiler as Profiler;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class EventController extends Controller
 {
@@ -20,48 +22,12 @@ class EventController extends Controller
 
     public function index(EventIndexRequest $request): AnonymousResourceCollection
     {
-        Profiler::begin('EventController@index');
+        $sort = $request->validated()['sort'] ?? 'soonest';
+        $query = $this->eventListingQuery($sort === 'trending');
 
-        $sort = Profiler::section('Read validated sort', fn (): string => $request->validated()['sort'] ?? 'soonest');
+        $this->applyEventFilters($query, $request);
 
-        $query = Profiler::section('Build Event listing query', fn (): Builder => Event::query()
-            ->select([
-                'events.id',
-                'events.title',
-                'events.slug',
-                'events.category',
-                'events.venue_name',
-                'events.city',
-                'events.starts_at',
-                'events.ends_at',
-                'events.timezone',
-                'events.status',
-                'events.visibility',
-                'events.banner_image_url',
-                'events.base_price',
-                'events.currency',
-                'events.views_count',
-            ])
-            ->with(['images:id,event_id,disk,path,url,type,is_primary,is_banner,sort_order'])
-            ->withMin([
-                'ticketTypes as minimum_price' => fn (Builder $query) => $query->where('status', 'active'),
-            ], 'price')
-            ->publicDiscovery());
-
-        if ($sort === 'trending') {
-            Profiler::section('Apply trending metrics eager counts', fn () => $query
-                ->withCount('favorites')
-                ->withDiscoveryMetrics());
-        }
-
-        Profiler::section('Apply event filters helper', function () use ($query, $request): void {
-            $this->applyEventFilters($query, $request);
-        });
-
-        $perPage = Profiler::section('perPage helper', fn (): int => $this->perPage($request));
-        $paginated = Profiler::section('Event pagination', fn () => $query->paginate($perPage));
-
-        return Profiler::section('EventListingResource collection create', fn (): AnonymousResourceCollection => EventListingResource::collection($paginated));
+        return EventListingResource::collection($query->paginate($this->perPage($request)));
     }
 
     public function show(Event $event): EventDetailResource
@@ -140,5 +106,69 @@ class EventController extends Controller
             ->get());
 
         return Profiler::section('EventListingResource related collection create', fn (): AnonymousResourceCollection => EventListingResource::collection($events));
+    }
+
+    private function eventListingQuery(bool $includeTrendingMetrics = false): Builder
+    {
+        $ticketPrices = DB::table('ticket_types')
+            ->select('event_id')
+            ->selectRaw('MIN(price) as minimum_price')
+            ->where('status', 'active')
+            ->groupBy('event_id');
+
+        $query = Event::query()
+            ->select([
+                'events.id',
+                'events.title',
+                'events.slug',
+                'events.category',
+                'events.venue_name',
+                'events.city',
+                'events.starts_at',
+                'events.ends_at',
+                'events.timezone',
+                'events.status',
+                'events.visibility',
+                'events.banner_image_url',
+                'events.base_price',
+                'events.currency',
+                'events.views_count',
+            ])
+            ->addSelect(DB::raw('ticket_prices.minimum_price as minimum_price'))
+            ->leftJoinSub($ticketPrices, 'ticket_prices', function ($join): void {
+                $join->on('ticket_prices.event_id', '=', 'events.id');
+            })
+            ->with(['images:id,event_id,disk,path,url,type,is_primary,is_banner,sort_order'])
+            ->publicDiscovery();
+
+        if (! $includeTrendingMetrics) {
+            return $query;
+        }
+
+        $favoriteCounts = DB::table('favorites')
+            ->select('event_id')
+            ->selectRaw('COUNT(*) as favorites_count')
+            ->groupBy('event_id');
+
+        $ticketMetrics = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->select('order_items.event_id')
+            ->selectRaw('SUM(order_items.quantity) as tickets_sold_count')
+            ->selectRaw('SUM(CASE WHEN order_items.created_at >= ? THEN order_items.quantity END) as recent_tickets_sold_count', [now()->subDays(7)])
+            ->where('orders.payment_status', Order::PAYMENT_STATUS_PAID)
+            ->groupBy('order_items.event_id');
+
+        return $query
+            ->leftJoinSub($favoriteCounts, 'favorite_counts', function ($join): void {
+                $join->on('favorite_counts.event_id', '=', 'events.id');
+            })
+            ->leftJoinSub($ticketMetrics, 'ticket_metrics', function ($join): void {
+                $join->on('ticket_metrics.event_id', '=', 'events.id');
+            })
+            ->addSelect([
+                DB::raw('COALESCE(favorite_counts.favorites_count, 0) as favorites_count'),
+                DB::raw('ticket_metrics.tickets_sold_count as tickets_sold_count'),
+                DB::raw('ticket_metrics.recent_tickets_sold_count as recent_tickets_sold_count'),
+            ]);
     }
 }
