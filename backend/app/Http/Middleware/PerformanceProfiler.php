@@ -4,6 +4,10 @@ namespace App\Http\Middleware;
 
 use App\Support\Performance\AuthPerformanceAudit;
 use Closure;
+use Illuminate\Cache\Events\CacheHit;
+use Illuminate\Cache\Events\CacheMissed;
+use Illuminate\Cache\Events\KeyWritten;
+use Illuminate\Cache\Events\RetrievingKey;
 use Illuminate\Database\Events\ConnectionEstablished;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
@@ -23,6 +27,11 @@ class PerformanceProfiler
     private static array $profiles = [];
 
     private static bool $listenersRegistered = false;
+
+    /**
+     * @var array<string, float>
+     */
+    private static array $authCacheReads = [];
 
     /**
      * @param  Closure(Request): Response  $next
@@ -153,7 +162,10 @@ class PerformanceProfiler
         self::$profiles[$uuid]['cache'][$operation.'_ms'] += $milliseconds;
     }
 
-    public static function addAuthAuditStep(string $name, float $startedAt, float $finishedAt, float $milliseconds): void
+    /**
+     * @param array<string, mixed> $meta
+     */
+    public static function addAuthAuditStep(string $name, float $startedAt, float $finishedAt, float $milliseconds, array $meta = []): void
     {
         $uuid = self::activeUuid();
 
@@ -166,9 +178,29 @@ class PerformanceProfiler
             'start_ms' => round(($startedAt - (float) self::$profiles[$uuid]['started_at']) * 1000, 2),
             'end_ms' => round(($finishedAt - (float) self::$profiles[$uuid]['started_at']) * 1000, 2),
             'duration_ms' => round($milliseconds, 2),
+            'meta' => $meta,
         ];
 
         self::addTiming('auth_audit_'.$name, $milliseconds);
+    }
+
+    public static function annotateLastAuthSqlRows(string $name, int $rows): void
+    {
+        $uuid = self::activeUuid();
+
+        if ($uuid === null) {
+            return;
+        }
+
+        for ($index = count(self::$profiles[$uuid]['auth_audit']) - 1; $index >= 0; $index--) {
+            if ((self::$profiles[$uuid]['auth_audit'][$index]['name'] ?? null) !== $name) {
+                continue;
+            }
+
+            self::$profiles[$uuid]['auth_audit'][$index]['meta']['rows_returned'] = $rows;
+
+            return;
+        }
     }
 
     public static function markResponseSent(Request $request, float $milliseconds): void
@@ -326,14 +358,99 @@ class PerformanceProfiler
                 $startedAt = $finishedAt - ((float) $event->time / 1000);
                 $sql = strtolower($event->sql);
                 $name = match (true) {
-                    str_contains($sql, 'personal_access_tokens') => 'PersonalAccessToken SQL query',
-                    str_contains($sql, 'users') => 'User SQL query',
+                    str_contains($sql, 'update') && str_contains($sql, 'personal_access_tokens') => 'Save updated token SQL',
+                    str_contains($sql, 'personal_access_tokens') => 'Execute PersonalAccessToken SQL',
+                    str_contains($sql, 'users') => 'Execute User SQL',
                     str_contains($sql, 'sessions') => 'Session SQL query',
                     default => 'Authentication SQL query',
                 };
 
-                self::addAuthAuditStep($name, $startedAt, $finishedAt, (float) $event->time);
+                self::addAuthAuditStep($name, $startedAt, $finishedAt, (float) $event->time, [
+                    'sql' => $event->sql,
+                    'bindings' => $event->bindings,
+                    'execution_time_ms' => round((float) $event->time, 2),
+                    'rows_returned' => 'unknown',
+                    'connection' => $event->connectionName,
+                ]);
             }
+        });
+
+        foreach (['booting', 'booted', 'retrieved', 'saving', 'saved', 'updating', 'updated'] as $modelEvent) {
+            Event::listen("eloquent.{$modelEvent}: *", function (string $eventName, array $payload) use ($modelEvent): void {
+                if (! AuthPerformanceAudit::active()) {
+                    return;
+                }
+
+                $startedAt = $this->now();
+                $model = $payload[0] ?? null;
+                $finishedAt = $this->now();
+
+                self::addAuthAuditStep(
+                    "Model event: {$modelEvent}",
+                    $startedAt,
+                    $finishedAt,
+                    ($finishedAt - $startedAt) * 1000,
+                    [
+                        'event' => $eventName,
+                        'model' => is_object($model) ? $model::class : null,
+                        'observers' => 'included in Laravel model event dispatch when registered',
+                    ]
+                );
+            });
+        }
+
+        Event::listen(RetrievingKey::class, function (RetrievingKey $event): void {
+            if (! AuthPerformanceAudit::active()) {
+                return;
+            }
+
+            self::$authCacheReads[$this->cacheReadKey($event->storeName, $event->key)] = $this->now();
+        });
+
+        foreach ([CacheHit::class, CacheMissed::class] as $cacheReadFinishedEvent) {
+            Event::listen($cacheReadFinishedEvent, function ($event): void {
+                if (! AuthPerformanceAudit::active()) {
+                    return;
+                }
+
+                $finishedAt = $this->now();
+                $key = $this->cacheReadKey($event->storeName, $event->key);
+                $startedAt = self::$authCacheReads[$key] ?? $finishedAt;
+                unset(self::$authCacheReads[$key]);
+
+                self::addAuthAuditStep(
+                    'Cache::get() inside Sanctum authentication',
+                    $startedAt,
+                    $finishedAt,
+                    ($finishedAt - $startedAt) * 1000,
+                    [
+                        'store' => $event->storeName,
+                        'key' => $event->key,
+                        'result' => $event instanceof CacheHit ? 'hit' : 'miss',
+                    ]
+                );
+            });
+        }
+
+        Event::listen(KeyWritten::class, function (KeyWritten $event): void {
+            if (! AuthPerformanceAudit::active()) {
+                return;
+            }
+
+            $startedAt = $this->now();
+            $finishedAt = $this->now();
+
+            self::addAuthAuditStep(
+                'Cache::put() inside Sanctum authentication',
+                $startedAt,
+                $finishedAt,
+                ($finishedAt - $startedAt) * 1000,
+                [
+                    'store' => $event->storeName,
+                    'key' => $event->key,
+                    'duration_note' => 'Laravel KeyWritten event fires after write; exact write duration is not exposed by the event.',
+                ]
+            );
         });
 
         Event::listen(RouteMatched::class, function (): void {
@@ -411,15 +528,34 @@ class PerformanceProfiler
     }
 
     /**
-     * @param  array<int, array{name: string, start_ms: float, end_ms: float, duration_ms: float}>  $steps
-     * @return array{steps: array<int, array{name: string, start_ms: float, end_ms: float, duration_ms: float}>, slowest: array{name: string, start_ms: float, end_ms: float, duration_ms: float}|null}
+     * @param  array<int, array{name: string, start_ms: float, end_ms: float, duration_ms: float, meta?: array<string, mixed>}>  $steps
+     * @return array{steps: array<int, array{name: string, start_ms: float, end_ms: float, duration_ms: float, meta?: array<string, mixed>}>, slowest: array{name: string, start_ms: float, end_ms: float, duration_ms: float, meta?: array<string, mixed>}|null, total_ms: float|null}
      */
     private function formattedAuthAudit(array $steps): array
     {
         $slowest = null;
+        $firstStart = null;
+        $lastEnd = null;
+        $wrapperSteps = [
+            'Authenticate middleware',
+            'Sanctum Guard',
+            'PersonalAccessToken lookup',
+            'PersonalAccessToken query first() total',
+            'isValidAccessToken()',
+            'Retrieve related user model',
+            'User lookup',
+            'User relation first() total',
+            'PersonalAccessToken last_used_at update',
+        ];
 
         foreach ($steps as $step) {
-            if ($slowest === null || (float) $step['duration_ms'] > (float) $slowest['duration_ms']) {
+            $firstStart = $firstStart === null ? (float) $step['start_ms'] : min($firstStart, (float) $step['start_ms']);
+            $lastEnd = $lastEnd === null ? (float) $step['end_ms'] : max($lastEnd, (float) $step['end_ms']);
+            $isWrapper = in_array((string) $step['name'], $wrapperSteps, true)
+                || str_starts_with((string) $step['name'], 'auth:')
+                || str_starts_with((string) $step['name'], 'Sanctum configured guard');
+
+            if (! $isWrapper && ($slowest === null || (float) $step['duration_ms'] > (float) $slowest['duration_ms'])) {
                 $slowest = $step;
             }
         }
@@ -427,6 +563,7 @@ class PerformanceProfiler
         return [
             'steps' => $steps,
             'slowest' => $slowest,
+            'total_ms' => $firstStart !== null && $lastEnd !== null ? round($lastEnd - $firstStart, 2) : null,
         ];
     }
 
@@ -444,15 +581,24 @@ class PerformanceProfiler
             $authAuditLines[] = 'START '.$step['start_ms'].' ms';
             $authAuditLines[] = 'END '.$step['end_ms'].' ms';
             $authAuditLines[] = 'DURATION '.$step['duration_ms'].' ms';
+
+            foreach (($step['meta'] ?? []) as $key => $detail) {
+                $authAuditLines[] = strtoupper(str_replace('_', ' ', (string) $key)).': '.$this->formatAuditDetail($detail);
+            }
+
             $authAuditLines[] = '';
         }
 
+        $authAuditLines[] = 'TOTAL';
+        $authAuditLines[] = ($profile['auth_audit']['total_ms'] ?? 'n/a').' ms';
+        $authAuditLines[] = '';
+
         if ($profile['auth_audit']['slowest'] !== null) {
             $slowest = $profile['auth_audit']['slowest'];
-            $authAuditLines[] = 'SLOWEST AUTH FUNCTION:';
+            $authAuditLines[] = 'SLOWEST INTERNAL STEP';
             $authAuditLines[] = $slowest['name'].' - '.$slowest['duration_ms'].' ms';
         } else {
-            $authAuditLines[] = 'SLOWEST AUTH FUNCTION:';
+            $authAuditLines[] = 'SLOWEST INTERNAL STEP';
             $authAuditLines[] = 'n/a';
         }
 
@@ -500,7 +646,7 @@ class PerformanceProfiler
             'AUTHENTICATE MIDDLEWARE:',
             $ms($profile['authenticate_middleware_ms']).' ('.$profile['authenticate_middleware_count'].' calls)',
             '',
-            'DEEP AUTHENTICATION PERFORMANCE AUDIT:',
+            'SANCTUM INTERNAL PROFILER:',
             ...$authAuditLines,
             '',
             'THROTTLE MIDDLEWARE:',
@@ -556,6 +702,28 @@ class PerformanceProfiler
             '',
             '==============================',
         ]);
+    }
+
+    private function formatAuditDetail(mixed $detail): string
+    {
+        if (is_array($detail)) {
+            return json_encode($detail, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '[]';
+        }
+
+        if (is_bool($detail)) {
+            return $detail ? 'true' : 'false';
+        }
+
+        if ($detail === null) {
+            return 'null';
+        }
+
+        return (string) $detail;
+    }
+
+    private function cacheReadKey(?string $store, mixed $key): string
+    {
+        return (string) $store.'|'.(is_scalar($key) ? (string) $key : md5(json_encode($key) ?: serialize($key)));
     }
 
     private function now(): float

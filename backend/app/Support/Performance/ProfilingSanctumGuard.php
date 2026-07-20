@@ -36,10 +36,7 @@ class ProfilingSanctumGuard
                 }
             }
 
-            $token = AuthPerformanceAudit::measure(
-                'Sanctum bearer token extraction',
-                fn (): ?string => $this->getTokenFromRequest($request)
-            );
+            $token = $this->getTokenFromRequest($request);
 
             if (! $token) {
                 return null;
@@ -49,7 +46,7 @@ class ProfilingSanctumGuard
 
             $accessToken = $model::findToken($token);
 
-            if (! AuthPerformanceAudit::measure('Sanctum access token validation', fn (): bool => $this->isValidAccessToken($accessToken))) {
+            if (! AuthPerformanceAudit::measure('isValidAccessToken()', fn (): bool => $this->isValidAccessToken($accessToken))) {
                 return null;
             }
 
@@ -65,7 +62,7 @@ class ProfilingSanctumGuard
             );
 
             AuthPerformanceAudit::measure(
-                'Authentication event: TokenAuthenticated',
+                'Dispatch TokenAuthenticated event',
                 fn () => event(new TokenAuthenticated($accessToken))
             );
 
@@ -76,7 +73,7 @@ class ProfilingSanctumGuard
                 );
             }
 
-            return $tokenable;
+            return AuthPerformanceAudit::measure('Return authenticated user', fn () => $tokenable);
         });
     }
 
@@ -90,21 +87,35 @@ class ProfilingSanctumGuard
     protected function getTokenFromRequest(Request $request): ?string
     {
         if (is_callable(Sanctum::$accessTokenRetrievalCallback)) {
-            return (string) (Sanctum::$accessTokenRetrievalCallback)($request);
+            return AuthPerformanceAudit::measure(
+                'Bearer token extraction',
+                fn (): string => (string) (Sanctum::$accessTokenRetrievalCallback)($request)
+            );
         }
 
-        $token = $request->bearerToken();
+        $token = AuthPerformanceAudit::measure(
+            'Bearer token extraction',
+            fn (): ?string => $request->bearerToken()
+        );
 
         return $this->isValidBearerToken($token) ? $token : null;
     }
 
     protected function isValidBearerToken(?string $token = null): bool
     {
-        if (! is_null($token) && str_contains($token, '|')) {
+        $hasIdPrefix = AuthPerformanceAudit::measure(
+            'Token format detection',
+            fn (): bool => ! is_null($token) && str_contains($token, '|')
+        );
+
+        if ($hasIdPrefix) {
             $model = new Sanctum::$personalAccessTokenModel;
 
             if ($model->getKeyType() === 'int') {
-                [$id, $token] = explode('|', $token, 2);
+                [$id, $token] = AuthPerformanceAudit::measure(
+                    "explode('|', token)",
+                    fn (): array => explode('|', (string) $token, 2)
+                );
 
                 return ctype_digit($id) && ! empty($token);
             }
@@ -119,17 +130,29 @@ class ProfilingSanctumGuard
             return false;
         }
 
-        $tokenable = AuthPerformanceAudit::measure(
+        $tokenable = AuthPerformanceAudit::measure('Retrieve related user model', fn () => AuthPerformanceAudit::measure(
             'User lookup',
-            fn () => $accessToken->tokenable
-        );
+            fn () => AuthPerformanceAudit::measure('User relation first() total', fn () => $accessToken->tokenable)
+        ));
+
+        AuthPerformanceAudit::annotateLastSqlRows('Execute User SQL', $tokenable ? 1 : 0);
 
         AuthPerformanceAudit::measure('User model hydration', fn () => $tokenable);
         AuthPerformanceAudit::measure('Authentication eager loaded relationships', fn (): array => $tokenable?->getRelations() ?? []);
 
+        $expirationValid = AuthPerformanceAudit::measure(
+            'Token expiration check',
+            fn (): bool => (! $this->expiration || $accessToken->created_at->gt(now()->subMinutes($this->expiration)))
+                && (! $accessToken->expires_at || ! $accessToken->expires_at->isPast())
+        );
+
+        AuthPerformanceAudit::measure(
+            'Token abilities check',
+            fn (): array => $accessToken->abilities ?? []
+        );
+
         $isValid =
-            (! $this->expiration || $accessToken->created_at->gt(now()->subMinutes($this->expiration)))
-            && (! $accessToken->expires_at || ! $accessToken->expires_at->isPast())
+            $expirationValid
             && AuthPerformanceAudit::measure(
                 'Sanctum token provider validation',
                 fn (): bool => $this->hasValidProvider($tokenable)
@@ -158,16 +181,21 @@ class ProfilingSanctumGuard
 
     protected function updateLastUsedAt($accessToken): void
     {
+        AuthPerformanceAudit::measure(
+            'last_used_at update',
+            fn () => $accessToken->forceFill(['last_used_at' => now()])
+        );
+
         if (method_exists($accessToken->getConnection(), 'hasModifiedRecords') &&
             method_exists($accessToken->getConnection(), 'setRecordModificationState')) {
             $hasModifiedRecords = $accessToken->getConnection()->hasModifiedRecords();
-            $accessToken->forceFill(['last_used_at' => now()])->save();
+            AuthPerformanceAudit::measure('Save updated token', fn (): bool => $accessToken->save());
 
             $accessToken->getConnection()->setRecordModificationState($hasModifiedRecords);
 
             return;
         }
 
-        $accessToken->forceFill(['last_used_at' => now()])->save();
+        AuthPerformanceAudit::measure('Save updated token', fn (): bool => $accessToken->save());
     }
 }

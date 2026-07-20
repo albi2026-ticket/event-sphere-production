@@ -9,14 +9,17 @@ class AuthPerformanceAudit
     private static int $depth = 0;
 
     /**
-     * @var array<int, array{name: string, started_at: float}>
+     * @var array<int, array{name: string, started_at: float, meta: array<string, mixed>}>
      */
     private static array $stack = [];
 
-    public static function measure(string $name, callable $callback): mixed
+    /**
+     * @param array<string, mixed> $meta
+     */
+    public static function measure(string $name, callable $callback, array $meta = []): mixed
     {
         self::startContext();
-        $id = self::start($name);
+        $id = self::start($name, $meta);
 
         try {
             return $callback();
@@ -26,12 +29,16 @@ class AuthPerformanceAudit
         }
     }
 
-    public static function start(string $name): int
+    /**
+     * @param array<string, mixed> $meta
+     */
+    public static function start(string $name, array $meta = []): int
     {
         $id = count(self::$stack) + 1;
         self::$stack[$id] = [
             'name' => $name,
             'started_at' => microtime(true),
+            'meta' => $meta,
         ];
 
         return $id;
@@ -51,8 +58,28 @@ class AuthPerformanceAudit
             $step['name'],
             $step['started_at'],
             $finishedAt,
-            ($finishedAt - $step['started_at']) * 1000
+            ($finishedAt - $step['started_at']) * 1000,
+            $step['meta']
         );
+    }
+
+    /**
+     * @param array<string, mixed> $meta
+     */
+    public static function record(string $name, float $startedAt, float $finishedAt, array $meta = []): void
+    {
+        PerformanceProfiler::addAuthAuditStep(
+            $name,
+            $startedAt,
+            $finishedAt,
+            ($finishedAt - $startedAt) * 1000,
+            $meta
+        );
+    }
+
+    public static function annotateLastSqlRows(string $name, int $rows): void
+    {
+        PerformanceProfiler::annotateLastAuthSqlRows($name, $rows);
     }
 
     public static function startContext(): void
