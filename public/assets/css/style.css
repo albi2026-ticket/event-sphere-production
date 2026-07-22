@@ -5714,83 +5714,41 @@ textarea.form-control:focus {
   }
 }
 
-/* ---------- User dashboard tickets responsive containment ---------- */
+/* ---------- User dashboard tickets section containment ---------- */
 @media (max-width: 768px) {
-  .user-dashboard-page [data-dashboard-section="tickets"],
-  .user-dashboard-page [data-dashboard-section="tickets"] .card-pro,
-  .user-dashboard-page [data-dashboard-section="tickets"] .card-pro > .d-flex,
-  .user-dashboard-page [data-dashboard-section="tickets"] [data-dashboard-tickets],
-  .user-dashboard-page [data-dashboard-section="tickets"] [data-ticket-id],
-  .user-dashboard-page [data-dashboard-section="tickets"] .qr-ticket,
-  .user-dashboard-page [data-dashboard-section="tickets"] .qr-ticket .info,
-  .user-dashboard-page [data-dashboard-section="tickets"] .ticket-meta,
-  .user-dashboard-page [data-dashboard-section="tickets"] .ticket-codes,
-  .user-dashboard-page [data-dashboard-section="tickets"] .ticket-actions,
-  .user-dashboard-page [data-dashboard-section="tickets"] [data-ticket-pagination] {
+  .user-dashboard-page #tickets[data-dashboard-section="tickets"] > .card-pro,
+  .user-dashboard-page #tickets[data-dashboard-section="tickets"] > .card-pro > .d-flex:has(.dashboard-tabs),
+  .user-dashboard-page #tickets[data-dashboard-section="tickets"] > .card-pro > .d-flex:has(.dashboard-tabs) > *,
+  .user-dashboard-page #tickets[data-dashboard-section="tickets"] [data-dashboard-tickets] {
     min-width: 0;
     max-width: 100%;
   }
 
-  .user-dashboard-page [data-dashboard-section="tickets"] .card-pro {
-    overflow: clip;
-  }
-
-  .user-dashboard-page [data-dashboard-section="tickets"] .card-pro > .d-flex:has(.dashboard-search) {
+  .user-dashboard-page #tickets[data-dashboard-section="tickets"] > .card-pro > .d-flex:has(.dashboard-tabs) {
     width: 100%;
   }
 
-  .user-dashboard-page [data-dashboard-section="tickets"] .card-pro > .d-flex:has(.dashboard-search) > .d-flex {
+  .user-dashboard-page #tickets[data-dashboard-section="tickets"] .dashboard-tabs {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .user-dashboard-page #tickets[data-dashboard-section="tickets"] > .card-pro > .d-flex:has(.dashboard-tabs) > .d-flex {
     flex: 1 1 100%;
     min-width: 0;
     width: 100%;
   }
 
-  .user-dashboard-page [data-dashboard-section="tickets"] .dashboard-tabs {
-    max-width: 100%;
-  }
-
-  .user-dashboard-page [data-dashboard-section="tickets"] .dashboard-search,
-  .user-dashboard-page [data-dashboard-section="tickets"] .dashboard-select {
-    flex: 1 1 100%;
+  .user-dashboard-page #tickets[data-dashboard-section="tickets"] .dashboard-search,
+  .user-dashboard-page #tickets[data-dashboard-section="tickets"] .dashboard-select {
     min-width: 0;
-    width: 100%;
   }
 
-  .user-dashboard-page [data-dashboard-section="tickets"] [data-dashboard-tickets] {
+  .user-dashboard-page #tickets[data-dashboard-section="tickets"] [data-dashboard-tickets] {
     --bs-gutter-x: 0;
     margin-left: 0;
     margin-right: 0;
     width: 100%;
-  }
-
-  .user-dashboard-page [data-dashboard-section="tickets"] [data-ticket-id] {
-    padding-left: 0;
-    padding-right: 0;
-    width: 100%;
-  }
-
-  .user-dashboard-page [data-dashboard-section="tickets"] .qr-ticket {
-    width: 100%;
-  }
-
-  .user-dashboard-page [data-dashboard-section="tickets"] .qr-ticket h5,
-  .user-dashboard-page [data-dashboard-section="tickets"] .ticket-meta small,
-  .user-dashboard-page [data-dashboard-section="tickets"] .ticket-codes,
-  .user-dashboard-page [data-dashboard-section="tickets"] .ticket-code,
-  .user-dashboard-page [data-dashboard-section="tickets"] .order-code {
-    overflow-wrap: anywhere;
-    word-break: break-word;
-  }
-
-  .user-dashboard-page [data-dashboard-section="tickets"] .ticket-actions {
-    width: 100%;
-  }
-}
-
-@media (min-width: 576px) and (max-width: 768px) {
-  .user-dashboard-page [data-dashboard-section="tickets"] .ticket-actions .btn {
-    flex: 1 1 calc(50% - .5rem);
-    white-space: normal;
   }
 }
 
