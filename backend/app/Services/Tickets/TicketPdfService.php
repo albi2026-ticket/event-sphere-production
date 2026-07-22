@@ -123,19 +123,20 @@ class TicketPdfService
         $pdf->rect(34, 154, 527, 86, true);
 
         $this->setTextColor($pdf, self::BRAND_TEXT);
-        $pdf->text(58, 188, $data['event_title'], 26, true, 460);
+        $titleHeight = $pdf->textBox(58, 184, $data['event_title'], 23, true, 338, 2, 27);
         $this->setTextColor($pdf, self::BRAND_MUTED);
-        $pdf->text(58, 224, $data['event_date'].'  |  '.$data['event_time'].'  |  '.$data['timezone'], 11, false, 350);
+        $pdf->textBox(58, 190 + $titleHeight, $data['event_date'].'  |  '.$data['event_time'].'  |  '.$data['timezone'], 10, false, 338, 2, 14);
         $this->statusPill($pdf, 428, 188, $data['ticket_status']);
 
         $this->setTextColor($pdf, self::BRAND_TEXT);
         $pdf->sectionTitle(58, 276, 'Event Details');
-        $pdf->field(58, 304, 'Venue', $data['venue']);
-        $pdf->field(58, 354, 'City', $data['city']);
-        $pdf->field(58, 404, 'Ticket Type', $data['ticket_type']);
-        $pdf->field(58, 454, 'Attendee', $data['attendee_name']);
-        $pdf->field(58, 504, 'Order Number', $data['order_number']);
-        $pdf->field(58, 554, 'Ticket Number', $data['ticket_number']);
+        $fieldY = 304;
+        $fieldY = $this->fieldBox($pdf, 58, $fieldY, 'Venue', $data['venue'], 228, 3) + 14;
+        $fieldY = $this->fieldBox($pdf, 58, $fieldY, 'City', $data['city'], 228, 1) + 14;
+        $fieldY = $this->fieldBox($pdf, 58, $fieldY, 'Ticket Type', $data['ticket_type'], 228, 2) + 14;
+        $fieldY = $this->fieldBox($pdf, 58, $fieldY, 'Attendee', $data['attendee_name'], 228, 2) + 14;
+        $fieldY = $this->fieldBox($pdf, 58, $fieldY, 'Order Number', $data['order_number'], 228, 1) + 14;
+        $this->fieldBox($pdf, 58, $fieldY, 'Ticket Number', $data['ticket_number'], 228, 1);
 
         $pdf->setFillColor(255, 255, 255);
         $this->setStrokeColor($pdf, self::BRAND_NAVY);
@@ -176,17 +177,17 @@ class TicketPdfService
         $pdf->text(42, 96, 'This page is your proof of purchase. It is not required for QR scanning.', 10);
 
         $this->sectionCard($pdf, 42, 142, 244, 116, 'Purchaser Information');
-        $pdf->field(62, 184, 'Purchaser Name', $data['purchaser_name']);
-        $pdf->field(62, 224, 'Purchaser Email', $data['purchaser_email']);
+        $this->fieldBox($pdf, 62, 184, 'Purchaser Name', $data['purchaser_name'], 204, 2, 9);
+        $this->fieldBox($pdf, 62, 224, 'Purchaser Email', $data['purchaser_email'], 204, 2, 9);
 
         $this->sectionCard($pdf, 310, 142, 244, 116, 'Order Information');
-        $pdf->field(330, 184, 'Order Number', $data['order_number']);
-        $pdf->field(330, 224, 'Purchase Date', $data['purchase_date']);
+        $this->fieldBox($pdf, 330, 184, 'Order Number', $data['order_number'], 204, 2, 9);
+        $this->fieldBox($pdf, 330, 224, 'Purchase Date', $data['purchase_date'], 204, 2, 9);
 
         $this->sectionCard($pdf, 42, 286, 512, 102, 'Event Information');
-        $pdf->field(62, 328, 'Event Name', $data['event_title']);
-        $pdf->field(62, 368, 'Event Date / Time', $data['event_date'].' at '.$data['event_time'].' '.$data['timezone']);
-        $pdf->field(318, 368, 'Venue', $data['venue']);
+        $this->fieldBox($pdf, 62, 328, 'Event Name', $data['event_title'], 456, 2, 9);
+        $this->fieldBox($pdf, 62, 368, 'Event Date / Time', $data['event_date'].' at '.$data['event_time'].' '.$data['timezone'], 216, 2, 9);
+        $this->fieldBox($pdf, 318, 368, 'Venue', $data['venue'], 216, 2, 9);
 
         $pdf->sectionTitle(42, 430, 'Ticket Breakdown');
         $this->setFillColor($pdf, self::BRAND_FOOTER);
@@ -203,18 +204,19 @@ class TicketPdfService
             $unit = (float) ($lineItem?->unit_price ?? $ticket->ticketType?->price ?? 0);
             $subtotal = $qty * $unit;
             $this->setTextColor($pdf, self::BRAND_TEXT);
-            $pdf->text(58, $y, $lineItem?->ticket_type_name ?: $lineItem?->ticketType?->name ?: $ticket->ticketType?->name ?: 'Ticket', 10, false, 210);
-            $pdf->text(304, $y, (string) $qty, 10);
-            $pdf->text(362, $y, $this->money($unit, $data['currency']), 10);
-            $pdf->text(466, $y, $this->money($subtotal, $data['currency']), 10);
+            $lineHeight = $pdf->textBox(58, $y, $lineItem?->ticket_type_name ?: $lineItem?->ticketType?->name ?: $ticket->ticketType?->name ?: 'Ticket', 8, false, 214, 2, 10);
+            $pdf->text(304, $y, (string) $qty, 9);
+            $pdf->textBox(362, $y, $this->money($unit, $data['currency']), 8, false, 82, 2, 10);
+            $pdf->textBox(466, $y, $this->money($subtotal, $data['currency']), 8, false, 76, 2, 10);
             $this->setStrokeColor($pdf, self::BRAND_BORDER);
-            $pdf->line(42, $y + 18, 554, $y + 18);
-            $y += 36;
+            $rowHeight = max(24, $lineHeight + 8);
+            $pdf->line(42, $y + $rowHeight, 554, $y + $rowHeight);
+            $y += $rowHeight + 8;
         }
 
         $serviceFee = (float) ($order?->service_fee ?? $items->sum(fn ($lineItem) => (float) ($lineItem?->service_fee ?? 0)));
         $totalPaid = (float) ($order?->total ?? ($items->sum(fn ($lineItem) => (float) ($lineItem?->total ?? 0)) + $serviceFee));
-        $summaryY = max($y + 8, 600);
+        $summaryY = max($y + 4, 584);
         $this->setTextColor($pdf, self::BRAND_MUTED);
         $pdf->text(362, $summaryY, 'Service Fee', 10, true);
         $pdf->text(466, $summaryY, $this->money($serviceFee, $data['currency']), 10);
@@ -222,16 +224,17 @@ class TicketPdfService
         $pdf->text(362, $summaryY + 28, 'Total Paid', 12, true);
         $pdf->text(466, $summaryY + 28, $this->money($totalPaid, $data['currency']), 12, true);
 
-        $pdf->sectionTitle(42, 664, 'Attendees');
-        $attendeeY = 692;
+        $attendeeSectionY = max(650, $summaryY + 56);
+        $pdf->sectionTitle(42, $attendeeSectionY, 'Attendees');
+        $attendeeY = $attendeeSectionY + 28;
         foreach ($attendees->take(5) as $index => $attendeeTicket) {
             $name = $attendeeTicket->attendee_name ?: $attendeeTicket->user?->name ?: 'Guest';
             $email = $attendeeTicket->attendee_email ?: $attendeeTicket->user?->email ?: '-';
             $this->setTextColor($pdf, self::BRAND_TEXT);
-            $pdf->text(58, $attendeeY, ($index + 1).'. '.$name, 10, true, 220);
+            $nameHeight = $pdf->textBox(58, $attendeeY, ($index + 1).'. '.$name, 9, true, 220, 2, 12);
             $this->setTextColor($pdf, self::BRAND_MUTED);
-            $pdf->text(300, $attendeeY, $email, 9, false, 220);
-            $attendeeY += 24;
+            $emailHeight = $pdf->textBox(300, $attendeeY, $email, 8, false, 220, 2, 11);
+            $attendeeY += max($nameHeight, $emailHeight, 18) + 8;
         }
 
         $this->setStrokeColor($pdf, self::BRAND_BORDER);
@@ -318,6 +321,15 @@ class TicketPdfService
         $this->setStrokeColor($pdf, self::BRAND_BORDER);
         $pdf->rect($x, $y, $w, $h, true, true);
         $pdf->sectionTitle($x + 20, $y + 28, $title);
+    }
+
+    protected function fieldBox(SimpleTicketPdf $pdf, float $x, float $y, string $label, string $value, float $width, int $maxLines = 3, int $valueSize = 10): float
+    {
+        $this->setTextColor($pdf, self::BRAND_MUTED);
+        $pdf->text($x, $y, $label, 8, true);
+        $this->setTextColor($pdf, self::BRAND_TEXT);
+
+        return $y + 16 + $pdf->textBox($x, $y + 16, $value, $valueSize, false, $width, $maxLines, $valueSize + 3);
     }
 
     protected function brandHeader(SimpleTicketPdf $pdf, string $title, string $eyebrow, float $height = 132): void
@@ -425,13 +437,35 @@ class SimpleTicketPdf
     public function text(float $x, float $y, string $text, int $size = 10, bool $bold = false, float $maxWidth = 0, string $align = 'left'): void
     {
         $lines = $maxWidth > 0 ? $this->wrap($text, $size, $maxWidth) : [$text];
+        $this->drawTextLines($x, $y, $lines, $size, $bold, $maxWidth, $align, $size + 4);
+    }
+
+    public function textBox(float $x, float $y, string $text, int $size = 10, bool $bold = false, float $maxWidth = 0, int $maxLines = 0, ?float $lineHeight = null, string $align = 'left'): float
+    {
+        $lineHeight ??= $size + 4;
+        $lines = $maxWidth > 0 ? $this->wrap($text, $size, $maxWidth) : [$text];
+
+        if ($maxLines > 0 && count($lines) > $maxLines) {
+            [$lines, $size] = $this->fitLines($text, $size, $maxWidth, $maxLines);
+        }
+
+        $this->drawTextLines($x, $y, $lines, $size, $bold, $maxWidth, $align, $lineHeight);
+
+        return count($lines) * $lineHeight;
+    }
+
+    /**
+     * @param array<int, string> $lines
+     */
+    protected function drawTextLines(float $x, float $y, array $lines, int $size, bool $bold, float $maxWidth, string $align, float $lineHeight): void
+    {
         foreach ($lines as $index => $line) {
             $tx = $x;
             if ($align === 'center' && $maxWidth > 0) {
                 $tx = $x + max(0, ($maxWidth - $this->textWidth($line, $size)) / 2);
             }
             $font = $bold ? 'F2' : 'F1';
-            $this->append(sprintf("BT /%s %d Tf %.2F %.2F Td (%s) Tj ET\n", $font, $size, $tx, $this->height - $y - ($index * ($size + 4)), $this->escape($line)));
+            $this->append(sprintf("BT /%s %d Tf %.2F %.2F Td (%s) Tj ET\n", $font, $size, $tx, $this->height - $y - ($index * $lineHeight), $this->escape($line)));
         }
     }
 
@@ -523,14 +557,18 @@ class SimpleTicketPdf
         $line = '';
 
         foreach ($words as $word) {
-            $candidate = $line === '' ? $word : $line.' '.$word;
-            if ($this->textWidth($candidate, $size) <= $maxWidth || $line === '') {
-                $line = $candidate;
-                continue;
-            }
+            $wordParts = $this->splitLongWord($word, $size, $maxWidth);
 
-            $lines[] = $line;
-            $line = $word;
+            foreach ($wordParts as $part) {
+                $candidate = $line === '' ? $part : $line.' '.$part;
+                if ($this->textWidth($candidate, $size) <= $maxWidth || $line === '') {
+                    $line = $candidate;
+                    continue;
+                }
+
+                $lines[] = $line;
+                $line = $part;
+            }
         }
 
         if ($line !== '') {
@@ -538,6 +576,38 @@ class SimpleTicketPdf
         }
 
         return $lines ?: [''];
+    }
+
+    /**
+     * @return array{0: array<int, string>, 1: int}
+     */
+    protected function fitLines(string $text, int $size, float $maxWidth, int $maxLines): array
+    {
+        for ($fontSize = $size; $fontSize >= 7; $fontSize--) {
+            $lines = $this->wrap($text, $fontSize, $maxWidth);
+            if (count($lines) <= $maxLines) {
+                return [$lines, $fontSize];
+            }
+        }
+
+        $lines = $this->wrap($text, 7, $maxWidth);
+
+        return [array_slice($lines, 0, $maxLines), 7];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function splitLongWord(string $word, int $size, float $maxWidth): array
+    {
+        if ($maxWidth <= 0 || $this->textWidth($word, $size) <= $maxWidth) {
+            return [$word];
+        }
+
+        $maxCharacters = max(1, (int) floor($maxWidth / ($size * 0.5)));
+        $parts = str_split($word, $maxCharacters);
+
+        return $parts ?: [$word];
     }
 
     protected function textWidth(string $text, int $size): float
