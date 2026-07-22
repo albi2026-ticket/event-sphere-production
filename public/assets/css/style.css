@@ -1761,7 +1761,10 @@ a:hover { color: var(--secondary); }
   transition: opacity .2s ease;
   z-index: 1030;
 }
-.dash-main { padding: 2rem; }
+.dash-main {
+  min-width: 0;
+  padding: 2rem;
+}
 .dash-side .menu a {
   display: flex; align-items: center; gap: .75rem; padding: .7rem .85rem;
   color: var(--muted); border-radius: 12px; font-weight: 500; margin-bottom: .25rem;
@@ -5711,44 +5714,6 @@ textarea.form-control:focus {
 
   [data-dashboard-tickets] .ticket-actions {
     gap: .55rem !important;
-  }
-}
-
-/* ---------- User dashboard tickets section containment ---------- */
-@media (max-width: 768px) {
-  .user-dashboard-page #tickets[data-dashboard-section="tickets"] > .card-pro,
-  .user-dashboard-page #tickets[data-dashboard-section="tickets"] > .card-pro > .d-flex:has(.dashboard-tabs),
-  .user-dashboard-page #tickets[data-dashboard-section="tickets"] > .card-pro > .d-flex:has(.dashboard-tabs) > *,
-  .user-dashboard-page #tickets[data-dashboard-section="tickets"] [data-dashboard-tickets] {
-    min-width: 0;
-    max-width: 100%;
-  }
-
-  .user-dashboard-page #tickets[data-dashboard-section="tickets"] > .card-pro > .d-flex:has(.dashboard-tabs) {
-    width: 100%;
-  }
-
-  .user-dashboard-page #tickets[data-dashboard-section="tickets"] .dashboard-tabs {
-    flex: 1 1 100%;
-    width: 100%;
-  }
-
-  .user-dashboard-page #tickets[data-dashboard-section="tickets"] > .card-pro > .d-flex:has(.dashboard-tabs) > .d-flex {
-    flex: 1 1 100%;
-    min-width: 0;
-    width: 100%;
-  }
-
-  .user-dashboard-page #tickets[data-dashboard-section="tickets"] .dashboard-search,
-  .user-dashboard-page #tickets[data-dashboard-section="tickets"] .dashboard-select {
-    min-width: 0;
-  }
-
-  .user-dashboard-page #tickets[data-dashboard-section="tickets"] [data-dashboard-tickets] {
-    --bs-gutter-x: 0;
-    margin-left: 0;
-    margin-right: 0;
-    width: 100%;
   }
 }
 
