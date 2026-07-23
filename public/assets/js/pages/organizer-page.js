@@ -70,6 +70,9 @@
     return new URLSearchParams(clean).toString();
   }
 
+  let checkInAudioContext = null;
+  let checkInFeedbackTimer = null;
+
   function cssVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
@@ -1175,11 +1178,57 @@
       ${validation.can_check_in ? `<button class="btn btn-primary-grad mt-3" type="button" data-checkin-confirm><i class="bi bi-check2-circle me-1"></i>Check In</button>` : ""}`;
   }
 
+  function showCheckInQrCapturedFeedback() {
+    const panel = $("[data-checkin-video]")?.closest(".qr-scanner-panel");
+    if (!panel) return;
+    let feedback = $("[data-checkin-captured-feedback]");
+    if (!feedback) {
+      feedback = document.createElement("div");
+      feedback.dataset.checkinCapturedFeedback = "true";
+      feedback.className = "alert alert-success py-2 px-3 mt-2 mb-0 small";
+      feedback.setAttribute("role", "status");
+      panel.insertAdjacentElement("afterend", feedback);
+    }
+    feedback.innerHTML = `<i class="bi bi-check2-circle me-1"></i>${esc(tr("scanner.qr_captured", "QR captured. Loading ticket..."))}`;
+    feedback.hidden = false;
+    clearTimeout(checkInFeedbackTimer);
+    checkInFeedbackTimer = window.setTimeout(() => {
+      feedback.hidden = true;
+    }, 1800);
+  }
+
+  function playCheckInQrCapturedBeep() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      checkInAudioContext ||= new AudioCtx();
+      if (checkInAudioContext.state === "suspended") checkInAudioContext.resume().catch(() => {});
+      const oscillator = checkInAudioContext.createOscillator();
+      const gain = checkInAudioContext.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(880, checkInAudioContext.currentTime);
+      gain.gain.setValueAtTime(0.0001, checkInAudioContext.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.08, checkInAudioContext.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, checkInAudioContext.currentTime + 0.12);
+      oscillator.connect(gain);
+      gain.connect(checkInAudioContext.destination);
+      oscillator.start();
+      oscillator.stop(checkInAudioContext.currentTime + 0.14);
+    } catch {
+      /* audio feedback is best-effort */
+    }
+  }
+
+  function scrollToCheckInResult() {
+    $("[data-checkin-result]")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   async function validateTicket(payload, method = "qr") {
     const body = { ...payload, event_id: selectedCheckInEventId(), method };
     const { data } = await api().fetch("/organizer/tickets/validate", { method: "POST", body });
     state.checkInResult = { ...data, payload: body };
     renderCheckInResult(state.checkInResult);
+    if (method === "mobile_scanner") scrollToCheckInResult();
     await Promise.all([loadCheckInStats(), loadCheckInLogs()]);
   }
 
@@ -1260,6 +1309,8 @@
         onDecode: async (raw) => {
           if (!raw || raw === state.lastScannedPayload) return;
           state.lastScannedPayload = raw;
+          showCheckInQrCapturedFeedback();
+          playCheckInQrCapturedBeep();
           await validateTicket(parseScannerPayload(raw), "mobile_scanner").catch((err) =>
             window.tkToast?.(err.message || tr("toast.scan_failed", "We couldn’t read this ticket. Try scanning again or use manual lookup."), "error"),
           );
