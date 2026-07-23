@@ -5351,6 +5351,17 @@ textarea.form-control:focus {
   --lux-glow-gold: 0 18px 58px rgba(212,167,90,.2);
 }
 
+[data-theme="light"] {
+  --lux-border: rgba(15,23,42,.105);
+  --lux-border-soft: rgba(15,23,42,.07);
+  --lux-surface: linear-gradient(180deg, rgba(255,255,255,.92), rgba(248,250,252,.72));
+  --lux-surface-strong: linear-gradient(145deg, rgba(255,255,255,.96), rgba(241,245,249,.82));
+  --lux-shadow: 0 18px 54px rgba(15,23,42,.09), 0 1px 0 rgba(255,255,255,.9) inset;
+  --lux-shadow-hover: 0 24px 70px rgba(15,23,42,.13), 0 0 0 1px rgba(91,140,255,.045) inset;
+  --lux-glow-primary: 0 16px 44px rgba(91,140,255,.18);
+  --lux-glow-gold: 0 16px 44px rgba(180,124,36,.16);
+}
+
 .section,
 .section-sm,
 .content-page,

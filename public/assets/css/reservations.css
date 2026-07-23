@@ -2896,3 +2896,106 @@ body.reservation-success-burst::after {
     display: none;
   }
 }
+
+/* ---- Welcome light theme polish ---- */
+[data-theme="light"] .welcome-bg {
+  background:
+    radial-gradient(1100px 640px at 12% -8%, rgba(91,140,255,.16), transparent 60%),
+    radial-gradient(980px 620px at 90% 108%, rgba(212,167,90,.14), transparent 62%),
+    radial-gradient(820px 560px at 50% 46%, rgba(124,92,255,.08), transparent 68%),
+    linear-gradient(180deg, #FBFCFF 0%, #F3F6FB 100%);
+}
+
+[data-theme="light"] .welcome-topbar .brand {
+  color: #172033;
+}
+
+[data-theme="light"] .welcome-topbar .btn-ghost {
+  background: rgba(255,255,255,.74);
+  border-color: rgba(15,23,42,.11);
+  color: #172033;
+  box-shadow: 0 10px 26px rgba(15,23,42,.06), 0 1px 0 rgba(255,255,255,.86) inset;
+}
+
+[data-theme="light"] .welcome-topbar .btn-ghost:hover {
+  background: #fff;
+  border-color: rgba(91,140,255,.24);
+  color: #0B0F19;
+}
+
+[data-theme="light"] .welcome-intro h1 {
+  color: #101827;
+}
+
+[data-theme="light"] .welcome-intro p {
+  color: #536176 !important;
+}
+
+[data-theme="light"] .eyebrow-res {
+  background: rgba(255,255,255,.78);
+  border-color: rgba(180,124,36,.24);
+  color: #7A561B;
+  box-shadow: 0 10px 28px rgba(15,23,42,.055), 0 1px 0 rgba(255,255,255,.86) inset;
+}
+
+[data-theme="light"] .choice-card {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.9));
+  border-color: rgba(15,23,42,.095);
+  box-shadow:
+    0 22px 58px rgba(15,23,42,.095),
+    0 1px 0 rgba(255,255,255,.86) inset;
+}
+
+[data-theme="light"] .choice-card .visual {
+  opacity: .2;
+  filter: saturate(1.05) contrast(1.04);
+}
+
+[data-theme="light"] .choice-card::after,
+[data-theme="light"] .welcome-choices .choice-card::after {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.74) 0%, rgba(248,250,252,.98) 72%),
+    radial-gradient(520px 260px at 20% 0%, rgba(91,140,255,.11), transparent 68%);
+}
+
+[data-theme="light"] .choice-card h3 {
+  color: #121A2A;
+}
+
+[data-theme="light"] .choice-card p {
+  color: #536176;
+}
+
+[data-theme="light"] .choice-card .features span {
+  background: rgba(255,255,255,.76);
+  border-color: rgba(15,23,42,.09);
+  color: #526174;
+  box-shadow: 0 1px 0 rgba(255,255,255,.72) inset;
+}
+
+[data-theme="light"] .choice-card.tickets:hover {
+  border-color: rgba(74,120,232,.3);
+  box-shadow:
+    0 28px 68px rgba(74,120,232,.16),
+    0 1px 0 rgba(255,255,255,.9) inset;
+}
+
+[data-theme="light"] .choice-card.reservations:hover {
+  border-color: rgba(180,124,36,.28);
+  box-shadow:
+    0 28px 68px rgba(180,124,36,.14),
+    0 1px 0 rgba(255,255,255,.9) inset;
+}
+
+[data-theme="light"] .welcome-choices .text-muted-pro,
+[data-theme="light"] .welcome-footer .text-muted-pro {
+  color: #667388 !important;
+}
+
+[data-theme="light"] .choice-card .btn-primary-grad,
+[data-theme="light"] .choice-card .btn-gold {
+  box-shadow:
+    0 14px 36px rgba(15,23,42,.12),
+    0 1px 0 rgba(255,255,255,.32) inset;
+}
