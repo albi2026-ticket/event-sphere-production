@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\App;
 
 class TicketController extends Controller
 {
@@ -61,6 +62,7 @@ class TicketController extends Controller
         abort_unless($request->user()->can('download', $ticket), 403);
 
         $this->tickets->markDownloaded($ticket);
+        $this->applyPdfLocale($request);
         $pdf = $this->ticketPdfs->download($ticket);
 
         return response($pdf['content'], 200, [
@@ -88,6 +90,7 @@ class TicketController extends Controller
         $this->authorizeSignedEmailTicketAccess($ticket);
 
         $this->tickets->markDownloaded($ticket);
+        $this->applyPdfLocale($request, $ticket);
         $pdf = $this->ticketPdfs->download($ticket);
 
         return response($pdf['content'], 200, [
@@ -112,5 +115,15 @@ class TicketController extends Controller
     {
         abort_unless($ticket->order?->payment_status === Order::PAYMENT_STATUS_PAID, SymfonyResponse::HTTP_FORBIDDEN);
         abort_if(in_array($ticket->status, [Ticket::STATUS_CANCELLED, Ticket::STATUS_REFUNDED], true), SymfonyResponse::HTTP_FORBIDDEN);
+    }
+
+    private function applyPdfLocale(Request $request, ?Ticket $ticket = null): void
+    {
+        $language = $request->headers->get('X-Tiketa-Language')
+            ?: $request->input('preferred_language')
+            ?: $request->user()?->preferred_language
+            ?: $ticket?->user?->preferred_language;
+
+        App::setLocale(in_array($language, ['en', 'sq'], true) ? $language : 'en');
     }
 }

@@ -32,7 +32,12 @@
   }
 
   async function downloadTicket(ticketId, ticketCode) {
-    const blob = await api().fetchBlob(`/tickets/${ticketId}/download`);
+    const language = window.TiketaLanguage?.getLanguage?.() || "en";
+    const blob = await api().fetchBlob(`/tickets/${ticketId}/download`, {
+      headers: {
+        "X-Tiketa-Language": ["en", "sq"].includes(language) ? language : "en",
+      },
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
