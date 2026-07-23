@@ -114,49 +114,53 @@ class TicketPdfService
         $pdf->addPage();
         $this->pageBackground($pdf);
 
-        $this->brandHeader($pdf, 'ENTRY TICKET', 'Your ticket is ready');
+        $this->brandHeader($pdf, 'Entry Ticket', 'Your ticket is ready');
 
-        $pdf->setFillColor(255, 255, 255);
-        $this->setStrokeColor($pdf, self::BRAND_BORDER);
-        $pdf->rect(34, 154, 527, 620, true, true);
+        $this->card($pdf, 34, 150, 527, 606);
         $this->setFillColor($pdf, self::BRAND_FOOTER);
-        $pdf->rect(34, 154, 527, 86, true);
+        $pdf->rect(34, 150, 527, 138, true);
 
-        $this->setTextColor($pdf, self::BRAND_TEXT);
-        $titleHeight = $pdf->textBox(58, 184, $data['event_title'], 23, true, 338, 2, 27);
         $this->setTextColor($pdf, self::BRAND_MUTED);
-        $pdf->textBox(58, 190 + $titleHeight, $data['event_date'].'  |  '.$data['event_time'].'  |  '.$data['timezone'], 10, false, 338, 2, 14);
-        $this->statusPill($pdf, 428, 188, $data['ticket_status']);
-
+        $pdf->text(58, 180, 'EVENT', 8, true);
         $this->setTextColor($pdf, self::BRAND_TEXT);
-        $pdf->sectionTitle(58, 276, 'Event Details');
-        $fieldY = 304;
-        $fieldY = $this->fieldBox($pdf, 58, $fieldY, 'Venue', $data['venue'], 228, 3) + 14;
-        $fieldY = $this->fieldBox($pdf, 58, $fieldY, 'City', $data['city'], 228, 1) + 14;
-        $fieldY = $this->fieldBox($pdf, 58, $fieldY, 'Ticket Type', $data['ticket_type'], 228, 2) + 14;
-        $fieldY = $this->fieldBox($pdf, 58, $fieldY, 'Attendee', $data['attendee_name'], 228, 2) + 14;
-        $fieldY = $this->fieldBox($pdf, 58, $fieldY, 'Order Number', $data['order_number'], 228, 1) + 14;
-        $this->fieldBox($pdf, 58, $fieldY, 'Ticket Number', $data['ticket_number'], 228, 1);
+        $titleHeight = $pdf->textBox(58, 204, $data['event_title'], 22, true, 330, 3, 27);
+        $this->setTextColor($pdf, self::BRAND_MUTED);
+        $pdf->textBox(58, 212 + $titleHeight, $data['event_date'].'  |  '.$data['event_time'].'  |  '.$data['timezone'], 9, false, 330, 2, 13);
+        $this->statusPill($pdf, 428, 190, $data['ticket_status']);
 
+        $this->sectionCard($pdf, 58, 312, 224, 312, 'Ticket Details');
+        $fieldY = 356;
+        $fieldY = $this->fieldBox($pdf, 78, $fieldY, 'Attendee', $data['attendee_name'], 184, 3, 9) + 10;
+        $fieldY = $this->fieldBox($pdf, 78, $fieldY, 'Ticket Type', $data['ticket_type'], 184, 3, 9) + 10;
+        $fieldY = $this->fieldBox($pdf, 78, $fieldY, 'Venue', $data['venue'], 184, 4, 8) + 10;
+        $fieldY = $this->fieldBox($pdf, 78, $fieldY, 'City', $data['city'], 184, 2, 8) + 10;
+        $fieldY = $this->fieldBox($pdf, 78, $fieldY, 'Order Number', $data['order_number'], 184, 2, 8) + 10;
+        $this->fieldBox($pdf, 78, $fieldY, 'Ticket Number', $data['ticket_number'], 184, 2, 9);
+
+        $this->sectionCard($pdf, 306, 312, 220, 312, 'Venue Scan');
         $pdf->setFillColor(255, 255, 255);
-        $this->setStrokeColor($pdf, self::BRAND_NAVY);
-        $pdf->rect(324, 278, 210, 210, true, true);
-        $pdf->drawQrSvg($this->tickets->qrSvg($ticket, 320), 342, 296, 174);
-        $this->setTextColor($pdf, self::BRAND_TEXT);
-        $pdf->text(318, 514, 'Scan this QR code at the venue entrance.', 12, true, 222, 'center');
-        $this->setTextColor($pdf, self::BRAND_MUTED);
-        $pdf->text(318, 536, 'Tiketa Verification', 9, true, 222, 'center');
-        $pdf->text(318, 558, $data['ticket_uuid'], 7, false, 222, 'center');
-
         $this->setStrokeColor($pdf, self::BRAND_BORDER);
-        $pdf->line(58, 638, 536, 638);
-        $this->setTextColor($pdf, self::BRAND_MUTED);
-        $pdf->text(58, 670, 'Present this page at entry. Keep the QR code bright, flat, and unobstructed for scanning.', 10, false, 450);
-        $pdf->text(58, 704, 'Valid for one entry only. Duplicate, altered, cancelled, refunded, or already checked-in tickets are not valid.', 10, false, 450);
+        $pdf->rect(344, 350, 144, 144, true, true);
+        $pdf->drawQrSvg($this->tickets->qrSvg($ticket, 320), 354, 360, 124);
+
         $this->setTextColor($pdf, self::BRAND_TEXT);
-        $pdf->text(58, 744, 'Tiketa', 10, true);
+        $pdf->textBox(330, 526, 'Scan this QR code at the venue entrance.', 11, true, 172, 2, 15, 'center');
+        $this->setStrokeColor($pdf, self::BRAND_BORDER);
+        $pdf->line(330, 562, 502, 562);
         $this->setTextColor($pdf, self::BRAND_MUTED);
-        $pdf->text(448, 744, 'Page 1 of 2', 9);
+        $pdf->textBox(330, 584, 'Tiketa Verification', 8, true, 172, 1, 11, 'center');
+        $this->setTextColor($pdf, self::BRAND_TEXT);
+        $pdf->textBox(330, 606, $data['ticket_uuid'], 7, false, 172, 3, 10, 'center');
+
+        $this->setFillColor($pdf, self::BRAND_FOOTER);
+        $this->setStrokeColor($pdf, self::BRAND_BORDER);
+        $pdf->rect(58, 652, 468, 76, true, true);
+        $this->setTextColor($pdf, self::BRAND_TEXT);
+        $pdf->textBox(78, 684, 'Present this page at entry.', 10, true, 420, 1, 13);
+        $this->setTextColor($pdf, self::BRAND_MUTED);
+        $pdf->textBox(78, 706, 'Keep the QR code bright, flat, and unobstructed. Valid for one entry only; duplicate, altered, cancelled, refunded, or already checked-in tickets are not valid.', 8, false, 420, 3, 11);
+
+        $this->footer($pdf, 'Page 1 of 2');
     }
 
     /**
@@ -171,34 +175,35 @@ class TicketPdfService
         $pdf->addPage();
         $this->pageBackground($pdf);
 
-        $this->brandHeader($pdf, 'Ticket Purchase Receipt', 'Proof of purchase', 116);
-        $this->statusPill($pdf, 428, 60, $data['payment_status']);
+        $this->brandHeader($pdf, 'Ticket Purchase Receipt', 'Proof of purchase', 132);
+        $this->statusPill($pdf, 428, 66, $data['payment_status']);
         $this->setTextColor($pdf, self::BRAND_BLUE_SOFT);
-        $pdf->text(42, 96, 'This page is your proof of purchase. It is not required for QR scanning.', 10);
+        $pdf->textBox(42, 108, 'This page is your proof of purchase. It is not required for QR scanning.', 9, false, 360, 2, 12);
 
-        $this->sectionCard($pdf, 42, 142, 244, 116, 'Purchaser Information');
-        $this->fieldBox($pdf, 62, 184, 'Purchaser Name', $data['purchaser_name'], 204, 2, 9);
-        $this->fieldBox($pdf, 62, 224, 'Purchaser Email', $data['purchaser_email'], 204, 2, 9);
+        $this->sectionCard($pdf, 42, 166, 244, 128, 'Purchaser Information');
+        $this->fieldBox($pdf, 62, 210, 'Purchaser Name', $data['purchaser_name'], 204, 3, 9);
+        $this->fieldBox($pdf, 62, 254, 'Purchaser Email', $data['purchaser_email'], 204, 2, 9);
 
-        $this->sectionCard($pdf, 310, 142, 244, 116, 'Order Information');
-        $this->fieldBox($pdf, 330, 184, 'Order Number', $data['order_number'], 204, 2, 9);
-        $this->fieldBox($pdf, 330, 224, 'Purchase Date', $data['purchase_date'], 204, 2, 9);
+        $this->sectionCard($pdf, 310, 166, 244, 128, 'Order Information');
+        $this->fieldBox($pdf, 330, 210, 'Order Number', $data['order_number'], 204, 2, 9);
+        $this->fieldBox($pdf, 330, 254, 'Purchase Date', $data['purchase_date'], 204, 2, 9);
 
-        $this->sectionCard($pdf, 42, 286, 512, 102, 'Event Information');
-        $this->fieldBox($pdf, 62, 328, 'Event Name', $data['event_title'], 456, 2, 9);
-        $this->fieldBox($pdf, 62, 368, 'Event Date / Time', $data['event_date'].' at '.$data['event_time'].' '.$data['timezone'], 216, 2, 9);
-        $this->fieldBox($pdf, 318, 368, 'Venue', $data['venue'], 216, 2, 9);
+        $this->sectionCard($pdf, 42, 318, 512, 130, 'Event Information');
+        $this->fieldBox($pdf, 62, 362, 'Event Name', $data['event_title'], 456, 3, 9);
+        $this->fieldBox($pdf, 62, 414, 'Event Date / Time', $data['event_date'].' at '.$data['event_time'].' '.$data['timezone'], 216, 2, 9);
+        $this->fieldBox($pdf, 318, 414, 'Venue', $data['venue'], 216, 2, 9);
 
-        $pdf->sectionTitle(42, 430, 'Ticket Breakdown');
+        $pdf->sectionTitle(42, 486, 'Ticket Breakdown');
         $this->setFillColor($pdf, self::BRAND_FOOTER);
-        $pdf->rect(42, 448, 512, 30, true);
+        $this->setStrokeColor($pdf, self::BRAND_BORDER);
+        $pdf->rect(42, 504, 512, 30, true, true);
         $this->setTextColor($pdf, self::BRAND_TEXT);
-        $pdf->text(58, 468, 'Ticket Type', 9, true);
-        $pdf->text(300, 468, 'Qty', 9, true);
-        $pdf->text(362, 468, 'Unit Price', 9, true);
-        $pdf->text(466, 468, 'Subtotal', 9, true);
+        $pdf->text(58, 524, 'Ticket Type', 9, true);
+        $pdf->text(300, 524, 'Qty', 9, true);
+        $pdf->text(362, 524, 'Unit Price', 9, true);
+        $pdf->text(466, 524, 'Subtotal', 9, true);
 
-        $y = 500;
+        $y = 556;
         foreach ($items as $lineItem) {
             $qty = max(1, (int) ($lineItem?->quantity ?? 1));
             $unit = (float) ($lineItem?->unit_price ?? $ticket->ticketType?->price ?? 0);
@@ -216,7 +221,7 @@ class TicketPdfService
 
         $serviceFee = (float) ($order?->service_fee ?? $items->sum(fn ($lineItem) => (float) ($lineItem?->service_fee ?? 0)));
         $totalPaid = (float) ($order?->total ?? ($items->sum(fn ($lineItem) => (float) ($lineItem?->total ?? 0)) + $serviceFee));
-        $summaryY = max($y + 4, 584);
+        $summaryY = max($y + 4, 640);
         $this->setTextColor($pdf, self::BRAND_MUTED);
         $pdf->text(362, $summaryY, 'Service Fee', 10, true);
         $pdf->text(466, $summaryY, $this->money($serviceFee, $data['currency']), 10);
@@ -224,10 +229,13 @@ class TicketPdfService
         $pdf->text(362, $summaryY + 28, 'Total Paid', 12, true);
         $pdf->text(466, $summaryY + 28, $this->money($totalPaid, $data['currency']), 12, true);
 
-        $attendeeSectionY = max(650, $summaryY + 56);
+        $attendeeSectionY = max(704, $summaryY + 56);
         $pdf->sectionTitle(42, $attendeeSectionY, 'Attendees');
         $attendeeY = $attendeeSectionY + 28;
         foreach ($attendees->take(5) as $index => $attendeeTicket) {
+            if ($attendeeY > 752) {
+                break;
+            }
             $name = $attendeeTicket->attendee_name ?: $attendeeTicket->user?->name ?: 'Guest';
             $email = $attendeeTicket->attendee_email ?: $attendeeTicket->user?->email ?: '-';
             $this->setTextColor($pdf, self::BRAND_TEXT);
@@ -237,13 +245,7 @@ class TicketPdfService
             $attendeeY += max($nameHeight, $emailHeight, 18) + 8;
         }
 
-        $this->setStrokeColor($pdf, self::BRAND_BORDER);
-        $pdf->line(42, 782, 554, 782);
-        $this->setTextColor($pdf, self::BRAND_TEXT);
-        $pdf->text(42, 808, 'Tiketa', 10, true);
-        $this->setTextColor($pdf, self::BRAND_MUTED);
-        $pdf->text(152, 808, 'This receipt was generated automatically.', 9);
-        $pdf->text(470, 808, 'Page 2 of 2', 9);
+        $this->footer($pdf, 'Page 2 of 2', 'This receipt was generated automatically.');
     }
 
     protected function eventDate(?CarbonInterface $date, ?string $timezone): ?CarbonInterface
@@ -306,6 +308,13 @@ class TicketPdfService
         $pdf->rect(0, self::PAGE_HEIGHT - 56, self::PAGE_WIDTH, 56, true);
     }
 
+    protected function card(SimpleTicketPdf $pdf, float $x, float $y, float $w, float $h): void
+    {
+        $pdf->setFillColor(255, 255, 255);
+        $this->setStrokeColor($pdf, self::BRAND_BORDER);
+        $pdf->rect($x, $y, $w, $h, true, true);
+    }
+
     protected function statusPill(SimpleTicketPdf $pdf, float $x, float $y, string $label): void
     {
         $this->setFillColor($pdf, self::BRAND_NAVY_SURFACE);
@@ -317,9 +326,7 @@ class TicketPdfService
 
     protected function sectionCard(SimpleTicketPdf $pdf, float $x, float $y, float $w, float $h, string $title): void
     {
-        $pdf->setFillColor(255, 255, 255);
-        $this->setStrokeColor($pdf, self::BRAND_BORDER);
-        $pdf->rect($x, $y, $w, $h, true, true);
+        $this->card($pdf, $x, $y, $w, $h);
         $pdf->sectionTitle($x + 20, $y + 28, $title);
     }
 
@@ -336,15 +343,33 @@ class TicketPdfService
     {
         $this->setFillColor($pdf, self::BRAND_NAVY);
         $pdf->rect(0, 0, self::PAGE_WIDTH, $height, true);
+        $this->setFillColor($pdf, self::BRAND_NAVY_SURFACE);
+        $this->setStrokeColor($pdf, [38, 52, 76]);
+        $pdf->rect(42, 32, 236, 56, true, true);
         $this->setFillColor($pdf, self::BRAND_BLUE);
-        $pdf->rect(42, 32, 44, 44, true);
+        $pdf->rect(56, 44, 32, 32, true);
         $pdf->setTextColor(255, 255, 255);
-        $pdf->text(50, 59, 'Tk', 17, true);
-        $pdf->text(102, 47, 'Tiketa', 22, true);
+        $pdf->text(62, 65, 'Tk', 13, true);
+        $pdf->text(104, 56, 'Tiketa', 20, true);
         $this->setTextColor($pdf, self::BRAND_BLUE_SOFT);
-        $pdf->text(102, 68, $eyebrow, 11, true);
+        $pdf->textBox(104, 76, $eyebrow, 9, true, 150, 1, 11);
         $pdf->setTextColor(255, 255, 255);
-        $pdf->text(42, $height - 28, $title, 28, true);
+        $pdf->textBox(42, $height - 28, $title, 24, true, 360, 2, 27);
+    }
+
+    protected function footer(SimpleTicketPdf $pdf, string $pageLabel, string $note = 'Secure ticket document'): void
+    {
+        $this->setStrokeColor($pdf, self::BRAND_BORDER);
+        $pdf->line(42, 782, 554, 782);
+        $this->setFillColor($pdf, self::BRAND_BLUE);
+        $pdf->rect(42, 798, 22, 22, true);
+        $pdf->setTextColor(255, 255, 255);
+        $pdf->text(46, 813, 'Tk', 8, true);
+        $this->setTextColor($pdf, self::BRAND_TEXT);
+        $pdf->text(74, 812, 'Tiketa', 10, true);
+        $this->setTextColor($pdf, self::BRAND_MUTED);
+        $pdf->textBox(152, 812, $note, 8, false, 260, 1, 11);
+        $pdf->text(470, 812, $pageLabel, 8);
     }
 
     /**
