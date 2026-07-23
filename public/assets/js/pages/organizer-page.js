@@ -1245,31 +1245,28 @@
     const video = $("[data-checkin-video]");
     const empty = $("[data-checkin-camera-empty]");
     if (!video) return;
-    if (!("BarcodeDetector" in window)) {
+    if (!window.TiketaQrCameraScanner) {
       if (empty)
         empty.innerHTML =
           '<i class="bi bi-camera-video-off"></i><span>Camera QR scanning is not supported in this browser. Use manual lookup.</span>';
       return;
     }
     try {
-      state.scannerStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+      stopScanner();
+      state.qrScanner = new window.TiketaQrCameraScanner({
+        video,
+        maxScansPerSecond: 2,
+        preferredCamera: "environment",
+        onDecode: async (raw) => {
+          if (!raw || raw === state.lastScannedPayload) return;
+          state.lastScannedPayload = raw;
+          await validateTicket(parseScannerPayload(raw), "mobile_scanner").catch((err) =>
+            window.tkToast?.(err.message || tr("toast.scan_failed", "We couldn’t read this ticket. Try scanning again or use manual lookup."), "error"),
+          );
+        },
       });
-      video.srcObject = state.scannerStream;
-      await video.play();
+      await state.qrScanner.start();
       if (empty) empty.hidden = true;
-      const detector = new BarcodeDetector({ formats: ["qr_code"] });
-      clearInterval(state.scannerTimer);
-      state.scannerTimer = setInterval(async () => {
-        if (!video.videoWidth) return;
-        const codes = await detector.detect(video).catch(() => []);
-        const raw = codes[0]?.rawValue;
-        if (!raw || raw === state.lastScannedPayload) return;
-        state.lastScannedPayload = raw;
-        await validateTicket(parseScannerPayload(raw), "mobile_scanner").catch((err) =>
-          window.tkToast?.(err.message || tr("toast.scan_failed", "We couldn’t read this ticket. Try scanning again or use manual lookup."), "error"),
-        );
-      }, 700);
     } catch (err) {
       if (empty)
         empty.innerHTML = `<i class="bi bi-camera-video-off"></i><span>${esc(err.message || tr("toast.camera_unavailable", "We couldn’t open the camera in this browser. Allow camera access or use manual lookup."))}</span>`;
@@ -1280,6 +1277,8 @@
     clearInterval(state.scannerTimer);
     state.scannerTimer = null;
     state.lastScannedPayload = "";
+    state.qrScanner?.stop?.();
+    state.qrScanner = null;
     state.scannerStream?.getTracks?.().forEach((track) => track.stop());
     state.scannerStream = null;
     const video = $("[data-checkin-video]");

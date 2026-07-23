@@ -13,6 +13,7 @@
     stats: null,
     logs: [],
     stream: null,
+    scanner: null,
     timer: null,
     lastPayload: "",
   };
@@ -266,34 +267,34 @@
     const video = $("[data-scanner-video]");
     const empty = $("[data-scanner-empty]");
     if (!video) return;
-    if (!("BarcodeDetector" in window)) {
+    if (!window.TiketaQrCameraScanner) {
       if (empty)
         empty.innerHTML = `<i class="bi bi-camera-video-off"></i><span>${esc(tr("scanner.camera_not_supported", "Camera QR scanning is not supported in this browser. Use manual lookup."))}</span>`;
       return;
     }
-    state.stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
+    stopCamera();
+    state.scanner = new window.TiketaQrCameraScanner({
+      video,
+      maxScansPerSecond: 2,
+      preferredCamera: "environment",
+      onDecode: async (raw) => {
+        if (!raw || raw === state.lastPayload) return;
+        state.lastPayload = raw;
+        await validateTicket(parsePayload(raw), "mobile_scanner").catch((err) =>
+          window.tkToast?.(err.message || tr("toast.scan_failed", "We couldn’t read this ticket. Try scanning again or use manual lookup."), "error"),
+        );
+      },
     });
-    video.srcObject = state.stream;
-    await video.play();
+    await state.scanner.start();
     if (empty) empty.hidden = true;
-    const detector = new BarcodeDetector({ formats: ["qr_code"] });
-    clearInterval(state.timer);
-    state.timer = setInterval(async () => {
-      const codes = await detector.detect(video).catch(() => []);
-      const raw = codes[0]?.rawValue;
-      if (!raw || raw === state.lastPayload) return;
-      state.lastPayload = raw;
-      await validateTicket(parsePayload(raw), "mobile_scanner").catch((err) =>
-        window.tkToast?.(err.message || tr("toast.scan_failed", "We couldn’t read this ticket. Try scanning again or use manual lookup."), "error"),
-      );
-    }, 700);
   }
 
   function stopCamera() {
     clearInterval(state.timer);
     state.timer = null;
     state.lastPayload = "";
+    state.scanner?.stop?.();
+    state.scanner = null;
     state.stream?.getTracks?.().forEach((track) => track.stop());
     state.stream = null;
     const video = $("[data-scanner-video]");
