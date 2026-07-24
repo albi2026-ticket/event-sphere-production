@@ -162,10 +162,10 @@ class ProductionPreflightCommand extends Command
         $failedDriver = (string) config('queue.failed.driver');
         $failedTable = (string) config('queue.failed.table');
 
-        if (app()->environment('production') && $queueConnection === 'sync') {
-            $this->record('warn', 'Production QUEUE_CONNECTION is sync. Use redis, database, or sqs for queued mail and background work.');
+        if ($queueConnection === 'sync') {
+            $this->record('ok', 'Queue connection is [sync]; queued mail runs inline and does not require a worker.');
         } else {
-            $this->record('ok', "Queue connection is [{$queueConnection}].");
+            $this->record('warn', "Queue connection is [{$queueConnection}]. Ensure a queue worker is deployed and running for queued mail and background work.");
         }
 
         $this->record($failedDriver !== 'null' ? 'ok' : 'fail', 'Failed jobs are persisted.');

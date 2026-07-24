@@ -13,6 +13,7 @@
     stats: null,
     logs: [],
     stream: null,
+    scanner: null,
     timer: null,
     lastPayload: "",
   };
@@ -28,6 +29,8 @@
         ([, value]) => value !== undefined && value !== null && String(value).trim() !== "",
       ),
     ).toString();
+  let audioContext = null;
+  let scanFeedbackTimer = null;
 
   function badge(value) {
     const key = String(value || "unknown").toLowerCase();
@@ -170,6 +173,51 @@
       ${validation.can_check_in ? `<button class="btn btn-primary-grad mt-3" type="button" data-scanner-checkin><i class="bi bi-check2-circle me-1"></i>${esc(tr("scanner.check_in", "Check In"))}</button>` : ""}`;
   }
 
+  function showQrCapturedFeedback() {
+    const panel = $("[data-scanner-video]")?.closest(".qr-scanner-panel");
+    if (!panel) return;
+    let feedback = $("[data-scanner-captured-feedback]");
+    if (!feedback) {
+      feedback = document.createElement("div");
+      feedback.dataset.scannerCapturedFeedback = "true";
+      feedback.className = "alert alert-success py-2 px-3 mt-2 mb-0 small";
+      feedback.setAttribute("role", "status");
+      panel.insertAdjacentElement("afterend", feedback);
+    }
+    feedback.innerHTML = `<i class="bi bi-check2-circle me-1"></i>${esc(tr("scanner.qr_captured", "QR captured. Loading ticket..."))}`;
+    feedback.hidden = false;
+    clearTimeout(scanFeedbackTimer);
+    scanFeedbackTimer = window.setTimeout(() => {
+      feedback.hidden = true;
+    }, 1800);
+  }
+
+  function playQrCapturedBeep() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      audioContext ||= new AudioCtx();
+      if (audioContext.state === "suspended") audioContext.resume().catch(() => {});
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+      gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.08, audioContext.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.12);
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.14);
+    } catch {
+      /* audio feedback is best-effort */
+    }
+  }
+
+  function scrollToResult() {
+    $("[data-scanner-result]")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   async function validateTicket(payload, method = "qr") {
     const body = { ...payload, event_id: selectedEventId(), method };
     try {
@@ -179,6 +227,7 @@
       });
       state.result = { ...data, payload: body };
       renderResult(state.result);
+      if (method === "mobile_scanner") scrollToResult();
       await Promise.all([loadStats(), loadLogs()]);
     } catch (err) {
       const message =
@@ -196,6 +245,7 @@
         ticket: null,
       };
       renderResult(state.result);
+      if (method === "mobile_scanner") scrollToResult();
       window.tkToast?.(message, "error");
       await loadLogs().catch(() => {});
     }
@@ -266,34 +316,36 @@
     const video = $("[data-scanner-video]");
     const empty = $("[data-scanner-empty]");
     if (!video) return;
-    if (!("BarcodeDetector" in window)) {
+    if (!window.TiketaQrCameraScanner) {
       if (empty)
         empty.innerHTML = `<i class="bi bi-camera-video-off"></i><span>${esc(tr("scanner.camera_not_supported", "Camera QR scanning is not supported in this browser. Use manual lookup."))}</span>`;
       return;
     }
-    state.stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
+    stopCamera();
+    state.scanner = new window.TiketaQrCameraScanner({
+      video,
+      maxScansPerSecond: 2,
+      preferredCamera: "environment",
+      onDecode: async (raw) => {
+        if (!raw || raw === state.lastPayload) return;
+        state.lastPayload = raw;
+        showQrCapturedFeedback();
+        playQrCapturedBeep();
+        await validateTicket(parsePayload(raw), "mobile_scanner").catch((err) =>
+          window.tkToast?.(err.message || tr("toast.scan_failed", "We couldn’t read this ticket. Try scanning again or use manual lookup."), "error"),
+        );
+      },
     });
-    video.srcObject = state.stream;
-    await video.play();
+    await state.scanner.start();
     if (empty) empty.hidden = true;
-    const detector = new BarcodeDetector({ formats: ["qr_code"] });
-    clearInterval(state.timer);
-    state.timer = setInterval(async () => {
-      const codes = await detector.detect(video).catch(() => []);
-      const raw = codes[0]?.rawValue;
-      if (!raw || raw === state.lastPayload) return;
-      state.lastPayload = raw;
-      await validateTicket(parsePayload(raw), "mobile_scanner").catch((err) =>
-        window.tkToast?.(err.message || tr("toast.scan_failed", "We couldn’t read this ticket. Try scanning again or use manual lookup."), "error"),
-      );
-    }, 700);
   }
 
   function stopCamera() {
     clearInterval(state.timer);
     state.timer = null;
     state.lastPayload = "";
+    state.scanner?.stop?.();
+    state.scanner = null;
     state.stream?.getTracks?.().forEach((track) => track.stop());
     state.stream = null;
     const video = $("[data-scanner-video]");

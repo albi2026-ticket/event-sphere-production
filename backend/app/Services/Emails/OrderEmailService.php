@@ -10,9 +10,7 @@ use App\Models\OrderItem;
 use App\Support\AppUrls;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
-use Throwable;
 
 class OrderEmailService
 {
@@ -53,12 +51,15 @@ class OrderEmailService
             'tickets.ticketType',
         ]);
 
-        try {
-            Mail::to($order->billing_email, $this->purchaserName($order))
-                ->locale($order->user?->preferred_language ?: 'en')
-                ->send(new OrderConfirmationMail($order, $this->emailData($order)));
-            $this->sendOrganizerTicketSaleEmails($order);
-        } catch (Throwable $exception) {
+        $sent = app(MailDeliveryService::class)->send(
+            $order->billing_email,
+            $this->purchaserName($order),
+            new OrderConfirmationMail($order, $this->emailData($order)),
+            $order->user?->preferred_language ?: 'en',
+            ['order_id' => $order->id, 'order_number' => $order->order_number, 'email_type' => 'Ticket Purchased'],
+        );
+
+        if (! $sent) {
             Order::query()
                 ->whereKey($order->id)
                 ->update(['order_confirmation_email_sent_at' => null]);
@@ -66,12 +67,12 @@ class OrderEmailService
             Log::warning('Order confirmation email failed.', [
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
-                'exception' => $exception::class,
-                'message' => $exception->getMessage(),
             ]);
 
             return false;
         }
+
+        $this->sendOrganizerTicketSaleEmails($order);
 
         return true;
     }
@@ -92,20 +93,19 @@ class OrderEmailService
                     return;
                 }
 
-                try {
-                    Mail::to($event->organizer->email, $event->organizer->name)
-                        ->locale($event->organizer->preferred_language ?: 'en')
-                        ->send(new OrganizerTicketSaleMail($event, $order, $this->organizerSaleEmailData($order, $event, $items)));
-                } catch (Throwable $exception) {
-                    Log::warning('Organizer ticket sale email failed.', [
+                app(MailDeliveryService::class)->send(
+                    $event->organizer->email,
+                    $event->organizer->name,
+                    new OrganizerTicketSaleMail($event, $order, $this->organizerSaleEmailData($order, $event, $items)),
+                    $event->organizer->preferred_language ?: 'en',
+                    [
                         'order_id' => $order->id,
                         'order_number' => $order->order_number,
                         'event_id' => $event->id,
                         'organizer_id' => $event->organizer_id,
-                        'exception' => $exception::class,
-                        'message' => $exception->getMessage(),
-                    ]);
-                }
+                        'email_type' => 'Organizer New Ticket Sold',
+                    ],
+                );
             });
     }
 

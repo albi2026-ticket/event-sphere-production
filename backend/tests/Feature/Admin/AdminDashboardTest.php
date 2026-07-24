@@ -641,6 +641,57 @@ class AdminDashboardTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_admin_event_index_handles_missing_organizer_without_500(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_ADMIN,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $user = User::factory()->create([
+            'role' => User::ROLE_USER,
+            'status' => User::STATUS_ACTIVE,
+        ]);
+
+        $organizer = User::factory()->create([
+            'role' => User::ROLE_ORGANIZER,
+            'status' => User::STATUS_ACTIVE,
+            'organizer_status' => User::ORGANIZER_STATUS_APPROVED,
+        ]);
+
+        $event = Event::query()->create([
+            'organizer_id' => $organizer->id,
+            'title' => 'Orphaned Organizer Event',
+            'slug' => 'orphaned-organizer-event',
+            'category' => 'Concerts',
+            'venue_name' => 'Tiketa Hall',
+            'city' => 'New York',
+            'starts_at' => now()->addMonth(),
+            'status' => 'published',
+            'visibility' => 'public',
+            'currency' => 'USD',
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/admin/events?per_page=100&sort=newest')
+            ->assertForbidden();
+
+        $this->assertNull((new \App\Http\Resources\EventResource(
+            $event->fresh()->setRelation('organizer', null)
+        ))->toArray(request())['organizer']);
+
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/admin/events?per_page=100&sort=newest')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $event->id)
+            ->assertJsonPath('data.0.organizer.id', $organizer->id)
+            ->assertJsonStructure([
+                'data',
+                'links',
+                'meta',
+            ]);
+    }
+
     public function test_admin_can_refund_mock_paid_orders(): void
     {
         $admin = User::factory()->create([

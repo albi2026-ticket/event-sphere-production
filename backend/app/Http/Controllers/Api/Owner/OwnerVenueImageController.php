@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\VenueResource;
 use App\Models\Venue;
 use App\Models\VenueImage;
+use App\Services\Storage\PublicStorageUrl;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -23,8 +24,20 @@ class OwnerVenueImageController extends Controller
             'sort_order' => ['sometimes', 'integer', 'min:0'],
         ]);
 
-        $disk = 'public';
-        $path = $payload['image']->store("venue-images/{$venue->id}", $disk);
+        $disk = config('filesystems.venue_images_disk', 'public');
+
+        if ($disk === 'supabase') {
+            $bucket = (string) config('services.supabase.venue_images_bucket', 'venue-images');
+            $storedPath = app(PublicStorageUrl::class)
+                ->diskForBucket($bucket)
+                ->putFile((string) $venue->id, $payload['image'], ['visibility' => 'public']);
+
+            abort_unless($storedPath, 500, 'Venue image upload failed.');
+
+            $path = trim($bucket.'/'.$storedPath, '/');
+        } else {
+            $path = $payload['image']->store("venue-images/{$venue->id}", $disk);
+        }
 
         $venue->images()->create([
             'disk' => $disk,
@@ -63,7 +76,13 @@ class OwnerVenueImageController extends Controller
         $this->ensureVerifiedOwner($request);
 
         if ($venueImage->disk && $venueImage->path) {
-            Storage::disk($venueImage->disk)->delete($venueImage->path);
+            if ($venueImage->disk === 'public' && app(PublicStorageUrl::class)->hasSupabasePublicUrl()) {
+                app(PublicStorageUrl::class)
+                    ->diskForPath($venueImage->path)
+                    ->delete(app(PublicStorageUrl::class)->objectPath($venueImage->path));
+            } else {
+                Storage::disk($venueImage->disk)->delete($venueImage->path);
+            }
         } elseif (! str_starts_with($venueImage->image_path, 'http') && ! str_starts_with($venueImage->image_path, 'data:')) {
             Storage::disk('public')->delete($venueImage->image_path);
         }

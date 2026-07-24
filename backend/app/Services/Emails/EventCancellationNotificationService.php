@@ -11,9 +11,6 @@ use App\Models\Order;
 use App\Models\User;
 use App\Services\Notifications\NotificationService;
 use Carbon\CarbonInterface;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
-use Throwable;
 
 class EventCancellationNotificationService
 {
@@ -54,13 +51,14 @@ class EventCancellationNotificationService
 
         $userNotifications = 0;
         foreach ($orders as $order) {
-            try {
-                Mail::to($order->billing_email, $this->purchaserName($order))
-                    ->locale($order->user?->preferred_language ?: 'en')
-                    ->send(new EventCancelledUserMail($event, $order, $this->eventData($event)));
+            if (app(MailDeliveryService::class)->send(
+                $order->billing_email,
+                $this->purchaserName($order),
+                new EventCancelledUserMail($event, $order, $this->eventData($event)),
+                $order->user?->preferred_language ?: 'en',
+                ['order_id' => $order->id, 'event_id' => $event->id, 'email_type' => 'Event Cancelled'],
+            )) {
                 $userNotifications++;
-            } catch (Throwable $exception) {
-                $this->logFailure('Event cancellation user email failed.', $event, $exception, ['order_id' => $order->id]);
             }
         }
         $this->notifications->eventCancelled($event);
@@ -68,30 +66,30 @@ class EventCancellationNotificationService
         $adminNotifications = 0;
         $adminData = $this->adminData($event, $ticketsSold, $revenue, $cancelledAt);
         foreach ($this->admins() as $admin) {
-            try {
-                Mail::to($admin->email, $admin->name)
-                    ->locale($admin->preferred_language ?: 'en')
-                    ->send(new EventCancelledAdminMail($event, $adminData));
+            if (app(MailDeliveryService::class)->send(
+                $admin->email,
+                $admin->name,
+                new EventCancelledAdminMail($event, $adminData),
+                $admin->preferred_language ?: 'en',
+                ['admin_id' => $admin->id, 'event_id' => $event->id, 'email_type' => 'Event Cancelled'],
+            )) {
                 $adminNotifications++;
-            } catch (Throwable $exception) {
-                $this->logFailure('Event cancellation admin email failed.', $event, $exception, ['admin_id' => $admin->id]);
             }
         }
 
         $organizerNotified = false;
         if ($event->organizer?->email) {
-            try {
-                Mail::to($event->organizer->email, $event->organizer->name)
-                    ->locale($event->organizer->preferred_language ?: 'en')
-                    ->send(new EventCancelledOrganizerMail($event, [
-                        'ticket_holders_notified' => $userNotifications,
-                        'cancelled_at' => $this->dateTimeLabel($cancelledAt),
-                    ]));
+            if (app(MailDeliveryService::class)->send(
+                $event->organizer->email,
+                $event->organizer->name,
+                new EventCancelledOrganizerMail($event, [
+                    'ticket_holders_notified' => $userNotifications,
+                    'cancelled_at' => $this->dateTimeLabel($cancelledAt),
+                ]),
+                $event->organizer->preferred_language ?: 'en',
+                ['organizer_id' => $event->organizer_id, 'event_id' => $event->id, 'email_type' => 'Event Cancelled'],
+            )) {
                 $organizerNotified = true;
-            } catch (Throwable $exception) {
-                $this->logFailure('Event cancellation organizer email failed.', $event, $exception, [
-                    'organizer_id' => $event->organizer_id,
-                ]);
             }
         }
 
@@ -203,15 +201,4 @@ class EventCancellationNotificationService
         return $timezone === self::EVENT_DISPLAY_TIMEZONE ? 'Europe/Belgrade' : $timezone;
     }
 
-    /**
-     * @param  array<string, mixed>  $context
-     */
-    protected function logFailure(string $message, Event $event, Throwable $exception, array $context = []): void
-    {
-        Log::warning($message, array_merge($context, [
-            'event_id' => $event->id,
-            'exception' => $exception::class,
-            'message' => $exception->getMessage(),
-        ]));
-    }
 }

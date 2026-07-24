@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Organizer;
 
-use App\Events\EventCancelled;
 use App\Http\Controllers\Api\Concerns\FiltersEvents;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\EventIndexRequest;
@@ -12,6 +11,7 @@ use App\Http\Resources\EventResource;
 use App\Models\Event;
 use App\Models\PlatformSetting;
 use App\Models\TicketType;
+use App\Services\Emails\EventCancellationNotificationService;
 use App\Services\Notifications\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -78,7 +78,7 @@ class OrganizerEventController extends Controller
         $event->update($payload);
 
         if ($wasPublished && $isCancelling) {
-            event(new EventCancelled($event->fresh(['organizer']), $request->user(), $request->ip()));
+            app(EventCancellationNotificationService::class)->send($event->fresh(['organizer']), $request->user(), $request->ip());
         } elseif ($wasPublished) {
             $this->notifications->eventUpdated($event->fresh());
         }

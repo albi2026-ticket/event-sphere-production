@@ -7,10 +7,10 @@ use App\Http\Requests\Api\StoreNewsletterSubscriptionRequest;
 use App\Mail\SubscriberWelcomeMail;
 use App\Models\AuditLog;
 use App\Models\NewsletterSubscription;
+use App\Services\Emails\MailDeliveryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Mail;
 
 class NewsletterSubscriptionController extends Controller
 {
@@ -37,7 +37,13 @@ class NewsletterSubscriptionController extends Controller
 
         $subscription->refresh();
 
-        Mail::to($subscription->email)->queue(new SubscriberWelcomeMail($subscription));
+        app(MailDeliveryService::class)->queue(
+            $subscription->email,
+            null,
+            new SubscriberWelcomeMail($subscription),
+            $subscription->language ?: 'en',
+            ['newsletter_subscription_id' => $subscription->id, 'email_type' => 'Subscriber Welcome'],
+        );
 
         AuditLog::record(null, $subscription->wasRecentlyCreated ? 'newsletter_subscription.created' : 'newsletter_subscription.updated', $subscription, [
             'email' => $subscription->email,

@@ -9,17 +9,7 @@ import { existsSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import path from "node:path";
 import type { ViteDevServer } from "vite";
-
-const cleanUrlAliases: Record<string, string> = {
-  events: "index",
-  "events/list": "events",
-  event: "event-details",
-  restaurant: "venue",
-  restaurants: "reservations",
-  "checkout-success": "checkout-success",
-  "checkout-cancelled": "checkout-cancelled",
-  "my-tickets": "dashboard",
-};
+import { resolveCleanStaticHtmlUrl } from "./src/lib/clean-url-routing";
 
 const securityHeaders: Record<string, string> = {
   "Content-Security-Policy": [
@@ -76,26 +66,17 @@ function cleanStaticHtmlUrls() {
         }
 
         const url = new URL(req.url, "http://localhost");
-        const slug = url.pathname.replace(/^\/+|\/+$/g, "");
+        const resolution = resolveCleanStaticHtmlUrl({
+          url,
+          method: req.method,
+          hasPage: (pageName) => existsSync(path.join(siteRoot, `${pageName}.html`)),
+        });
 
-        if (slug && (slug.includes(".") || !/^[a-z0-9/-]+$/i.test(slug))) {
+        if (!resolution) {
           return next();
         }
 
-        const pageName = slug.startsWith("event/")
-          ? "event-details"
-          : slug.startsWith("restaurant/")
-            ? "venue"
-            : slug
-              ? (cleanUrlAliases[slug] ?? slug)
-              : "welcome";
-        const htmlPath = path.join(siteRoot, `${pageName}.html`);
-
-        if (!existsSync(htmlPath)) {
-          return next();
-        }
-
-        req.url = `/site/${pageName}.html${url.search}`;
+        req.url = `${resolution.pathname}${url.search}`;
         return next();
       });
     },

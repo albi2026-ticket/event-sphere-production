@@ -32,6 +32,7 @@
   let galleryTouchStartX = null;
   let liveStatusTimer = null;
   let renderedVenueKey = "";
+  let reservationSubmitInFlight = false;
   const availabilityCache = new Map();
   const availabilityRequests = new Map();
   const renderSignatures = new Map();
@@ -125,12 +126,13 @@
   function socialPageUrl(path) {
     try {
       const current = new URL(window.location.href);
-      const base = ["localhost", "127.0.0.1", "::1"].includes(current.hostname)
-        ? "https://tiketa.example"
-        : current.origin;
+      const base =
+        window.EventSphereConfig?.PUBLIC_URL ||
+        window.TIKETA_CONFIG?.PUBLIC_URL ||
+        current.origin;
       return new URL(path, base).href;
     } catch (err) {
-      return new URL(path, "https://tiketa.example").href;
+      return new URL(path, "https://tiketa-staging.albi-hellocare.workers.dev").href;
     }
   }
 
@@ -1265,6 +1267,7 @@
   async function submitReservation(event) {
     event.preventDefault();
     if (!currentVenue) return;
+    if (reservationSubmitInFlight) return;
 
     if (!userHasVerifiedEmail()) {
       showVerifyEmailModal();
@@ -1282,6 +1285,7 @@
       notes: form.elements.notes.value.trim() || null,
     };
 
+    reservationSubmitInFlight = true;
     setReservationBusy(true);
     try {
       await api().fetch("/reservations", { method: "POST", body: payload });
@@ -1300,6 +1304,7 @@
     } catch (err) {
       window.tkToast?.(reservationError(err), "error");
     } finally {
+      reservationSubmitInFlight = false;
       setReservationBusy(false);
     }
   }

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
-use App\Events\EventCancelled;
 use App\Http\Controllers\Api\Concerns\FiltersEvents;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\EventIndexRequest;
@@ -13,6 +12,7 @@ use App\Models\AuditLog;
 use App\Models\Event;
 use App\Models\PlatformSetting;
 use App\Models\User;
+use App\Services\Emails\EventCancellationNotificationService;
 use App\Services\Notifications\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -83,7 +83,7 @@ class AdminEventController extends Controller
         AuditLog::record($request->user(), 'event.updated', $event, array_keys($payload), $request->ip());
 
         if ($wasPublished && $isCancelling) {
-            event(new EventCancelled($event->fresh(['organizer']), $request->user(), $request->ip()));
+            app(EventCancellationNotificationService::class)->send($event->fresh(['organizer']), $request->user(), $request->ip());
         }
 
         return new EventResource($event->fresh()->load(['organizer', 'images', 'ticketTypes']));

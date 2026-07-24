@@ -70,6 +70,9 @@
     return new URLSearchParams(clean).toString();
   }
 
+  let checkInAudioContext = null;
+  let checkInFeedbackTimer = null;
+
   function cssVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
@@ -1175,11 +1178,57 @@
       ${validation.can_check_in ? `<button class="btn btn-primary-grad mt-3" type="button" data-checkin-confirm><i class="bi bi-check2-circle me-1"></i>Check In</button>` : ""}`;
   }
 
+  function showCheckInQrCapturedFeedback() {
+    const panel = $("[data-checkin-video]")?.closest(".qr-scanner-panel");
+    if (!panel) return;
+    let feedback = $("[data-checkin-captured-feedback]");
+    if (!feedback) {
+      feedback = document.createElement("div");
+      feedback.dataset.checkinCapturedFeedback = "true";
+      feedback.className = "alert alert-success py-2 px-3 mt-2 mb-0 small";
+      feedback.setAttribute("role", "status");
+      panel.insertAdjacentElement("afterend", feedback);
+    }
+    feedback.innerHTML = `<i class="bi bi-check2-circle me-1"></i>${esc(tr("scanner.qr_captured", "QR captured. Loading ticket..."))}`;
+    feedback.hidden = false;
+    clearTimeout(checkInFeedbackTimer);
+    checkInFeedbackTimer = window.setTimeout(() => {
+      feedback.hidden = true;
+    }, 1800);
+  }
+
+  function playCheckInQrCapturedBeep() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      checkInAudioContext ||= new AudioCtx();
+      if (checkInAudioContext.state === "suspended") checkInAudioContext.resume().catch(() => {});
+      const oscillator = checkInAudioContext.createOscillator();
+      const gain = checkInAudioContext.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(880, checkInAudioContext.currentTime);
+      gain.gain.setValueAtTime(0.0001, checkInAudioContext.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.08, checkInAudioContext.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, checkInAudioContext.currentTime + 0.12);
+      oscillator.connect(gain);
+      gain.connect(checkInAudioContext.destination);
+      oscillator.start();
+      oscillator.stop(checkInAudioContext.currentTime + 0.14);
+    } catch {
+      /* audio feedback is best-effort */
+    }
+  }
+
+  function scrollToCheckInResult() {
+    $("[data-checkin-result]")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   async function validateTicket(payload, method = "qr") {
     const body = { ...payload, event_id: selectedCheckInEventId(), method };
     const { data } = await api().fetch("/organizer/tickets/validate", { method: "POST", body });
     state.checkInResult = { ...data, payload: body };
     renderCheckInResult(state.checkInResult);
+    if (method === "mobile_scanner") scrollToCheckInResult();
     await Promise.all([loadCheckInStats(), loadCheckInLogs()]);
   }
 
@@ -1245,31 +1294,30 @@
     const video = $("[data-checkin-video]");
     const empty = $("[data-checkin-camera-empty]");
     if (!video) return;
-    if (!("BarcodeDetector" in window)) {
+    if (!window.TiketaQrCameraScanner) {
       if (empty)
         empty.innerHTML =
           '<i class="bi bi-camera-video-off"></i><span>Camera QR scanning is not supported in this browser. Use manual lookup.</span>';
       return;
     }
     try {
-      state.scannerStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+      stopScanner();
+      state.qrScanner = new window.TiketaQrCameraScanner({
+        video,
+        maxScansPerSecond: 2,
+        preferredCamera: "environment",
+        onDecode: async (raw) => {
+          if (!raw || raw === state.lastScannedPayload) return;
+          state.lastScannedPayload = raw;
+          showCheckInQrCapturedFeedback();
+          playCheckInQrCapturedBeep();
+          await validateTicket(parseScannerPayload(raw), "mobile_scanner").catch((err) =>
+            window.tkToast?.(err.message || tr("toast.scan_failed", "We couldn’t read this ticket. Try scanning again or use manual lookup."), "error"),
+          );
+        },
       });
-      video.srcObject = state.scannerStream;
-      await video.play();
+      await state.qrScanner.start();
       if (empty) empty.hidden = true;
-      const detector = new BarcodeDetector({ formats: ["qr_code"] });
-      clearInterval(state.scannerTimer);
-      state.scannerTimer = setInterval(async () => {
-        if (!video.videoWidth) return;
-        const codes = await detector.detect(video).catch(() => []);
-        const raw = codes[0]?.rawValue;
-        if (!raw || raw === state.lastScannedPayload) return;
-        state.lastScannedPayload = raw;
-        await validateTicket(parseScannerPayload(raw), "mobile_scanner").catch((err) =>
-          window.tkToast?.(err.message || tr("toast.scan_failed", "We couldn’t read this ticket. Try scanning again or use manual lookup."), "error"),
-        );
-      }, 700);
     } catch (err) {
       if (empty)
         empty.innerHTML = `<i class="bi bi-camera-video-off"></i><span>${esc(err.message || tr("toast.camera_unavailable", "We couldn’t open the camera in this browser. Allow camera access or use manual lookup."))}</span>`;
@@ -1280,6 +1328,8 @@
     clearInterval(state.scannerTimer);
     state.scannerTimer = null;
     state.lastScannedPayload = "";
+    state.qrScanner?.stop?.();
+    state.qrScanner = null;
     state.scannerStream?.getTracks?.().forEach((track) => track.stop());
     state.scannerStream = null;
     const video = $("[data-checkin-video]");

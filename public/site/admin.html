@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <link href="../assets/css/style.css" rel="stylesheet">
@@ -63,7 +63,7 @@
       </div>
     </section>
 
-    <section id="events" class="admin-section" data-admin-section="events">
+    <section id="events" class="admin-section event-typography" data-admin-section="events">
       <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap"><div><h4 class="m-0" data-i18n="admin.events_management">Events Management</h4><p class="text-muted-pro mb-0" data-i18n="admin.events_management_copy">Moderation, publishing, service fees, inventory, and bulk actions.</p></div></div>
       <div class="card-pro p-3 mb-4">
         <form class="row g-2 mb-3" data-admin-event-filters>
@@ -85,7 +85,7 @@
       </div>
     </section>
 
-    <section id="organizers" class="admin-section" data-admin-section="organizers">
+    <section id="organizers" class="admin-section event-typography" data-admin-section="organizers">
       <div class="row g-3">
         <div class="col-xl-8"><div class="card-pro p-3 h-100" data-admin-organizers><h4 class="mb-3" data-i18n="admin.organizers_management">Organizers Management</h4><div class="table-responsive"><table class="table table-borderless align-middle mb-0 dashboard-table">
           <thead><tr><th data-i18n="organizer.organizer_profile">Organizer Profile</th><th>Contact</th><th data-i18n="admin.status">Status</th><th data-i18n="admin.events">Events</th><th data-i18n="admin.revenue">Revenue</th><th data-i18n="events.tickets_sold">Tickets Sold</th><th></th></tr></thead>
@@ -156,7 +156,7 @@
       </div>
     </section>
 
-    <section id="tickets" class="admin-section" data-admin-section="tickets">
+    <section id="tickets" class="admin-section event-typography" data-admin-section="tickets">
       <div class="card-pro p-3">
         <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap"><div><h4 class="m-0" data-i18n="admin.tickets_management">Tickets Management</h4><p class="text-muted-pro mb-0" data-i18n="admin.tickets_management_copy">Ticket status, QR access, attendee, purchaser, and manual validation.</p></div></div>
         <form class="row g-2 mb-3" data-admin-ticket-filters>
@@ -172,7 +172,7 @@
       </div>
     </section>
 
-    <section id="revenue" class="admin-section" data-admin-section="revenue">
+    <section id="revenue" class="admin-section event-typography" data-admin-section="revenue">
       <div class="row g-3 mb-4" data-admin-revenue-kpis></div>
       <div class="row g-3 mb-4">
         <div class="col-lg-8"><div class="card-pro p-4 h-100"><h4 data-i18n="admin.revenue_trend">Revenue Trend</h4><canvas id="adminRevenueTrend" height="120"></canvas></div></div>
@@ -192,7 +192,7 @@
       </div>
     </section>
 
-    <section id="analytics" class="admin-section" data-admin-section="analytics">
+    <section id="analytics" class="admin-section event-typography" data-admin-section="analytics">
       <div class="row g-3 mb-4">
         <div class="col-lg-4"><div class="card-pro p-4 h-100"><h4 data-i18n="admin.sales_by_day">Sales by Day</h4><canvas id="adminSalesDay" height="150"></canvas></div></div>
         <div class="col-lg-4"><div class="card-pro p-4 h-100"><h4 data-i18n="admin.sales_by_week">Sales by Week</h4><canvas id="adminSalesWeek" height="150"></canvas></div></div>
@@ -274,7 +274,7 @@
       </div>
     </section>
 
-    <section id="categories" class="admin-section" data-admin-section="categories">
+    <section id="categories" class="admin-section event-typography" data-admin-section="categories">
       <div class="row g-3">
         <div class="col-xl-8"><div class="card-pro p-3 h-100"><h4 class="mb-3">Categories Management</h4><div class="table-responsive"><table class="table table-borderless align-middle mb-0 dashboard-table"><thead><tr><th>Name</th><th>Slug</th><th>Icon</th><th>Events</th><th>Status</th><th></th></tr></thead><tbody data-admin-categories><tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td></tr></tbody></table></div></div></div>
         <div class="col-xl-4"><div class="card-pro p-3 h-100"><h4 class="mb-3">Create event category</h4><form data-admin-category-form><label class="form-label">Category name</label><input class="form-control mb-2" name="name" required placeholder="Concerts"/><label class="form-label">Icon class</label><input class="form-control mb-2" name="icon" placeholder="bi-music-note-beamed"/><label class="form-label">Sort order</label><input class="form-control mb-3" name="sort_order" type="number" min="0" value="0"/><button class="btn btn-primary-grad w-100" type="submit" data-i18n="buttons.create_category">Create category</button></form></div></div>
@@ -298,7 +298,7 @@
       </form></div>
     </section>
 
-    <section id="reports" class="admin-section" data-admin-section="reports">
+    <section id="reports" class="admin-section event-typography" data-admin-section="reports">
       <div class="card-pro p-3 mb-3"><h4 class="mb-3">Report Filters</h4><div class="row g-2"><div class="col-md-3"><input class="form-control" type="date" data-report-date-from></div><div class="col-md-3"><input class="form-control" type="date" data-report-date-to></div><div class="col-md-3"><select class="form-select" data-report-organizer><option value="">All organizers</option></select></div><div class="col-md-3"><select class="form-select" data-report-category><option value="">All categories</option></select></div></div></div>
       <div class="row g-3">
         <div class="col-md-6 col-xl-3"><div class="card-pro p-4 h-100"><h5>Revenue Report</h5><p class="text-muted-pro">Revenue and service fees.</p><button class="btn btn-glass btn-sm" data-admin-report="revenue" data-report-format="csv">CSV</button> <button class="btn btn-glass btn-sm" data-admin-report="revenue" data-report-format="pdf">PDF</button></div></div>
@@ -312,7 +312,7 @@
       <div class="card-pro p-3"><div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3"><h4 class="m-0" data-i18n="admin.system_activity">System Activity</h4><form class="d-flex gap-2 flex-wrap" data-admin-audit-filters><input class="form-control form-control-sm dashboard-search" name="q" placeholder="Search logs" data-i18n-attr="placeholder:forms.search_logs"/><input class="form-control form-control-sm dashboard-search" name="action" placeholder="Action filter" data-i18n-attr="placeholder:admin.action_filter"/><button class="btn btn-glass btn-sm" type="submit" data-i18n="buttons.filter">Filter</button></form></div><div class="table-responsive"><table class="table table-borderless align-middle mb-0 dashboard-table"><thead><tr><th data-i18n="roles.admin">Admin</th><th>Action</th><th data-i18n="admin.target">Target</th><th data-i18n="admin.timestamp">Timestamp</th></tr></thead><tbody data-admin-audit-logs><tr class="skeleton-row"><td></td><td></td><td></td><td></td></tr><tr class="skeleton-row"><td></td><td></td><td></td><td></td></tr></tbody></table></div><div class="mt-3" data-admin-audit-pagination></div></div>
     </section>
 
-    <section id="checkins" class="admin-section" data-admin-section="checkins">
+    <section id="checkins" class="admin-section event-typography" data-admin-section="checkins">
       <h4 class="mt-2 mb-3" data-i18n="admin.check_in_monitoring">Check-In Monitoring</h4>
       <div class="card-pro p-3 mb-4">
       <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
@@ -361,6 +361,7 @@
 </div>
 
 <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/runtime-config.js"></script>
 <script defer src="../assets/js/api/config.js"></script>
 <script defer src="../assets/js/api/api-client.js"></script>
 <script defer src="../assets/js/api/auth.js"></script>

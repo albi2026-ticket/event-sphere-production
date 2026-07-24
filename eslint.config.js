@@ -10,6 +10,7 @@ export default tseslint.config(
     ignores: [
       "backend/vendor/**",
       "backend/public/**",
+      "public/assets/vendor/**",
       "dist/**",
       "node_modules/**",
       ".output/**",

@@ -23,6 +23,21 @@ class ReservationCreationService
                 ->lockForUpdate()
                 ->firstOrFail();
 
+            $duplicate = Reservation::query()
+                ->where('venue_id', $venue->id)
+                ->where('user_id', $user->id)
+                ->where('reservation_date', $payload['reservation_date'])
+                ->where('reservation_time', $payload['reservation_time'])
+                ->where('party_size', $payload['party_size'])
+                ->whereIn('status', [Reservation::STATUS_PENDING, Reservation::STATUS_CONFIRMED])
+                ->where('created_at', '>=', now()->subMinutes(2))
+                ->latest('id')
+                ->first();
+
+            if ($duplicate) {
+                return $duplicate;
+            }
+
             if (app(ReservationAvailabilityService::class)->slotIsFull(
                 $venue,
                 (string) $payload['reservation_date'],

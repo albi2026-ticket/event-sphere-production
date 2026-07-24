@@ -2,11 +2,14 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Mail\WelcomeMail;
 use App\Models\User;
 use App\Notifications\Auth\EventSphereVerifyEmail;
+use App\Services\Emails\MailDeliveryService;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
@@ -53,6 +56,7 @@ class EmailVerificationTest extends TestCase
 
     public function test_registration_sends_verification_email_and_allows_login_unverified(): void
     {
+        Mail::fake();
         Notification::fake();
 
         $response = $this->postJson('/api/register', [
@@ -69,6 +73,7 @@ class EmailVerificationTest extends TestCase
 
         $user = User::query()->where('email', 'test@example.com')->firstOrFail();
 
+        Mail::assertSent(WelcomeMail::class, fn (WelcomeMail $mail) => $mail->hasTo('test@example.com'));
         Notification::assertSentTo($user, EventSphereVerifyEmail::class);
         Notification::assertSentTo($user, EventSphereVerifyEmail::class, function (EventSphereVerifyEmail $notification) use ($user) {
             $mail = $notification->toMail($user);
@@ -90,5 +95,34 @@ class EmailVerificationTest extends TestCase
         ])->assertOk();
 
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_registration_still_succeeds_when_verification_email_side_effect_fails(): void
+    {
+        $this->mock(MailDeliveryService::class, function ($mock): void {
+            $mock->shouldReceive('sendWelcome')->once()->andReturn(false);
+            $mock->shouldReceive('sendVerification')->once()->andReturn(false);
+        });
+
+        $response = $this->postJson('/api/register', [
+            'name' => 'Mail Failure User',
+            'email' => 'mail-failure@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('user.email', 'mail-failure@example.com')
+            ->assertJsonStructure(['token', 'token_type', 'user']);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'mail-failure@example.com',
+        ]);
+
+        $this->postJson('/api/login', [
+            'email' => 'mail-failure@example.com',
+            'password' => 'password',
+        ])->assertOk();
     }
 }

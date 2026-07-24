@@ -5,20 +5,59 @@
   const cfg = () => window.EventSphereConfig;
   const tr = (key, fallback, replacements = {}) => window.t?.(key, replacements) || fallback;
 
+  function authDebug(stage, details = {}) {
+    console.info("[Tiketa auth debug]", stage, {
+      path: location.pathname,
+      ...details,
+    });
+  }
+
+  function migrateAuthStorage() {
+    [cfg().TOKEN_KEY, cfg().USER_KEY].forEach((key) => {
+      const existing = localStorage.getItem(key);
+      const legacy = sessionStorage.getItem(key);
+      if (!existing && legacy) {
+        localStorage.setItem(key, legacy);
+        authDebug("MIGRATE: copied legacy auth storage", { key });
+      }
+      if (legacy) {
+        sessionStorage.removeItem(key);
+        authDebug("MIGRATE: removed legacy sessionStorage key", { key });
+      }
+    });
+  }
+
   function getToken() {
-    return sessionStorage.getItem(cfg().TOKEN_KEY);
+    migrateAuthStorage();
+    const token = localStorage.getItem(cfg().TOKEN_KEY);
+    authDebug("TOKEN READ", { tokenExists: !!token });
+    return token;
   }
 
   function setSession(token, user) {
-    sessionStorage.setItem(cfg().TOKEN_KEY, token);
-    if (user) sessionStorage.setItem(cfg().USER_KEY, JSON.stringify(user));
+    migrateAuthStorage();
+    localStorage.setItem(cfg().TOKEN_KEY, token);
+    if (user) localStorage.setItem(cfg().USER_KEY, JSON.stringify(user));
+    authDebug("LOGIN: token saved", {
+      tokenSaved: !!localStorage.getItem(cfg().TOKEN_KEY),
+      userSaved: !!localStorage.getItem(cfg().USER_KEY),
+      userId: user?.id || null,
+      role: user?.role || null,
+    });
     document.dispatchEvent(
       new CustomEvent("event-sphere:auth-changed", { detail: { user: user || null } }),
     );
     paintAuthNav();
   }
 
-  function clearSession() {
+  function clearSession(reason = "unspecified") {
+    authDebug("LOGOUT: clearing auth storage", {
+      reason,
+      tokenBeforeClear: !!localStorage.getItem(cfg().TOKEN_KEY),
+      userBeforeClear: !!localStorage.getItem(cfg().USER_KEY),
+    });
+    localStorage.removeItem(cfg().TOKEN_KEY);
+    localStorage.removeItem(cfg().USER_KEY);
     sessionStorage.removeItem(cfg().TOKEN_KEY);
     sessionStorage.removeItem(cfg().USER_KEY);
     document.dispatchEvent(
@@ -28,7 +67,9 @@
   }
 
   function getUser() {
-    const raw = sessionStorage.getItem(cfg().USER_KEY);
+    migrateAuthStorage();
+    const raw = localStorage.getItem(cfg().USER_KEY);
+    authDebug("USER READ", { userExists: !!raw });
     if (!raw) return null;
     try {
       return JSON.parse(raw);
@@ -39,7 +80,12 @@
 
   async function refreshUser() {
     const { data } = await api().fetch("/user");
-    sessionStorage.setItem(cfg().USER_KEY, JSON.stringify(data));
+    localStorage.setItem(cfg().USER_KEY, JSON.stringify(data));
+    authDebug("PAGE LOAD: current user refreshed", {
+      userSaved: !!localStorage.getItem(cfg().USER_KEY),
+      userId: data?.id || null,
+      role: data?.role || null,
+    });
     document.dispatchEvent(
       new CustomEvent("event-sphere:auth-changed", { detail: { user: data } }),
     );
@@ -54,7 +100,7 @@
       body: { preferred_language: language },
       skipAuthRedirect: true,
     });
-    sessionStorage.setItem(cfg().USER_KEY, JSON.stringify(data));
+    localStorage.setItem(cfg().USER_KEY, JSON.stringify(data));
     document.dispatchEvent(
       new CustomEvent("event-sphere:auth-changed", { detail: { user: data } }),
     );
@@ -117,7 +163,7 @@
     } catch {
       /* ignore */
     }
-    clearSession();
+    clearSession("explicit logout");
     location.href = cfg().LOGIN_URL;
   }
 
@@ -296,8 +342,16 @@
     paintAuthNav();
     const params = new URLSearchParams(location.search);
     const shouldShowVerifiedMessage = params.get("verified") === "1";
+    const pageLoadToken = getToken();
+    const pageLoadUser = getUser();
 
-    if (shouldShowVerifiedMessage && !getToken()) {
+    authDebug("PAGE LOAD: auth state", {
+      tokenExists: !!pageLoadToken,
+      userExists: !!pageLoadUser,
+      apiBaseUrl: cfg().API_BASE_URL,
+    });
+
+    if (shouldShowVerifiedMessage && !pageLoadToken) {
       window.tkToast?.(
         tr("auth.email_verified_success", "Email verified. Your account is ready to use."),
         "success",
@@ -305,7 +359,7 @@
       return;
     }
 
-    if (!getToken()) return;
+    if (!pageLoadToken) return;
 
     try {
       const user = await refreshUser();
@@ -320,8 +374,15 @@
           "success",
         );
       }
-    } catch {
-      clearSession();
+    } catch (error) {
+      authDebug("PAGE LOAD: current user refresh failed", {
+        status: error?.status || 0,
+        message: error?.message || "",
+        tokenPreserved: error?.status !== 401,
+      });
+      if (error?.status === 401) {
+        clearSession("current user returned 401");
+      }
     }
   }
 

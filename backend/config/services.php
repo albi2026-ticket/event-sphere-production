@@ -19,7 +19,7 @@ return [
     ],
 
     'resend' => [
-        'key' => env('RESEND_API_KEY'),
+        'key' => env('RESEND_KEY'),
     ],
 
     'ses' => [
@@ -37,6 +37,13 @@ return [
 
     'frontend' => [
         'url' => env('FRONTEND_URL', 'http://localhost:8080'),
+    ],
+
+    'supabase' => [
+        'storage_public_url' => env('SUPABASE_STORAGE_PUBLIC_URL'),
+        'storage_bucket' => env('SUPABASE_STORAGE_BUCKET', 'event-images'),
+        'event_images_bucket' => env('SUPABASE_EVENT_IMAGES_BUCKET', 'event-images'),
+        'venue_images_bucket' => env('SUPABASE_VENUE_IMAGES_BUCKET', 'venue-images'),
     ],
 
     'tickets' => [

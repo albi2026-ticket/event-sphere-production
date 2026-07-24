@@ -107,12 +107,13 @@
   function socialPageUrl(path) {
     try {
       const current = new URL(window.location.href);
-      const base = ["localhost", "127.0.0.1", "::1"].includes(current.hostname)
-        ? "https://tiketa.example"
-        : current.origin;
+      const base =
+        window.EventSphereConfig?.PUBLIC_URL ||
+        window.TIKETA_CONFIG?.PUBLIC_URL ||
+        current.origin;
       return new URL(path, base).href;
     } catch (err) {
-      return new URL(path, "https://tiketa.example").href;
+      return new URL(path, "https://tiketa-staging.albi-hellocare.workers.dev").href;
     }
   }
 
@@ -407,7 +408,19 @@
 
   function loadRelatedEventsWhenVisible(slug) {
     const root = document.querySelector("[data-related-events]");
-    if (!root || !eventsApi().getRelatedEvents) return;
+    const section = root?.closest(".event-related-section");
+    const hideRelatedSection = () => {
+      root?.replaceChildren();
+      if (section) section.hidden = true;
+    };
+    const showRelatedSection = () => {
+      if (section) section.hidden = false;
+    };
+
+    if (!root || !eventsApi().getRelatedEvents) {
+      hideRelatedSection();
+      return;
+    }
 
     const load = () => {
       if (root.dataset.relatedLoaded === "true") return;
@@ -415,17 +428,20 @@
       eventsApi()
         .getRelatedEvents(slug)
         .then((events) => {
-          root.innerHTML =
-            Array.isArray(events) && events.length
-              ? events
-                  .slice(0, 3)
-                  .map((event, index) => eventsApi().renderEventCard(event, index))
-                  .join("")
-              : `<div class="col-12"><div class="dashboard-empty"><i class="bi bi-stars"></i><div><h4 class="mb-1">${tr("events.no_related_events", "No related events yet")}</h4><p class="mb-0">${tr("events.related_events_appear", "Similar events will appear here when they are available.")}</p></div></div></div>`;
+          if (!Array.isArray(events) || !events.length) {
+            hideRelatedSection();
+            return;
+          }
+
+          showRelatedSection();
+          root.innerHTML = events
+            .slice(0, 3)
+            .map((event, index) => eventsApi().renderEventCard(event, index))
+            .join("");
           window.EventSphereFavorites?.syncFavoriteButtons();
         })
         .catch(() => {
-          root.replaceChildren();
+          hideRelatedSection();
         });
     };
 

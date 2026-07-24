@@ -2742,3 +2742,260 @@ body.reservation-success-burst::after {
       0 1px 0 rgba(255,255,255,.045) inset;
   }
 }
+
+/* ---- Welcome mobile chooser ---- */
+@media (max-width: 767.98px) {
+  .welcome-bg {
+    min-height: 100dvh;
+    align-items: flex-start;
+    padding: max(.75rem, env(safe-area-inset-top)) 0 max(.75rem, env(safe-area-inset-bottom));
+  }
+
+  .welcome-bg > .container-xxl {
+    min-height: calc(100dvh - max(.75rem, env(safe-area-inset-top)) - max(.75rem, env(safe-area-inset-bottom)));
+    display: flex;
+    flex-direction: column;
+  }
+
+  .welcome-topbar {
+    margin-bottom: .7rem !important;
+  }
+
+  .welcome-topbar .brand {
+    font-size: 1.08rem;
+    max-width: 42vw;
+  }
+
+  .welcome-topbar .brand-logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+
+  .welcome-topbar .btn {
+    min-height: 38px;
+    padding: .48rem .75rem;
+    font-size: .82rem;
+  }
+
+  .welcome-intro {
+    margin-bottom: .85rem !important;
+  }
+
+  .welcome-intro .eyebrow-res {
+    margin-bottom: .45rem !important;
+    padding: 4px 10px;
+    font-size: .66rem;
+    letter-spacing: .035em;
+  }
+
+  .welcome-intro h1 {
+    margin-top: .45rem !important;
+    margin-bottom: 0;
+    font-size: clamp(1.85rem, 11vw, 2.65rem) !important;
+    line-height: .98 !important;
+  }
+
+  .welcome-intro p {
+    display: none;
+  }
+
+  .welcome-choices {
+    --bs-gutter-y: .75rem;
+    flex: 1 1 auto;
+    align-content: start;
+  }
+
+  .welcome-choices > [class*="col-"] {
+    width: 100%;
+  }
+
+  .welcome-choices a {
+    display: block;
+    height: 100%;
+  }
+
+  .welcome-choices .choice-card {
+    min-height: clamp(176px, 25.5dvh, 218px);
+    height: 100%;
+    border-radius: 18px;
+    padding: 1rem;
+  }
+
+  .welcome-choices .choice-card::after {
+    background: linear-gradient(90deg, rgba(11,15,25,.92) 0%, rgba(11,15,25,.72) 58%, rgba(11,15,25,.58) 100%);
+  }
+
+  .welcome-choices .choice-card .visual {
+    opacity: .4;
+    background-position: center;
+  }
+
+  .welcome-choices .choice-card .icon-wrap {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    margin-bottom: .5rem;
+    font-size: 1.18rem;
+  }
+
+  .welcome-choices .choice-card h3 {
+    margin-bottom: .25rem;
+    font-size: 1.38rem;
+    line-height: 1.04;
+  }
+
+  .welcome-choices .choice-card p {
+    max-width: 17rem;
+    margin-bottom: 0;
+    font-size: .82rem;
+    line-height: 1.34;
+  }
+
+  .welcome-choices .choice-card .features,
+  .welcome-choices .text-muted-pro {
+    display: none;
+  }
+
+  .welcome-choices .choice-card .d-flex {
+    margin-top: .85rem;
+  }
+
+  .welcome-choices .choice-card .btn {
+    min-height: 44px;
+    padding: .6rem .95rem;
+    font-size: .88rem;
+  }
+
+  .welcome-footer {
+    margin-top: auto !important;
+    padding-top: .65rem !important;
+  }
+
+  .welcome-footer .text-muted-pro {
+    font-size: .72rem;
+    line-height: 1.25;
+  }
+}
+
+@media (max-width: 380px) and (max-height: 820px) {
+  .welcome-bg {
+    padding-top: max(.55rem, env(safe-area-inset-top));
+    padding-bottom: max(.55rem, env(safe-area-inset-bottom));
+  }
+
+  .welcome-choices .choice-card {
+    min-height: clamp(166px, 24.5dvh, 198px);
+  }
+
+  .welcome-choices .choice-card p {
+    font-size: .78rem;
+  }
+
+  .welcome-footer {
+    display: none;
+  }
+}
+
+/* ---- Welcome light theme polish ---- */
+[data-theme="light"] .welcome-bg {
+  background:
+    radial-gradient(1100px 640px at 12% -8%, rgba(91,140,255,.16), transparent 60%),
+    radial-gradient(980px 620px at 90% 108%, rgba(212,167,90,.14), transparent 62%),
+    radial-gradient(820px 560px at 50% 46%, rgba(124,92,255,.08), transparent 68%),
+    linear-gradient(180deg, #FBFCFF 0%, #F3F6FB 100%);
+}
+
+[data-theme="light"] .welcome-topbar .brand {
+  color: #172033;
+}
+
+[data-theme="light"] .welcome-topbar .btn-ghost {
+  background: rgba(255,255,255,.74);
+  border-color: rgba(15,23,42,.11);
+  color: #172033;
+  box-shadow: 0 10px 26px rgba(15,23,42,.06), 0 1px 0 rgba(255,255,255,.86) inset;
+}
+
+[data-theme="light"] .welcome-topbar .btn-ghost:hover {
+  background: #fff;
+  border-color: rgba(91,140,255,.24);
+  color: #0B0F19;
+}
+
+[data-theme="light"] .welcome-intro h1 {
+  color: #101827;
+}
+
+[data-theme="light"] .welcome-intro p {
+  color: #536176 !important;
+}
+
+[data-theme="light"] .eyebrow-res {
+  background: rgba(255,255,255,.78);
+  border-color: rgba(180,124,36,.24);
+  color: #7A561B;
+  box-shadow: 0 10px 28px rgba(15,23,42,.055), 0 1px 0 rgba(255,255,255,.86) inset;
+}
+
+[data-theme="light"] .choice-card {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.9));
+  border-color: rgba(15,23,42,.095);
+  box-shadow:
+    0 22px 58px rgba(15,23,42,.095),
+    0 1px 0 rgba(255,255,255,.86) inset;
+}
+
+[data-theme="light"] .choice-card .visual {
+  opacity: .2;
+  filter: saturate(1.05) contrast(1.04);
+}
+
+[data-theme="light"] .choice-card::after,
+[data-theme="light"] .welcome-choices .choice-card::after {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.74) 0%, rgba(248,250,252,.98) 72%),
+    radial-gradient(520px 260px at 20% 0%, rgba(91,140,255,.11), transparent 68%);
+}
+
+[data-theme="light"] .choice-card h3 {
+  color: #121A2A;
+}
+
+[data-theme="light"] .choice-card p {
+  color: #536176;
+}
+
+[data-theme="light"] .choice-card .features span {
+  background: rgba(255,255,255,.76);
+  border-color: rgba(15,23,42,.09);
+  color: #526174;
+  box-shadow: 0 1px 0 rgba(255,255,255,.72) inset;
+}
+
+[data-theme="light"] .choice-card.tickets:hover {
+  border-color: rgba(74,120,232,.3);
+  box-shadow:
+    0 28px 68px rgba(74,120,232,.16),
+    0 1px 0 rgba(255,255,255,.9) inset;
+}
+
+[data-theme="light"] .choice-card.reservations:hover {
+  border-color: rgba(180,124,36,.28);
+  box-shadow:
+    0 28px 68px rgba(180,124,36,.14),
+    0 1px 0 rgba(255,255,255,.9) inset;
+}
+
+[data-theme="light"] .welcome-choices .text-muted-pro,
+[data-theme="light"] .welcome-footer .text-muted-pro {
+  color: #667388 !important;
+}
+
+[data-theme="light"] .choice-card .btn-primary-grad,
+[data-theme="light"] .choice-card .btn-gold {
+  box-shadow:
+    0 14px 36px rgba(15,23,42,.12),
+    0 1px 0 rgba(255,255,255,.32) inset;
+}

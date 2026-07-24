@@ -9,6 +9,10 @@ class VenueResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $imageUrl = $this->relationLoaded('images')
+            ? $this->images->sortBy('sort_order')->first()?->publicUrl()
+            : null;
+
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
@@ -33,6 +37,7 @@ class VenueResource extends JsonResource
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
             'logo_image' => $this->logo_image,
+            'image_url' => $imageUrl,
             'status' => $this->status,
             'featured' => $this->featured,
             'images' => VenueImageResource::collection($this->whenLoaded('images')),

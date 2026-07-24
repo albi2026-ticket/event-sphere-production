@@ -2,13 +2,18 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
-import welcomeHtml from "../public/site/welcome.html?raw";
+import { resolveCleanStaticHtmlUrl } from "./lib/clean-url-routing";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
 
 let serverEntryPromise: Promise<ServerEntry> | undefined;
+const staticHtmlPages = import.meta.glob("../public/site/*.html", {
+  eager: true,
+  import: "default",
+  query: "?raw",
+}) as Record<string, string>;
 
 const securityHeaders = {
   "Content-Security-Policy": [
@@ -99,15 +104,28 @@ function brandedErrorResponse(request: Request): Response {
   });
 }
 
-function isProductionRootRequest(request: Request): boolean {
-  const url = new URL(request.url);
-
-  return (request.method === "GET" || request.method === "HEAD") && url.pathname === "/";
+function staticHtmlKey(pageName: string): string {
+  return `../public/site/${pageName}.html`;
 }
 
-function welcomeResponse(request: Request): Response {
+function hasStaticHtmlPage(pageName: string): boolean {
+  return staticHtmlKey(pageName) in staticHtmlPages;
+}
+
+function staticHtmlResponse(request: Request): Response | null {
+  const url = new URL(request.url);
+  const resolution = resolveCleanStaticHtmlUrl({
+    url,
+    method: request.method,
+    hasPage: hasStaticHtmlPage,
+  });
+
+  if (!resolution) return null;
+
+  const html = staticHtmlPages[staticHtmlKey(resolution.pageName)];
+
   return withSecurityHeaders(
-    new Response(request.method === "HEAD" ? null : welcomeHtml, {
+    new Response(request.method === "HEAD" ? null : html, {
       status: 200,
       headers: { "content-type": "text/html; charset=utf-8" },
     }),
@@ -159,8 +177,9 @@ async function normalizeCatastrophicSsrResponse(response: Response, request: Req
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
-      if (isProductionRootRequest(request)) {
-        return welcomeResponse(request);
+      const staticResponse = staticHtmlResponse(request);
+      if (staticResponse) {
+        return staticResponse;
       }
 
       const handler = await getServerEntry();

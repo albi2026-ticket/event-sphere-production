@@ -1761,7 +1761,10 @@ a:hover { color: var(--secondary); }
   transition: opacity .2s ease;
   z-index: 1030;
 }
-.dash-main { padding: 2rem; }
+.dash-main {
+  min-width: 0;
+  padding: 2rem;
+}
 .dash-side .menu a {
   display: flex; align-items: center; gap: .75rem; padding: .7rem .85rem;
   color: var(--muted); border-radius: 12px; font-weight: 500; margin-bottom: .25rem;
@@ -5348,6 +5351,17 @@ textarea.form-control:focus {
   --lux-glow-gold: 0 18px 58px rgba(212,167,90,.2);
 }
 
+[data-theme="light"] {
+  --lux-border: rgba(15,23,42,.105);
+  --lux-border-soft: rgba(15,23,42,.07);
+  --lux-surface: linear-gradient(180deg, rgba(255,255,255,.92), rgba(248,250,252,.72));
+  --lux-surface-strong: linear-gradient(145deg, rgba(255,255,255,.96), rgba(241,245,249,.82));
+  --lux-shadow: 0 18px 54px rgba(15,23,42,.09), 0 1px 0 rgba(255,255,255,.9) inset;
+  --lux-shadow-hover: 0 24px 70px rgba(15,23,42,.13), 0 0 0 1px rgba(91,140,255,.045) inset;
+  --lux-glow-primary: 0 16px 44px rgba(91,140,255,.18);
+  --lux-glow-gold: 0 16px 44px rgba(180,124,36,.16);
+}
+
 .section,
 .section-sm,
 .content-page,
@@ -5738,5 +5752,183 @@ textarea.form-control:focus {
   .hero-trust-strip span {
     flex: 1 1 100%;
     justify-content: center;
+  }
+}
+
+/* ---------- Event typography system ---------- */
+.event-typography {
+  --font-sans: 'Manrope', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --font-display: 'Sora', 'Manrope', system-ui, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 15.5px;
+  line-height: 1.65;
+}
+
+.event-typography h1,
+.event-typography h2,
+.event-typography h3,
+.event-typography h4,
+.event-typography h5,
+.event-typography .section-title h2,
+.event-typography .card-pro .title,
+.event-typography .event-card-pro .title,
+.event-typography .qr-ticket h5,
+.event-typography .checkout-heading h1,
+.event-typography .event-description-heading,
+.event-typography .event-detail-hero-copy h1,
+.event-typography.dashboard-enterprise .dash-main > .d-flex:first-child h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.event-typography h1,
+.event-typography .event-detail-hero-copy h1 {
+  line-height: 1.04;
+}
+
+.event-typography h2,
+.event-typography h3,
+.event-typography h4,
+.event-typography h5,
+.event-typography .checkout-form-card h5 {
+  line-height: 1.18;
+}
+
+.event-typography p,
+.event-typography .text-muted-pro,
+.event-typography .event-description,
+.event-typography .checkin-result p {
+  line-height: 1.72;
+}
+
+.event-typography .event-description {
+  font-size: 1.04rem;
+  font-weight: 500;
+}
+
+.event-typography .eyebrow,
+.event-typography .form-label,
+.event-typography .dashboard-table th,
+.event-typography .kpi .label,
+.event-typography .status-badge,
+.event-typography .badge-soft {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.event-typography .form-label {
+  font-size: .86rem;
+  line-height: 1.35;
+}
+
+.event-typography .btn,
+.event-typography .dashboard-tabs button,
+.event-typography .dash-side .menu a {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.event-typography .form-control,
+.event-typography .form-select {
+  font-family: var(--font-sans);
+  font-size: .95rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.event-typography .card-pro .title,
+.event-typography .event-card-pro .title {
+  font-size: 1.1rem;
+  line-height: 1.3;
+}
+
+.event-typography .card-pro .meta,
+.event-typography .card-pro .venue,
+.event-typography .event-card-pro .meta,
+.event-typography .event-card-pro .venue,
+.event-typography .ticket-meta,
+.event-typography .ticket-codes,
+.event-typography .dashboard-mini-row small {
+  font-size: .86rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.event-typography .card-pro .price,
+.event-typography .event-card-pro .price,
+.event-typography .event-ticket-panel [data-event-price],
+.event-typography .checkout-summary-card [data-checkout-total],
+.event-typography .kpi .value,
+.event-typography.scanner-dashboard-page [data-scanner-total-today] {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.event-typography .event-ticket-panel ul li,
+.event-typography .checkout-summary-card,
+.event-typography .stepper .step,
+.event-typography .dashboard-mini-row,
+.event-typography .checkin-result {
+  line-height: 1.55;
+}
+
+.event-typography .dashboard-table th {
+  font-size: .72rem;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.event-typography .dashboard-table td {
+  font-size: .92rem;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.event-typography .dashboard-mini-row .fw-semibold,
+.event-typography .checkin-result h5 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.event-typography .ticket-code,
+.event-typography .order-code {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+@media (max-width: 767.98px) {
+  .event-typography {
+    font-size: 15px;
+    line-height: 1.62;
+  }
+
+  .event-typography h1,
+  .event-typography .event-detail-hero-copy h1 {
+    line-height: 1.08;
+  }
+
+  .event-typography .card-pro .title,
+  .event-typography .event-card-pro .title,
+  .event-typography .qr-ticket h5 {
+    font-size: 1.04rem;
+    line-height: 1.32;
+  }
+
+  .event-typography .dashboard-table td {
+    font-size: .9rem;
+    line-height: 1.5;
+  }
+
+  .event-typography .btn,
+  .event-typography .form-control,
+  .event-typography .form-select {
+    font-size: .94rem;
   }
 }
