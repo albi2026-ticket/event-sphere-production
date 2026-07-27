@@ -764,6 +764,7 @@
   function renderHours(openingHours = []) {
     const root = $("[data-owner-hours]");
     if (!root) return;
+    $("[data-owner-availability-empty]")?.toggleAttribute("hidden", openingHours.length > 0);
     const byDay = new Map(openingHours.map((item) => [Number(item.day_of_week), item]));
     root.innerHTML = days
       .map((day, index) => {
@@ -787,7 +788,9 @@
   }
 
   function renderAvailabilityExceptions() {
-    $("[data-owner-availability-section]")?.toggleAttribute("hidden", !state.venue);
+    document.querySelectorAll("[data-owner-availability-section]").forEach((section) => {
+      section.toggleAttribute("hidden", !state.venue);
+    });
     renderBlackoutDates();
     renderSpecialHours();
   }
@@ -1525,7 +1528,9 @@
     $("[data-owner-empty]")?.toggleAttribute("hidden", hasVenue);
     $("[data-owner-summary]")?.toggleAttribute("hidden", !hasVenue);
     $("[data-owner-delete-section]")?.toggleAttribute("hidden", !hasVenue);
-    $("[data-owner-availability-section]")?.toggleAttribute("hidden", !hasVenue);
+    document.querySelectorAll("[data-owner-availability-section]").forEach((section) => {
+      section.toggleAttribute("hidden", !hasVenue);
+    });
     renderProfileCompletion();
     renderManagerDashboard();
 
@@ -3592,12 +3597,12 @@
     }
     if (section === "calendar") {
       switchOwnerReservationPanel("calendar");
-      scrollManagerTarget("#ownerReservations");
+      scrollManagerTarget("#managerCalendar");
       return;
     }
     if (section === "analytics") {
       switchOwnerReservationPanel("analytics");
-      scrollManagerTarget("#ownerReservations");
+      scrollManagerTarget("#managerAnalytics");
       return;
     }
     if (section === "venue") {
@@ -3650,7 +3655,7 @@
       return;
     }
     if (action === "special-hours") {
-      openManagerSection("availability", { target: "#managerAvailabilityExceptions" });
+      openManagerSection("availability", { target: "#managerAvailabilitySpecialHours" });
       $("[data-special-date]")?.focus();
       return;
     }

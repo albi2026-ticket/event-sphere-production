@@ -4579,6 +4579,114 @@ textarea.form-control:focus {
   background: rgba(255,255,255,.03);
 }
 
+.owner-dashboard-page .manager-calendar-workspace,
+.owner-dashboard-page .manager-analytics-workspace,
+.owner-dashboard-page .manager-config-module {
+  scroll-margin-top: 96px;
+}
+
+.owner-dashboard-page .manager-calendar-workspace,
+.owner-dashboard-page .manager-analytics-workspace {
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 1rem;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018)),
+    var(--card);
+}
+
+.owner-dashboard-page .manager-config-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.owner-dashboard-page .manager-config-header h2 {
+  margin: .25rem 0 .2rem;
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.owner-dashboard-page .manager-config-header p {
+  margin: 0;
+  max-width: 680px;
+  color: var(--muted);
+}
+
+.owner-dashboard-page .manager-config-grid,
+.owner-dashboard-page .manager-settings-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, .75fr);
+  gap: 1rem;
+}
+
+.owner-dashboard-page .manager-config-grid-compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.owner-dashboard-page .manager-config-grid > .card-pro,
+.owner-dashboard-page .manager-settings-grid > .card-pro {
+  margin-bottom: 0;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--card);
+}
+
+.owner-dashboard-page .manager-config-stack {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.owner-dashboard-page .manager-config-stack h4,
+.owner-dashboard-page .manager-config-placeholder h3,
+.owner-dashboard-page #managerDangerZone h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.owner-dashboard-page .manager-config-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 132px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 1.25rem;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.018)),
+    var(--card);
+  scroll-margin-top: 96px;
+}
+
+.owner-dashboard-page .manager-config-placeholder p {
+  margin: .35rem 0 0;
+  color: var(--muted);
+}
+
+.owner-dashboard-page .manager-empty-inline {
+  display: grid;
+  gap: .25rem;
+  margin-bottom: 1rem;
+  border: 1px dashed color-mix(in oklab, var(--border-strong) 75%, transparent);
+  border-radius: 16px;
+  padding: .9rem 1rem;
+  background: rgba(255,255,255,.03);
+}
+
+.owner-dashboard-page .manager-empty-inline span {
+  color: var(--muted);
+}
+
+.owner-dashboard-page [hidden].manager-empty-inline {
+  display: none !important;
+}
+
 .dashboard-enterprise .dashboard-table,
 .dashboard-enterprise .table-pro,
 .owner-dashboard-page .owner-reservations-table {
@@ -6310,6 +6418,12 @@ textarea.form-control:focus {
   .owner-dashboard-page [data-owner-venue-page] > .d-flex:first-child {
     border-radius: 20px;
   }
+
+  .owner-dashboard-page .manager-config-grid,
+  .owner-dashboard-page .manager-config-grid-compact,
+  .owner-dashboard-page .manager-settings-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
@@ -6324,6 +6438,22 @@ textarea.form-control:focus {
   .dashboard-enterprise .dashboard-table td,
   .owner-dashboard-page .owner-reservations-table td {
     padding: .85rem;
+  }
+
+  .owner-dashboard-page .manager-calendar-workspace,
+  .owner-dashboard-page .manager-analytics-workspace {
+    border-radius: 18px;
+    padding: .85rem;
+  }
+
+  .owner-dashboard-page .manager-config-header {
+    display: block;
+  }
+
+  .owner-dashboard-page .manager-config-placeholder {
+    align-items: flex-start;
+    flex-direction: column;
+    min-height: auto;
   }
 }
 

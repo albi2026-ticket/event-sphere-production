@@ -46,13 +46,13 @@
           <a href="#ownerReservations" data-manager-reservation-filter="cancelled">Cancelled</a>
           <a href="#ownerReservations" data-manager-reservation-filter="no_show">No-shows</a>
         </div>
-        <a class="manager-nav-item" href="#ownerReservations" data-manager-nav="calendar" data-manager-section="calendar" data-label="Calendar">
+        <a class="manager-nav-item" href="#managerCalendar" data-manager-nav="calendar" data-manager-section="calendar" data-label="Calendar">
           <i class="bi bi-calendar3"></i><span>Calendar</span>
         </a>
         <a class="manager-nav-item" href="#ownerReservations" data-manager-nav="guests" data-manager-section="guests" data-label="Guests">
           <i class="bi bi-people"></i><span>Guests</span>
         </a>
-        <a class="manager-nav-item" href="#ownerReservations" data-manager-nav="analytics" data-manager-section="analytics" data-label="Analytics">
+        <a class="manager-nav-item" href="#managerAnalytics" data-manager-nav="analytics" data-manager-section="analytics" data-label="Analytics">
           <i class="bi bi-graph-up-arrow"></i><span>Analytics</span>
         </a>
       </div>
@@ -69,7 +69,7 @@
           <a href="#managerVenueGallery" data-manager-target="#managerVenueGallery">Gallery</a>
           <a href="#managerVenueLocation" data-manager-target="#managerVenueLocation">Location</a>
           <a href="#managerVenueAmenities" data-manager-target="#managerVenueAmenities">Amenities</a>
-          <a href="#managerPublicPreview" data-manager-public-preview>Public Preview</a>
+          <a href="#managerVenuePublicPreview" data-manager-target="#managerVenuePublicPreview">Public Preview</a>
         </div>
         <a class="manager-nav-item" href="#managerAvailabilityOpeningHours" data-manager-nav="availability" data-manager-section="availability" data-label="Availability">
           <i class="bi bi-clock-history"></i><span>Availability</span>
@@ -79,18 +79,18 @@
           <a href="#managerBookingRules" data-manager-target="#managerBookingRules">Booking Rules</a>
           <a href="#managerGuestRules" data-manager-target="#managerGuestRules">Guest Rules</a>
           <a href="#managerAvailabilityExceptions" data-manager-target="#managerAvailabilityExceptions">Blackout Dates</a>
-          <a href="#managerAvailabilityExceptions" data-manager-target="#managerAvailabilityExceptions">Special Hours</a>
+          <a href="#managerAvailabilitySpecialHours" data-manager-target="#managerAvailabilitySpecialHours">Special Hours</a>
         </div>
         <a class="manager-nav-item" href="#managerSettings" data-manager-nav="settings" data-manager-section="settings" data-label="Settings">
           <i class="bi bi-gear"></i><span>Settings</span>
         </a>
         <div class="manager-subnav" data-manager-subnav="settings">
-          <a href="#managerSettings" data-manager-placeholder="Account">Account</a>
-          <a href="#managerSettings" data-manager-placeholder="Notifications">Notifications</a>
-          <a href="#managerSettings" data-manager-placeholder="Language">Language</a>
-          <a href="#managerSettings" data-manager-placeholder="Integrations">Integrations</a>
-          <a href="#managerSettings" data-manager-placeholder="Billing">Billing</a>
-          <a href="#managerSettings" data-manager-target="#managerDangerZone">Danger Zone</a>
+          <a href="#managerSettingsAccount" data-manager-target="#managerSettingsAccount">Account</a>
+          <a href="#managerSettingsNotifications" data-manager-target="#managerSettingsNotifications">Notifications</a>
+          <a href="#managerSettingsLanguage" data-manager-target="#managerSettingsLanguage">Language</a>
+          <a href="#managerSettingsIntegrations" data-manager-target="#managerSettingsIntegrations">Integrations</a>
+          <a href="#managerSettingsBilling" data-manager-target="#managerSettingsBilling">Billing</a>
+          <a href="#managerDangerZone" data-manager-target="#managerDangerZone">Danger Zone</a>
         </div>
       </div>
     </nav>
@@ -400,7 +400,14 @@
       </div>
     </div>
 
-    <div data-owner-reservation-panel="calendar" hidden>
+    <section class="manager-calendar-workspace mb-4" id="managerCalendar" data-owner-reservation-panel="calendar" hidden>
+      <div class="manager-config-header">
+        <div>
+          <span class="eyebrow-res"><i class="bi bi-calendar3"></i> Daily Operations</span>
+          <h2>Calendar</h2>
+          <p>Visual schedule for day, week, and month reservation planning.</p>
+        </div>
+      </div>
       <div class="owner-calendar-summary mb-3" data-owner-calendar-summary>
         <div><span data-i18n="owner.today_reservations">Today's Reservations</span><strong>0</strong></div>
         <div><span data-i18n="owner.pending_today">Pending Today</span><strong>0</strong></div>
@@ -442,9 +449,16 @@
           <span class="skeleton-block"></span>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div data-owner-reservation-panel="analytics" hidden>
+    <section class="manager-analytics-workspace mb-4" id="managerAnalytics" data-owner-reservation-panel="analytics" hidden>
+      <div class="manager-config-header">
+        <div>
+          <span class="eyebrow-res"><i class="bi bi-graph-up-arrow"></i> Daily Operations</span>
+          <h2>Analytics</h2>
+          <p>Reservation performance, status trends, and planning signals.</p>
+        </div>
+      </div>
       <div class="owner-analytics-toolbar">
         <div class="btn-group owner-analytics-range" role="group" aria-label="Analytics range">
           <button class="btn btn-gold-outline" type="button" data-owner-analytics-range="7" data-i18n="owner.last_7_days">Last 7 Days</button>
@@ -515,16 +529,24 @@
           </div>
         </div>
       </div>
-    </div>
+    </section>
   </section>
 
   <form data-owner-venue-form novalidate>
     <input type="hidden" name="venue_slug" />
-    <div class="row g-4">
-      <div class="col-xl-8">
-        <section class="card-pro p-4 mb-4" id="managerVenueProfile" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+
+    <section class="manager-config-module mb-4" id="managerVenueModule">
+      <div class="manager-config-header">
+        <div>
+          <span class="eyebrow-res"><i class="bi bi-shop-window"></i> Configuration</span>
+          <h2>Venue</h2>
+          <p>Manage the public restaurant or bar presence guests see before booking.</p>
+        </div>
+      </div>
+      <div class="manager-config-grid">
+        <section class="card-pro p-4" id="managerVenueProfile">
           <div class="section-head-res mb-3">
-            <div><h2 data-i18n="header.profile">Profile</h2><div class="sub" data-i18n="venue.contact">Name, type, contact, and location</div></div>
+            <div><h2 data-i18n="header.profile">Profile</h2><div class="sub">Name, type, description, contact, website, and social links</div></div>
           </div>
           <div class="row g-3">
             <div class="col-md-8"><label class="form-label" data-i18n="forms.full_name">Name</label><input class="form-control" name="name" required maxlength="255" /></div>
@@ -534,62 +556,13 @@
             <div class="col-md-4"><label class="form-label" data-i18n="venue.email">Email</label><input class="form-control" name="email" type="email" maxlength="255" /></div>
             <div class="col-12"><label class="form-label" data-i18n="venue.description">Description</label><textarea class="form-control" name="description" rows="4"></textarea></div>
             <div class="col-md-6"><label class="form-label" data-i18n="venue.website">Website</label><input class="form-control" name="website" type="url" placeholder="https://example.com" /></div>
-            <div class="col-md-6"><label class="form-label" data-i18n="venue.address">Address</label><input class="form-control" name="address" data-owner-address /></div>
-            <div class="col-md-4"><label class="form-label" data-i18n="restaurants.city">City</label><input class="form-control" name="city" required maxlength="255" /></div>
-            <div class="col-md-4"><label class="form-label" data-i18n="owner.country">Country</label><input class="form-control" name="country" maxlength="255" /></div>
-            <div class="col-md-2"><label class="form-label" data-i18n="owner.latitude">Latitude</label><input class="form-control" name="latitude" type="number" step="0.0000001" /></div>
-            <div class="col-md-2"><label class="form-label" data-i18n="owner.longitude">Longitude</label><input class="form-control" name="longitude" type="number" step="0.0000001" /></div>
-            <div class="col-12" id="managerVenueLocation">
-              <div class="owner-location-picker">
-                <div class="owner-location-toolbar">
-                  <div>
-                    <h5 class="mb-1" data-i18n="owner.exact_map_location">Exact Map Location</h5>
-                    <p class="small text-muted-pro mb-0" data-i18n="owner.map_location_copy">Search, click the map, or drag the marker to set the exact pin.</p>
-                  </div>
-                  <a class="btn btn-gold-outline btn-sm" href="#" target="_blank" rel="noopener" data-owner-location-open hidden>
-                    <i class="bi bi-box-arrow-up-right me-1"></i>Open pin in Google Maps
-                  </a>
-                </div>
-                <div class="row g-2 mb-3">
-                  <div class="col-md-8">
-                    <input class="form-control" type="search" placeholder="Search address, city, or place" data-i18n-attr="placeholder:forms.search_address" data-owner-location-search>
-                  </div>
-                  <div class="col-md-4 d-grid">
-                    <button class="btn btn-gold-outline" type="button" data-owner-location-search-button>
-                      <i class="bi bi-search me-1"></i>Search this address
-                    </button>
-                  </div>
-                </div>
-                <div class="owner-location-map" data-owner-location-map>
-                  <div class="owner-location-canvas" data-owner-location-canvas hidden></div>
-                  <iframe title="Restaurant or bar Google Map picker" loading="lazy" referrerpolicy="no-referrer-when-downgrade" data-owner-location-frame></iframe>
-                  <button class="owner-location-click-layer" type="button" data-owner-location-click-layer aria-label="Click to set location"></button>
-                  <div class="owner-location-pin" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></div>
-                </div>
-                <div class="owner-location-selected">
-                  <div>
-                    <span data-i18n="owner.selected_address">Selected Address</span>
-                    <strong data-owner-location-selected-address>Not selected</strong>
-                  </div>
-                  <div>
-                    <span data-i18n="owner.latitude">Latitude</span>
-                    <strong data-owner-location-selected-latitude>-</strong>
-                  </div>
-                  <div>
-                    <span data-i18n="owner.longitude">Longitude</span>
-                    <strong data-owner-location-selected-longitude>-</strong>
-                  </div>
-                </div>
-                <div class="owner-location-meta">
-                  <span data-owner-location-status>Set latitude and longitude to preview the map pin.</span>
-                  <button class="btn btn-glass btn-sm" type="button" data-owner-location-clear>Clear map pin</button>
-                </div>
-              </div>
-            </div>
+            <div class="col-md-6"><label class="form-label">Facebook</label><input class="form-control" name="facebook_url" type="url" placeholder="Facebook URL" /></div>
+            <div class="col-md-6"><label class="form-label">Instagram</label><input class="form-control" name="instagram_url" type="url" placeholder="Instagram URL" /></div>
+            <div class="col-md-6"><label class="form-label">TikTok</label><input class="form-control" name="tiktok_url" type="url" placeholder="TikTok URL" /></div>
           </div>
         </section>
 
-        <section class="card-pro p-4 mb-4" id="managerVenueGallery" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <section class="card-pro p-4" id="managerVenueGallery">
           <div class="section-head-res mb-3">
             <div><h2 data-i18n="venue.gallery">Gallery</h2><div class="sub" data-i18n="owner.upload_photos">Upload, delete, and reorder restaurant or bar images</div></div>
           </div>
@@ -608,80 +581,125 @@
           <div class="row g-3" data-owner-gallery></div>
         </section>
 
-        <section class="card-pro p-4 mb-4" id="managerAvailabilityOpeningHours" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <section class="card-pro p-4" id="managerVenueLocation">
+          <div class="section-head-res mb-3">
+            <div><h2>Location</h2><div class="sub">Address and exact map pin used on the public venue page</div></div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6"><label class="form-label" data-i18n="venue.address">Address</label><input class="form-control" name="address" data-owner-address /></div>
+            <div class="col-md-3"><label class="form-label" data-i18n="restaurants.city">City</label><input class="form-control" name="city" required maxlength="255" /></div>
+            <div class="col-md-3"><label class="form-label" data-i18n="owner.country">Country</label><input class="form-control" name="country" maxlength="255" /></div>
+            <div class="col-md-6"><label class="form-label" data-i18n="owner.latitude">Latitude</label><input class="form-control" name="latitude" type="number" step="0.0000001" /></div>
+            <div class="col-md-6"><label class="form-label" data-i18n="owner.longitude">Longitude</label><input class="form-control" name="longitude" type="number" step="0.0000001" /></div>
+          </div>
+          <div class="owner-location-picker">
+            <div class="owner-location-toolbar">
+              <div>
+                <h5 class="mb-1" data-i18n="owner.exact_map_location">Exact Map Location</h5>
+                <p class="small text-muted-pro mb-0" data-i18n="owner.map_location_copy">Search, click the map, or drag the marker to set the exact pin.</p>
+              </div>
+              <a class="btn btn-gold-outline btn-sm" href="#" target="_blank" rel="noopener" data-owner-location-open hidden>
+                <i class="bi bi-box-arrow-up-right me-1"></i>Open pin in Google Maps
+              </a>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-md-8">
+                <input class="form-control" type="search" placeholder="Search address, city, or place" data-i18n-attr="placeholder:forms.search_address" data-owner-location-search>
+              </div>
+              <div class="col-md-4 d-grid">
+                <button class="btn btn-gold-outline" type="button" data-owner-location-search-button>
+                  <i class="bi bi-search me-1"></i>Search this address
+                </button>
+              </div>
+            </div>
+            <div class="owner-location-map" data-owner-location-map>
+              <div class="owner-location-canvas" data-owner-location-canvas hidden></div>
+              <iframe title="Restaurant or bar Google Map picker" loading="lazy" referrerpolicy="no-referrer-when-downgrade" data-owner-location-frame></iframe>
+              <button class="owner-location-click-layer" type="button" data-owner-location-click-layer aria-label="Click to set location"></button>
+              <div class="owner-location-pin" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></div>
+            </div>
+            <div class="owner-location-selected">
+              <div>
+                <span data-i18n="owner.selected_address">Selected Address</span>
+                <strong data-owner-location-selected-address>Not selected</strong>
+              </div>
+              <div>
+                <span data-i18n="owner.latitude">Latitude</span>
+                <strong data-owner-location-selected-latitude>-</strong>
+              </div>
+              <div>
+                <span data-i18n="owner.longitude">Longitude</span>
+                <strong data-owner-location-selected-longitude>-</strong>
+              </div>
+            </div>
+            <div class="owner-location-meta">
+              <span data-owner-location-status>Set latitude and longitude to preview the map pin.</span>
+              <button class="btn btn-glass btn-sm" type="button" data-owner-location-clear>Clear map pin</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card-pro p-4" id="managerVenueAmenities">
+          <div class="section-head-res mb-3">
+            <div><h2>Amenities</h2><div class="sub">Facilities, cuisine types, and payment options guests use to decide where to book</div></div>
+          </div>
+          <div class="manager-config-stack">
+            <div>
+              <h4 data-i18n="venue.facilities">Facilities</h4>
+              <div class="owner-check-grid mt-3" data-owner-facilities></div>
+            </div>
+            <div>
+              <h4 data-i18n="restaurants.cuisine_type">Cuisine Types</h4>
+              <div class="owner-check-grid mt-3" data-owner-cuisines></div>
+            </div>
+            <div>
+              <h4 data-i18n="venue.payment_options">Payment Options</h4>
+              <div class="owner-check-grid mt-3" data-owner-payments></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="manager-config-placeholder" id="managerVenuePublicPreview">
+          <div>
+            <h3>Public Preview</h3>
+            <p>The live guest-facing preview remains available from the Dashboard readiness panel and topbar quick action.</p>
+          </div>
+          <button class="btn btn-gold-outline" type="button" data-manager-quick-action="preview"><i class="bi bi-box-arrow-up-right me-1"></i>Preview public page</button>
+        </section>
+      </div>
+    </section>
+
+    <section class="manager-config-module mb-4" id="managerAvailabilityModule">
+      <div class="manager-config-header">
+        <div>
+          <span class="eyebrow-res"><i class="bi bi-clock-history"></i> Configuration</span>
+          <h2>Availability</h2>
+          <p>Control when guests can book and the rules that shape reservation availability.</p>
+        </div>
+      </div>
+      <div class="manager-config-grid manager-config-grid-compact">
+        <section class="card-pro p-4" id="managerAvailabilityOpeningHours">
           <div class="section-head-res mb-3">
             <div><h2 data-i18n="owner.opening_hours">Opening Hours</h2><div class="sub" data-i18n="owner.monday_sunday">Monday through Sunday</div></div>
+          </div>
+          <div class="manager-empty-inline" data-owner-availability-empty hidden>
+            <strong>Opening hours define when guests can book.</strong>
+            <span>Configure your weekly schedule before opening reservations publicly.</span>
           </div>
           <div class="row g-2" data-owner-hours></div>
         </section>
 
-        <section class="card-pro p-4 mb-4" data-owner-availability-section hidden id="managerAvailabilityExceptions" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <section class="card-pro p-4" id="managerBookingRules">
           <div class="section-head-res mb-3">
-            <div><h2 data-i18n="owner.availability">Availability Exceptions</h2><div class="sub"><span data-i18n="owner.blackout_dates">Blackout dates</span> & <span data-i18n="owner.special_hours">Special Hours</span></div></div>
+            <div><h2>Booking Rules</h2><div class="sub">Reservation interval, booking horizon, and capacity per time slot</div></div>
           </div>
-
-          <div class="availability-exception-grid">
-            <div class="availability-exception-panel">
-              <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                <div>
-                  <h5 class="mb-1" data-i18n="owner.blackout_dates">Blackout Dates</h5>
-                  <p class="small text-muted-pro mb-0">Block reservations for holidays, private events, or maintenance.</p>
-                </div>
-                <i class="bi bi-calendar-x text-gold fs-4"></i>
-              </div>
-              <div class="row g-2">
-                <div class="col-sm-5"><input class="form-control" type="date" data-blackout-date aria-label="Blackout date" data-i18n-attr="aria-label:availability.blackout_date" /></div>
-                <div class="col-sm-5"><input class="form-control" list="blackout-reasons" maxlength="255" placeholder="Reason optional" data-blackout-reason aria-label="Blackout reason" data-i18n-attr="placeholder:reservation.reason,aria-label:reservation.reason" /></div>
-                <div class="col-sm-2 d-grid"><button class="btn btn-gold-outline" type="button" data-blackout-add><i class="bi bi-plus-lg"></i></button></div>
-              </div>
-              <datalist id="blackout-reasons">
-                <option value="Holiday"></option>
-                <option value="Private Event"></option>
-                <option value="Maintenance"></option>
-                <option value="Closed"></option>
-              </datalist>
-              <div class="availability-list mt-3" data-blackout-list></div>
-            </div>
-
-            <div class="availability-exception-panel">
-              <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                <div>
-                  <h5 class="mb-1" data-i18n="owner.special_hours">Special Opening Hours</h5>
-                  <p class="small text-muted-pro mb-0">Override normal hours for a single date, or mark it closed.</p>
-                </div>
-                <i class="bi bi-clock-history text-gold fs-4"></i>
-              </div>
-              <div class="row g-2 align-items-end">
-                <div class="col-sm-4"><label class="form-label small" data-i18n="owner.date">Date</label><input class="form-control" type="date" data-special-date /></div>
-                <div class="col-sm-3"><label class="form-label small" data-i18n="restaurants.opens">Opens</label><select class="form-select owner-time-select" data-special-open></select></div>
-                <div class="col-sm-3"><label class="form-label small" data-i18n="restaurants.closes">Closes</label><select class="form-select owner-time-select" data-special-close></select></div>
-                <div class="col-sm-2 d-grid"><button class="btn btn-gold-outline" type="button" data-special-save><i class="bi bi-check2"></i></button></div>
-                <div class="col-12">
-                  <label class="owner-check availability-closed-toggle">
-                    <input class="form-check-input" type="checkbox" data-special-closed>
-                    <span data-i18n="availability.closed_on_date">Closed on this date</span>
-                  </label>
-                </div>
-              </div>
-              <div class="availability-list mt-3" data-special-list></div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <div class="col-xl-4">
-        <section class="card-pro p-4 mb-4" id="managerGuestRules" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="reservation.guest_settings">Guest Settings</h4>
-          <p class="small text-muted-pro mb-0">Active restaurants and bars are available publicly for reservations.</p>
-          <div class="row g-3 mt-1">
-            <div class="col-6"><label class="form-label" data-i18n="reservation.min_guests">Min guests</label><input class="form-control" name="min_guests" type="number" min="1" value="1" /></div>
-            <div class="col-6"><label class="form-label" data-i18n="reservation.max_guests">Max guests</label><input class="form-control" name="max_guests" type="number" min="1" value="10" /></div>
-            <div class="col-12" id="managerBookingRules">
+          <div class="row g-3">
+            <div class="col-md-4">
               <label class="form-label" data-i18n="availability.max_reservations_per_slot">Maximum Reservations Per Time Slot</label>
               <input class="form-control" name="max_reservations_per_slot" type="number" min="1" value="10" />
               <small class="text-muted-pro">Maximum number of reservations allowed for the same time slot.</small>
             </div>
-            <div class="col-12">
+            <div class="col-md-4">
               <label class="form-label" data-i18n="availability.booking_horizon">Booking Horizon</label>
               <select class="form-select" name="booking_horizon_days">
                 <option value="7">7 Days</option>
@@ -693,42 +711,96 @@
                 <option value="365">365 Days</option>
               </select>
             </div>
-            <div class="col-12"><label class="form-label" data-i18n="availability.reservation_interval">Interval</label><select class="form-select" name="reservation_interval_minutes"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option><option value="90">90 minutes</option><option value="120">120 minutes</option></select></div>
-            <div class="col-12"><label class="form-label" data-i18n="availability.last_reservation">Last reservation time</label><select class="form-select owner-time-select" name="last_reservation_time" data-owner-time-select></select></div>
+            <div class="col-md-4"><label class="form-label" data-i18n="availability.reservation_interval">Interval</label><select class="form-select" name="reservation_interval_minutes"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option><option value="90">90 minutes</option><option value="120">120 minutes</option></select></div>
+            <div class="col-md-4"><label class="form-label" data-i18n="availability.last_reservation">Last reservation time</label><select class="form-select owner-time-select" name="last_reservation_time" data-owner-time-select></select></div>
           </div>
         </section>
 
-        <section class="card-pro p-4 mb-4" id="managerSettings" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="owner.social_links">Social Links</h4>
-          <div class="d-grid gap-3 mt-3">
-            <input class="form-control" name="facebook_url" type="url" placeholder="Facebook URL" />
-            <input class="form-control" name="instagram_url" type="url" placeholder="Instagram URL" />
-            <input class="form-control" name="tiktok_url" type="url" placeholder="TikTok URL" />
+        <section class="card-pro p-4" id="managerGuestRules">
+          <div class="section-head-res mb-3">
+            <div><h2 data-i18n="reservation.guest_settings">Guest Rules</h2><div class="sub">Minimum and maximum party sizes guests can request</div></div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label" data-i18n="reservation.min_guests">Min guests</label><input class="form-control" name="min_guests" type="number" min="1" value="1" /></div>
+            <div class="col-md-6"><label class="form-label" data-i18n="reservation.max_guests">Max guests</label><input class="form-control" name="max_guests" type="number" min="1" value="10" /></div>
           </div>
         </section>
 
-        <section class="card-pro p-4 mb-4" id="managerVenueAmenities" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="venue.facilities">Facilities</h4>
-          <div class="owner-check-grid mt-3" data-owner-facilities></div>
+        <section class="card-pro p-4" data-owner-availability-section hidden id="managerAvailabilityExceptions">
+          <div class="section-head-res mb-3">
+            <div><h2 data-i18n="owner.blackout_dates">Blackout Dates</h2><div class="sub">Block reservations for holidays, private events, or maintenance.</div></div>
+          </div>
+          <div class="row g-2">
+            <div class="col-sm-5"><input class="form-control" type="date" data-blackout-date aria-label="Blackout date" data-i18n-attr="aria-label:availability.blackout_date" /></div>
+            <div class="col-sm-5"><input class="form-control" list="blackout-reasons" maxlength="255" placeholder="Reason optional" data-blackout-reason aria-label="Blackout reason" data-i18n-attr="placeholder:reservation.reason,aria-label:reservation.reason" /></div>
+            <div class="col-sm-2 d-grid"><button class="btn btn-gold-outline" type="button" data-blackout-add><i class="bi bi-plus-lg"></i></button></div>
+          </div>
+          <datalist id="blackout-reasons">
+            <option value="Holiday"></option>
+            <option value="Private Event"></option>
+            <option value="Maintenance"></option>
+            <option value="Closed"></option>
+          </datalist>
+          <div class="availability-list mt-3" data-blackout-list></div>
         </section>
 
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="restaurants.cuisine_type">Cuisine Types</h4>
-          <div class="owner-check-grid mt-3" data-owner-cuisines></div>
+        <section class="card-pro p-4" data-owner-availability-section hidden id="managerAvailabilitySpecialHours">
+          <div class="section-head-res mb-3">
+            <div><h2 data-i18n="owner.special_hours">Special Hours</h2><div class="sub">Override normal hours for a single date, or mark it closed.</div></div>
+          </div>
+          <div class="row g-2 align-items-end">
+            <div class="col-sm-4"><label class="form-label small" data-i18n="owner.date">Date</label><input class="form-control" type="date" data-special-date /></div>
+            <div class="col-sm-3"><label class="form-label small" data-i18n="restaurants.opens">Opens</label><select class="form-select owner-time-select" data-special-open></select></div>
+            <div class="col-sm-3"><label class="form-label small" data-i18n="restaurants.closes">Closes</label><select class="form-select owner-time-select" data-special-close></select></div>
+            <div class="col-sm-2 d-grid"><button class="btn btn-gold-outline" type="button" data-special-save><i class="bi bi-check2"></i></button></div>
+            <div class="col-12">
+              <label class="owner-check availability-closed-toggle">
+                <input class="form-check-input" type="checkbox" data-special-closed>
+                <span data-i18n="availability.closed_on_date">Closed on this date</span>
+              </label>
+            </div>
+          </div>
+          <div class="availability-list mt-3" data-special-list></div>
         </section>
+      </div>
+    </section>
 
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="venue.payment_options">Payment Options</h4>
-          <div class="owner-check-grid mt-3" data-owner-payments></div>
+    <section class="manager-config-module mb-4" id="managerSettings">
+      <div class="manager-config-header">
+        <div>
+          <span class="eyebrow-res"><i class="bi bi-gear"></i> Administration</span>
+          <h2>Settings</h2>
+          <p>Administrative preferences and account-level controls kept outside daily workflows.</p>
+        </div>
+      </div>
+      <div class="manager-settings-grid">
+        <section class="manager-config-placeholder" id="managerSettingsAccount">
+          <h3>Account</h3>
+          <p>Account preferences are managed by the current authenticated owner profile.</p>
         </section>
-
-        <section class="card-pro p-4 mb-4 border-danger-subtle" data-owner-delete-section hidden id="managerDangerZone" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="owner.delete_restaurant_bar">Delete Restaurant / Bar</h4>
-          <p class="small text-muted-pro">This removes the restaurant or bar profile and gallery.</p>
+        <section class="manager-config-placeholder" id="managerSettingsNotifications">
+          <h3>Notifications</h3>
+          <p>Notification preferences are prepared for future reservation and venue alerts.</p>
+        </section>
+        <section class="manager-config-placeholder" id="managerSettingsLanguage">
+          <h3>Language</h3>
+          <p>Language controls will live here when manager preferences are expanded.</p>
+        </section>
+        <section class="manager-config-placeholder" id="managerSettingsIntegrations">
+          <h3>Integrations</h3>
+          <p>POS, calendar, and ordering integrations can be connected here in later phases.</p>
+        </section>
+        <section class="manager-config-placeholder" id="managerSettingsBilling">
+          <h3>Billing</h3>
+          <p>Billing is reserved for future subscription and payment administration.</p>
+        </section>
+        <section class="card-pro p-4 border-danger-subtle" data-owner-delete-section hidden id="managerDangerZone">
+          <h3 data-i18n="owner.delete_restaurant_bar">Danger Zone</h3>
+          <p class="small text-muted-pro">Destructive venue actions live here and require confirmation.</p>
           <button class="btn btn-outline-danger w-100" type="button" data-owner-delete-open><i class="bi bi-trash me-1"></i><span data-i18n="owner.delete_profile">Delete profile</span></button>
         </section>
       </div>
-    </div>
+    </section>
   </form>
 </main>
   </div>
