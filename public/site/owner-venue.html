@@ -17,21 +17,116 @@
 </head>
 <body class="dashboard-enterprise owner-dashboard-page restaurant-experience-page">
 
-<nav class="navbar navbar-expand-lg nav-blur nav-res">
-  <div class="container-xxl">
-    <a class="brand" href="/welcome"><span class="brand-logo" style="background:var(--grad-res)"><i class="bi bi-cup-hot-fill"></i></span>Tiketa <span class="text-gold ms-1 d-none d-sm-inline" style="font-weight:500;font-size:.95rem">· Reservations</span></a>
-    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#resNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
-    <div class="collapse navbar-collapse" id="resNav">
-      <ul class="navbar-nav mx-auto gap-1">
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="/restaurants" data-i18n="header.home">Home</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="/my-reservations" data-auth-role-nav="user" data-i18n="header.my_reservations" hidden>My Reservations</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro active" href="/owner-venue" data-auth-role-nav="owner" hidden>Restaurant & Bar Reservations</a></li>
-      </ul>
-      <div class="d-flex align-items-center gap-2">
-        <a class="btn btn-ghost" href="/login" data-auth-guest data-i18n="header.login">Login</a>
-        <a class="btn btn-gold" href="/register" data-auth-guest data-i18n="header.register">Register</a>
-        <div class="notification-root" data-notification-root data-auth-user hidden>
-          <button class="icon-btn notification-toggle" type="button" data-notification-toggle aria-label="Notifications" data-i18n-attr="aria-label:header.notifications" aria-expanded="false">
+<div class="manager-shell" data-manager-shell>
+  <aside class="manager-sidebar" data-manager-sidebar aria-label="Restaurant manager navigation">
+    <div class="manager-sidebar-head">
+      <a class="manager-brand" href="/welcome" data-label="Tiketa Reservations">
+        <span class="manager-brand-mark"><i class="bi bi-cup-hot-fill"></i></span>
+        <span class="manager-brand-copy"><strong>Tiketa</strong><small>Reservations</small></span>
+      </a>
+      <button class="manager-sidebar-toggle" type="button" data-manager-sidebar-toggle aria-label="Collapse sidebar">
+        <i class="bi bi-layout-sidebar-inset"></i>
+      </button>
+    </div>
+
+    <nav class="manager-nav" aria-label="Manager workspace">
+      <div class="manager-nav-group">
+        <div class="manager-nav-label">Daily Operations</div>
+        <a class="manager-nav-item active" href="#managerDashboard" data-manager-nav="dashboard" data-manager-section="dashboard" data-label="Dashboard">
+          <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+        </a>
+        <a class="manager-nav-item" href="#ownerReservations" data-manager-nav="reservations" data-manager-section="reservations" data-label="Reservations">
+          <i class="bi bi-calendar-check"></i><span>Reservations</span><strong class="manager-nav-badge" data-manager-pending-badge hidden>0</strong>
+        </a>
+        <div class="manager-subnav" data-manager-subnav="reservations">
+          <a href="#ownerReservations" data-manager-reservation-filter="all">All</a>
+          <a href="#ownerReservations" data-manager-reservation-filter="pending">Pending</a>
+          <a href="#ownerReservations" data-manager-reservation-filter="confirmed">Confirmed</a>
+          <a href="#ownerReservations" data-manager-reservation-filter="completed">Completed</a>
+          <a href="#ownerReservations" data-manager-reservation-filter="cancelled">Cancelled</a>
+          <a href="#ownerReservations" data-manager-reservation-filter="no_show">No-shows</a>
+        </div>
+        <a class="manager-nav-item" href="#ownerReservations" data-manager-nav="calendar" data-manager-section="calendar" data-label="Calendar">
+          <i class="bi bi-calendar3"></i><span>Calendar</span>
+        </a>
+        <a class="manager-nav-item" href="#ownerReservations" data-manager-nav="guests" data-manager-section="guests" data-label="Guests">
+          <i class="bi bi-people"></i><span>Guests</span>
+        </a>
+        <a class="manager-nav-item" href="#ownerReservations" data-manager-nav="analytics" data-manager-section="analytics" data-label="Analytics">
+          <i class="bi bi-graph-up-arrow"></i><span>Analytics</span>
+        </a>
+      </div>
+
+      <div class="manager-nav-divider"></div>
+
+      <div class="manager-nav-group">
+        <div class="manager-nav-label">Configuration</div>
+        <a class="manager-nav-item" href="#managerVenueProfile" data-manager-nav="venue" data-manager-section="venue" data-label="Venue">
+          <i class="bi bi-shop-window"></i><span>Venue</span>
+        </a>
+        <div class="manager-subnav" data-manager-subnav="venue">
+          <a href="#managerVenueProfile" data-manager-target="#managerVenueProfile">Profile</a>
+          <a href="#managerVenueGallery" data-manager-target="#managerVenueGallery">Gallery</a>
+          <a href="#managerVenueLocation" data-manager-target="#managerVenueLocation">Location</a>
+          <a href="#managerVenueAmenities" data-manager-target="#managerVenueAmenities">Amenities</a>
+          <a href="#managerPublicPreview" data-manager-public-preview>Public Preview</a>
+        </div>
+        <a class="manager-nav-item" href="#managerAvailabilityOpeningHours" data-manager-nav="availability" data-manager-section="availability" data-label="Availability">
+          <i class="bi bi-clock-history"></i><span>Availability</span>
+        </a>
+        <div class="manager-subnav" data-manager-subnav="availability">
+          <a href="#managerAvailabilityOpeningHours" data-manager-target="#managerAvailabilityOpeningHours">Opening Hours</a>
+          <a href="#managerBookingRules" data-manager-target="#managerBookingRules">Booking Rules</a>
+          <a href="#managerGuestRules" data-manager-target="#managerGuestRules">Guest Rules</a>
+          <a href="#managerAvailabilityExceptions" data-manager-target="#managerAvailabilityExceptions">Blackout Dates</a>
+          <a href="#managerAvailabilityExceptions" data-manager-target="#managerAvailabilityExceptions">Special Hours</a>
+        </div>
+        <a class="manager-nav-item" href="#managerSettings" data-manager-nav="settings" data-manager-section="settings" data-label="Settings">
+          <i class="bi bi-gear"></i><span>Settings</span>
+        </a>
+        <div class="manager-subnav" data-manager-subnav="settings">
+          <a href="#managerSettings" data-manager-placeholder="Account">Account</a>
+          <a href="#managerSettings" data-manager-placeholder="Notifications">Notifications</a>
+          <a href="#managerSettings" data-manager-placeholder="Language">Language</a>
+          <a href="#managerSettings" data-manager-placeholder="Integrations">Integrations</a>
+          <a href="#managerSettings" data-manager-placeholder="Billing">Billing</a>
+          <a href="#managerSettings" data-manager-target="#managerDangerZone">Danger Zone</a>
+        </div>
+      </div>
+    </nav>
+  </aside>
+
+  <div class="manager-workspace">
+    <header class="manager-topbar" data-manager-topbar>
+      <div class="manager-venue-switcher" data-manager-venue-switcher>
+        <span class="manager-venue-icon"><i class="bi bi-shop"></i></span>
+        <span><small>Current venue</small><strong data-manager-venue-name>Restaurant / Bar</strong></span>
+        <i class="bi bi-chevron-down"></i>
+      </div>
+
+      <button class="manager-search" type="button" data-manager-search>
+        <i class="bi bi-search"></i>
+        <span>Search reservations, guests, dates...</span>
+        <kbd data-manager-shortcut>Ctrl K</kbd>
+      </button>
+
+      <div class="manager-topbar-actions">
+        <div class="dropdown">
+          <button class="btn btn-gold-outline manager-topbar-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-lightning-charge"></i><span>Quick Actions</span>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end manager-dropdown">
+            <button class="dropdown-item" type="button" data-manager-quick-action="pending"><i class="bi bi-hourglass-split"></i>Review Pending Reservations</button>
+            <button class="dropdown-item" type="button" data-manager-quick-action="calendar"><i class="bi bi-calendar3"></i>Open Today's Calendar</button>
+            <button class="dropdown-item" type="button" data-manager-quick-action="blackout"><i class="bi bi-calendar-x"></i>Add Blackout Date</button>
+            <button class="dropdown-item" type="button" data-manager-quick-action="special-hours"><i class="bi bi-clock-history"></i>Add Special Hours</button>
+            <button class="dropdown-item" type="button" data-manager-quick-action="opening-hours"><i class="bi bi-clock"></i>Edit Opening Hours</button>
+            <button class="dropdown-item" type="button" data-manager-quick-action="preview"><i class="bi bi-box-arrow-up-right"></i>Preview Public Page</button>
+          </div>
+        </div>
+
+        <div class="notification-root manager-notification-root" data-notification-root data-auth-user hidden>
+          <button class="icon-btn notification-toggle manager-icon-button" type="button" data-notification-toggle aria-label="Notifications" data-i18n-attr="aria-label:header.notifications" aria-expanded="false">
             <i class="bi bi-bell"></i>
             <span class="notification-badge" data-notification-count hidden>0</span>
           </button>
@@ -45,13 +140,24 @@
             <a class="notification-view-all" href="/notifications" data-i18n="header.view_all_notifications">View all notifications</a>
           </div>
         </div>
-        <a class="btn btn-gold" href="#" data-auth-user data-logout data-i18n="header.logout" hidden>Logout</a>
-      </div>
-    </div>
-  </div>
-</nav>
 
-<main class="container-xxl py-5" data-owner-venue-page>
+        <div class="dropdown">
+          <button class="manager-user-button" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <span data-auth-name>Account</span><i class="bi bi-chevron-down"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end manager-dropdown">
+            <button class="dropdown-item" type="button" data-manager-placeholder="Account"><i class="bi bi-person"></i>Account</button>
+            <button class="dropdown-item" type="button" data-manager-placeholder="Language"><i class="bi bi-translate"></i>Language</button>
+            <a class="dropdown-item" href="/reservation-support"><i class="bi bi-life-preserver"></i>Help / Support</a>
+            <a class="dropdown-item" href="#" data-manager-public-page><i class="bi bi-box-arrow-up-right"></i>Public Venue Page</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#" data-auth-user data-logout data-i18n="header.logout" hidden><i class="bi bi-box-arrow-right"></i>Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+<main class="container-xxl py-5" data-owner-venue-page id="managerDashboard">
   <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
     <div>
       <span class="eyebrow-res"><i class="bi bi-shop"></i> <span data-i18n="owner.owner_profile">Restaurant / Bar owner profile</span></span>
@@ -132,7 +238,7 @@
     </div>
   </section>
 
-  <section class="mb-4" data-owner-summary hidden>
+  <section class="mb-4" data-owner-summary hidden id="managerPublicPreview">
     <div class="venue-card owner-venue-summary">
       <div class="img-wrap">
         <img data-owner-cover alt="Restaurant venue cover preview" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1000&q=80" loading="lazy" decoding="async" width="1000" height="667" sizes="(min-width: 992px) 50vw, 100vw" />
@@ -355,7 +461,7 @@
     <input type="hidden" name="venue_slug" />
     <div class="row g-4">
       <div class="col-xl-8">
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <section class="card-pro p-4 mb-4" id="managerVenueProfile" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
           <div class="section-head-res mb-3">
             <div><h2 data-i18n="header.profile">Profile</h2><div class="sub" data-i18n="venue.contact">Name, type, contact, and location</div></div>
           </div>
@@ -372,7 +478,7 @@
             <div class="col-md-4"><label class="form-label" data-i18n="owner.country">Country</label><input class="form-control" name="country" maxlength="255" /></div>
             <div class="col-md-2"><label class="form-label" data-i18n="owner.latitude">Latitude</label><input class="form-control" name="latitude" type="number" step="0.0000001" /></div>
             <div class="col-md-2"><label class="form-label" data-i18n="owner.longitude">Longitude</label><input class="form-control" name="longitude" type="number" step="0.0000001" /></div>
-            <div class="col-12">
+            <div class="col-12" id="managerVenueLocation">
               <div class="owner-location-picker">
                 <div class="owner-location-toolbar">
                   <div>
@@ -422,7 +528,7 @@
           </div>
         </section>
 
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <section class="card-pro p-4 mb-4" id="managerVenueGallery" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
           <div class="section-head-res mb-3">
             <div><h2 data-i18n="venue.gallery">Gallery</h2><div class="sub" data-i18n="owner.upload_photos">Upload, delete, and reorder restaurant or bar images</div></div>
           </div>
@@ -441,14 +547,14 @@
           <div class="row g-3" data-owner-gallery></div>
         </section>
 
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <section class="card-pro p-4 mb-4" id="managerAvailabilityOpeningHours" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
           <div class="section-head-res mb-3">
             <div><h2 data-i18n="owner.opening_hours">Opening Hours</h2><div class="sub" data-i18n="owner.monday_sunday">Monday through Sunday</div></div>
           </div>
           <div class="row g-2" data-owner-hours></div>
         </section>
 
-        <section class="card-pro p-4 mb-4" data-owner-availability-section hidden style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <section class="card-pro p-4 mb-4" data-owner-availability-section hidden id="managerAvailabilityExceptions" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
           <div class="section-head-res mb-3">
             <div><h2 data-i18n="owner.availability">Availability Exceptions</h2><div class="sub"><span data-i18n="owner.blackout_dates">Blackout dates</span> & <span data-i18n="owner.special_hours">Special Hours</span></div></div>
           </div>
@@ -503,13 +609,13 @@
       </div>
 
       <div class="col-xl-4">
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <section class="card-pro p-4 mb-4" id="managerGuestRules" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
           <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="reservation.guest_settings">Guest Settings</h4>
           <p class="small text-muted-pro mb-0">Active restaurants and bars are available publicly for reservations.</p>
           <div class="row g-3 mt-1">
             <div class="col-6"><label class="form-label" data-i18n="reservation.min_guests">Min guests</label><input class="form-control" name="min_guests" type="number" min="1" value="1" /></div>
             <div class="col-6"><label class="form-label" data-i18n="reservation.max_guests">Max guests</label><input class="form-control" name="max_guests" type="number" min="1" value="10" /></div>
-            <div class="col-12">
+            <div class="col-12" id="managerBookingRules">
               <label class="form-label" data-i18n="availability.max_reservations_per_slot">Maximum Reservations Per Time Slot</label>
               <input class="form-control" name="max_reservations_per_slot" type="number" min="1" value="10" />
               <small class="text-muted-pro">Maximum number of reservations allowed for the same time slot.</small>
@@ -531,7 +637,7 @@
           </div>
         </section>
 
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <section class="card-pro p-4 mb-4" id="managerSettings" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
           <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="owner.social_links">Social Links</h4>
           <div class="d-grid gap-3 mt-3">
             <input class="form-control" name="facebook_url" type="url" placeholder="Facebook URL" />
@@ -540,7 +646,7 @@
           </div>
         </section>
 
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <section class="card-pro p-4 mb-4" id="managerVenueAmenities" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
           <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="venue.facilities">Facilities</h4>
           <div class="owner-check-grid mt-3" data-owner-facilities></div>
         </section>
@@ -555,7 +661,7 @@
           <div class="owner-check-grid mt-3" data-owner-payments></div>
         </section>
 
-        <section class="card-pro p-4 mb-4 border-danger-subtle" data-owner-delete-section hidden style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <section class="card-pro p-4 mb-4 border-danger-subtle" data-owner-delete-section hidden id="managerDangerZone" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
           <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="owner.delete_restaurant_bar">Delete Restaurant / Bar</h4>
           <p class="small text-muted-pro">This removes the restaurant or bar profile and gallery.</p>
           <button class="btn btn-outline-danger w-100" type="button" data-owner-delete-open><i class="bi bi-trash me-1"></i><span data-i18n="owner.delete_profile">Delete profile</span></button>
@@ -564,6 +670,8 @@
     </div>
   </form>
 </main>
+  </div>
+</div>
 
 <div class="modal fade" id="ownerDeleteModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">

@@ -1077,6 +1077,10 @@
     $("[data-owner-description]").textContent =
       venue.description ||
       tr("venue.complete_profile_details", "Complete your profile details below.");
+    const managerVenueName = $("[data-manager-venue-name]");
+    if (managerVenueName) {
+      managerVenueName.textContent = venue.name || tr("venue.profile", "Restaurant or bar profile");
+    }
     const publicLink = $("[data-owner-public-link]");
     if (publicLink) {
       publicLink.href = venue.slug
@@ -1085,6 +1089,10 @@
         : "#";
       publicLink.toggleAttribute("aria-disabled", !venue.slug);
     }
+    document.querySelectorAll("[data-manager-public-page]").forEach((link) => {
+      link.href = publicLink?.href || "#";
+      link.toggleAttribute("aria-disabled", !venue.slug);
+    });
     const publicNote = $("[data-owner-public-note]");
     if (publicNote) {
       publicNote.textContent =
@@ -1136,6 +1144,7 @@
     const stats = state.reservationStats || {};
     const signature = stableSignature(stats);
     if (skipRender("reservation-stats", signature)) return;
+    updateManagerPendingBadge(stats.pending || 0);
 
     root.innerHTML = [
       {
@@ -2465,7 +2474,214 @@
     await reservationAction(pending.id, pending.action, body);
   }
 
+  function managerShortcutLabel() {
+    return /Mac|iPhone|iPad|iPod/.test(navigator.platform || "") ? "⌘ K" : "Ctrl K";
+  }
+
+  function setManagerSidebarCollapsed(collapsed) {
+    const shell = $("[data-manager-shell]");
+    const toggle = $("[data-manager-sidebar-toggle]");
+    if (!shell) return;
+    shell.classList.toggle("manager-sidebar-collapsed", collapsed);
+    toggle?.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+    localStorage.setItem("tiketa_manager_sidebar_collapsed", collapsed ? "1" : "0");
+  }
+
+  function updateManagerPendingBadge(count) {
+    const badge = $("[data-manager-pending-badge]");
+    if (!badge) return;
+    badge.textContent = String(count);
+    badge.hidden = Number(count) <= 0;
+  }
+
+  function scrollManagerTarget(selector) {
+    const target = typeof selector === "string" ? $(selector) : selector;
+    if (!target) return;
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function setManagerActiveSection(section) {
+    document.querySelectorAll("[data-manager-nav]").forEach((item) => {
+      const active = item.dataset.managerNav === section;
+      item.classList.toggle("active", active);
+      item.setAttribute("aria-current", active ? "page" : "false");
+    });
+    document.querySelectorAll("[data-manager-subnav]").forEach((subnav) => {
+      subnav.hidden = subnav.dataset.managerSubnav !== section;
+    });
+  }
+
+  function switchOwnerReservationPanel(view) {
+    const tab = $(`[data-owner-reservation-tab="${view}"]`);
+    if (tab) tab.click();
+  }
+
+  function applyManagerReservationFilter(status) {
+    const view = $('[data-owner-reservation-filter="view"]');
+    const statusSelect = $('[data-owner-reservation-filter="status"]');
+    if (view) view.value = "";
+    if (statusSelect) statusSelect.value = status === "all" ? "" : status;
+    state.reservationFilters.view = "";
+    state.reservationFilters.status = status === "all" ? "" : status;
+    lastReservationRenderSignature = "";
+    clearOwnerRenderSignatures("reservation-stats");
+    loadReservations();
+  }
+
+  function openManagerSection(section, options = {}) {
+    setManagerActiveSection(section);
+    if (section === "dashboard") {
+      scrollManagerTarget("#managerDashboard");
+      return;
+    }
+    if (section === "reservations") {
+      switchOwnerReservationPanel("list");
+      scrollManagerTarget("#ownerReservations");
+      return;
+    }
+    if (section === "calendar") {
+      switchOwnerReservationPanel("calendar");
+      scrollManagerTarget("#ownerReservations");
+      return;
+    }
+    if (section === "analytics") {
+      switchOwnerReservationPanel("analytics");
+      scrollManagerTarget("#ownerReservations");
+      return;
+    }
+    if (section === "venue") {
+      scrollManagerTarget(options.target || "#managerVenueProfile");
+      return;
+    }
+    if (section === "availability") {
+      scrollManagerTarget(options.target || "#managerAvailabilityOpeningHours");
+      return;
+    }
+    if (section === "settings") {
+      scrollManagerTarget(options.target || "#managerSettings");
+      return;
+    }
+    if (section === "guests") {
+      scrollManagerTarget("#ownerReservations");
+      window.tkToast?.("Guest workspace will be available in a later manager phase.", "info");
+    }
+  }
+
+  function openPublicVenuePage() {
+    const link = $("[data-owner-public-link]");
+    if (link?.href && link.href !== "#") {
+      window.open(link.href, "_blank", "noopener");
+      return;
+    }
+    window.tkToast?.(
+      tr(
+        "owner.create_before_upload",
+        "Create the restaurant or bar before opening the public page.",
+      ),
+      "info",
+    );
+  }
+
+  function bindManagerShell() {
+    const shortcut = $("[data-manager-shortcut]");
+    if (shortcut) shortcut.textContent = managerShortcutLabel();
+
+    setManagerSidebarCollapsed(localStorage.getItem("tiketa_manager_sidebar_collapsed") === "1");
+    setManagerActiveSection("dashboard");
+
+    $("[data-manager-sidebar-toggle]")?.addEventListener("click", () => {
+      const shell = $("[data-manager-shell]");
+      setManagerSidebarCollapsed(!shell?.classList.contains("manager-sidebar-collapsed"));
+    });
+
+    document.querySelectorAll("[data-manager-section]").forEach((item) => {
+      item.addEventListener("click", (event) => {
+        event.preventDefault();
+        openManagerSection(item.dataset.managerSection);
+      });
+    });
+
+    document.querySelectorAll("[data-manager-reservation-filter]").forEach((item) => {
+      item.addEventListener("click", (event) => {
+        event.preventDefault();
+        openManagerSection("reservations");
+        applyManagerReservationFilter(item.dataset.managerReservationFilter);
+      });
+    });
+
+    document.querySelectorAll("[data-manager-target]").forEach((item) => {
+      item.addEventListener("click", (event) => {
+        event.preventDefault();
+        const section = item.closest("[data-manager-subnav]")?.dataset.managerSubnav || "dashboard";
+        openManagerSection(section, { target: item.dataset.managerTarget });
+      });
+    });
+
+    document.querySelectorAll("[data-manager-placeholder]").forEach((item) => {
+      item.addEventListener("click", (event) => {
+        event.preventDefault();
+        const label = item.dataset.managerPlaceholder || "This section";
+        window.tkToast?.(`${label} will be available in a later manager phase.`, "info");
+      });
+    });
+
+    document
+      .querySelectorAll("[data-manager-public-preview], [data-manager-public-page]")
+      .forEach((item) => {
+        item.addEventListener("click", (event) => {
+          event.preventDefault();
+          setManagerActiveSection("venue");
+          openPublicVenuePage();
+        });
+      });
+
+    $("[data-manager-search]")?.addEventListener("click", () => {
+      window.tkToast?.("Global search will be available in a later manager phase.", "info");
+    });
+
+    document.addEventListener("keydown", (event) => {
+      const isShortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
+      if (!isShortcut) return;
+      event.preventDefault();
+      window.tkToast?.("Global search will be available in a later manager phase.", "info");
+    });
+
+    document.querySelectorAll("[data-manager-quick-action]").forEach((item) => {
+      item.addEventListener("click", () => {
+        const action = item.dataset.managerQuickAction;
+        if (action === "pending") {
+          openManagerSection("reservations");
+          applyManagerReservationFilter("pending");
+          return;
+        }
+        if (action === "calendar") {
+          openManagerSection("calendar");
+          document.querySelector('[data-owner-calendar-view="day"]')?.click();
+          return;
+        }
+        if (action === "blackout") {
+          openManagerSection("availability", { target: "#managerAvailabilityExceptions" });
+          $("[data-blackout-date]")?.focus();
+          return;
+        }
+        if (action === "special-hours") {
+          openManagerSection("availability", { target: "#managerAvailabilityExceptions" });
+          $("[data-special-date]")?.focus();
+          return;
+        }
+        if (action === "opening-hours") {
+          openManagerSection("availability", { target: "#managerAvailabilityOpeningHours" });
+          return;
+        }
+        if (action === "preview") {
+          openPublicVenuePage();
+        }
+      });
+    });
+  }
+
   function bindEvents() {
+    bindManagerShell();
     $("[data-owner-save]")?.addEventListener("click", saveVenue);
     $("[data-owner-start-create]")?.addEventListener("click", () =>
       $("[data-owner-venue-form]")?.scrollIntoView({ behavior: "smooth", block: "start" }),
