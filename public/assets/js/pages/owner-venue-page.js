@@ -981,6 +981,479 @@
     }
   }
 
+  function todayValue() {
+    return toDateInputValue(new Date());
+  }
+
+  function reservationTimeValue(reservation) {
+    return normalizeTime(reservation?.reservation_time || "");
+  }
+
+  function reservationDateTime(reservation) {
+    const date = reservation?.reservation_date || todayValue();
+    const time = reservationTimeValue(reservation) || "00:00";
+    return new Date(`${date}T${time}:00`);
+  }
+
+  function reservationUpdatedTime(reservation) {
+    return new Date(
+      reservation?.cancelled_at || reservation?.updated_at || reservation?.created_at || 0,
+    ).getTime();
+  }
+
+  function todayReservations() {
+    const today = todayValue();
+    return state.reservations
+      .filter((reservation) => reservation.reservation_date === today)
+      .sort((a, b) => reservationDateTime(a) - reservationDateTime(b));
+  }
+
+  function upcomingReservations(statuses = []) {
+    const now = new Date();
+    return state.reservations
+      .filter((reservation) => {
+        if (statuses.length && !statuses.includes(reservation.status)) return false;
+        return reservationDateTime(reservation) >= now;
+      })
+      .sort((a, b) => reservationDateTime(a) - reservationDateTime(b));
+  }
+
+  function todaysOpeningWindow() {
+    const hours = state.venue?.opening_hours || [];
+    const dayIndex = (new Date().getDay() + 6) % 7;
+    return hours.find((item) => Number(item.day_of_week) === dayIndex);
+  }
+
+  function operatingStatus() {
+    if (!state.venue) {
+      return {
+        label: "Setup needed",
+        detail: "Create a venue profile to start accepting reservations.",
+        tone: "warning",
+      };
+    }
+    if (state.venue.status !== "active") {
+      return {
+        label: "Venue inactive",
+        detail: "Activate the venue when you are ready for guests to book.",
+        tone: "critical",
+      };
+    }
+
+    const todayHours = todaysOpeningWindow();
+    if (!todayHours || todayHours.is_closed || !todayHours.opens_at || !todayHours.closes_at) {
+      return {
+        label: "Closed today",
+        detail: "Existing reservations still appear in today's operations.",
+        tone: "warning",
+      };
+    }
+
+    const now = new Date();
+    const open = new Date(`${todayValue()}T${normalizeTime(todayHours.opens_at)}:00`);
+    const close = new Date(`${todayValue()}T${normalizeTime(todayHours.closes_at)}:00`);
+    if (now < open) {
+      return {
+        label: `Opens at ${timeLabel(todayHours.opens_at)}`,
+        detail: `Today's hours: ${timeLabel(todayHours.opens_at)} - ${timeLabel(todayHours.closes_at)}`,
+        tone: "info",
+      };
+    }
+    if (now > close) {
+      return {
+        label: "Closed now",
+        detail: `Closed at ${timeLabel(todayHours.closes_at)}`,
+        tone: "info",
+      };
+    }
+    return {
+      label: "Open now",
+      detail: `Open until ${timeLabel(todayHours.closes_at)}`,
+      tone: "success",
+    };
+  }
+
+  function servicePeriodLabel() {
+    const hour = new Date().getHours();
+    if (hour < 11) return "Breakfast service";
+    if (hour < 16) return "Lunch service";
+    if (hour < 22) return "Dinner service";
+    return "Late service";
+  }
+
+  function dashboardEmpty(icon, title, copy, actions = "") {
+    return `
+      <div class="manager-dashboard-empty">
+        <i class="bi ${icon}"></i>
+        <div><strong>${esc(title)}</strong><span>${esc(copy)}</span>${actions}</div>
+      </div>
+    `;
+  }
+
+  function dashboardReservationRow(reservation, action = "") {
+    return `
+      <div class="manager-operation-row">
+        <div>
+          <strong>${esc(reservation.guest_name || "Guest")}</strong>
+          <span>${esc(timeLabel(reservation.reservation_time))} · ${Number(reservation.party_size || 0)} ${Number(reservation.party_size) === 1 ? "guest" : "guests"}</span>
+        </div>
+        <div class="manager-operation-meta">
+          ${statusBadge(reservation.status)}
+          ${action}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderDashboardHeader() {
+    const user = auth()?.getUser?.();
+    const name = user?.name ? user.name.split(" ")[0] : "";
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+    const status = operatingStatus();
+    const next = upcomingReservations(["pending", "confirmed"])[0];
+
+    const greetingEl = $("[data-dashboard-greeting]");
+    if (greetingEl) greetingEl.textContent = name ? `${greeting}, ${name}` : greeting;
+    const venueEl = $("[data-dashboard-venue-name]");
+    if (venueEl) {
+      venueEl.textContent = state.venue?.name || "Restaurant / Bar";
+    }
+    const dateEl = $("[data-dashboard-date]");
+    if (dateEl) {
+      dateEl.textContent = new Date().toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      });
+    }
+    const statusEl = $("[data-dashboard-operating-status]");
+    if (statusEl) {
+      statusEl.textContent = status.label;
+      statusEl.className = `manager-status-pill manager-status-${status.tone}`;
+    }
+    const serviceEl = $("[data-dashboard-service-period]");
+    if (serviceEl) serviceEl.textContent = servicePeriodLabel();
+    const nextEl = $("[data-dashboard-next-service]");
+    if (nextEl) {
+      nextEl.textContent = next
+        ? `Next reservation at ${timeLabel(next.reservation_time)} · ${next.guest_name || "Guest"}`
+        : status.detail;
+    }
+  }
+
+  function renderAttentionQueue() {
+    const root = $("[data-dashboard-attention-list]");
+    if (!root) return;
+    const today = todayValue();
+    const pending = state.reservations.filter((reservation) => reservation.status === "pending");
+    const cancellationsToday = state.reservations.filter(
+      (reservation) =>
+        reservation.status === "cancelled" &&
+        (reservation.reservation_date === today ||
+          String(reservation.cancelled_at || "").startsWith(today)),
+    );
+    const noShowsToday = state.reservations.filter(
+      (reservation) => reservation.status === "no_show" && reservation.reservation_date === today,
+    );
+    const missing = state.venue
+      ? profileCompletionItems(state.venue).filter((item) => !item.complete)
+      : [];
+    const status = operatingStatus();
+    const items = [];
+
+    if (!state.venue) {
+      items.push({
+        tone: "critical",
+        icon: "bi-exclamation-octagon",
+        title: "Venue setup is blocking bookings",
+        copy: "Create your venue profile before guests can reserve.",
+      });
+    } else if (state.venue.status !== "active") {
+      items.push({
+        tone: "critical",
+        icon: "bi-slash-circle",
+        title: "Venue is not active",
+        copy: "Public booking depends on the venue being active.",
+      });
+    }
+    if (pending.length) {
+      items.push({
+        tone: "warning",
+        icon: "bi-hourglass-split",
+        title: `${pending.length} pending ${pending.length === 1 ? "request" : "requests"}`,
+        copy: "Review guest requests before service.",
+        action: "pending",
+      });
+    }
+    if (cancellationsToday.length) {
+      items.push({
+        tone: "warning",
+        icon: "bi-calendar-x",
+        title: `${cancellationsToday.length} cancellation${cancellationsToday.length === 1 ? "" : "s"} today`,
+        copy: "Same-day changes may affect covers and staffing.",
+      });
+    }
+    if (noShowsToday.length) {
+      items.push({
+        tone: "warning",
+        icon: "bi-person-x",
+        title: `${noShowsToday.length} no-show${noShowsToday.length === 1 ? "" : "s"} today`,
+        copy: "Review missed arrivals before closing the day.",
+      });
+    }
+    if (state.venue && (!hasOpeningHours(state.venue) || missing.length >= 4)) {
+      items.push({
+        tone: "info",
+        icon: "bi-clipboard2-check",
+        title: !hasOpeningHours(state.venue) ? "Opening hours missing" : "Profile needs attention",
+        copy: !hasOpeningHours(state.venue)
+          ? "Availability cannot be trusted until hours are configured."
+          : `${missing.length} setup items are still incomplete.`,
+      });
+    }
+    if (status.label === "Closed today" && todayReservations().length) {
+      items.push({
+        tone: "warning",
+        icon: "bi-calendar-event",
+        title: "Reservations exist while closed today",
+        copy: "Review today's bookings against venue hours.",
+      });
+    }
+
+    root.innerHTML = items.length
+      ? items
+          .slice(0, 4)
+          .map(
+            (item) => `
+        <div class="manager-attention-item manager-attention-${item.tone}">
+          <i class="bi ${item.icon}"></i>
+          <div><strong>${esc(item.title)}</strong><span>${esc(item.copy)}</span></div>
+          ${
+            item.action
+              ? `<button class="btn btn-gold-outline btn-sm" type="button" data-manager-quick-action="${item.action}">Review</button>`
+              : ""
+          }
+        </div>
+      `,
+          )
+          .join("")
+      : dashboardEmpty(
+          "bi-shield-check",
+          "No urgent items.",
+          "Pending requests, same-day cancellations, and setup blockers will appear here.",
+        );
+  }
+
+  function renderDashboardOperations() {
+    const pendingRoot = $("[data-dashboard-pending-list]");
+    const arrivalsRoot = $("[data-dashboard-arrivals-list]");
+    const timelineRoot = $("[data-dashboard-timeline-list]");
+    const pending = state.reservations
+      .filter((reservation) => reservation.status === "pending")
+      .sort((a, b) => reservationDateTime(a) - reservationDateTime(b))
+      .slice(0, 4);
+    const arrivals = upcomingReservations(["confirmed"]).slice(0, 4);
+    const today = todayReservations();
+
+    if (pendingRoot) {
+      pendingRoot.innerHTML = pending.length
+        ? pending
+            .map((reservation) =>
+              dashboardReservationRow(
+                reservation,
+                `<button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservation-view="${reservation.id}">Review</button>`,
+              ),
+            )
+            .join("")
+        : dashboardEmpty(
+            "bi-calendar-check",
+            "No pending reservations.",
+            "New guest requests will appear here when they need review.",
+          );
+    }
+
+    if (arrivalsRoot) {
+      arrivalsRoot.innerHTML = arrivals.length
+        ? arrivals.map((reservation) => dashboardReservationRow(reservation)).join("")
+        : dashboardEmpty(
+            "bi-person-walking",
+            "No upcoming confirmed arrivals.",
+            "Confirmed reservations will appear here as service approaches.",
+          );
+    }
+
+    if (timelineRoot) {
+      timelineRoot.innerHTML = today.length
+        ? today
+            .slice(0, 8)
+            .map(
+              (reservation) => `
+        <div class="manager-timeline-row">
+          <time>${esc(timeLabel(reservation.reservation_time))}</time>
+          <div><strong>${esc(reservation.guest_name || "Guest")}</strong><span>${Number(reservation.party_size || 0)} ${Number(reservation.party_size) === 1 ? "guest" : "guests"}</span></div>
+          ${statusBadge(reservation.status)}
+        </div>
+      `,
+            )
+            .join("")
+        : dashboardEmpty(
+            "bi-calendar2",
+            "No reservations yet.",
+            "Preview the public page or check availability when you are ready for bookings.",
+            `<div class="manager-empty-actions"><button class="btn btn-gold btn-sm" type="button" data-manager-quick-action="preview">Preview public page</button><button class="btn btn-gold-outline btn-sm" type="button" data-manager-quick-action="opening-hours">Check availability</button></div>`,
+          );
+    }
+  }
+
+  function renderDashboardActivity() {
+    const root = $("[data-dashboard-activity-list]");
+    if (!root) return;
+    const items = state.reservations
+      .slice()
+      .sort((a, b) => reservationUpdatedTime(b) - reservationUpdatedTime(a))
+      .slice(0, 6)
+      .map((reservation) => {
+        const label =
+          reservation.status === "pending"
+            ? "New reservation request"
+            : reservation.status === "confirmed"
+              ? "Reservation confirmed"
+              : reservation.status === "cancelled"
+                ? "Reservation cancelled"
+                : reservation.status === "completed"
+                  ? "Reservation completed"
+                  : "No-show marked";
+        return `
+          <div class="manager-activity-item">
+            <i class="bi bi-clock-history"></i>
+            <div>
+              <strong>${esc(label)}</strong>
+              <span>${esc(reservation.guest_name || "Guest")} · ${esc(dateTimeLabel(reservation.cancelled_at || reservation.updated_at || reservation.created_at))}</span>
+            </div>
+          </div>
+        `;
+      });
+
+    if (state.venue?.updated_at) {
+      items.push(`
+        <div class="manager-activity-item">
+          <i class="bi bi-shop-window"></i>
+          <div><strong>Venue updated</strong><span>${esc(dateTimeLabel(state.venue.updated_at))}</span></div>
+        </div>
+      `);
+    }
+
+    root.innerHTML = items.length
+      ? items.join("")
+      : dashboardEmpty(
+          "bi-activity",
+          "No recent activity yet.",
+          "Meaningful reservation and venue changes will appear here after activity begins.",
+        );
+  }
+
+  function renderDashboardReadiness() {
+    const root = $("[data-dashboard-readiness-list]");
+    if (!root) return;
+    if (!state.venue) {
+      root.innerHTML = dashboardEmpty(
+        "bi-list-check",
+        "Start with venue setup.",
+        "Complete the checklist above before focusing on daily operations.",
+      );
+      return;
+    }
+
+    const insights = [];
+    const missing = profileCompletionItems(state.venue).filter((item) => !item.complete);
+    if (!hasOpeningHours(state.venue)) {
+      insights.push([
+        "bi-clock-history",
+        "No opening hours configured",
+        "Add hours so availability is clear.",
+      ]);
+    }
+    if (!(state.venue.images || []).length) {
+      insights.push([
+        "bi-images",
+        "Venue has no images",
+        "Upload at least one image before sharing the public page.",
+      ]);
+    }
+    if (!String(state.venue.address || "").trim()) {
+      insights.push([
+        "bi-geo-alt",
+        "Location is incomplete",
+        "Add an address so guests know where to arrive.",
+      ]);
+    }
+    if (!state.reservations.length) {
+      insights.push([
+        "bi-calendar-check",
+        "No reservations yet",
+        "Preview the public page and confirm availability settings.",
+      ]);
+    }
+    if (!insights.length && missing.length) {
+      insights.push([
+        "bi-clipboard2-check",
+        `${missing.length} profile items remaining`,
+        "Finish the remaining setup items when service is calm.",
+      ]);
+    }
+
+    root.innerHTML = insights.length
+      ? insights
+          .slice(0, 3)
+          .map(
+            ([icon, title, copy]) => `
+        <div class="manager-insight-item">
+          <i class="bi ${icon}"></i>
+          <div><strong>${esc(title)}</strong><span>${esc(copy)}</span></div>
+        </div>
+      `,
+          )
+          .join("")
+      : dashboardEmpty(
+          "bi-check2-circle",
+          "Venue health looks good.",
+          "Availability and profile issues will appear here only when relevant.",
+        );
+  }
+
+  function renderManagerDashboard() {
+    const signature = stableSignature({
+      venue: state.venue
+        ? {
+            id: state.venue.id,
+            name: state.venue.name,
+            status: state.venue.status,
+            updated_at: state.venue.updated_at,
+            images: state.venue.images?.length || 0,
+            opening_hours: state.venue.opening_hours,
+            address: state.venue.address,
+          }
+        : null,
+      stats: state.reservationStats,
+      reservations: state.reservations.map((reservation) => [
+        reservation.id,
+        reservation.status,
+        reservation.reservation_date,
+        reservation.reservation_time,
+        reservation.party_size,
+        reservation.updated_at,
+        reservation.cancelled_at,
+      ]),
+    });
+    if (skipRender("manager-dashboard", signature)) return;
+    renderDashboardHeader();
+    renderAttentionQueue();
+    renderDashboardOperations();
+    renderDashboardActivity();
+    renderDashboardReadiness();
+  }
+
   function fillForm() {
     const form = $("[data-owner-venue-form]");
     if (!form) return;
@@ -1047,6 +1520,7 @@
     $("[data-owner-delete-section]")?.toggleAttribute("hidden", !hasVenue);
     $("[data-owner-availability-section]")?.toggleAttribute("hidden", !hasVenue);
     renderProfileCompletion();
+    renderManagerDashboard();
 
     if (!hasVenue) return;
     const venue = state.venue;
@@ -1141,50 +1615,90 @@
   function renderReservationStats() {
     const root = $("[data-owner-reservation-stats]");
     if (!root) return;
+    renderManagerDashboard();
     const stats = state.reservationStats || {};
-    const signature = stableSignature(stats);
+    const todaysReservations = todayReservations();
+    const coversToday = todaysReservations.reduce(
+      (total, reservation) => total + Number(reservation.party_size || 0),
+      0,
+    );
+    const cancellationsToday = todaysReservations.filter(
+      (reservation) => reservation.status === "cancelled",
+    ).length;
+    const noShowsToday = todaysReservations.filter(
+      (reservation) => reservation.status === "no_show",
+    ).length;
+    const next = upcomingReservations(["pending", "confirmed"])[0];
+    const signature = stableSignature({
+      stats,
+      today: todaysReservations.map((reservation) => [
+        reservation.id,
+        reservation.status,
+        reservation.reservation_time,
+        reservation.party_size,
+      ]),
+      next: next ? [next.id, next.reservation_time, next.guest_name] : null,
+    });
     if (skipRender("reservation-stats", signature)) return;
     updateManagerPendingBadge(stats.pending || 0);
 
     root.innerHTML = [
       {
-        label: tr("reservation.pending_reservations", "Pending Reservations"),
+        label: "Pending Requests",
         value: stats.pending || 0,
-        description: tr("reservation.requests_waiting", "Requests waiting for your review"),
+        description: "Needs review",
         icon: "bi-hourglass-split",
         tone: "pending",
+        action: "pending",
       },
       {
-        label: tr("reservation.confirmed_reservations", "Confirmed Reservations"),
-        value: stats.confirmed || 0,
-        description: tr("reservation.approved_by_venue", "Reservations approved by the restaurant or bar"),
-        icon: "bi-patch-check",
-        tone: "confirmed",
+        label: "Today's Reservations",
+        value: stats.today || todaysReservations.length,
+        description: "Scheduled today",
+        icon: "bi-calendar2-check",
+        tone: "today",
+        action: "calendar",
       },
       {
-        label: tr("reservation.cancelled_reservations", "Cancelled Reservations"),
-        value: stats.cancelled || 0,
-        description: tr("reservation.no_longer_active", "Requests that were cancelled"),
+        label: "Guests Today",
+        value: coversToday,
+        description: "Covers expected",
+        icon: "bi-people",
+        tone: "guests",
+        action: "calendar",
+      },
+      {
+        label: "Next Arrival",
+        value: next ? timeLabel(next.reservation_time) : "-",
+        description: next ? next.guest_name || "Guest" : "No arrival scheduled",
+        icon: "bi-person-walking",
+        tone: "next",
+        action: "calendar",
+      },
+      {
+        label: "Cancellations Today",
+        value: cancellationsToday,
+        description: "Same-day changes",
         icon: "bi-x-circle",
         tone: "cancelled",
       },
       {
-        label: tr("owner.today_reservations", "Today's Reservations"),
-        value: stats.today || 0,
-        description: tr("owner.guest_arrivals_today", "Guest arrivals scheduled today"),
-        icon: "bi-calendar2-check",
-        tone: "today",
+        label: "No-shows Today",
+        value: noShowsToday,
+        description: "Marked today",
+        icon: "bi-person-x",
+        tone: "noshow",
       },
     ]
       .map(
         (item) => `
-      <div class="col-sm-6 col-xl-3">
-        <div class="reservation-stat reservation-stat-${item.tone}">
+      <div class="col-sm-6 col-xl-2">
+        <button class="reservation-stat reservation-stat-${item.tone}" type="button" ${item.action ? `data-manager-quick-action="${item.action}"` : ""}>
           <div class="reservation-stat-icon"><i class="bi ${item.icon}"></i></div>
           <span>${item.label}</span>
           <strong>${item.value}</strong>
           <small>${item.description}</small>
-        </div>
+        </button>
       </div>
     `,
       )
@@ -2582,6 +3096,36 @@
     );
   }
 
+  function handleManagerQuickAction(action) {
+    if (action === "pending") {
+      openManagerSection("reservations");
+      applyManagerReservationFilter("pending");
+      return;
+    }
+    if (action === "calendar") {
+      openManagerSection("calendar");
+      document.querySelector('[data-owner-calendar-view="day"]')?.click();
+      return;
+    }
+    if (action === "blackout") {
+      openManagerSection("availability", { target: "#managerAvailabilityExceptions" });
+      $("[data-blackout-date]")?.focus();
+      return;
+    }
+    if (action === "special-hours") {
+      openManagerSection("availability", { target: "#managerAvailabilityExceptions" });
+      $("[data-special-date]")?.focus();
+      return;
+    }
+    if (action === "opening-hours") {
+      openManagerSection("availability", { target: "#managerAvailabilityOpeningHours" });
+      return;
+    }
+    if (action === "preview") {
+      openPublicVenuePage();
+    }
+  }
+
   function bindManagerShell() {
     const shortcut = $("[data-manager-shortcut]");
     if (shortcut) shortcut.textContent = managerShortcutLabel();
@@ -2646,37 +3190,11 @@
       window.tkToast?.("Global search will be available in a later manager phase.", "info");
     });
 
-    document.querySelectorAll("[data-manager-quick-action]").forEach((item) => {
-      item.addEventListener("click", () => {
-        const action = item.dataset.managerQuickAction;
-        if (action === "pending") {
-          openManagerSection("reservations");
-          applyManagerReservationFilter("pending");
-          return;
-        }
-        if (action === "calendar") {
-          openManagerSection("calendar");
-          document.querySelector('[data-owner-calendar-view="day"]')?.click();
-          return;
-        }
-        if (action === "blackout") {
-          openManagerSection("availability", { target: "#managerAvailabilityExceptions" });
-          $("[data-blackout-date]")?.focus();
-          return;
-        }
-        if (action === "special-hours") {
-          openManagerSection("availability", { target: "#managerAvailabilityExceptions" });
-          $("[data-special-date]")?.focus();
-          return;
-        }
-        if (action === "opening-hours") {
-          openManagerSection("availability", { target: "#managerAvailabilityOpeningHours" });
-          return;
-        }
-        if (action === "preview") {
-          openPublicVenuePage();
-        }
-      });
+    document.addEventListener("click", (event) => {
+      const item = event.target.closest("[data-manager-quick-action]");
+      if (!item) return;
+      event.preventDefault();
+      handleManagerQuickAction(item.dataset.managerQuickAction);
     });
   }
 
