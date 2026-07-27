@@ -14,8 +14,24 @@
     image?.url ||
     image?.image_path ||
     "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1000&q=80";
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  const shortDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const dayKeys = [
+    "calendar.monday",
+    "calendar.tuesday",
+    "calendar.wednesday",
+    "calendar.thursday",
+    "calendar.friday",
+    "calendar.saturday",
+    "calendar.sunday",
+  ];
+  const shortDayKeys = [
+    "calendar.mon",
+    "calendar.tue",
+    "calendar.wed",
+    "calendar.thu",
+    "calendar.fri",
+    "calendar.sat",
+    "calendar.sun",
+  ];
   const calendarStatuses = ["pending", "confirmed", "cancelled", "completed", "no_show"];
   const ownerCancellationReasons = [
     "Fully booked",
@@ -78,6 +94,34 @@
     pendingReservationAction: null,
     saving: false,
   };
+
+  function currentLocale() {
+    return window.TiketaLanguage?.getLanguage?.() === "sq" ? "sq-AL" : "en-US";
+  }
+
+  function dayName(index) {
+    const fallback = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][
+      index
+    ];
+    return tr(dayKeys[index], fallback);
+  }
+
+  function shortDayName(index) {
+    const fallback = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][index];
+    return tr(shortDayKeys[index], fallback);
+  }
+
+  function guestCountLabel(count) {
+    return Number(count) === 1 ? tr("manager.guest", "guest") : tr("manager.guests_count", "guests");
+  }
+
+  function guestFallback() {
+    return tr("manager.guest_fallback", "Guest");
+  }
+
+  function restaurantBarFallback() {
+    return tr("manager.restaurant_bar", "Restaurant / Bar");
+  }
 
   function setBusy(busy) {
     state.saving = busy;
@@ -201,7 +245,7 @@
     if (!value) return "";
     const date = new Date(`${value}T00:00:00`);
     if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    return date.toLocaleDateString(currentLocale(), { month: "short", day: "numeric", year: "numeric" });
   }
 
   function timeLabel(value) {
@@ -267,7 +311,7 @@
     if (!value) return tr("reservation.not_set", "Not set");
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleString(undefined, {
+    return date.toLocaleString(currentLocale(), {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -363,7 +407,9 @@
     const longitude = $("[data-owner-location-selected-longitude]");
 
     if (address)
-      address.textContent = coordinates ? selectedAddressText() || "Selected pin" : "Not selected";
+      address.textContent = coordinates
+        ? selectedAddressText() || tr("manager.selected_pin", "Selected pin")
+        : tr("manager.not_selected", "Not selected");
     if (latitude) latitude.textContent = coordinates ? formatCoordinate(coordinates.lat) : "-";
     if (longitude) longitude.textContent = coordinates ? formatCoordinate(coordinates.lng) : "-";
   }
@@ -482,8 +528,8 @@
     if (mapRoot) mapRoot.classList.toggle("has-location", Boolean(coordinates));
     if (status) {
       status.textContent = coordinates
-        ? "Location pin is ready. Drag the marker or click the map to refine it."
-        : "Search an address, click the map, or drag the marker to set the exact pin.";
+        ? tr("manager.location_pin_ready", "Location pin is ready. Drag the marker or click the map to refine it.")
+        : tr("owner.map_location_copy", "Search an address, click the map, or drag the marker to set the exact pin.");
     }
     if (open) {
       open.hidden = !coordinates;
@@ -523,7 +569,7 @@
       map: ownerGoogleMap,
       draggable: true,
       animation: window.google.maps.Animation.DROP,
-      title: "Selected restaurant or bar location",
+      title: tr("manager.selected_restaurant_location", "Selected restaurant or bar location"),
     });
 
     ownerGoogleMap.addListener("click", (event) => {
@@ -701,7 +747,7 @@
   function calendarTitle() {
     const { start, end } = calendarPeriod();
     if (state.calendar.view === "day") {
-      return start.toLocaleDateString(undefined, {
+      return start.toLocaleDateString(currentLocale(), {
         weekday: "long",
         month: "short",
         day: "numeric",
@@ -709,12 +755,12 @@
       });
     }
     if (state.calendar.view === "month") {
-      return localDate(state.calendar.anchorDate).toLocaleDateString(undefined, {
+      return localDate(state.calendar.anchorDate).toLocaleDateString(currentLocale(), {
         month: "long",
         year: "numeric",
       });
     }
-    return `${start.toLocaleDateString(undefined, { month: "short", day: "numeric" })} - ${end.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`;
+    return `${start.toLocaleDateString(currentLocale(), { month: "short", day: "numeric" })} - ${end.toLocaleDateString(currentLocale(), { month: "short", day: "numeric", year: "numeric" })}`;
   }
 
   function analyticsPeriod() {
@@ -766,8 +812,9 @@
     if (!root) return;
     $("[data-owner-availability-empty]")?.toggleAttribute("hidden", openingHours.length > 0);
     const byDay = new Map(openingHours.map((item) => [Number(item.day_of_week), item]));
-    root.innerHTML = days
-      .map((day, index) => {
+    root.innerHTML = dayKeys
+      .map((_, index) => {
+        const day = dayName(index);
         const item = byDay.get(index) || {};
         const closed = Boolean(item.is_closed);
         return `
@@ -807,7 +854,7 @@
           <strong>${esc(dateLabel(item.date))}</strong>
           <span>${esc(item.reason || tr("availability.closed", "Closed"))}</span>
         </div>
-        <button class="btn btn-glass btn-sm" type="button" data-blackout-delete="${item.id}" aria-label="Remove blackout date">
+        <button class="btn btn-glass btn-sm" type="button" data-blackout-delete="${item.id}" aria-label="${esc(tr("manager.remove_blackout_date", "Remove blackout date"))}">
           <i class="bi bi-trash"></i>
         </button>
       </div>
@@ -830,10 +877,10 @@
           <span>${item.is_closed ? tr("availability.closed", "Closed") : `${esc(timeLabel(item.opens_at))} - ${esc(timeLabel(item.closes_at))}`}</span>
         </div>
         <div class="btn-group btn-group-sm">
-          <button class="btn btn-glass" type="button" data-special-edit="${item.id}" aria-label="Edit special hours">
+          <button class="btn btn-glass" type="button" data-special-edit="${item.id}" aria-label="${esc(tr("manager.edit_special_hours", "Edit special hours"))}">
             <i class="bi bi-pencil"></i>
           </button>
-          <button class="btn btn-glass" type="button" data-special-delete="${item.id}" aria-label="Delete special hours">
+          <button class="btn btn-glass" type="button" data-special-delete="${item.id}" aria-label="${esc(tr("manager.delete_special_hours", "Delete special hours"))}">
             <i class="bi bi-trash"></i>
           </button>
         </div>
@@ -884,7 +931,7 @@
       <div class="col-md-6 col-xl-4">
         <div class="owner-gallery-card ${index === 0 ? "is-cover" : ""}" draggable="true" data-owner-gallery-card="${image.id}">
           <div class="owner-gallery-image">
-            <img loading="lazy" decoding="async" width="800" height="500" sizes="(min-width: 1200px) 33vw, (min-width: 768px) 50vw, 100vw" src="${esc(imageUrl(image))}" alt="${esc(state.venue?.name || "Restaurant or bar")} gallery photo ${index + 1}" />
+            <img loading="lazy" decoding="async" width="800" height="500" sizes="(min-width: 1200px) 33vw, (min-width: 768px) 50vw, 100vw" src="${esc(imageUrl(image))}" alt="${esc(state.venue?.name || tr("common.restaurant_bar", "Restaurant or bar"))} ${esc(tr("venue.gallery", "Gallery"))} ${index + 1}" />
             <span class="owner-gallery-cover-badge"><i class="bi bi-star-fill"></i> ${tr("owner.cover", "Cover")}</span>
             <span class="owner-gallery-drag-hint"><i class="bi bi-grip-vertical"></i> ${tr("owner.drag", "Drag")}</span>
           </div>
@@ -894,10 +941,10 @@
               <small class="text-muted-pro">${tr("owner.drag_to_reorder", "Drag to reorder")}</small>
             </div>
             <div class="owner-gallery-actions">
-              <button class="btn btn-glass btn-sm" type="button" data-owner-image-cover="${image.id}" ${index === 0 ? "disabled" : ""} aria-label="Set as cover photo"><i class="bi bi-star"></i></button>
-              <button class="btn btn-glass btn-sm" type="button" data-owner-image-up="${image.id}" ${index === 0 ? "disabled" : ""} aria-label="Move image left"><i class="bi bi-arrow-left"></i></button>
-              <button class="btn btn-glass btn-sm" type="button" data-owner-image-down="${image.id}" ${index === images.length - 1 ? "disabled" : ""} aria-label="Move image right"><i class="bi bi-arrow-right"></i></button>
-              <button class="btn btn-glass btn-sm" type="button" data-owner-image-delete="${image.id}" aria-label="Delete image"><i class="bi bi-trash"></i></button>
+              <button class="btn btn-glass btn-sm" type="button" data-owner-image-cover="${image.id}" ${index === 0 ? "disabled" : ""} aria-label="${esc(tr("manager.set_as_cover_photo", "Set as cover photo"))}"><i class="bi bi-star"></i></button>
+              <button class="btn btn-glass btn-sm" type="button" data-owner-image-up="${image.id}" ${index === 0 ? "disabled" : ""} aria-label="${esc(tr("manager.move_image_left", "Move image left"))}"><i class="bi bi-arrow-left"></i></button>
+              <button class="btn btn-glass btn-sm" type="button" data-owner-image-down="${image.id}" ${index === images.length - 1 ? "disabled" : ""} aria-label="${esc(tr("manager.move_image_right", "Move image right"))}"><i class="bi bi-arrow-right"></i></button>
+              <button class="btn btn-glass btn-sm" type="button" data-owner-image-delete="${image.id}" aria-label="${esc(tr("manager.delete_image", "Delete image"))}"><i class="bi bi-trash"></i></button>
             </div>
           </div>
         </div>
@@ -925,43 +972,43 @@
     const images = venue?.images || [];
     return [
       {
-        label: "Restaurant name",
-        missing: "Add Name",
+        label: tr("manager.restaurant_name", "Restaurant name"),
+        missing: tr("manager.add_name", "Add Name"),
         complete: Boolean(String(venue?.name || "").trim()),
       },
       {
-        label: "Description",
-        missing: "Add Description",
+        label: tr("venue.description", "Description"),
+        missing: tr("manager.add_description", "Add Description"),
         complete: Boolean(String(venue?.description || "").trim()),
       },
       {
-        label: "Cover Image",
-        missing: "Add Cover Image",
+        label: tr("manager.cover_image", "Cover Image"),
+        missing: tr("manager.add_cover_image", "Add Cover Image"),
         complete: Boolean(venue?.logo_image || images.length),
       },
-      { label: "Gallery Images", missing: "Add Gallery Images", complete: images.length > 1 },
+      { label: tr("manager.gallery_images", "Gallery Images"), missing: tr("manager.add_gallery_images", "Add Gallery Images"), complete: images.length > 1 },
       {
-        label: "Phone",
-        missing: "Add Phone",
+        label: tr("venue.phone", "Phone"),
+        missing: tr("manager.add_phone", "Add Phone"),
         complete: Boolean(String(venue?.phone || "").trim()),
       },
       {
-        label: "Address",
-        missing: "Add Address",
+        label: tr("venue.address", "Address"),
+        missing: tr("manager.add_address", "Add Address"),
         complete: Boolean(String(venue?.address || "").trim()),
       },
-      { label: "Opening hours", missing: "Add opening hours", complete: hasOpeningHours(venue) },
+      { label: tr("owner.opening_hours", "Opening hours"), missing: tr("manager.add_opening_hours", "Add opening hours"), complete: hasOpeningHours(venue) },
       {
-        label: "Facilities",
-        missing: "Add Facilities",
+        label: tr("venue.facilities", "Facilities"),
+        missing: tr("manager.add_facilities", "Add Facilities"),
         complete: Boolean(venue?.facilities?.length),
       },
       {
-        label: "Cuisine Types",
-        missing: "Add Cuisine Types",
+        label: tr("manager.cuisine_types", "Cuisine Types"),
+        missing: tr("manager.add_cuisine_types", "Add Cuisine Types"),
         complete: Boolean(venue?.cuisine_types?.length),
       },
-      { label: "Social links", missing: "Add Instagram", complete: hasSocialLinks(venue) },
+      { label: tr("manager.social_links", "Social links"), missing: tr("manager.add_instagram", "Add Instagram"), complete: hasSocialLinks(venue) },
     ];
   }
 
@@ -1037,15 +1084,15 @@
   function operatingStatus() {
     if (!state.venue) {
       return {
-        label: "Setup needed",
-        detail: "Create a venue profile to start accepting reservations.",
+        label: tr("manager.setup_needed", "Setup needed"),
+        detail: tr("manager.setup_needed_detail", "Create a venue profile to start accepting reservations."),
         tone: "warning",
       };
     }
     if (state.venue.status !== "active") {
       return {
-        label: "Venue inactive",
-        detail: "Activate the venue when you are ready for guests to book.",
+        label: tr("manager.venue_inactive", "Venue inactive"),
+        detail: tr("manager.venue_inactive_detail", "Activate the venue when you are ready for guests to book."),
         tone: "critical",
       };
     }
@@ -1053,8 +1100,8 @@
     const todayHours = todaysOpeningWindow();
     if (!todayHours || todayHours.is_closed || !todayHours.opens_at || !todayHours.closes_at) {
       return {
-        label: "Closed today",
-        detail: "Existing reservations still appear in today's operations.",
+        label: tr("manager.closed_today", "Closed today"),
+        detail: tr("manager.closed_today_detail", "Existing reservations still appear in today's operations."),
         tone: "warning",
       };
     }
@@ -1064,31 +1111,34 @@
     const close = new Date(`${todayValue()}T${normalizeTime(todayHours.closes_at)}:00`);
     if (now < open) {
       return {
-        label: `Opens at ${timeLabel(todayHours.opens_at)}`,
-        detail: `Today's hours: ${timeLabel(todayHours.opens_at)} - ${timeLabel(todayHours.closes_at)}`,
+        label: tr("manager.opens_at", "Opens at {time}", { time: timeLabel(todayHours.opens_at) }),
+        detail: tr("manager.todays_hours", "Today's hours: {open} - {close}", {
+          open: timeLabel(todayHours.opens_at),
+          close: timeLabel(todayHours.closes_at),
+        }),
         tone: "info",
       };
     }
     if (now > close) {
       return {
-        label: "Closed now",
-        detail: `Closed at ${timeLabel(todayHours.closes_at)}`,
+        label: tr("manager.closed_now", "Closed now"),
+        detail: tr("manager.closed_at", "Closed at {time}", { time: timeLabel(todayHours.closes_at) }),
         tone: "info",
       };
     }
     return {
-      label: "Open now",
-      detail: `Open until ${timeLabel(todayHours.closes_at)}`,
+      label: tr("manager.open_now", "Open now"),
+      detail: tr("manager.open_until", "Open until {time}", { time: timeLabel(todayHours.closes_at) }),
       tone: "success",
     };
   }
 
   function servicePeriodLabel() {
     const hour = new Date().getHours();
-    if (hour < 11) return "Breakfast service";
-    if (hour < 16) return "Lunch service";
-    if (hour < 22) return "Dinner service";
-    return "Late service";
+    if (hour < 11) return tr("manager.breakfast_service", "Breakfast service");
+    if (hour < 16) return tr("manager.lunch_service", "Lunch service");
+    if (hour < 22) return tr("manager.dinner_service", "Dinner service");
+    return tr("manager.late_service", "Late service");
   }
 
   function dashboardEmpty(icon, title, copy, actions = "") {
@@ -1104,8 +1154,8 @@
     return `
       <div class="manager-operation-row">
         <div>
-          <strong>${esc(reservation.guest_name || "Guest")}</strong>
-          <span>${esc(timeLabel(reservation.reservation_time))} · ${Number(reservation.party_size || 0)} ${Number(reservation.party_size) === 1 ? "guest" : "guests"}</span>
+          <strong>${esc(reservation.guest_name || guestFallback())}</strong>
+          <span>${esc(timeLabel(reservation.reservation_time))} · ${Number(reservation.party_size || 0)} ${guestCountLabel(reservation.party_size)}</span>
         </div>
         <div class="manager-operation-meta">
           ${statusBadge(reservation.status)}
@@ -1119,7 +1169,12 @@
     const user = auth()?.getUser?.();
     const name = user?.name ? user.name.split(" ")[0] : "";
     const hour = new Date().getHours();
-    const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+    const greeting =
+      hour < 12
+        ? tr("manager.good_morning", "Good morning")
+        : hour < 18
+          ? tr("manager.good_afternoon", "Good afternoon")
+          : tr("manager.good_evening", "Good evening");
     const status = operatingStatus();
     const next = upcomingReservations(["pending", "confirmed"])[0];
 
@@ -1127,11 +1182,11 @@
     if (greetingEl) greetingEl.textContent = name ? `${greeting}, ${name}` : greeting;
     const venueEl = $("[data-dashboard-venue-name]");
     if (venueEl) {
-      venueEl.textContent = state.venue?.name || "Restaurant / Bar";
+      venueEl.textContent = state.venue?.name || restaurantBarFallback();
     }
     const dateEl = $("[data-dashboard-date]");
     if (dateEl) {
-      dateEl.textContent = new Date().toLocaleDateString(undefined, {
+      dateEl.textContent = new Date().toLocaleDateString(currentLocale(), {
         weekday: "long",
         month: "long",
         day: "numeric",
@@ -1147,7 +1202,10 @@
     const nextEl = $("[data-dashboard-next-service]");
     if (nextEl) {
       nextEl.textContent = next
-        ? `Next reservation at ${timeLabel(next.reservation_time)} · ${next.guest_name || "Guest"}`
+        ? tr("manager.next_reservation_at", "Next reservation at {time} · {guest}", {
+            time: timeLabel(next.reservation_time),
+            guest: next.guest_name || guestFallback(),
+          })
         : status.detail;
     }
   }
@@ -1176,23 +1234,27 @@
       items.push({
         tone: "critical",
         icon: "bi-exclamation-octagon",
-        title: "Venue setup is blocking bookings",
-        copy: "Create your venue profile before guests can reserve.",
+        title: tr("manager.venue_setup_blocking", "Venue setup is blocking bookings"),
+        copy: tr("manager.venue_setup_blocking_copy", "Create your venue profile before guests can reserve."),
       });
     } else if (state.venue.status !== "active") {
       items.push({
         tone: "critical",
         icon: "bi-slash-circle",
-        title: "Venue is not active",
-        copy: "Public booking depends on the venue being active.",
+        title: tr("manager.venue_inactive", "Venue is not active"),
+        copy: tr("manager.venue_not_active_copy", "Public booking depends on the venue being active."),
       });
     }
     if (pending.length) {
       items.push({
         tone: "warning",
         icon: "bi-hourglass-split",
-        title: `${pending.length} pending ${pending.length === 1 ? "request" : "requests"}`,
-        copy: "Review guest requests before service.",
+        title: tr(
+          pending.length === 1 ? "manager.pending_request_count" : "manager.pending_requests_count",
+          "{count} pending requests",
+          { count: pending.length },
+        ),
+        copy: tr("manager.review_guest_requests_copy", "Review guest requests before service."),
         action: "pending",
       });
     }
@@ -1200,34 +1262,48 @@
       items.push({
         tone: "warning",
         icon: "bi-calendar-x",
-        title: `${cancellationsToday.length} cancellation${cancellationsToday.length === 1 ? "" : "s"} today`,
-        copy: "Same-day changes may affect covers and staffing.",
+        title: tr(
+          cancellationsToday.length === 1
+            ? "manager.cancellation_today_count"
+            : "manager.cancellations_today_count",
+          "{count} cancellations today",
+          { count: cancellationsToday.length },
+        ),
+        copy: tr("manager.same_day_changes", "Same-day changes may affect covers and staffing."),
       });
     }
     if (noShowsToday.length) {
       items.push({
         tone: "warning",
         icon: "bi-person-x",
-        title: `${noShowsToday.length} no-show${noShowsToday.length === 1 ? "" : "s"} today`,
-        copy: "Review missed arrivals before closing the day.",
+        title: tr(
+          noShowsToday.length === 1 ? "manager.no_show_today_count" : "manager.no_shows_today_count",
+          "{count} no-shows today",
+          { count: noShowsToday.length },
+        ),
+        copy: tr("manager.review_missed_arrivals_copy", "Review missed arrivals before closing the day."),
       });
     }
     if (state.venue && (!hasOpeningHours(state.venue) || missing.length >= 4)) {
       items.push({
         tone: "info",
         icon: "bi-clipboard2-check",
-        title: !hasOpeningHours(state.venue) ? "Opening hours missing" : "Profile needs attention",
+        title: !hasOpeningHours(state.venue)
+          ? tr("manager.opening_hours", "Opening hours missing")
+          : tr("manager.profile_needs_attention", "Profile needs attention"),
         copy: !hasOpeningHours(state.venue)
-          ? "Availability cannot be trusted until hours are configured."
-          : `${missing.length} setup items are still incomplete.`,
+          ? tr("manager.availability_untrusted_copy", "Availability cannot be trusted until hours are configured.")
+          : tr("manager.setup_items_incomplete", "{count} setup items are still incomplete.", {
+              count: missing.length,
+            }),
       });
     }
-    if (status.label === "Closed today" && todayReservations().length) {
+    if (status.label === tr("manager.closed_today", "Closed today") && todayReservations().length) {
       items.push({
         tone: "warning",
         icon: "bi-calendar-event",
-        title: "Reservations exist while closed today",
-        copy: "Review today's bookings against venue hours.",
+        title: tr("manager.reservations_exist_closed", "Reservations exist while closed today"),
+        copy: tr("manager.review_closed_bookings_copy", "Review today's bookings against venue hours."),
       });
     }
 
@@ -1241,7 +1317,7 @@
           <div><strong>${esc(item.title)}</strong><span>${esc(item.copy)}</span></div>
           ${
             item.action
-              ? `<button class="btn btn-gold-outline btn-sm" type="button" data-manager-quick-action="${item.action}">Review</button>`
+              ? `<button class="btn btn-gold-outline btn-sm" type="button" data-manager-quick-action="${item.action}">${tr("manager.review", "Review")}</button>`
               : ""
           }
         </div>
@@ -1250,8 +1326,8 @@
           .join("")
       : dashboardEmpty(
           "bi-shield-check",
-          "No urgent items.",
-          "Pending requests, same-day cancellations, and setup blockers will appear here.",
+          tr("manager.no_urgent_items", "No urgent items."),
+          tr("manager.no_urgent_items_copy", "Pending requests, same-day cancellations, and setup blockers will appear here."),
         );
   }
 
@@ -1272,14 +1348,14 @@
             .map((reservation) =>
               dashboardReservationRow(
                 reservation,
-                `<button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservation-view="${reservation.id}">Review</button>`,
+                `<button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservation-view="${reservation.id}">${tr("manager.review", "Review")}</button>`,
               ),
             )
             .join("")
         : dashboardEmpty(
             "bi-calendar-check",
-            "No pending reservations.",
-            "New guest requests will appear here when they need review.",
+            tr("manager.no_pending_reservations", "No pending reservations."),
+            tr("manager.no_pending_reservations_copy", "New guest requests will appear here when they need review."),
           );
     }
 
@@ -1288,8 +1364,8 @@
         ? arrivals.map((reservation) => dashboardReservationRow(reservation)).join("")
         : dashboardEmpty(
             "bi-person-walking",
-            "No upcoming confirmed arrivals.",
-            "Confirmed reservations will appear here as service approaches.",
+            tr("manager.no_upcoming_arrivals", "No upcoming confirmed arrivals."),
+            tr("manager.no_upcoming_arrivals_copy", "Confirmed reservations will appear here as service approaches."),
           );
     }
 
@@ -1301,7 +1377,7 @@
               (reservation) => `
         <div class="manager-timeline-row">
           <time>${esc(timeLabel(reservation.reservation_time))}</time>
-          <div><strong>${esc(reservation.guest_name || "Guest")}</strong><span>${Number(reservation.party_size || 0)} ${Number(reservation.party_size) === 1 ? "guest" : "guests"}</span></div>
+          <div><strong>${esc(reservation.guest_name || guestFallback())}</strong><span>${Number(reservation.party_size || 0)} ${guestCountLabel(reservation.party_size)}</span></div>
           ${statusBadge(reservation.status)}
         </div>
       `,
@@ -1309,9 +1385,9 @@
             .join("")
         : dashboardEmpty(
             "bi-calendar2",
-            "No reservations yet.",
-            "Preview the public page or check availability when you are ready for bookings.",
-            `<div class="manager-empty-actions"><button class="btn btn-gold btn-sm" type="button" data-manager-quick-action="preview">Preview public page</button><button class="btn btn-gold-outline btn-sm" type="button" data-manager-quick-action="opening-hours">Check availability</button></div>`,
+            tr("manager.no_reservations_yet", "No reservations yet."),
+            tr("manager.no_reservations_dashboard_copy", "Preview the public page or check availability when you are ready for bookings."),
+            `<div class="manager-empty-actions"><button class="btn btn-gold btn-sm" type="button" data-manager-quick-action="preview">${tr("manager.preview_public_page", "Preview public page")}</button><button class="btn btn-gold-outline btn-sm" type="button" data-manager-quick-action="opening-hours">${tr("manager.check_availability", "Check availability")}</button></div>`,
           );
     }
   }
@@ -1326,20 +1402,20 @@
       .map((reservation) => {
         const label =
           reservation.status === "pending"
-            ? "New reservation request"
+            ? tr("manager.new_reservation_request", "New reservation request")
             : reservation.status === "confirmed"
-              ? "Reservation confirmed"
+              ? tr("manager.reservation_confirmed", "Reservation confirmed")
               : reservation.status === "cancelled"
-                ? "Reservation cancelled"
+                ? tr("manager.reservation_cancelled", "Reservation cancelled")
                 : reservation.status === "completed"
-                  ? "Reservation completed"
-                  : "No-show marked";
+                  ? tr("manager.reservation_completed", "Reservation completed")
+                  : tr("manager.no_show_marked", "No-show marked");
         return `
           <div class="manager-activity-item">
             <i class="bi bi-clock-history"></i>
             <div>
               <strong>${esc(label)}</strong>
-              <span>${esc(reservation.guest_name || "Guest")} · ${esc(dateTimeLabel(reservation.cancelled_at || reservation.updated_at || reservation.created_at))}</span>
+              <span>${esc(reservation.guest_name || guestFallback())} · ${esc(dateTimeLabel(reservation.cancelled_at || reservation.updated_at || reservation.created_at))}</span>
             </div>
           </div>
         `;
@@ -1349,7 +1425,7 @@
       items.push(`
         <div class="manager-activity-item">
           <i class="bi bi-shop-window"></i>
-          <div><strong>Venue updated</strong><span>${esc(dateTimeLabel(state.venue.updated_at))}</span></div>
+          <div><strong>${tr("manager.venue_updated", "Venue updated")}</strong><span>${esc(dateTimeLabel(state.venue.updated_at))}</span></div>
         </div>
       `);
     }
@@ -1358,8 +1434,8 @@
       ? items.join("")
       : dashboardEmpty(
           "bi-activity",
-          "No recent activity yet.",
-          "Meaningful reservation and venue changes will appear here after activity begins.",
+          tr("manager.no_recent_activity", "No recent activity yet."),
+          tr("manager.no_recent_activity_copy", "Meaningful reservation and venue changes will appear here after activity begins."),
         );
   }
 
@@ -1369,8 +1445,8 @@
     if (!state.venue) {
       root.innerHTML = dashboardEmpty(
         "bi-list-check",
-        "Start with venue setup.",
-        "Complete the checklist above before focusing on daily operations.",
+        tr("manager.start_with_venue_setup", "Start with venue setup."),
+        tr("manager.start_with_venue_setup_copy", "Complete the checklist above before focusing on daily operations."),
       );
       return;
     }
@@ -1380,36 +1456,38 @@
     if (!hasOpeningHours(state.venue)) {
       insights.push([
         "bi-clock-history",
-        "No opening hours configured",
-        "Add hours so availability is clear.",
+        tr("manager.no_opening_hours_configured", "No opening hours configured"),
+        tr("manager.no_opening_hours_configured_copy", "Add hours so availability is clear."),
       ]);
     }
     if (!(state.venue.images || []).length) {
       insights.push([
         "bi-images",
-        "Venue has no images",
-        "Upload at least one image before sharing the public page.",
+        tr("manager.venue_no_images", "Venue has no images"),
+        tr("manager.venue_no_images_copy", "Upload at least one image before sharing the public page."),
       ]);
     }
     if (!String(state.venue.address || "").trim()) {
       insights.push([
         "bi-geo-alt",
-        "Location is incomplete",
-        "Add an address so guests know where to arrive.",
+        tr("manager.location_incomplete", "Location is incomplete"),
+        tr("manager.location_incomplete_copy", "Add an address so guests know where to arrive."),
       ]);
     }
     if (!state.reservations.length) {
       insights.push([
         "bi-calendar-check",
-        "No reservations yet",
-        "Preview the public page and confirm availability settings.",
+        tr("manager.no_reservations_yet", "No reservations yet"),
+        tr("manager.no_reservations_readiness_copy", "Preview the public page and confirm availability settings."),
       ]);
     }
     if (!insights.length && missing.length) {
       insights.push([
         "bi-clipboard2-check",
-        `${missing.length} profile items remaining`,
-        "Finish the remaining setup items when service is calm.",
+        tr("manager.profile_items_remaining", "{count} profile items remaining", {
+          count: missing.length,
+        }),
+        tr("manager.profile_items_remaining_copy", "Finish the remaining setup items when service is calm."),
       ]);
     }
 
@@ -1427,8 +1505,8 @@
           .join("")
       : dashboardEmpty(
           "bi-check2-circle",
-          "Venue health looks good.",
-          "Availability and profile issues will appear here only when relevant.",
+          tr("manager.venue_health_good", "Venue health looks good."),
+          tr("manager.venue_health_good_copy", "Availability and profile issues will appear here only when relevant."),
         );
   }
 
@@ -1656,48 +1734,48 @@
 
     root.innerHTML = [
       {
-        label: "Pending Requests",
+        label: tr("manager.pending_requests", "Pending Requests"),
         value: stats.pending || 0,
-        description: "Needs review",
+        description: tr("manager.needs_review", "Needs review"),
         icon: "bi-hourglass-split",
         tone: "pending",
         action: "pending",
       },
       {
-        label: "Today's Reservations",
+        label: tr("manager.todays_reservations", "Today's Reservations"),
         value: stats.today || todaysReservations.length,
-        description: "Scheduled today",
+        description: tr("manager.scheduled_today", "Scheduled today"),
         icon: "bi-calendar2-check",
         tone: "today",
         action: "calendar",
       },
       {
-        label: "Guests Today",
+        label: tr("manager.guests_today", "Guests Today"),
         value: coversToday,
-        description: "Covers expected",
+        description: tr("manager.covers_expected", "Covers expected"),
         icon: "bi-people",
         tone: "guests",
         action: "calendar",
       },
       {
-        label: "Next Arrival",
+        label: tr("manager.next_arrival", "Next Arrival"),
         value: next ? timeLabel(next.reservation_time) : "-",
-        description: next ? next.guest_name || "Guest" : "No arrival scheduled",
+        description: next ? next.guest_name || guestFallback() : tr("manager.no_arrival_scheduled", "No arrival scheduled"),
         icon: "bi-person-walking",
         tone: "next",
         action: "calendar",
       },
       {
-        label: "Cancellations Today",
+        label: tr("manager.cancellations_today", "Cancellations Today"),
         value: cancellationsToday,
-        description: "Same-day changes",
+        description: tr("manager.same_day_changes", "Same-day changes"),
         icon: "bi-x-circle",
         tone: "cancelled",
       },
       {
-        label: "No-shows Today",
+        label: tr("manager.no_shows_today", "No-shows Today"),
         value: noShowsToday,
-        description: "Marked today",
+        description: tr("manager.marked_today", "Marked today"),
         icon: "bi-person-x",
         tone: "noshow",
       },
@@ -1809,18 +1887,18 @@
 
   function servicePeriod(time) {
     const hour = Number(String(time || "00:00").slice(0, 2));
-    if (hour < 11) return "Morning";
-    if (hour < 16) return "Lunch";
-    if (hour < 22) return "Dinner";
-    return "Late";
+    if (hour < 11) return tr("manager.morning", "Morning");
+    if (hour < 16) return tr("manager.lunch", "Lunch");
+    if (hour < 22) return tr("manager.dinner", "Dinner");
+    return tr("manager.late", "Late");
   }
 
   function urgencyGroup(reservation) {
     const today = todayValue();
     const tomorrow = toDateInputValue(new Date(Date.now() + 86400000));
-    if (reservation.reservation_date === today) return "Today";
-    if (reservation.reservation_date === tomorrow) return "Tomorrow";
-    return "Later";
+    if (reservation.reservation_date === today) return tr("manager.today", "Today");
+    if (reservation.reservation_date === tomorrow) return tr("manager.tomorrow", "Tomorrow");
+    return tr("manager.later", "Later");
   }
 
   function reservationGroupLabel(reservation) {
@@ -1831,7 +1909,7 @@
     if (["completed", "cancelled", "no_show"].includes(view))
       return dateLabel(reservation.reservation_date);
     return reservation.reservation_date === todayValue()
-      ? "Today"
+      ? tr("manager.today", "Today")
       : dateLabel(reservation.reservation_date);
   }
 
@@ -1846,18 +1924,18 @@
   }
 
   function nextBestReservationAction(reservation) {
-    if (reservation.status === "pending") return { label: "Review", action: "view", tone: "gold" };
+    if (reservation.status === "pending") return { label: tr("manager.review", "Review"), action: "view", tone: "gold" };
     if (reservation.status === "confirmed")
-      return { label: "Open details", action: "view", tone: "glass" };
-    return { label: "View", action: "view", tone: "glass" };
+      return { label: tr("manager.open_details", "Open details"), action: "view", tone: "glass" };
+    return { label: tr("manager.view", "View"), action: "view", tone: "glass" };
   }
 
   function reservationRowCard(reservation) {
     const action = nextBestReservationAction(reservation);
     const mobileAction =
       reservation.status === "pending"
-        ? `<button class="btn btn-gold manager-reservation-mobile-primary" type="button" data-owner-reservation-action="confirm" data-owner-reservation-id="${reservation.id}">Confirm</button>`
-        : `<button class="btn btn-gold-outline manager-reservation-mobile-primary" type="button" data-owner-reservation-view="${reservation.id}">View details</button>`;
+        ? `<button class="btn btn-gold manager-reservation-mobile-primary" type="button" data-owner-reservation-action="confirm" data-owner-reservation-id="${reservation.id}">${tr("owner.confirm", "Confirm")}</button>`
+        : `<button class="btn btn-gold-outline manager-reservation-mobile-primary" type="button" data-owner-reservation-view="${reservation.id}">${tr("manager.view_details", "View details")}</button>`;
     const contact = [reservation.phone, reservation.email].filter(Boolean).join(" · ");
     const secondary = [
       contact || tr("reservation.not_provided", "Contact not provided"),
@@ -1869,14 +1947,14 @@
         <button class="manager-reservation-main" type="button" data-owner-reservation-view="${reservation.id}">
           <time>${esc(timeLabel(reservation.reservation_time) || dateLabel(reservation.reservation_date))}</time>
           <div>
-            <strong>${esc(reservation.guest_name || "Guest")}</strong>
-            <span>${Number(reservation.party_size || 0)} ${Number(reservation.party_size) === 1 ? "guest" : "guests"}</span>
+            <strong>${esc(reservation.guest_name || guestFallback())}</strong>
+            <span>${Number(reservation.party_size || 0)} ${guestCountLabel(reservation.party_size)}</span>
           </div>
           ${statusBadge(reservation.status)}
         </button>
         <div class="manager-reservation-mobile-meta">
           <span><i class="bi bi-clock"></i>${esc(timeLabel(reservation.reservation_time) || dateLabel(reservation.reservation_date))}</span>
-          <span><i class="bi bi-people"></i>${Number(reservation.party_size || 0)} ${Number(reservation.party_size) === 1 ? "guest" : "guests"}</span>
+          <span><i class="bi bi-people"></i>${Number(reservation.party_size || 0)} ${guestCountLabel(reservation.party_size)}</span>
         </div>
         <div class="manager-reservation-secondary">
           <span>${esc(secondary.join(" · "))}</span>
@@ -1897,40 +1975,42 @@
     if (state.reservationWorkspace.search) {
       return dashboardEmpty(
         "bi-search",
-        `No reservations match "${state.reservationWorkspace.search}".`,
-        "Clear the search or active filters to broaden the list.",
-        `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservations-clear>Clear search</button><button class="btn btn-glass btn-sm" type="button" data-owner-reservations-clear>Clear filters</button></div>`,
+        tr("manager.no_search_results_query", 'No reservations match "{query}".', {
+          query: state.reservationWorkspace.search,
+        }),
+        tr("manager.clear_search_filters_copy", "Clear the search or active filters to broaden the list."),
+        `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservations-clear>${tr("manager.clear_search", "Clear search")}</button><button class="btn btn-glass btn-sm" type="button" data-owner-reservations-clear>${tr("manager.clear_filters", "Clear filters")}</button></div>`,
       );
     }
     if (view === "today") {
       return dashboardEmpty(
         "bi-calendar2",
-        "No reservations scheduled today.",
-        "Upcoming bookings and public availability are one click away.",
-        `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-reservation-workspace-view="upcoming">View Upcoming</button><button class="btn btn-glass btn-sm" type="button" data-manager-quick-action="opening-hours">Check Availability</button><button class="btn btn-glass btn-sm" type="button" data-manager-quick-action="preview">Preview Public Page</button></div>`,
+        tr("manager.no_reservations_today", "No reservations scheduled today."),
+        tr("manager.no_reservations_today_copy", "Upcoming bookings and public availability are one click away."),
+        `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-reservation-workspace-view="upcoming">${tr("manager.view_upcoming", "View Upcoming")}</button><button class="btn btn-glass btn-sm" type="button" data-manager-quick-action="opening-hours">${tr("manager.check_availability", "Check Availability")}</button><button class="btn btn-glass btn-sm" type="button" data-manager-quick-action="preview">${tr("manager.preview_public_page", "Preview Public Page")}</button></div>`,
       );
     }
     if (view === "pending") {
       return dashboardEmpty(
         "bi-hourglass-split",
-        "No pending requests.",
-        "New requests will appear here when guests need confirmation.",
-        `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-reservation-workspace-view="today">View Today</button><button class="btn btn-glass btn-sm" type="button" data-reservation-workspace-view="upcoming">View Upcoming</button></div>`,
+        tr("manager.no_pending_requests", "No pending requests."),
+        tr("manager.no_pending_requests_copy", "New requests will appear here when guests need confirmation."),
+        `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-reservation-workspace-view="today">${tr("manager.view_today", "View Today")}</button><button class="btn btn-glass btn-sm" type="button" data-reservation-workspace-view="upcoming">${tr("manager.view_upcoming", "View Upcoming")}</button></div>`,
       );
     }
     return dashboardEmpty(
       "bi-calendar-check",
-      "No reservations in this view.",
-      "Try another view or clear filters to see more reservations.",
+      tr("manager.no_reservations_view", "No reservations in this view."),
+      tr("manager.no_reservations_view_copy", "Try another view or clear filters to see more reservations."),
     );
   }
 
   function renderReservationWorkspaceHeader() {
     const venue = $("[data-reservations-venue-name]");
-    if (venue) venue.textContent = state.venue?.name || "Restaurant / Bar";
+    if (venue) venue.textContent = state.venue?.name || restaurantBarFallback();
     const date = $("[data-reservations-date-context]");
     if (date) {
-      date.textContent = new Date().toLocaleDateString(undefined, {
+      date.textContent = new Date().toLocaleDateString(currentLocale(), {
         weekday: "long",
         month: "long",
         day: "numeric",
@@ -1939,13 +2019,13 @@
     const view = $("[data-reservation-current-view]");
     if (view) {
       view.textContent = {
-        today: "Today",
-        pending: "Pending",
-        upcoming: "Upcoming",
-        all: "All",
-        completed: "Completed",
-        cancelled: "Cancelled",
-        no_show: "No-shows",
+        today: tr("manager.today", "Today"),
+        pending: tr("manager.pending", "Pending"),
+        upcoming: tr("events.upcoming", "Upcoming"),
+        all: tr("manager.all", "All"),
+        completed: tr("manager.completed", "Completed"),
+        cancelled: tr("manager.cancelled", "Cancelled"),
+        no_show: tr("manager.no_shows", "No-shows"),
       }[state.reservationWorkspace.view || "today"];
     }
   }
@@ -2002,18 +2082,18 @@
     if (!root) return;
     const filters = [];
     if (state.reservationWorkspace.search)
-      filters.push(`Search: ${state.reservationWorkspace.search}`);
+      filters.push(tr("manager.search_filter", "Search: {value}", { value: state.reservationWorkspace.search }));
     if (state.reservationFilters.status)
-      filters.push(`Status: ${statusLabel(state.reservationFilters.status)}`);
+      filters.push(tr("manager.status_filter", "Status: {value}", { value: statusLabel(state.reservationFilters.status) }));
     if (state.reservationFilters.date)
-      filters.push(`From: ${dateLabel(state.reservationFilters.date)}`);
+      filters.push(tr("manager.from_filter", "From: {value}", { value: dateLabel(state.reservationFilters.date) }));
     if (state.reservationWorkspace.dateEnd)
-      filters.push(`To: ${dateLabel(state.reservationWorkspace.dateEnd)}`);
-    if (state.reservationFilters.venue_id) filters.push("Venue selected");
+      filters.push(tr("manager.to_filter", "To: {value}", { value: dateLabel(state.reservationWorkspace.dateEnd) }));
+    if (state.reservationFilters.venue_id) filters.push(tr("manager.venue_selected", "Venue selected"));
     if (state.reservationWorkspace.partySize)
-      filters.push(`Party: ${state.reservationWorkspace.partySize}`);
+      filters.push(tr("manager.party_filter", "Party: {value}", { value: state.reservationWorkspace.partySize }));
     if (state.reservationWorkspace.occasion)
-      filters.push(`Occasion: ${state.reservationWorkspace.occasion}`);
+      filters.push(tr("manager.occasion_filter", "Occasion: {value}", { value: state.reservationWorkspace.occasion }));
 
     root.hidden = !filters.length;
     root.innerHTML = filters
@@ -2188,7 +2268,7 @@
     const status = calendarStatuses.includes(reservation.status) ? reservation.status : "pending";
     return `
       <button class="owner-calendar-item owner-calendar-item-${status}" type="button" data-owner-calendar-reservation="${reservation.id}">
-        <strong>${esc(reservation.guest_name)}</strong>
+        <strong>${esc(reservation.guest_name || guestFallback())}</strong>
         <span>${esc(timeLabel(reservation.reservation_time))}</span>
         <span>${reservation.party_size} ${Number(reservation.party_size) === 1 ? tr("reservation.guest", "Guest") : tr("reservation.guests", "Guests")}</span>
         <em>${esc(statusLabel(reservation.status))}</em>
@@ -2202,7 +2282,7 @@
     return `
       <section class="owner-calendar-day ${compact ? "owner-calendar-day-compact" : ""}">
         <div class="owner-calendar-day-head">
-          <span>${esc(shortDays[(date.getDay() + 6) % 7])}</span>
+          <span>${esc(shortDayName((date.getDay() + 6) % 7))}</span>
           <strong>${date.getDate()}</strong>
         </div>
         <div class="owner-calendar-day-items">
@@ -2568,28 +2648,28 @@
       `;
     }
     if (reservation.status === "cancelled") {
-      return `<div class="manager-detail-state-note manager-detail-state-danger"><i class="bi bi-x-circle"></i><span>This reservation has been cancelled.</span></div>`;
+      return `<div class="manager-detail-state-note manager-detail-state-danger"><i class="bi bi-x-circle"></i><span>${tr("manager.reservation_cancelled_note", "This reservation has been cancelled.")}</span></div>`;
     }
     if (reservation.status === "no_show") {
-      return `<div class="manager-detail-state-note"><i class="bi bi-person-x"></i><span>This guest was marked as a no-show.</span></div>`;
+      return `<div class="manager-detail-state-note"><i class="bi bi-person-x"></i><span>${tr("manager.no_show_note", "This guest was marked as a no-show.")}</span></div>`;
     }
-    return `<div class="manager-detail-state-note"><i class="bi bi-eye"></i><span>${esc(statusLabel(reservation.status))} reservations are view-only.</span></div>`;
+    return `<div class="manager-detail-state-note"><i class="bi bi-eye"></i><span>${esc(tr("manager.view_only_note", "{status} reservations are view-only.", { status: statusLabel(reservation.status) }))}</span></div>`;
   }
 
   function detailHistoryItems(reservation) {
     return [
-      reservation.created_at ? ["Created", dateTimeLabel(reservation.created_at)] : null,
+      reservation.created_at ? [tr("manager.created", "Created"), dateTimeLabel(reservation.created_at)] : null,
       reservation.status === "confirmed" && reservation.updated_at
-        ? ["Confirmed", dateTimeLabel(reservation.updated_at)]
+        ? [tr("manager.confirmed", "Confirmed"), dateTimeLabel(reservation.updated_at)]
         : null,
       reservation.status === "completed" && reservation.updated_at
-        ? ["Completed", dateTimeLabel(reservation.updated_at)]
+        ? [tr("manager.completed", "Completed"), dateTimeLabel(reservation.updated_at)]
         : null,
       reservation.status === "no_show" && reservation.updated_at
-        ? ["No-show", dateTimeLabel(reservation.updated_at)]
+        ? [tr("reservation.no_show", "No-show"), dateTimeLabel(reservation.updated_at)]
         : null,
-      reservation.cancelled_at ? ["Cancelled", dateTimeLabel(reservation.cancelled_at)] : null,
-      reservation.updated_at ? ["Last updated", dateTimeLabel(reservation.updated_at)] : null,
+      reservation.cancelled_at ? [tr("manager.cancelled", "Cancelled"), dateTimeLabel(reservation.cancelled_at)] : null,
+      reservation.updated_at ? [tr("manager.last_updated", "Last updated"), dateTimeLabel(reservation.updated_at)] : null,
     ].filter(Boolean);
   }
 
@@ -2604,14 +2684,14 @@
   }
 
   function renderReservationDetailMissing() {
-    $("[data-owner-reservation-title]").textContent = "Reservation unavailable";
+    $("[data-owner-reservation-title]").textContent = tr("manager.reservation_unavailable", "Reservation unavailable");
     const body = $("[data-owner-reservation-detail]");
     if (!body) return;
     body.innerHTML = dashboardEmpty(
       "bi-exclamation-circle",
-      "Reservation not found.",
-      "The list may have refreshed or the selected reservation is no longer available.",
-      `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-bs-dismiss="offcanvas">Close panel</button></div>`,
+      tr("manager.reservation_not_found", "Reservation not found."),
+      tr("manager.reservation_not_found_copy", "The list may have refreshed or the selected reservation is no longer available."),
+      `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-bs-dismiss="offcanvas">${tr("manager.close_panel", "Close panel")}</button></div>`,
     );
     bootstrap.Offcanvas.getOrCreateInstance($("#ownerReservationModal"), {
       backdrop: false,
@@ -2642,8 +2722,8 @@
     const detailHtml = `
       <div class="manager-detail-hero">
         <div>
-          <h3>${esc(reservation.guest_name || "Guest")}</h3>
-          <p>${esc(dateLabel(reservation.reservation_date))} · ${esc(timeLabel(reservation.reservation_time))} · ${Number(reservation.party_size || 0)} ${Number(reservation.party_size) === 1 ? "guest" : "guests"}</p>
+          <h3>${esc(reservation.guest_name || guestFallback())}</h3>
+          <p>${esc(dateLabel(reservation.reservation_date))} · ${esc(timeLabel(reservation.reservation_time))} · ${Number(reservation.party_size || 0)} ${guestCountLabel(reservation.party_size)}</p>
         </div>
         ${statusBadge(reservation.status)}
       </div>
@@ -2651,30 +2731,30 @@
       <div class="manager-detail-actions">${primaryActions}</div>
 
       <section class="manager-detail-section">
-        <h4>Guest Information</h4>
+        <h4>${tr("manager.guest_information", "Guest Information")}</h4>
         <div class="manager-detail-grid">
-          <div><span>Name</span><strong>${esc(reservation.guest_name || "Guest")}</strong></div>
-          <div><span>Phone</span><strong>${esc(reservation.phone || tr("reservation.not_provided", "Not provided"))}</strong></div>
-          <div><span>Email</span><strong>${esc(reservation.email || tr("reservation.not_provided", "Not provided"))}</strong></div>
+          <div><span>${tr("manager.name", "Name")}</span><strong>${esc(reservation.guest_name || guestFallback())}</strong></div>
+          <div><span>${tr("manager.phone", "Phone")}</span><strong>${esc(reservation.phone || tr("reservation.not_provided", "Not provided"))}</strong></div>
+          <div><span>${tr("manager.email", "Email")}</span><strong>${esc(reservation.email || tr("reservation.not_provided", "Not provided"))}</strong></div>
         </div>
       </section>
 
       <section class="manager-detail-section">
-        <h4>Reservation Details</h4>
+        <h4>${tr("manager.reservation_details", "Reservation Details")}</h4>
         <div class="manager-detail-grid">
-          <div><span>Status</span><strong>${esc(statusLabel(reservation.status))}</strong></div>
-          <div><span>Reservation ID</span><strong>#${esc(reservation.id)}</strong></div>
-          <div><span>Date</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div>
-          <div><span>Time</span><strong>${esc(timeLabel(reservation.reservation_time))}</strong></div>
-          <div><span>Party size</span><strong>${Number(reservation.party_size || 0)}</strong></div>
-          <div><span>Occasion</span><strong>${esc(occasionLabel(reservation.occasion))}</strong></div>
+          <div><span>${tr("common.status", "Status")}</span><strong>${esc(statusLabel(reservation.status))}</strong></div>
+          <div><span>${tr("manager.reservation_id", "Reservation ID")}</span><strong>#${esc(reservation.id)}</strong></div>
+          <div><span>${tr("common.date", "Date")}</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div>
+          <div><span>${tr("common.time", "Time")}</span><strong>${esc(timeLabel(reservation.reservation_time))}</strong></div>
+          <div><span>${tr("manager.party_size", "Party size")}</span><strong>${Number(reservation.party_size || 0)}</strong></div>
+          <div><span>${tr("reservation.occasion", "Occasion")}</span><strong>${esc(occasionLabel(reservation.occasion))}</strong></div>
         </div>
       </section>
 
       <section class="manager-detail-section">
-        <h4>Notes</h4>
+        <h4>${tr("manager.notes", "Notes")}</h4>
         <div class="manager-detail-note-block">
-          <strong>${esc(reservation.venue?.name || state.venue?.name || "Restaurant / Bar")}</strong>
+          <strong>${esc(reservation.venue?.name || state.venue?.name || restaurantBarFallback())}</strong>
           <span>${esc(reservation.notes || tr("reservation.no_special_request", "No special request provided."))}</span>
         </div>
       </section>
@@ -2683,7 +2763,7 @@
         reservation.status === "cancelled"
           ? `
         <section class="manager-detail-section">
-          <h4>Cancellation Context</h4>
+          <h4>${tr("manager.cancellation_context", "Cancellation Context")}</h4>
           <div class="manager-detail-note-block">
             <strong>${esc(dateTimeLabel(reservation.cancelled_at))}</strong>
             <span>${esc(reservation.owner_cancellation_reason || reservation.cancellation_reason || tr("reservation.no_reason_provided", "No reason provided."))}</span>
@@ -2694,7 +2774,7 @@
       }
 
       <section class="manager-detail-section">
-        <h4>Status History</h4>
+        <h4>${tr("manager.status_history", "Status History")}</h4>
         <div class="manager-detail-history">
           ${
             history.length
@@ -2704,16 +2784,16 @@
                       `<div><i class="bi bi-clock-history"></i><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`,
                   )
                   .join("")
-              : `<div><i class="bi bi-clock-history"></i><span>No status history available</span><strong>Current status only</strong></div>`
+              : `<div><i class="bi bi-clock-history"></i><span>${tr("manager.no_status_history", "No status history available")}</span><strong>${tr("manager.current_status_only", "Current status only")}</strong></div>`
           }
         </div>
       </section>
 
       <section class="manager-detail-section">
-        <h4>Related Context</h4>
+        <h4>${tr("manager.related_context", "Related Context")}</h4>
         <div class="manager-detail-note-block">
-          <strong>${esc(reservation.venue?.name || state.venue?.name || "Restaurant / Bar")}</strong>
-          <span>${esc(reservation.reservation_date === todayValue() ? "Scheduled for today" : `Scheduled for ${dateLabel(reservation.reservation_date)}`)}</span>
+          <strong>${esc(reservation.venue?.name || state.venue?.name || restaurantBarFallback())}</strong>
+          <span>${esc(reservation.reservation_date === todayValue() ? tr("manager.scheduled_for_today", "Scheduled for today") : tr("manager.scheduled_for_date", "Scheduled for {date}", { date: dateLabel(reservation.reservation_date) }))}</span>
         </div>
       </section>
     `;
@@ -2729,7 +2809,7 @@
   }
 
   function collectHours() {
-    return days.map((day, index) => {
+    return dayKeys.map((_, index) => {
       const closed = $(`[data-hours-closed="${index}"]`)?.checked || false;
       return {
         day_of_week: index,
@@ -2837,7 +2917,12 @@
       renderUploadProgress(valid, 0, tr("loading.uploading", "Preparing uploads..."));
       for (const [index, file] of valid.entries()) {
         const data = await uploadVenueImage(file, (progress) => {
-          renderUploadProgress(valid, index, `Uploading ${file.name}`, progress);
+          renderUploadProgress(
+            valid,
+            index,
+            tr("manager.uploading_file", "Uploading {file}", { file: file.name }),
+            progress,
+          );
         });
         state.venue = data;
         state.venues = state.venues.map((venue) =>
@@ -2851,8 +2936,8 @@
         tr(
           valid.length === 1 ? "owner.image_uploaded" : "owner.images_uploaded",
           valid.length === 1
-            ? "Image uploaded. The public gallery is up to date."
-            : "Images uploaded. The public gallery is up to date.",
+            ? tr("owner.image_uploaded", "Image uploaded. The public gallery is up to date.")
+            : tr("owner.images_uploaded", "Images uploaded. The public gallery is up to date."),
         ),
         "success",
       );
@@ -3451,7 +3536,7 @@
           title: tr("owner.mark_completed", "Mark reservation completed?"),
           body: tr(
             "reservation.reservation_completed",
-            "Use this after the guest visit has finished.",
+            tr("manager.mark_completed_body", "Use this after the guest visit has finished."),
           ),
           confirm: tr("owner.mark_completed", "Mark completed"),
         },
@@ -3459,7 +3544,7 @@
           title: tr("owner.mark_no_show", "Mark reservation as no show?"),
           body: tr(
             "reservation.no_show",
-            "Use this only when the guest did not arrive for a confirmed reservation.",
+            tr("manager.mark_no_show_body", "Use this only when the guest did not arrive for a confirmed reservation."),
           ),
           confirm: tr("owner.mark_no_show", "Mark no show"),
         },
@@ -3525,7 +3610,10 @@
     const toggle = $("[data-manager-sidebar-toggle]");
     if (!shell) return;
     shell.classList.toggle("manager-sidebar-collapsed", collapsed);
-    toggle?.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+    toggle?.setAttribute(
+      "aria-label",
+      collapsed ? tr("manager.expand_sidebar", "Expand sidebar") : tr("manager.collapse_sidebar", "Collapse sidebar"),
+    );
     localStorage.setItem("tiketa_manager_sidebar_collapsed", collapsed ? "1" : "0");
   }
 
@@ -3619,7 +3707,7 @@
     }
     if (section === "guests") {
       scrollManagerTarget("#ownerReservations");
-      window.tkToast?.("Guest workspace will be available in a later manager phase.", "info");
+      window.tkToast?.(tr("manager.guest_workspace_later", "Guest workspace will be available in a later manager phase."), "info");
     }
   }
 
@@ -3706,8 +3794,13 @@
     document.querySelectorAll("[data-manager-placeholder]").forEach((item) => {
       item.addEventListener("click", (event) => {
         event.preventDefault();
-        const label = item.dataset.managerPlaceholder || "This section";
-        window.tkToast?.(`${label} will be available in a later manager phase.`, "info");
+        const label = item.dataset.managerPlaceholder || tr("manager.this_section", "This section");
+        window.tkToast?.(
+          tr("manager.section_later", "{section} will be available in a later manager phase.", {
+            section: tr(`manager.${String(label).toLowerCase()}`, label),
+          }),
+          "info",
+        );
       });
     });
 
@@ -3722,14 +3815,14 @@
       });
 
     $("[data-manager-search]")?.addEventListener("click", () => {
-      window.tkToast?.("Global search will be available in a later manager phase.", "info");
+      window.tkToast?.(tr("manager.global_search_later", "Global search will be available in a later manager phase."), "info");
     });
 
     document.addEventListener("keydown", (event) => {
       const isShortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
       if (!isShortcut) return;
       event.preventDefault();
-      window.tkToast?.("Global search will be available in a later manager phase.", "info");
+      window.tkToast?.(tr("manager.global_search_later", "Global search will be available in a later manager phase."), "info");
     });
 
     document.addEventListener("click", (event) => {
