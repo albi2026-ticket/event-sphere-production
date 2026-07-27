@@ -52,7 +52,14 @@
     specialHours: [],
     editingSpecialHourId: null,
     reservationStats: { pending: 0, confirmed: 0, cancelled: 0, today: 0 },
-    reservationFilters: { view: "", status: "", date: "", venue_id: "" },
+    reservationFilters: { view: "today", status: "", date: "", venue_id: "" },
+    reservationWorkspace: {
+      view: "today",
+      search: "",
+      dateEnd: "",
+      partySize: "",
+      occasion: "",
+    },
     reservationView: "list",
     calendar: {
       view: "week",
@@ -1730,9 +1737,328 @@
     `;
   }
 
+  function reservationSearchText(reservation) {
+    return [
+      reservation.id,
+      reservation.guest_name,
+      reservation.phone,
+      reservation.email,
+      reservation.reservation_date,
+      reservation.status,
+      reservation.occasion,
+      reservation.notes,
+      reservation.venue?.name,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+  }
+
+  function partySizeMatches(value, partySize) {
+    const size = Number(partySize || 0);
+    if (!value) return true;
+    if (value === "1-2") return size >= 1 && size <= 2;
+    if (value === "3-4") return size >= 3 && size <= 4;
+    if (value === "5-8") return size >= 5 && size <= 8;
+    if (value === "9+") return size >= 9;
+    return true;
+  }
+
+  function workspaceViewMatches(reservation) {
+    const view = state.reservationWorkspace.view || "today";
+    const today = todayValue();
+    const reservationDate = reservation.reservation_date || "";
+    if (view === "today") return reservationDate === today;
+    if (view === "pending") return reservation.status === "pending";
+    if (view === "upcoming") {
+      return (
+        reservationDate >= today &&
+        !["completed", "cancelled", "no_show"].includes(reservation.status)
+      );
+    }
+    if (view === "completed") return reservation.status === "completed";
+    if (view === "cancelled") return reservation.status === "cancelled";
+    if (view === "no_show") return reservation.status === "no_show";
+    return true;
+  }
+
+  function filteredWorkspaceReservations() {
+    const workspace = state.reservationWorkspace;
+    const query = workspace.search.trim().toLowerCase();
+    return state.reservations
+      .filter((reservation) => workspaceViewMatches(reservation))
+      .filter((reservation) => (query ? reservationSearchText(reservation).includes(query) : true))
+      .filter((reservation) =>
+        state.reservationFilters.date
+          ? reservation.reservation_date >= state.reservationFilters.date
+          : true,
+      )
+      .filter((reservation) =>
+        workspace.dateEnd ? reservation.reservation_date <= workspace.dateEnd : true,
+      )
+      .filter((reservation) => partySizeMatches(workspace.partySize, reservation.party_size))
+      .filter((reservation) =>
+        workspace.occasion ? String(reservation.occasion || "") === workspace.occasion : true,
+      );
+  }
+
+  function servicePeriod(time) {
+    const hour = Number(String(time || "00:00").slice(0, 2));
+    if (hour < 11) return "Morning";
+    if (hour < 16) return "Lunch";
+    if (hour < 22) return "Dinner";
+    return "Late";
+  }
+
+  function urgencyGroup(reservation) {
+    const today = todayValue();
+    const tomorrow = toDateInputValue(new Date(Date.now() + 86400000));
+    if (reservation.reservation_date === today) return "Today";
+    if (reservation.reservation_date === tomorrow) return "Tomorrow";
+    return "Later";
+  }
+
+  function reservationGroupLabel(reservation) {
+    const view = state.reservationWorkspace.view || "today";
+    if (view === "today") return servicePeriod(reservation.reservation_time);
+    if (view === "pending") return urgencyGroup(reservation);
+    if (view === "upcoming") return dateLabel(reservation.reservation_date);
+    if (["completed", "cancelled", "no_show"].includes(view))
+      return dateLabel(reservation.reservation_date);
+    return reservation.reservation_date === todayValue()
+      ? "Today"
+      : dateLabel(reservation.reservation_date);
+  }
+
+  function sortWorkspaceReservations(items) {
+    const view = state.reservationWorkspace.view || "today";
+    return items.slice().sort((a, b) => {
+      if (["completed", "cancelled", "no_show", "all"].includes(view)) {
+        return reservationUpdatedTime(b) - reservationUpdatedTime(a);
+      }
+      return reservationDateTime(a) - reservationDateTime(b);
+    });
+  }
+
+  function nextBestReservationAction(reservation) {
+    if (reservation.status === "pending") return { label: "Review", action: "view", tone: "gold" };
+    if (reservation.status === "confirmed")
+      return { label: "Open details", action: "view", tone: "glass" };
+    return { label: "View", action: "view", tone: "glass" };
+  }
+
+  function reservationRowCard(reservation) {
+    const action = nextBestReservationAction(reservation);
+    const contact = [reservation.phone, reservation.email].filter(Boolean).join(" · ");
+    const secondary = [
+      contact || tr("reservation.not_provided", "Contact not provided"),
+      reservation.occasion ? occasionLabel(reservation.occasion) : "",
+      reservation.venue?.name || "",
+    ].filter(Boolean);
+    return `
+      <article class="manager-reservation-row manager-reservation-${esc(reservation.status || "pending")}">
+        <button class="manager-reservation-main" type="button" data-owner-reservation-view="${reservation.id}">
+          <time>${esc(timeLabel(reservation.reservation_time) || dateLabel(reservation.reservation_date))}</time>
+          <div>
+            <strong>${esc(reservation.guest_name || "Guest")}</strong>
+            <span>${Number(reservation.party_size || 0)} ${Number(reservation.party_size) === 1 ? "guest" : "guests"}</span>
+          </div>
+          ${statusBadge(reservation.status)}
+        </button>
+        <div class="manager-reservation-secondary">
+          <span>${esc(secondary.join(" · "))}</span>
+          ${
+            reservation.notes
+              ? `<small>${esc(String(reservation.notes).slice(0, 120))}</small>`
+              : ""
+          }
+        </div>
+        <button class="btn ${action.tone === "gold" ? "btn-gold-outline" : "btn-glass"} btn-sm" type="button" data-owner-reservation-view="${reservation.id}">${esc(action.label)}</button>
+      </article>
+    `;
+  }
+
+  function reservationEmptyState() {
+    const view = state.reservationWorkspace.view || "today";
+    if (state.reservationWorkspace.search) {
+      return dashboardEmpty(
+        "bi-search",
+        "No reservations match your search.",
+        "Clear the search or filters to broaden the list.",
+        `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservations-clear>Clear search</button><button class="btn btn-glass btn-sm" type="button" data-owner-reservations-clear>Clear filters</button></div>`,
+      );
+    }
+    if (view === "today") {
+      return dashboardEmpty(
+        "bi-calendar2",
+        "No reservations scheduled today.",
+        "Upcoming bookings and public availability are one click away.",
+        `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-reservation-workspace-view="upcoming">View Upcoming</button><button class="btn btn-glass btn-sm" type="button" data-manager-quick-action="opening-hours">Check Availability</button><button class="btn btn-glass btn-sm" type="button" data-manager-quick-action="preview">Preview Public Page</button></div>`,
+      );
+    }
+    if (view === "pending") {
+      return dashboardEmpty(
+        "bi-hourglass-split",
+        "No pending requests.",
+        "New requests will appear here when guests need confirmation.",
+        `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-reservation-workspace-view="today">View Today</button><button class="btn btn-glass btn-sm" type="button" data-reservation-workspace-view="upcoming">View Upcoming</button></div>`,
+      );
+    }
+    return dashboardEmpty(
+      "bi-calendar-check",
+      "No reservations in this view.",
+      "Try another view or clear filters to see more reservations.",
+    );
+  }
+
+  function renderReservationWorkspaceHeader() {
+    const venue = $("[data-reservations-venue-name]");
+    if (venue) venue.textContent = state.venue?.name || "Restaurant / Bar";
+    const date = $("[data-reservations-date-context]");
+    if (date) {
+      date.textContent = new Date().toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      });
+    }
+  }
+
+  function renderReservationWorkspaceSummary() {
+    const root = $("[data-reservation-workspace-summary]");
+    if (!root) return;
+    const today = todayValue();
+    const todayItems = state.reservations.filter(
+      (reservation) => reservation.reservation_date === today,
+    );
+    const values = {
+      pending: state.reservations.filter((reservation) => reservation.status === "pending").length,
+      confirmed_today: todayItems.filter((reservation) => reservation.status === "confirmed")
+        .length,
+      today: todayItems.reduce(
+        (total, reservation) => total + Number(reservation.party_size || 0),
+        0,
+      ),
+      cancelled_today: todayItems.filter((reservation) => reservation.status === "cancelled")
+        .length,
+      no_show_today: todayItems.filter((reservation) => reservation.status === "no_show").length,
+    };
+    root.querySelectorAll("[data-reservation-summary-filter]").forEach((item) => {
+      const value = values[item.dataset.reservationSummaryFilter] || 0;
+      const number = item.querySelector("strong");
+      if (number) number.textContent = String(value);
+    });
+    const badge = $("[data-reservation-pending-tab-badge]");
+    if (badge) {
+      badge.textContent = String(values.pending);
+      badge.hidden = values.pending <= 0;
+    }
+  }
+
+  function renderActiveReservationFilters() {
+    const root = $("[data-reservation-active-filters]");
+    if (!root) return;
+    const filters = [];
+    if (state.reservationWorkspace.search)
+      filters.push(`Search: ${state.reservationWorkspace.search}`);
+    if (state.reservationFilters.status)
+      filters.push(`Status: ${statusLabel(state.reservationFilters.status)}`);
+    if (state.reservationFilters.date)
+      filters.push(`From: ${dateLabel(state.reservationFilters.date)}`);
+    if (state.reservationWorkspace.dateEnd)
+      filters.push(`To: ${dateLabel(state.reservationWorkspace.dateEnd)}`);
+    if (state.reservationFilters.venue_id) filters.push("Venue selected");
+    if (state.reservationWorkspace.partySize)
+      filters.push(`Party: ${state.reservationWorkspace.partySize}`);
+    if (state.reservationWorkspace.occasion)
+      filters.push(`Occasion: ${state.reservationWorkspace.occasion}`);
+
+    root.hidden = !filters.length;
+    root.innerHTML = filters
+      .map((filter) => `<span><i class="bi bi-funnel"></i>${esc(filter)}</span>`)
+      .join("");
+  }
+
+  function syncReservationWorkspaceControls() {
+    document.querySelectorAll("[data-reservation-workspace-view]").forEach((button) => {
+      button.classList.toggle(
+        "active",
+        button.dataset.reservationWorkspaceView === state.reservationWorkspace.view,
+      );
+      button.setAttribute(
+        "aria-current",
+        button.dataset.reservationWorkspaceView === state.reservationWorkspace.view
+          ? "page"
+          : "false",
+      );
+    });
+    const view = $('[data-owner-reservation-filter="view"]');
+    if (view) view.value = state.reservationFilters.view;
+    const status = $('[data-owner-reservation-filter="status"]');
+    if (status) status.value = state.reservationFilters.status;
+    const date = $('[data-owner-reservation-filter="date"]');
+    if (date) date.value = state.reservationFilters.date;
+    const venue = $('[data-owner-reservation-filter="venue_id"]');
+    if (venue) venue.value = state.reservationFilters.venue_id;
+    const search = $("[data-owner-reservation-search]");
+    if (search) search.value = state.reservationWorkspace.search;
+    const dateEnd = $("[data-owner-reservation-date-end]");
+    if (dateEnd) dateEnd.value = state.reservationWorkspace.dateEnd;
+    const partySize = $("[data-owner-reservation-party-size]");
+    if (partySize) partySize.value = state.reservationWorkspace.partySize;
+    const occasion = $("[data-owner-reservation-occasion]");
+    if (occasion) occasion.value = state.reservationWorkspace.occasion;
+  }
+
+  function setReservationWorkspaceView(view, options = {}) {
+    state.reservationWorkspace.view = view || "today";
+    const filterMap = {
+      today: { view: "today", status: "" },
+      pending: { view: "", status: "pending" },
+      upcoming: { view: "upcoming", status: "" },
+      all: { view: "", status: "" },
+      completed: { view: "completed", status: "" },
+      cancelled: { view: "cancelled", status: "" },
+      no_show: { view: "", status: "no_show" },
+    }[state.reservationWorkspace.view] || { view: "", status: "" };
+    state.reservationFilters.view = filterMap.view;
+    state.reservationFilters.status = filterMap.status;
+    state.reservationFilters.date = "";
+    syncReservationWorkspaceControls();
+    lastReservationRenderSignature = "";
+    clearOwnerRenderSignatures("reservation-stats");
+    if (options.load === false) {
+      renderReservations();
+      return;
+    }
+    loadReservations();
+  }
+
+  function clearReservationWorkspace() {
+    state.reservationFilters = { view: "today", status: "", date: "", venue_id: "" };
+    state.reservationWorkspace = {
+      view: "today",
+      search: "",
+      dateEnd: "",
+      partySize: "",
+      occasion: "",
+    };
+    document.querySelectorAll("[data-owner-reservation-filter]").forEach((control) => {
+      control.value = control.dataset.ownerReservationFilter === "view" ? "today" : "";
+    });
+    syncReservationWorkspaceControls();
+    lastReservationRenderSignature = "";
+    clearOwnerRenderSignatures("reservation-stats");
+    loadReservations();
+  }
+
   function renderReservations(loading = false) {
     const body = $("[data-owner-reservations-table]");
     if (!body) return;
+    syncReservationWorkspaceControls();
+    renderReservationWorkspaceHeader();
+    renderReservationWorkspaceSummary();
+    renderActiveReservationFilters();
     const signature = loading
       ? `loading:${reservationQuery()}`
       : state.reservations
@@ -1740,43 +2066,41 @@
             (reservation) =>
               `${reservation.id}:${reservation.status}:${reservation.updated_at || reservation.cancelled_at || ""}`,
           )
-          .join("|");
+          .join("|") +
+        `:${stableSignature(state.reservationWorkspace)}:${stableSignature(state.reservationFilters)}`;
     if (signature === lastReservationRenderSignature) return;
     lastReservationRenderSignature = signature;
 
     if (loading) {
       body.innerHTML = `
-        <tr>
-          <td colspan="7">
-            <div class="reservation-table-skeleton" aria-label="${tr("reservation.loading_reservations", "Loading reservations")}">
-              ${Array.from({ length: 4 }, () => "<span></span>").join("")}
-            </div>
-          </td>
-        </tr>
+        <div class="reservation-list-skeleton" aria-label="${tr("reservation.loading_reservations", "Loading reservations")}">
+          ${Array.from({ length: 5 }, () => "<span></span>").join("")}
+        </div>
       `;
       renderReservationStats();
       return;
     }
 
-    body.innerHTML = state.reservations.length
-      ? state.reservations
+    const reservations = sortWorkspaceReservations(filteredWorkspaceReservations());
+    const groups = reservations.reduce((acc, reservation) => {
+      const label = reservationGroupLabel(reservation);
+      if (!acc.has(label)) acc.set(label, []);
+      acc.get(label).push(reservation);
+      return acc;
+    }, new Map());
+
+    body.innerHTML = reservations.length
+      ? Array.from(groups.entries())
           .map(
-            (reservation) => `
-      <tr>
-        <td data-label="${tr("owner.guest", "Guest")}">
-          <span class="owner-reservation-guest">${esc(reservation.guest_name)}</span>
-        </td>
-        <td data-label="${tr("owner.phone", "Phone")}">${esc(reservation.phone || tr("reservation.not_provided", "Not provided"))}</td>
-        <td data-label="${tr("owner.date", "Date")}">${esc(dateLabel(reservation.reservation_date))}</td>
-        <td data-label="${tr("owner.time", "Time")}">${esc(timeLabel(reservation.reservation_time))}</td>
-        <td data-label="${tr("reservation.guests", "Guests")}">${reservation.party_size}</td>
-        <td data-label="${tr("owner.status", "Status")}">${statusBadge(reservation.status)}</td>
-        <td data-label="${tr("owner.actions", "Actions")}">${reservationActions(reservation)}</td>
-      </tr>
-    `,
+            ([label, items]) => `
+        <section class="manager-reservation-group">
+          <div class="manager-reservation-group-head"><strong>${esc(label)}</strong><span>${items.length} ${items.length === 1 ? "reservation" : "reservations"}</span></div>
+          <div class="manager-reservation-group-list">${items.map(reservationRowCard).join("")}</div>
+        </section>
+      `,
           )
           .join("")
-      : `<tr><td colspan="7"><div class="dashboard-empty owner-reservation-empty"><i class="bi bi-calendar-check"></i><div><strong data-i18n="empty.no_reservations_found">${tr("empty.no_reservations_found", "No reservations on the list yet.")}</strong><span class="d-block" data-i18n="empty.no_reservations_copy">${tr("empty.no_reservations_copy", "Table requests and status updates will appear here once guests start booking.")}</span><a class="btn btn-gold btn-sm mt-2" href="/restaurants" data-i18n="buttons.discover_restaurants">${tr("buttons.discover_restaurants", "Discover restaurants & bars")}</a></div></div></td></tr>`;
+      : reservationEmptyState();
     renderReservationStats();
   }
 
@@ -2164,35 +2488,120 @@
   }
 
   function renderReservationDetail(reservation) {
-    $("[data-owner-reservation-title]").textContent = tr(
-      "owner.reservation_detail_title",
-      tr("reservation.reservation_details", "Reservation details"),
-    );
+    $("[data-owner-reservation-title]").textContent =
+      reservation.guest_name ||
+      tr(
+        "owner.reservation_detail_title",
+        tr("reservation.reservation_details", "Reservation details"),
+      );
     const body = $("[data-owner-reservation-detail]");
     if (!body) return;
-    body.innerHTML = `
-      <div class="row g-3 owner-reservation-detail-grid">
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.guest">${tr("owner.guest", "Guest")}</span><strong>${esc(reservation.guest_name)}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.status">${tr("owner.status", "Status")}</span>${statusBadge(reservation.status)}</div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.phone">${tr("owner.phone", "Phone")}</span><strong>${esc(reservation.phone || tr("reservation.not_provided", "Not provided"))}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.party_size">${tr("reservation.party_size", "Party Size")}</span><strong>${reservation.party_size}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.date">${tr("owner.date", "Date")}</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.time">${tr("owner.time", "Time")}</span><strong>${esc(timeLabel(reservation.reservation_time))}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.created_at">${tr("reservation.created_at", "Created at")}</span><strong>${esc(dateTimeLabel(reservation.created_at))}</strong></div></div>
-        <div class="col-12"><div class="facility justify-content-between"><span data-i18n="common.restaurant_bar">${tr("common.restaurant_bar", "Restaurant or bar")}</span><strong>${esc(reservation.venue?.name || "")}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.occasion">${tr("reservation.occasion", "Occasion")}</span><strong>${esc(occasionLabel(reservation.occasion))}</strong></div></div>
-        <div class="col-12"><div class="facility"><span><span class="text-muted-pro d-block mb-1" data-i18n="reservation.special_request">${tr("reservation.special_request", "Special Request")}</span>${esc(reservation.notes || tr("reservation.no_special_request", "No special request provided."))}</span></div></div>
-        ${
-          reservation.status === "cancelled"
-            ? `
-          <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.cancelled_at">${tr("reservation.cancelled_at", "Cancelled At")}</span><strong>${esc(dateTimeLabel(reservation.cancelled_at))}</strong></div></div>
-          <div class="col-12"><div class="facility"><span><span class="text-muted-pro d-block mb-1" data-i18n="reservation.cancellation_reason">${tr("reservation.cancellation_reason", "Cancellation Reason")}</span>${esc(reservation.owner_cancellation_reason || reservation.cancellation_reason || tr("reservation.no_reason_provided", "No reason provided."))}</span></div></div>
+    const primaryActions =
+      reservation.status === "pending"
+        ? `
+          <button class="btn btn-gold" type="button" data-owner-reservation-action="confirm" data-owner-reservation-id="${reservation.id}">
+            <i class="bi bi-check2-circle me-1"></i>${tr("owner.confirm", "Confirm")}
+          </button>
+          <button class="btn btn-outline-danger" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${reservation.id}">
+            <i class="bi bi-x-circle me-1"></i>${tr("buttons.cancel", "Cancel")}
+          </button>
         `
-            : ""
-        }
+        : reservation.status === "confirmed"
+          ? `
+          <button class="btn btn-gold" type="button" data-owner-reservation-action="complete" data-owner-reservation-id="${reservation.id}">
+            <i class="bi bi-patch-check me-1"></i>${tr("owner.mark_completed", "Mark Completed")}
+          </button>
+          <button class="btn btn-glass" type="button" data-owner-reservation-action="no-show" data-owner-reservation-id="${reservation.id}">
+            <i class="bi bi-person-x me-1"></i>${tr("owner.mark_no_show", "Mark guest as no-show")}
+          </button>
+          <button class="btn btn-outline-danger" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${reservation.id}">
+            <i class="bi bi-x-circle me-1"></i>${tr("buttons.cancel", "Cancel")}
+          </button>
+        `
+          : `<span class="manager-detail-note">${esc(statusLabel(reservation.status))} reservations are view-only.</span>`;
+    const history = [
+      reservation.created_at ? ["Created", dateTimeLabel(reservation.created_at)] : null,
+      reservation.updated_at ? ["Last updated", dateTimeLabel(reservation.updated_at)] : null,
+      reservation.cancelled_at ? ["Cancelled", dateTimeLabel(reservation.cancelled_at)] : null,
+    ].filter(Boolean);
+    body.innerHTML = `
+      <div class="manager-detail-hero">
+        <div>
+          <h3>${esc(reservation.guest_name || "Guest")}</h3>
+          <p>${esc(dateLabel(reservation.reservation_date))} · ${esc(timeLabel(reservation.reservation_time))} · ${Number(reservation.party_size || 0)} ${Number(reservation.party_size) === 1 ? "guest" : "guests"}</p>
+        </div>
+        ${statusBadge(reservation.status)}
       </div>
+
+      <div class="manager-detail-actions">${primaryActions}</div>
+
+      <section class="manager-detail-section">
+        <h4>Summary</h4>
+        <div class="manager-detail-grid">
+          <div><span>Status</span><strong>${esc(statusLabel(reservation.status))}</strong></div>
+          <div><span>Reservation ID</span><strong>#${esc(reservation.id)}</strong></div>
+          <div><span>Date</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div>
+          <div><span>Time</span><strong>${esc(timeLabel(reservation.reservation_time))}</strong></div>
+          <div><span>Party size</span><strong>${Number(reservation.party_size || 0)}</strong></div>
+          <div><span>Venue</span><strong>${esc(reservation.venue?.name || state.venue?.name || "Restaurant / Bar")}</strong></div>
+        </div>
+      </section>
+
+      <section class="manager-detail-section">
+        <h4>Guest Contact</h4>
+        <div class="manager-detail-grid">
+          <div><span>Phone</span><strong>${esc(reservation.phone || tr("reservation.not_provided", "Not provided"))}</strong></div>
+          <div><span>Email</span><strong>${esc(reservation.email || tr("reservation.not_provided", "Not provided"))}</strong></div>
+        </div>
+      </section>
+
+      <section class="manager-detail-section">
+        <h4>Notes / Occasion</h4>
+        <div class="manager-detail-note-block">
+          <strong>${esc(occasionLabel(reservation.occasion))}</strong>
+          <span>${esc(reservation.notes || tr("reservation.no_special_request", "No special request provided."))}</span>
+        </div>
+      </section>
+
+      ${
+        reservation.status === "cancelled"
+          ? `
+        <section class="manager-detail-section">
+          <h4>Cancellation Context</h4>
+          <div class="manager-detail-note-block">
+            <strong>${esc(dateTimeLabel(reservation.cancelled_at))}</strong>
+            <span>${esc(reservation.owner_cancellation_reason || reservation.cancellation_reason || tr("reservation.no_reason_provided", "No reason provided."))}</span>
+          </div>
+        </section>
+      `
+          : ""
+      }
+
+      <section class="manager-detail-section">
+        <h4>Status History</h4>
+        <div class="manager-detail-history">
+          ${
+            history.length
+              ? history
+                  .map(
+                    ([label, value]) =>
+                      `<div><i class="bi bi-clock-history"></i><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`,
+                  )
+                  .join("")
+              : `<div><i class="bi bi-clock-history"></i><span>No status history available</span><strong>Current status only</strong></div>`
+          }
+        </div>
+      </section>
+
+      <section class="manager-detail-section">
+        <h4>Related Context</h4>
+        <div class="manager-detail-note-block">
+          <strong>${esc(reservation.venue?.name || state.venue?.name || "Restaurant / Bar")}</strong>
+          <span>${esc(reservation.reservation_date === todayValue() ? "Scheduled for today" : `Scheduled for ${dateLabel(reservation.reservation_date)}`)}</span>
+        </div>
+      </section>
     `;
-    bootstrap.Modal.getOrCreateInstance($("#ownerReservationModal")).show();
+    bootstrap.Offcanvas.getOrCreateInstance($("#ownerReservationModal")).show();
   }
 
   function collectIds(name) {
@@ -2567,6 +2976,7 @@
   function reservationQuery() {
     const params = new URLSearchParams({ per_page: "50" });
     Object.entries(state.reservationFilters).forEach(([key, value]) => {
+      if (key === "date" && state.reservationWorkspace.dateEnd) return;
       if (value) params.set(key, value);
     });
     return params.toString();
@@ -3031,12 +3441,26 @@
   }
 
   function applyManagerReservationFilter(status) {
-    const view = $('[data-owner-reservation-filter="view"]');
-    const statusSelect = $('[data-owner-reservation-filter="status"]');
-    if (view) view.value = "";
-    if (statusSelect) statusSelect.value = status === "all" ? "" : status;
-    state.reservationFilters.view = "";
-    state.reservationFilters.status = status === "all" ? "" : status;
+    const mappedView =
+      {
+        all: "all",
+        pending: "pending",
+        completed: "completed",
+        cancelled: "cancelled",
+        no_show: "no_show",
+      }[status] || "all";
+    state.reservationWorkspace.search = "";
+    state.reservationWorkspace.dateEnd = "";
+    state.reservationWorkspace.partySize = "";
+    state.reservationWorkspace.occasion = "";
+    if (status === "confirmed") {
+      state.reservationWorkspace.view = "all";
+      state.reservationFilters.view = "";
+      state.reservationFilters.status = "confirmed";
+      syncReservationWorkspaceControls();
+    } else {
+      setReservationWorkspaceView(mappedView, { load: false });
+    }
     lastReservationRenderSignature = "";
     clearOwnerRenderSignatures("reservation-stats");
     loadReservations();
@@ -3303,21 +3727,92 @@
       clearOwnerRenderSignatures("calendar");
       loadCalendarReservations();
     });
-    $("[data-owner-reservations-clear]")?.addEventListener("click", () => {
-      state.reservationFilters = { view: "", status: "", date: "", venue_id: "" };
-      document.querySelectorAll("[data-owner-reservation-filter]").forEach((control) => {
-        control.value = "";
-      });
-      lastReservationRenderSignature = "";
-      clearOwnerRenderSignatures("reservation-stats");
-      loadReservations();
+    document.addEventListener("click", (event) => {
+      const clearButton = event.target.closest("[data-owner-reservations-clear]");
+      if (!clearButton) return;
+      event.preventDefault();
+      clearReservationWorkspace();
     });
 
     document.querySelectorAll("[data-owner-reservation-filter]").forEach((control) => {
       control.addEventListener("change", () => {
         state.reservationFilters[control.dataset.ownerReservationFilter] = control.value;
+        if (control.dataset.ownerReservationFilter === "status" && control.value) {
+          state.reservationWorkspace.view =
+            control.value === "pending" || control.value === "no_show" ? control.value : "all";
+        }
+        if (control.dataset.ownerReservationFilter === "date" && control.value) {
+          state.reservationWorkspace.view = "all";
+          state.reservationFilters.view = "";
+        }
+        syncReservationWorkspaceControls();
         debounceReservationLoad();
       });
+    });
+
+    $("[data-owner-reservation-search]")?.addEventListener("input", (event) => {
+      state.reservationWorkspace.search = event.target.value;
+      lastReservationRenderSignature = "";
+      renderReservations();
+    });
+
+    $("[data-owner-reservation-date-end]")?.addEventListener("change", (event) => {
+      state.reservationWorkspace.dateEnd = event.target.value;
+      lastReservationRenderSignature = "";
+      loadReservations();
+    });
+
+    $("[data-owner-reservation-party-size]")?.addEventListener("change", (event) => {
+      state.reservationWorkspace.partySize = event.target.value;
+      lastReservationRenderSignature = "";
+      renderReservations();
+    });
+
+    $("[data-owner-reservation-occasion]")?.addEventListener("change", (event) => {
+      state.reservationWorkspace.occasion = event.target.value;
+      lastReservationRenderSignature = "";
+      renderReservations();
+    });
+
+    document.querySelectorAll("[data-reservation-summary-filter]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const filter = button.dataset.reservationSummaryFilter;
+        if (filter === "pending") {
+          setReservationWorkspaceView("pending");
+          return;
+        }
+        if (filter === "confirmed_today") {
+          setReservationWorkspaceView("today", { load: false });
+          state.reservationFilters.status = "confirmed";
+          syncReservationWorkspaceControls();
+          loadReservations();
+          return;
+        }
+        if (filter === "today") {
+          setReservationWorkspaceView("today");
+          return;
+        }
+        if (filter === "cancelled_today") {
+          setReservationWorkspaceView("today", { load: false });
+          state.reservationFilters.status = "cancelled";
+          syncReservationWorkspaceControls();
+          loadReservations();
+          return;
+        }
+        if (filter === "no_show_today") {
+          setReservationWorkspaceView("today", { load: false });
+          state.reservationFilters.status = "no_show";
+          syncReservationWorkspaceControls();
+          loadReservations();
+        }
+      });
+    });
+
+    document.addEventListener("click", (event) => {
+      const viewButton = event.target.closest("[data-reservation-workspace-view]");
+      if (!viewButton) return;
+      event.preventDefault();
+      setReservationWorkspaceView(viewButton.dataset.reservationWorkspaceView);
     });
 
     document.querySelectorAll("[data-owner-reservation-tab]").forEach((button) => {

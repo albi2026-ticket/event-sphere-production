@@ -5000,6 +5000,318 @@ textarea.form-control:focus {
   margin-top: .65rem;
 }
 
+/* ---------- Manager reservations workspace ---------- */
+.manager-reservations-workspace {
+  border: 1px solid color-mix(in oklab, var(--border-strong) 74%, transparent);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.062), rgba(255,255,255,.024)),
+    var(--card);
+  box-shadow: 0 20px 58px rgba(0,0,0,.2);
+  padding: clamp(1rem, 1.8vw, 1.25rem);
+}
+
+.manager-reservations-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.manager-reservations-header h2 {
+  margin: .35rem 0 .2rem;
+  font-size: clamp(1.65rem, 2.7vw, 2.3rem);
+  letter-spacing: -.035em;
+}
+
+.manager-reservations-header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.manager-reservation-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+.manager-reservation-summary button {
+  display: grid;
+  gap: .18rem;
+  min-height: 94px;
+  padding: .85rem;
+  border: 1px solid color-mix(in oklab, var(--border-strong) 72%, transparent);
+  border-radius: 16px;
+  background: rgba(255,255,255,.035);
+  color: var(--text);
+  text-align: left;
+}
+
+.manager-reservation-summary span,
+.manager-reservation-summary small,
+.manager-active-filters span,
+.manager-reservation-group-head span,
+.manager-reservation-secondary,
+.manager-detail-grid span,
+.manager-detail-note-block span,
+.manager-detail-history span,
+.manager-detail-hero p,
+.manager-detail-note {
+  color: var(--muted);
+}
+
+.manager-reservation-summary span,
+.manager-active-filters span {
+  font-size: .72rem;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.manager-reservation-summary strong {
+  font-size: clamp(1.55rem, 3vw, 2rem);
+  line-height: 1;
+}
+
+.manager-reservation-tabs {
+  align-items: center;
+}
+
+.manager-reservation-tabs .secondary {
+  opacity: .82;
+}
+
+.manager-tab-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: .35rem;
+  padding: 0 .35rem;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: .68rem;
+  letter-spacing: 0;
+}
+
+.manager-reservation-filters {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.6fr) repeat(6, minmax(130px, 1fr)) auto;
+  gap: .65rem;
+  align-items: center;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  background: rgba(255,255,255,.03);
+  padding: .75rem;
+}
+
+.manager-reservation-search {
+  position: relative;
+}
+
+.manager-reservation-search i {
+  position: absolute;
+  left: .9rem;
+  top: 50%;
+  z-index: 1;
+  transform: translateY(-50%);
+  color: var(--muted);
+}
+
+.manager-reservation-search .form-control {
+  padding-left: 2.35rem;
+}
+
+.manager-active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.manager-active-filters span {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .36rem .55rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255,255,255,.035);
+}
+
+.manager-reservation-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.manager-reservation-group {
+  display: grid;
+  gap: .65rem;
+}
+
+.manager-reservation-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: 0 .2rem;
+}
+
+.manager-reservation-group-list {
+  display: grid;
+  gap: .55rem;
+}
+
+.manager-reservation-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(210px, .6fr) auto;
+  align-items: center;
+  gap: .8rem;
+  border: 1px solid color-mix(in oklab, var(--border-strong) 68%, transparent);
+  border-radius: 18px;
+  background: rgba(255,255,255,.032);
+  padding: .72rem;
+}
+
+.manager-reservation-main {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .8rem;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+
+.manager-reservation-main time {
+  color: var(--text);
+  font-size: 1.02rem;
+  font-weight: 900;
+}
+
+.manager-reservation-main div,
+.manager-reservation-secondary {
+  display: grid;
+  min-width: 0;
+  gap: .1rem;
+}
+
+.manager-reservation-main strong,
+.manager-detail-hero h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manager-reservation-secondary small {
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reservation-list-skeleton {
+  display: grid;
+  gap: .65rem;
+}
+
+.reservation-list-skeleton span {
+  min-height: 76px;
+  border-radius: 18px;
+  background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.09), rgba(255,255,255,.04));
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+
+.manager-reservation-detail-panel {
+  width: min(520px, 100vw) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025)),
+    var(--bg);
+  color: var(--text);
+  border-left: 1px solid color-mix(in oklab, var(--border-strong) 74%, transparent);
+}
+
+.manager-reservation-detail-panel .offcanvas-header {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border);
+}
+
+.manager-detail-hero,
+.manager-detail-actions,
+.manager-detail-section {
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  background: rgba(255,255,255,.035);
+  padding: 1rem;
+}
+
+.manager-detail-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: .85rem;
+}
+
+.manager-detail-hero h3 {
+  margin: 0 0 .25rem;
+}
+
+.manager-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
+  margin-bottom: .85rem;
+}
+
+.manager-detail-section {
+  display: grid;
+  gap: .75rem;
+  margin-bottom: .85rem;
+}
+
+.manager-detail-section h4 {
+  margin: 0;
+  font-size: .88rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.manager-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .65rem;
+}
+
+.manager-detail-grid div,
+.manager-detail-note-block,
+.manager-detail-history div {
+  display: grid;
+  gap: .15rem;
+  padding: .65rem;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 14px;
+  background: rgba(255,255,255,.025);
+}
+
+.manager-detail-history {
+  display: grid;
+  gap: .5rem;
+}
+
+.manager-detail-history div {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.manager-detail-history i {
+  grid-row: span 2;
+  color: var(--primary);
+}
+
 /* ---------- Restaurant manager navigation shell ---------- */
 .manager-shell {
   --manager-sidebar-width: 280px;
@@ -5425,6 +5737,19 @@ textarea.form-control:focus {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .manager-reservation-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .manager-reservation-filters,
+  .manager-reservation-row {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-reservation-main {
+    grid-template-columns: 72px minmax(0, 1fr) auto;
+  }
+
   .manager-topbar {
     flex-wrap: wrap;
   }
@@ -5442,6 +5767,42 @@ textarea.form-control:focus {
 @media (max-width: 720px) {
   .manager-dashboard-actions {
     grid-template-columns: 1fr;
+  }
+
+  .manager-reservations-header,
+  .manager-detail-hero {
+    flex-direction: column;
+  }
+
+  .manager-reservation-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-reservation-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: .2rem;
+  }
+
+  .manager-reservation-tabs .owner-reservation-tab {
+    flex: 0 0 auto;
+  }
+
+  .manager-reservation-main,
+  .manager-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-reservation-row {
+    align-items: stretch;
+  }
+
+  .manager-reservation-row > .btn {
+    width: 100%;
+  }
+
+  .manager-reservation-detail-panel {
+    width: 100vw !important;
   }
 
   .manager-timeline-row,

@@ -304,77 +304,85 @@
     </div>
   </section>
 
-  <section class="card-pro p-4 mb-4" id="ownerReservations" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-    <div class="section-head-res">
+  <section class="manager-reservations-workspace mb-4" id="ownerReservations">
+    <div class="manager-reservations-header">
       <div>
+        <span class="eyebrow-res"><i class="bi bi-calendar-check"></i> Daily Operations</span>
         <h2 data-i18n="owner.reservations">Reservations</h2>
-        <div class="sub" data-i18n="owner.reservation_requests">Manage guest reservations for your restaurants and bars</div>
+        <p><span data-reservations-venue-name>Restaurant / Bar</span> · <span data-reservations-date-context>Today</span></p>
       </div>
       <button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservations-refresh><i class="bi bi-arrow-clockwise me-1"></i><span data-i18n="buttons.refresh">Refresh</span></button>
     </div>
 
-    <div class="owner-reservation-tabs mb-3" role="tablist" aria-label="Owner reservation views">
-      <button class="owner-reservation-tab active" type="button" data-owner-reservation-tab="list" data-i18n="owner.reservation_list">Reservation List</button>
-      <button class="owner-reservation-tab" type="button" data-owner-reservation-tab="calendar" data-i18n="owner.reservations_calendar">Reservations Calendar</button>
-      <button class="owner-reservation-tab" type="button" data-owner-reservation-tab="analytics" data-i18n="owner.analytics">Analytics</button>
+    <div class="visually-hidden" aria-hidden="true">
+      <button class="owner-reservation-tab active" type="button" data-owner-reservation-tab="list">Reservation List</button>
+      <button class="owner-reservation-tab" type="button" data-owner-reservation-tab="calendar">Reservations Calendar</button>
+      <button class="owner-reservation-tab" type="button" data-owner-reservation-tab="analytics">Analytics</button>
     </div>
 
     <div data-owner-reservation-panel="list">
-      <div class="row g-3 align-items-end mb-3">
-        <div class="col-md-6 col-xl-3">
-          <label class="form-label small text-muted-pro" data-i18n="buttons.view">View</label>
-          <select class="form-select" data-owner-reservation-filter="view">
-            <option value="" data-i18n="owner.all">All</option>
-            <option value="today" data-i18n="owner.today">Today</option>
-            <option value="upcoming" data-i18n="owner.upcoming">Upcoming</option>
-            <option value="completed" data-i18n="owner.completed">Completed</option>
-            <option value="cancelled" data-i18n="owner.cancelled">Cancelled</option>
-          </select>
-        </div>
-        <div class="col-md-6 col-xl-3">
-          <label class="form-label small text-muted-pro" data-i18n="owner.status">Status</label>
-          <select class="form-select" data-owner-reservation-filter="status">
-            <option value="" data-i18n="owner.any_status">Any status</option>
-            <option value="pending" data-i18n="owner.pending">Pending</option>
-            <option value="confirmed" data-i18n="owner.confirmed">Confirmed</option>
-            <option value="completed" data-i18n="owner.completed">Completed</option>
-            <option value="cancelled" data-i18n="owner.cancelled">Cancelled</option>
-            <option value="no_show" data-i18n="owner.no_show">No Show</option>
-          </select>
-        </div>
-        <div class="col-md-6 col-xl-3">
-          <label class="form-label small text-muted-pro" data-i18n="owner.date">Date</label>
-          <input class="form-control" type="date" data-owner-reservation-filter="date">
-        </div>
-        <div class="col-md-6 col-xl-2">
-          <label class="form-label small text-muted-pro" data-i18n="common.restaurant_bar">Restaurant / Bar</label>
-          <select class="form-select" data-owner-reservation-filter="venue_id">
-            <option value="" data-i18n="owner.all_restaurants_bars">All restaurants & bars</option>
-          </select>
-        </div>
-        <div class="col-xl-1 d-grid">
-          <button class="btn btn-gold-outline" type="button" data-owner-reservations-clear data-i18n="buttons.clear">Clear</button>
-        </div>
+      <section class="manager-reservation-summary mb-3" data-reservation-workspace-summary>
+        <button type="button" data-reservation-summary-filter="pending"><span>Pending</span><strong>0</strong><small>Needs review</small></button>
+        <button type="button" data-reservation-summary-filter="confirmed_today"><span>Confirmed Today</span><strong>0</strong><small>Ready for service</small></button>
+        <button type="button" data-reservation-summary-filter="today"><span>Guests Today</span><strong>0</strong><small>Covers expected</small></button>
+        <button type="button" data-reservation-summary-filter="cancelled_today"><span>Cancelled Today</span><strong>0</strong><small>Same-day changes</small></button>
+        <button type="button" data-reservation-summary-filter="no_show_today"><span>No-shows Today</span><strong>0</strong><small>Marked today</small></button>
+      </section>
+
+      <div class="owner-reservation-tabs manager-reservation-tabs mb-3" role="tablist" aria-label="Reservation queue views">
+        <button class="owner-reservation-tab active" type="button" data-reservation-workspace-view="today">Today</button>
+        <button class="owner-reservation-tab" type="button" data-reservation-workspace-view="pending">Pending <span class="manager-tab-badge" data-reservation-pending-tab-badge hidden>0</span></button>
+        <button class="owner-reservation-tab" type="button" data-reservation-workspace-view="upcoming">Upcoming</button>
+        <button class="owner-reservation-tab" type="button" data-reservation-workspace-view="all">All</button>
+        <button class="owner-reservation-tab secondary" type="button" data-reservation-workspace-view="completed">Completed</button>
+        <button class="owner-reservation-tab secondary" type="button" data-reservation-workspace-view="cancelled">Cancelled</button>
+        <button class="owner-reservation-tab secondary" type="button" data-reservation-workspace-view="no_show">No-shows</button>
       </div>
 
-      <div class="table-responsive owner-reservations-responsive">
-        <table class="table table-pro owner-reservations-table align-middle">
-          <thead>
-            <tr>
-              <th data-i18n="owner.guest">Guest</th>
-              <th data-i18n="owner.phone">Phone</th>
-              <th data-i18n="owner.date">Date</th>
-              <th data-i18n="owner.time">Time</th>
-              <th data-i18n="reservation.guests">Guests</th>
-              <th data-i18n="owner.status">Status</th>
-              <th data-i18n="owner.actions">Actions</th>
-            </tr>
-          </thead>
-          <tbody data-owner-reservations-table>
-            <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-            <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          </tbody>
-        </table>
+      <div class="manager-reservation-filters mb-3">
+        <div class="manager-reservation-search">
+          <i class="bi bi-search"></i>
+          <input class="form-control" type="search" data-owner-reservation-search placeholder="Search ID, guest, phone, email, date, status" aria-label="Search reservations">
+        </div>
+        <select class="form-select" data-owner-reservation-filter="status" aria-label="Reservation status">
+          <option value="" data-i18n="owner.any_status">Any status</option>
+          <option value="pending" data-i18n="owner.pending">Pending</option>
+          <option value="confirmed" data-i18n="owner.confirmed">Confirmed</option>
+          <option value="completed" data-i18n="owner.completed">Completed</option>
+          <option value="cancelled" data-i18n="owner.cancelled">Cancelled</option>
+          <option value="no_show" data-i18n="owner.no_show">No Show</option>
+        </select>
+        <input class="form-control" type="date" data-owner-reservation-filter="date" aria-label="Reservation date">
+        <input class="form-control" type="date" data-owner-reservation-date-end aria-label="Reservation date range end">
+        <select class="form-select" data-owner-reservation-filter="venue_id" aria-label="Venue">
+          <option value="" data-i18n="owner.all_restaurants_bars">All restaurants & bars</option>
+        </select>
+        <select class="form-select" data-owner-reservation-party-size aria-label="Party size">
+          <option value="">Any party size</option>
+          <option value="1-2">1-2 guests</option>
+          <option value="3-4">3-4 guests</option>
+          <option value="5-8">5-8 guests</option>
+          <option value="9+">9+ guests</option>
+        </select>
+        <select class="form-select" data-owner-reservation-occasion aria-label="Occasion">
+          <option value="">Any occasion</option>
+          <option value="Birthday">Birthday</option>
+          <option value="Anniversary">Anniversary</option>
+          <option value="Date Night">Date Night</option>
+          <option value="Business Meeting">Business Meeting</option>
+          <option value="Family Gathering">Family Gathering</option>
+          <option value="Celebration">Celebration</option>
+          <option value="Friends Night Out">Friends Night Out</option>
+          <option value="Other">Other</option>
+        </select>
+        <input type="hidden" data-owner-reservation-filter="view" value="today">
+        <button class="btn btn-gold-outline" type="button" data-owner-reservations-clear data-i18n="buttons.clear">Clear</button>
+      </div>
+
+      <div class="manager-active-filters mb-3" data-reservation-active-filters hidden></div>
+
+      <div class="manager-reservation-list" data-owner-reservations-table>
+        <div class="reservation-list-skeleton"><span></span><span></span><span></span></div>
       </div>
     </div>
 
@@ -730,16 +738,15 @@
   </div>
 </div>
 
-<div class="modal fade" id="ownerReservationModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content dashboard-modal">
-      <div class="modal-header">
-        <h5 class="modal-title" data-owner-reservation-title data-i18n="reservation.reservation">Reservation</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>
-      </div>
-      <div class="modal-body" data-owner-reservation-detail></div>
+<div class="offcanvas offcanvas-end manager-reservation-detail-panel" id="ownerReservationModal" tabindex="-1" aria-labelledby="ownerReservationPanelTitle">
+  <div class="offcanvas-header">
+    <div>
+      <span class="eyebrow-res"><i class="bi bi-person-lines-fill"></i> Reservation Detail</span>
+      <h5 class="offcanvas-title" id="ownerReservationPanelTitle" data-owner-reservation-title data-i18n="reservation.reservation">Reservation</h5>
     </div>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>
   </div>
+  <div class="offcanvas-body" data-owner-reservation-detail></div>
 </div>
 
 <div class="modal fade" id="ownerReservationActionModal" tabindex="-1" aria-hidden="true">
