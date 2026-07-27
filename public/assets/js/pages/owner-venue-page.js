@@ -1849,6 +1849,10 @@
 
   function reservationRowCard(reservation) {
     const action = nextBestReservationAction(reservation);
+    const mobileAction =
+      reservation.status === "pending"
+        ? `<button class="btn btn-gold manager-reservation-mobile-primary" type="button" data-owner-reservation-action="confirm" data-owner-reservation-id="${reservation.id}">Confirm</button>`
+        : `<button class="btn btn-gold-outline manager-reservation-mobile-primary" type="button" data-owner-reservation-view="${reservation.id}">View details</button>`;
     const contact = [reservation.phone, reservation.email].filter(Boolean).join(" · ");
     const secondary = [
       contact || tr("reservation.not_provided", "Contact not provided"),
@@ -1865,6 +1869,10 @@
           </div>
           ${statusBadge(reservation.status)}
         </button>
+        <div class="manager-reservation-mobile-meta">
+          <span><i class="bi bi-clock"></i>${esc(timeLabel(reservation.reservation_time) || dateLabel(reservation.reservation_date))}</span>
+          <span><i class="bi bi-people"></i>${Number(reservation.party_size || 0)} ${Number(reservation.party_size) === 1 ? "guest" : "guests"}</span>
+        </div>
         <div class="manager-reservation-secondary">
           <span>${esc(secondary.join(" · "))}</span>
           ${
@@ -1873,6 +1881,7 @@
               : ""
           }
         </div>
+        ${mobileAction}
         <button class="btn ${action.tone === "gold" ? "btn-gold-outline" : "btn-glass"} btn-sm" type="button" data-owner-reservation-view="${reservation.id}">${esc(action.label)}</button>
       </article>
     `;
@@ -2008,6 +2017,12 @@
     if (partySize) partySize.value = state.reservationWorkspace.partySize;
     const occasion = $("[data-owner-reservation-occasion]");
     if (occasion) occasion.value = state.reservationWorkspace.occasion;
+    const mobileView = $("[data-reservation-mobile-view]");
+    if (mobileView) {
+      mobileView.value = ["today", "pending", "upcoming"].includes(state.reservationWorkspace.view)
+        ? state.reservationWorkspace.view
+        : "today";
+    }
   }
 
   function setReservationWorkspaceView(view, options = {}) {
@@ -2025,6 +2040,8 @@
     state.reservationFilters.status = filterMap.status;
     state.reservationFilters.date = "";
     syncReservationWorkspaceControls();
+    $("[data-reservation-filter-sheet]")?.classList.remove("is-open");
+    document.body.classList.remove("reservation-filter-sheet-open");
     lastReservationRenderSignature = "";
     clearOwnerRenderSignatures("reservation-stats");
     if (options.load === false) {
@@ -3772,6 +3789,20 @@
       state.reservationWorkspace.occasion = event.target.value;
       lastReservationRenderSignature = "";
       renderReservations();
+    });
+
+    $("[data-reservation-mobile-view]")?.addEventListener("change", (event) => {
+      setReservationWorkspaceView(event.target.value);
+    });
+
+    $("[data-reservation-filter-toggle]")?.addEventListener("click", () => {
+      $("[data-reservation-filter-sheet]")?.classList.add("is-open");
+      document.body.classList.add("reservation-filter-sheet-open");
+    });
+
+    $("[data-reservation-filter-close]")?.addEventListener("click", () => {
+      $("[data-reservation-filter-sheet]")?.classList.remove("is-open");
+      document.body.classList.remove("reservation-filter-sheet-open");
     });
 
     document.querySelectorAll("[data-reservation-summary-filter]").forEach((button) => {

@@ -5124,6 +5124,17 @@ textarea.form-control:focus {
   padding-left: 2.35rem;
 }
 
+.manager-mobile-filter-controls,
+.manager-filter-sheet-head,
+.manager-reservation-mobile-meta,
+.manager-reservation-mobile-primary {
+  display: none;
+}
+
+.manager-reservation-filter-sheet {
+  display: contents;
+}
+
 .manager-active-filters {
   display: flex;
   flex-wrap: wrap;
@@ -5172,6 +5183,10 @@ textarea.form-control:focus {
   border-radius: 18px;
   background: rgba(255,255,255,.032);
   padding: .72rem;
+}
+
+.manager-reservation-row > .btn {
+  min-height: 44px;
 }
 
 .manager-reservation-main {
@@ -5765,6 +5780,128 @@ textarea.form-control:focus {
 }
 
 @media (max-width: 720px) {
+  .manager-reservations-workspace {
+    margin-inline: -.35rem;
+    padding: .85rem;
+    border-radius: 18px;
+  }
+
+  .manager-reservations-header {
+    gap: .65rem;
+    margin-bottom: .75rem;
+  }
+
+  .manager-reservations-header h2 {
+    font-size: 1.55rem;
+  }
+
+  .manager-reservations-header .eyebrow-res {
+    font-size: .68rem;
+  }
+
+  .manager-reservation-summary {
+    display: flex;
+    gap: .6rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    margin-inline: -.85rem;
+    padding: 0 .85rem .2rem;
+  }
+
+  .manager-reservation-summary::-webkit-scrollbar,
+  .manager-reservation-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .manager-reservation-summary button {
+    flex: 0 0 138px;
+    min-height: 78px;
+    padding: .7rem;
+    scroll-snap-align: start;
+  }
+
+  .manager-reservation-summary strong {
+    font-size: 1.45rem;
+  }
+
+  .manager-reservation-filters {
+    position: sticky;
+    top: .35rem;
+    z-index: 25;
+    grid-template-columns: 1fr;
+    gap: .6rem;
+    margin-inline: -.1rem;
+    padding: .65rem;
+    border-radius: 18px;
+    background:
+      linear-gradient(180deg, color-mix(in oklab, var(--bg) 92%, transparent), color-mix(in oklab, var(--bg) 82%, transparent)),
+      var(--card);
+    backdrop-filter: blur(18px);
+  }
+
+  .manager-reservation-search .form-control {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  .manager-mobile-filter-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(132px, .8fr);
+    gap: .55rem;
+  }
+
+  .manager-mobile-filter-controls .btn,
+  .manager-mobile-filter-controls .form-select {
+    min-height: 46px;
+  }
+
+  .manager-reservation-filter-sheet {
+    position: fixed;
+    right: .65rem;
+    bottom: .65rem;
+    left: .65rem;
+    z-index: 1055;
+    display: grid;
+    gap: .65rem;
+    max-height: min(72vh, 560px);
+    padding: .9rem;
+    overflow-y: auto;
+    border: 1px solid color-mix(in oklab, var(--border-strong) 74%, transparent);
+    border-radius: 22px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025)),
+      var(--bg);
+    box-shadow: 0 28px 90px rgba(0,0,0,.42);
+    transform: translateY(calc(100% + 1.4rem));
+    visibility: hidden;
+  }
+
+  .manager-reservation-filter-sheet.is-open {
+    transform: translateY(0);
+    visibility: visible;
+  }
+
+  .manager-filter-sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+  }
+
+  .manager-filter-sheet-head strong {
+    font-size: 1rem;
+  }
+
+  .reservation-filter-sheet-open::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    background: rgba(0,0,0,.42);
+  }
+
   .manager-dashboard-actions {
     grid-template-columns: 1fr;
   }
@@ -5781,24 +5918,89 @@ textarea.form-control:focus {
   .manager-reservation-tabs {
     flex-wrap: nowrap;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    margin-inline: -.85rem;
+    padding-inline: .85rem;
     padding-bottom: .2rem;
   }
 
   .manager-reservation-tabs .owner-reservation-tab {
     flex: 0 0 auto;
+    min-height: 44px;
+    scroll-snap-align: start;
   }
 
-  .manager-reservation-main,
   .manager-detail-grid {
     grid-template-columns: 1fr;
   }
 
   .manager-reservation-row {
+    display: grid;
+    grid-template-columns: 1fr;
     align-items: stretch;
+    gap: .7rem;
+    padding: .85rem;
+    border-radius: 18px;
   }
 
-  .manager-reservation-row > .btn {
+  .manager-reservation-main {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: .6rem;
+    min-height: 44px;
+  }
+
+  .manager-reservation-main time,
+  .manager-reservation-main div span {
+    display: none;
+  }
+
+  .manager-reservation-main .reservation-status {
+    justify-self: end;
+    min-height: 30px;
+    padding-inline: .55rem;
+  }
+
+  .manager-reservation-mobile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    color: var(--muted);
+    font-weight: 800;
+  }
+
+  .manager-reservation-mobile-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    min-height: 32px;
+    padding: .25rem .5rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(255,255,255,.03);
+  }
+
+  .manager-reservation-secondary {
+    gap: .25rem;
+    font-size: .9rem;
+  }
+
+  .manager-reservation-secondary span,
+  .manager-reservation-secondary small {
+    white-space: normal;
+  }
+
+  .manager-reservation-mobile-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
+    min-height: 46px;
+  }
+
+  .manager-reservation-row > .btn:not(.manager-reservation-mobile-primary) {
+    display: none;
   }
 
   .manager-reservation-detail-panel {
