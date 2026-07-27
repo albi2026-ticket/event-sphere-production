@@ -2541,23 +2541,23 @@
   function detailActionMarkup(reservation) {
     if (reservation.status === "pending") {
       return `
-        <button class="btn btn-gold" type="button" data-owner-reservation-action="confirm" data-owner-reservation-id="${reservation.id}">
+        <button class="btn btn-gold manager-detail-primary-action" type="button" data-owner-reservation-action="confirm" data-owner-reservation-id="${reservation.id}">
           <i class="bi bi-check2-circle me-1"></i>${tr("owner.confirm", "Confirm")}
         </button>
-        <button class="btn btn-outline-danger" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${reservation.id}">
+        <button class="btn btn-outline-danger manager-detail-danger-action" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${reservation.id}">
           <i class="bi bi-x-circle me-1"></i>${tr("buttons.cancel", "Cancel")}
         </button>
       `;
     }
     if (reservation.status === "confirmed") {
       return `
-        <button class="btn btn-gold" type="button" data-owner-reservation-action="complete" data-owner-reservation-id="${reservation.id}">
+        <button class="btn btn-gold manager-detail-primary-action" type="button" data-owner-reservation-action="complete" data-owner-reservation-id="${reservation.id}">
           <i class="bi bi-patch-check me-1"></i>${tr("owner.mark_completed", "Complete")}
         </button>
-        <button class="btn btn-outline-danger" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${reservation.id}">
+        <button class="btn btn-outline-danger manager-detail-danger-action" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${reservation.id}">
           <i class="bi bi-x-circle me-1"></i>${tr("buttons.cancel", "Cancel")}
         </button>
-        <button class="btn btn-glass" type="button" data-owner-reservation-action="no-show" data-owner-reservation-id="${reservation.id}">
+        <button class="btn btn-glass manager-detail-secondary-action" type="button" data-owner-reservation-action="no-show" data-owner-reservation-id="${reservation.id}">
           <i class="bi bi-person-x me-1"></i>${tr("owner.mark_no_show", "Mark no-show")}
         </button>
       `;

@@ -5278,6 +5278,10 @@ textarea.form-control:focus {
     var(--card);
 }
 
+.manager-detail-back {
+  display: none;
+}
+
 .manager-reservation-detail-panel .offcanvas-body {
   background:
     radial-gradient(circle at 90% 0%, rgba(91,140,255,.08), transparent 16rem),
@@ -6108,6 +6112,110 @@ textarea.form-control:focus {
 
   .manager-reservation-detail-panel {
     width: 100vw !important;
+    height: 100dvh;
+    border-left: 0;
+  }
+
+  .manager-reservation-detail-panel .offcanvas-header {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .65rem;
+    padding: max(.85rem, env(safe-area-inset-top)) .85rem .85rem;
+  }
+
+  .manager-reservation-detail-panel .offcanvas-header > div {
+    min-width: 0;
+  }
+
+  .manager-reservation-detail-panel .offcanvas-title {
+    overflow: hidden;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .manager-reservation-detail-panel .offcanvas-header .eyebrow-res {
+    display: none;
+  }
+
+  .manager-detail-back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: .75rem;
+  }
+
+  .manager-reservation-detail-panel .btn-close {
+    display: none;
+  }
+
+  .manager-reservation-detail-panel .offcanvas-body {
+    display: flex;
+    flex-direction: column;
+    gap: .85rem;
+    padding: .85rem .85rem calc(7rem + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .manager-detail-hero,
+  .manager-detail-section {
+    margin-bottom: 0;
+  }
+
+  .manager-detail-hero {
+    order: 1;
+  }
+
+  .manager-detail-section {
+    order: 2;
+  }
+
+  .manager-detail-actions {
+    position: sticky;
+    bottom: max(.65rem, env(safe-area-inset-bottom));
+    order: 10;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: .55rem;
+    margin: .25rem 0 0;
+    padding: .75rem;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.34);
+  }
+
+  .manager-detail-actions .btn,
+  .manager-detail-state-note {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  .manager-detail-primary-action {
+    order: 1;
+  }
+
+  .manager-detail-secondary-action {
+    order: 2;
+  }
+
+  .manager-detail-danger-action {
+    order: 3;
+  }
+
+  .manager-detail-section h4 {
+    font-size: .78rem;
+  }
+
+  .manager-detail-grid div,
+  .manager-detail-note-block,
+  .manager-detail-history div {
+    min-width: 0;
+    padding: .75rem;
   }
 
   .manager-timeline-row,
