@@ -1892,8 +1892,8 @@
     if (state.reservationWorkspace.search) {
       return dashboardEmpty(
         "bi-search",
-        "No reservations match your search.",
-        "Clear the search or filters to broaden the list.",
+        `No reservations match "${state.reservationWorkspace.search}".`,
+        "Clear the search or active filters to broaden the list.",
         `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservations-clear>Clear search</button><button class="btn btn-glass btn-sm" type="button" data-owner-reservations-clear>Clear filters</button></div>`,
       );
     }
@@ -1931,6 +1931,18 @@
         day: "numeric",
       });
     }
+    const view = $("[data-reservation-current-view]");
+    if (view) {
+      view.textContent = {
+        today: "Today",
+        pending: "Pending",
+        upcoming: "Upcoming",
+        all: "All",
+        completed: "Completed",
+        cancelled: "Cancelled",
+        no_show: "No-shows",
+      }[state.reservationWorkspace.view || "today"];
+    }
   }
 
   function renderReservationWorkspaceSummary() {
@@ -1961,7 +1973,23 @@
     if (badge) {
       badge.textContent = String(values.pending);
       badge.hidden = values.pending <= 0;
+      badge.closest("[data-reservation-workspace-view]")?.classList.toggle(
+        "manager-tab-attention",
+        values.pending > 0,
+      );
     }
+  }
+
+  function activeReservationFilterCount() {
+    return [
+      state.reservationWorkspace.search,
+      state.reservationFilters.status,
+      state.reservationFilters.date,
+      state.reservationWorkspace.dateEnd,
+      state.reservationFilters.venue_id,
+      state.reservationWorkspace.partySize,
+      state.reservationWorkspace.occasion,
+    ].filter(Boolean).length;
   }
 
   function renderActiveReservationFilters() {
@@ -1986,6 +2014,12 @@
     root.innerHTML = filters
       .map((filter) => `<span><i class="bi bi-funnel"></i>${esc(filter)}</span>`)
       .join("");
+    const count = activeReservationFilterCount();
+    const filterCount = $("[data-reservation-filter-count]");
+    if (filterCount) {
+      filterCount.textContent = String(count);
+      filterCount.hidden = count <= 0;
+    }
   }
 
   function syncReservationWorkspaceControls() {
@@ -3801,6 +3835,21 @@
     });
 
     $("[data-reservation-filter-close]")?.addEventListener("click", () => {
+      $("[data-reservation-filter-sheet]")?.classList.remove("is-open");
+      document.body.classList.remove("reservation-filter-sheet-open");
+    });
+
+    document.addEventListener("click", (event) => {
+      const sheet = $("[data-reservation-filter-sheet]");
+      if (!sheet?.classList.contains("is-open")) return;
+      if (event.target.closest("[data-reservation-filter-sheet]")) return;
+      if (event.target.closest("[data-reservation-filter-toggle]")) return;
+      sheet.classList.remove("is-open");
+      document.body.classList.remove("reservation-filter-sheet-open");
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
       $("[data-reservation-filter-sheet]")?.classList.remove("is-open");
       document.body.classList.remove("reservation-filter-sheet-open");
     });

@@ -5030,6 +5030,11 @@ textarea.form-control:focus {
   color: var(--muted);
 }
 
+.manager-mobile-current-view,
+.manager-filter-count {
+  display: none;
+}
+
 .manager-reservation-summary {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -5096,6 +5101,11 @@ textarea.form-control:focus {
   letter-spacing: 0;
 }
 
+.manager-tab-attention:not(.active) {
+  border-color: color-mix(in oklab, var(--warning-text) 32%, var(--border));
+  color: var(--warning-text);
+}
+
 .manager-reservation-filters {
   display: grid;
   grid-template-columns: minmax(240px, 1.6fr) repeat(6, minmax(130px, 1fr)) auto;
@@ -5129,6 +5139,18 @@ textarea.form-control:focus {
 .manager-reservation-mobile-meta,
 .manager-reservation-mobile-primary {
   display: none;
+}
+
+.manager-filter-count {
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: .35rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 900;
 }
 
 .manager-reservation-filter-sheet {
@@ -5791,12 +5813,20 @@ textarea.form-control:focus {
     margin-bottom: .75rem;
   }
 
+  .manager-reservations-header .btn {
+    min-height: 44px;
+  }
+
   .manager-reservations-header h2 {
     font-size: 1.55rem;
   }
 
   .manager-reservations-header .eyebrow-res {
     font-size: .68rem;
+  }
+
+  .manager-mobile-current-view {
+    display: inline;
   }
 
   .manager-reservation-summary {
@@ -5848,7 +5878,7 @@ textarea.form-control:focus {
 
   .manager-mobile-filter-controls {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(132px, .8fr);
+    grid-template-columns: minmax(0, 1fr) minmax(118px, .75fr);
     gap: .55rem;
   }
 
@@ -5857,11 +5887,22 @@ textarea.form-control:focus {
     min-height: 46px;
   }
 
+  .manager-mobile-filter-controls .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .manager-filter-count:not([hidden]) {
+    display: grid;
+  }
+
   .manager-reservation-filter-sheet {
     position: fixed;
-    right: .65rem;
-    bottom: .65rem;
-    left: .65rem;
+    right: max(.65rem, env(safe-area-inset-right));
+    bottom: max(.65rem, env(safe-area-inset-bottom));
+    left: max(.65rem, env(safe-area-inset-left));
     z-index: 1055;
     display: grid;
     gap: .65rem;
@@ -5876,6 +5917,7 @@ textarea.form-control:focus {
     box-shadow: 0 28px 90px rgba(0,0,0,.42);
     transform: translateY(calc(100% + 1.4rem));
     visibility: hidden;
+    transition: transform var(--motion-med) var(--motion-ease), visibility var(--motion-med) var(--motion-ease);
   }
 
   .manager-reservation-filter-sheet.is-open {
@@ -5900,6 +5942,10 @@ textarea.form-control:focus {
     inset: 0;
     z-index: 1050;
     background: rgba(0,0,0,.42);
+  }
+
+  body.reservation-filter-sheet-open {
+    overflow: hidden;
   }
 
   .manager-dashboard-actions {
@@ -5929,6 +5975,7 @@ textarea.form-control:focus {
   .manager-reservation-tabs .owner-reservation-tab {
     flex: 0 0 auto;
     min-height: 44px;
+    max-width: 170px;
     scroll-snap-align: start;
   }
 
@@ -5949,6 +5996,11 @@ textarea.form-control:focus {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: .6rem;
     min-height: 44px;
+  }
+
+  .manager-reservation-main strong {
+    font-size: 1rem;
+    line-height: 1.2;
   }
 
   .manager-reservation-main time,
@@ -5997,6 +6049,7 @@ textarea.form-control:focus {
     justify-content: center;
     width: 100%;
     min-height: 46px;
+    font-weight: 900;
   }
 
   .manager-reservation-row > .btn:not(.manager-reservation-mobile-primary) {

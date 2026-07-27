@@ -309,7 +309,7 @@
       <div>
         <span class="eyebrow-res"><i class="bi bi-calendar-check"></i> Daily Operations</span>
         <h2 data-i18n="owner.reservations">Reservations</h2>
-        <p><span data-reservations-venue-name>Restaurant / Bar</span> · <span data-reservations-date-context>Today</span></p>
+        <p><span data-reservations-venue-name>Restaurant / Bar</span> · <span data-reservations-date-context>Today</span><span class="manager-mobile-current-view"> · <span data-reservation-current-view>Today</span></span></p>
       </div>
       <button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservations-refresh><i class="bi bi-arrow-clockwise me-1"></i><span data-i18n="buttons.refresh">Refresh</span></button>
     </div>
@@ -345,7 +345,7 @@
           <input class="form-control" type="search" data-owner-reservation-search placeholder="Search ID, guest, phone, email, date, status" aria-label="Search reservations">
         </div>
         <div class="manager-mobile-filter-controls">
-          <button class="btn btn-gold-outline" type="button" data-reservation-filter-toggle><i class="bi bi-sliders me-1"></i>Filters</button>
+          <button class="btn btn-gold-outline" type="button" data-reservation-filter-toggle><i class="bi bi-sliders me-1"></i>Filters<span class="manager-filter-count" data-reservation-filter-count hidden>0</span></button>
           <select class="form-select" data-reservation-mobile-view aria-label="Reservation view">
             <option value="today">Today</option>
             <option value="pending">Pending</option>
