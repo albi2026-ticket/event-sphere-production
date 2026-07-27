@@ -5262,7 +5262,7 @@ textarea.form-control:focus {
 }
 
 .manager-reservation-detail-panel {
-  width: min(520px, 100vw) !important;
+  width: min(580px, 100vw) !important;
   background:
     linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025)),
     var(--bg);
@@ -5273,6 +5273,15 @@ textarea.form-control:focus {
 .manager-reservation-detail-panel .offcanvas-header {
   align-items: flex-start;
   border-bottom: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
+    var(--card);
+}
+
+.manager-reservation-detail-panel .offcanvas-body {
+  background:
+    radial-gradient(circle at 90% 0%, rgba(91,140,255,.08), transparent 16rem),
+    transparent;
 }
 
 .manager-detail-hero,
@@ -5301,6 +5310,31 @@ textarea.form-control:focus {
   flex-wrap: wrap;
   gap: .55rem;
   margin-bottom: .85rem;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  backdrop-filter: blur(14px);
+}
+
+.manager-detail-actions .btn {
+  min-height: 44px;
+}
+
+.manager-detail-state-note {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  min-height: 44px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.manager-detail-state-note i {
+  color: var(--info-text);
+}
+
+.manager-detail-state-danger i {
+  color: var(--danger-text);
 }
 
 .manager-detail-section {
@@ -5347,6 +5381,22 @@ textarea.form-control:focus {
 .manager-detail-history i {
   grid-row: span 2;
   color: var(--primary);
+}
+
+.manager-detail-skeleton {
+  display: grid;
+  gap: .85rem;
+}
+
+.manager-detail-skeleton span {
+  min-height: 86px;
+  border-radius: 18px;
+  background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.09), rgba(255,255,255,.04));
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+
+.manager-detail-skeleton span:first-child {
+  min-height: 126px;
 }
 
 /* ---------- Restaurant manager navigation shell ---------- */

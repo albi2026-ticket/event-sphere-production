@@ -2538,7 +2538,87 @@
     }
   }
 
+  function detailActionMarkup(reservation) {
+    if (reservation.status === "pending") {
+      return `
+        <button class="btn btn-gold" type="button" data-owner-reservation-action="confirm" data-owner-reservation-id="${reservation.id}">
+          <i class="bi bi-check2-circle me-1"></i>${tr("owner.confirm", "Confirm")}
+        </button>
+        <button class="btn btn-outline-danger" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${reservation.id}">
+          <i class="bi bi-x-circle me-1"></i>${tr("buttons.cancel", "Cancel")}
+        </button>
+      `;
+    }
+    if (reservation.status === "confirmed") {
+      return `
+        <button class="btn btn-gold" type="button" data-owner-reservation-action="complete" data-owner-reservation-id="${reservation.id}">
+          <i class="bi bi-patch-check me-1"></i>${tr("owner.mark_completed", "Complete")}
+        </button>
+        <button class="btn btn-outline-danger" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${reservation.id}">
+          <i class="bi bi-x-circle me-1"></i>${tr("buttons.cancel", "Cancel")}
+        </button>
+        <button class="btn btn-glass" type="button" data-owner-reservation-action="no-show" data-owner-reservation-id="${reservation.id}">
+          <i class="bi bi-person-x me-1"></i>${tr("owner.mark_no_show", "Mark no-show")}
+        </button>
+      `;
+    }
+    if (reservation.status === "cancelled") {
+      return `<div class="manager-detail-state-note manager-detail-state-danger"><i class="bi bi-x-circle"></i><span>This reservation has been cancelled.</span></div>`;
+    }
+    if (reservation.status === "no_show") {
+      return `<div class="manager-detail-state-note"><i class="bi bi-person-x"></i><span>This guest was marked as a no-show.</span></div>`;
+    }
+    return `<div class="manager-detail-state-note"><i class="bi bi-eye"></i><span>${esc(statusLabel(reservation.status))} reservations are view-only.</span></div>`;
+  }
+
+  function detailHistoryItems(reservation) {
+    return [
+      reservation.created_at ? ["Created", dateTimeLabel(reservation.created_at)] : null,
+      reservation.status === "confirmed" && reservation.updated_at
+        ? ["Confirmed", dateTimeLabel(reservation.updated_at)]
+        : null,
+      reservation.status === "completed" && reservation.updated_at
+        ? ["Completed", dateTimeLabel(reservation.updated_at)]
+        : null,
+      reservation.status === "no_show" && reservation.updated_at
+        ? ["No-show", dateTimeLabel(reservation.updated_at)]
+        : null,
+      reservation.cancelled_at ? ["Cancelled", dateTimeLabel(reservation.cancelled_at)] : null,
+      reservation.updated_at ? ["Last updated", dateTimeLabel(reservation.updated_at)] : null,
+    ].filter(Boolean);
+  }
+
+  function renderReservationDetailSkeleton() {
+    const body = $("[data-owner-reservation-detail]");
+    if (!body) return;
+    body.innerHTML = `
+      <div class="manager-detail-skeleton" aria-label="Loading reservation detail">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    `;
+  }
+
+  function renderReservationDetailMissing() {
+    $("[data-owner-reservation-title]").textContent = "Reservation unavailable";
+    const body = $("[data-owner-reservation-detail]");
+    if (!body) return;
+    body.innerHTML = dashboardEmpty(
+      "bi-exclamation-circle",
+      "Reservation not found.",
+      "The list may have refreshed or the selected reservation is no longer available.",
+      `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-bs-dismiss="offcanvas">Close panel</button></div>`,
+    );
+    bootstrap.Offcanvas.getOrCreateInstance($("#ownerReservationModal"), {
+      backdrop: false,
+      scroll: true,
+    }).show();
+  }
+
   function renderReservationDetail(reservation) {
+    if (!reservation) {
+      renderReservationDetailMissing();
+      return;
+    }
     $("[data-owner-reservation-title]").textContent =
       reservation.guest_name ||
       tr(
@@ -2547,35 +2627,14 @@
       );
     const body = $("[data-owner-reservation-detail]");
     if (!body) return;
-    const primaryActions =
-      reservation.status === "pending"
-        ? `
-          <button class="btn btn-gold" type="button" data-owner-reservation-action="confirm" data-owner-reservation-id="${reservation.id}">
-            <i class="bi bi-check2-circle me-1"></i>${tr("owner.confirm", "Confirm")}
-          </button>
-          <button class="btn btn-outline-danger" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${reservation.id}">
-            <i class="bi bi-x-circle me-1"></i>${tr("buttons.cancel", "Cancel")}
-          </button>
-        `
-        : reservation.status === "confirmed"
-          ? `
-          <button class="btn btn-gold" type="button" data-owner-reservation-action="complete" data-owner-reservation-id="${reservation.id}">
-            <i class="bi bi-patch-check me-1"></i>${tr("owner.mark_completed", "Mark Completed")}
-          </button>
-          <button class="btn btn-glass" type="button" data-owner-reservation-action="no-show" data-owner-reservation-id="${reservation.id}">
-            <i class="bi bi-person-x me-1"></i>${tr("owner.mark_no_show", "Mark guest as no-show")}
-          </button>
-          <button class="btn btn-outline-danger" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${reservation.id}">
-            <i class="bi bi-x-circle me-1"></i>${tr("buttons.cancel", "Cancel")}
-          </button>
-        `
-          : `<span class="manager-detail-note">${esc(statusLabel(reservation.status))} reservations are view-only.</span>`;
-    const history = [
-      reservation.created_at ? ["Created", dateTimeLabel(reservation.created_at)] : null,
-      reservation.updated_at ? ["Last updated", dateTimeLabel(reservation.updated_at)] : null,
-      reservation.cancelled_at ? ["Cancelled", dateTimeLabel(reservation.cancelled_at)] : null,
-    ].filter(Boolean);
-    body.innerHTML = `
+    renderReservationDetailSkeleton();
+    const primaryActions = detailActionMarkup(reservation);
+    const history = detailHistoryItems(reservation);
+    bootstrap.Offcanvas.getOrCreateInstance($("#ownerReservationModal"), {
+      backdrop: false,
+      scroll: true,
+    }).show();
+    const detailHtml = `
       <div class="manager-detail-hero">
         <div>
           <h3>${esc(reservation.guest_name || "Guest")}</h3>
@@ -2587,29 +2646,30 @@
       <div class="manager-detail-actions">${primaryActions}</div>
 
       <section class="manager-detail-section">
-        <h4>Summary</h4>
+        <h4>Guest Information</h4>
         <div class="manager-detail-grid">
-          <div><span>Status</span><strong>${esc(statusLabel(reservation.status))}</strong></div>
-          <div><span>Reservation ID</span><strong>#${esc(reservation.id)}</strong></div>
-          <div><span>Date</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div>
-          <div><span>Time</span><strong>${esc(timeLabel(reservation.reservation_time))}</strong></div>
-          <div><span>Party size</span><strong>${Number(reservation.party_size || 0)}</strong></div>
-          <div><span>Venue</span><strong>${esc(reservation.venue?.name || state.venue?.name || "Restaurant / Bar")}</strong></div>
-        </div>
-      </section>
-
-      <section class="manager-detail-section">
-        <h4>Guest Contact</h4>
-        <div class="manager-detail-grid">
+          <div><span>Name</span><strong>${esc(reservation.guest_name || "Guest")}</strong></div>
           <div><span>Phone</span><strong>${esc(reservation.phone || tr("reservation.not_provided", "Not provided"))}</strong></div>
           <div><span>Email</span><strong>${esc(reservation.email || tr("reservation.not_provided", "Not provided"))}</strong></div>
         </div>
       </section>
 
       <section class="manager-detail-section">
-        <h4>Notes / Occasion</h4>
+        <h4>Reservation Details</h4>
+        <div class="manager-detail-grid">
+          <div><span>Status</span><strong>${esc(statusLabel(reservation.status))}</strong></div>
+          <div><span>Reservation ID</span><strong>#${esc(reservation.id)}</strong></div>
+          <div><span>Date</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div>
+          <div><span>Time</span><strong>${esc(timeLabel(reservation.reservation_time))}</strong></div>
+          <div><span>Party size</span><strong>${Number(reservation.party_size || 0)}</strong></div>
+          <div><span>Occasion</span><strong>${esc(occasionLabel(reservation.occasion))}</strong></div>
+        </div>
+      </section>
+
+      <section class="manager-detail-section">
+        <h4>Notes</h4>
         <div class="manager-detail-note-block">
-          <strong>${esc(occasionLabel(reservation.occasion))}</strong>
+          <strong>${esc(reservation.venue?.name || state.venue?.name || "Restaurant / Bar")}</strong>
           <span>${esc(reservation.notes || tr("reservation.no_special_request", "No special request provided."))}</span>
         </div>
       </section>
@@ -2652,7 +2712,9 @@
         </div>
       </section>
     `;
-    bootstrap.Offcanvas.getOrCreateInstance($("#ownerReservationModal")).show();
+    window.requestAnimationFrame(() => {
+      body.innerHTML = detailHtml;
+    });
   }
 
   function collectIds(name) {
@@ -3993,7 +4055,7 @@
         const reservation = state.reservations.find(
           (item) => String(item.id) === String(reservationView.dataset.ownerReservationView),
         );
-        if (reservation) renderReservationDetail(reservation);
+        renderReservationDetail(reservation);
         return;
       }
       const calendarReservation = event.target.closest("[data-owner-calendar-reservation]");
@@ -4002,7 +4064,7 @@
           (item) =>
             String(item.id) === String(calendarReservation.dataset.ownerCalendarReservation),
         );
-        if (reservation) renderReservationDetail(reservation);
+        renderReservationDetail(reservation);
         return;
       }
       const reservationButton = event.target.closest("[data-owner-reservation-action]");
