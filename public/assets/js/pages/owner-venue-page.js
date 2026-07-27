@@ -1797,31 +1797,6 @@
       .join("");
   }
 
-  function reservationActions(reservation) {
-    const id = reservation.id;
-    const status = reservation.status;
-    const isConfirmed = status === "confirmed";
-    return `
-      <div class="owner-reservation-actions">
-        <button class="btn btn-glass btn-sm" type="button" data-owner-reservation-view="${id}">
-          <i class="bi bi-eye"></i><span data-i18n="buttons.view_details">${tr("buttons.view_details", "View Details")}</span>
-        </button>
-        <button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservation-action="confirm" data-owner-reservation-id="${id}" ${status !== "pending" ? "disabled" : ""}>
-          <i class="bi bi-check2-circle"></i><span data-i18n="owner.confirm">${tr("owner.confirm", "Confirm")}</span>
-        </button>
-        <button class="btn btn-glass btn-sm" type="button" data-owner-reservation-action="complete" data-owner-reservation-id="${id}" ${!isConfirmed ? "disabled" : ""}>
-          <i class="bi bi-patch-check"></i><span data-i18n="owner.mark_completed">${tr("owner.mark_completed", "Mark Completed")}</span>
-        </button>
-        <button class="btn btn-glass btn-sm" type="button" data-owner-reservation-action="no-show" data-owner-reservation-id="${id}" ${!isConfirmed ? "disabled" : ""}>
-          <i class="bi bi-person-x"></i><span data-i18n="owner.mark_no_show">${tr("owner.mark_no_show", "Mark guest as no-show")}</span>
-        </button>
-        <button class="btn btn-outline-danger btn-sm" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${id}" ${!["pending", "confirmed"].includes(status) ? "disabled" : ""}>
-          <i class="bi bi-x-circle"></i><span data-i18n="buttons.cancel">${tr("buttons.cancel", "Cancel")}</span>
-        </button>
-      </div>
-    `;
-  }
-
   function reservationSearchText(reservation) {
     return [
       reservation.id,
@@ -1926,18 +1901,16 @@
   }
 
   function nextBestReservationAction(reservation) {
-    if (reservation.status === "pending") return { label: tr("manager.review", "Review"), action: "view", tone: "gold" };
-    if (reservation.status === "confirmed")
-      return { label: tr("manager.open_details", "Open details"), action: "view", tone: "glass" };
-    return { label: tr("manager.view", "View"), action: "view", tone: "glass" };
+    return {
+      label: tr("manager.review", "Review"),
+      action: "view",
+      tone: reservation.status === "pending" ? "gold" : "glass",
+    };
   }
 
   function reservationRowCard(reservation) {
     const action = nextBestReservationAction(reservation);
-    const mobileAction =
-      reservation.status === "pending"
-        ? `<button class="btn btn-gold-outline manager-reservation-mobile-primary" type="button" data-owner-reservation-view="${reservation.id}">${tr("manager.review", "Review")}</button>`
-        : `<button class="btn btn-gold-outline manager-reservation-mobile-primary" type="button" data-owner-reservation-view="${reservation.id}">${tr("manager.view_details", "View details")}</button>`;
+    const mobileAction = `<button class="btn btn-gold-outline manager-reservation-mobile-primary" type="button" data-owner-reservation-view="${reservation.id}">${tr("manager.review", "Review")}</button>`;
     const contact = [reservation.phone, reservation.email].filter(Boolean).join(" · ");
     const secondary = [
       contact || tr("reservation.not_provided", "Contact not provided"),
@@ -2641,11 +2614,11 @@
         <button class="btn btn-gold manager-detail-primary-action" type="button" data-owner-reservation-action="complete" data-owner-reservation-id="${reservation.id}">
           <i class="bi bi-patch-check me-1"></i>${tr("owner.mark_completed", "Complete")}
         </button>
-        <button class="btn btn-outline-danger manager-detail-danger-action" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${reservation.id}">
-          <i class="bi bi-x-circle me-1"></i>${tr("buttons.cancel", "Cancel")}
-        </button>
         <button class="btn btn-glass manager-detail-secondary-action" type="button" data-owner-reservation-action="no-show" data-owner-reservation-id="${reservation.id}">
           <i class="bi bi-person-x me-1"></i>${tr("owner.mark_no_show", "Mark no-show")}
+        </button>
+        <button class="btn btn-outline-danger manager-detail-danger-action" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${reservation.id}">
+          <i class="bi bi-x-circle me-1"></i>${tr("buttons.cancel", "Cancel")}
         </button>
       `;
     }
@@ -2696,7 +2669,8 @@
       `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-bs-dismiss="offcanvas">${tr("manager.close_panel", "Close panel")}</button></div>`,
     );
     bootstrap.Offcanvas.getOrCreateInstance($("#ownerReservationModal"), {
-      backdrop: false,
+      backdrop: true,
+      keyboard: true,
       scroll: true,
     }).show();
   }
@@ -2717,8 +2691,44 @@
     renderReservationDetailSkeleton();
     const primaryActions = detailActionMarkup(reservation);
     const history = detailHistoryItems(reservation);
+    const detailField = (label, value) =>
+      value ? `<div><span>${label}</span><strong>${esc(value)}</strong></div>` : "";
+    const detailSection = (title, content, className = "") =>
+      content
+        ? `<section class="manager-detail-section ${className}"><h4>${title}</h4>${content}</section>`
+        : "";
+    const guestFields = [
+      detailField(tr("manager.phone", "Phone"), reservation.phone),
+      detailField(tr("manager.email", "Email"), reservation.email),
+    ].join("");
+    const reservationFields = [
+      detailField(tr("common.status", "Status"), statusLabel(reservation.status)),
+      detailField(tr("common.date", "Date"), dateLabel(reservation.reservation_date)),
+      detailField(tr("common.time", "Time"), timeLabel(reservation.reservation_time)),
+      detailField(tr("manager.party_size", "Party size"), Number(reservation.party_size || 0) ? `${Number(reservation.party_size || 0)} ${guestCountLabel(reservation.party_size)}` : ""),
+    ].join("");
+    const noteFields = [
+      reservation.occasion ? `<div class="manager-detail-note-block"><strong>${tr("reservation.occasion", "Occasion")}</strong><span>${esc(occasionLabel(reservation.occasion))}</span></div>` : "",
+      reservation.notes ? `<div class="manager-detail-note-block"><strong>${tr("manager.notes", "Notes")}</strong><span>${esc(reservation.notes)}</span></div>` : "",
+    ].join("");
+    const cancellationContent =
+      reservation.status === "cancelled" && (reservation.cancelled_at || reservation.owner_cancellation_reason || reservation.cancellation_reason)
+        ? `<div class="manager-detail-note-block">
+            ${reservation.cancelled_at ? `<strong>${esc(dateTimeLabel(reservation.cancelled_at))}</strong>` : ""}
+            ${(reservation.owner_cancellation_reason || reservation.cancellation_reason) ? `<span>${esc(reservation.owner_cancellation_reason || reservation.cancellation_reason)}</span>` : ""}
+          </div>`
+        : "";
+    const historyContent = history.length
+      ? `<div class="manager-detail-history">${history
+          .map(
+            ([label, value]) =>
+              `<div><i class="bi bi-clock-history"></i><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`,
+          )
+          .join("")}</div>`
+      : "";
     bootstrap.Offcanvas.getOrCreateInstance($("#ownerReservationModal"), {
-      backdrop: false,
+      backdrop: true,
+      keyboard: true,
       scroll: true,
     }).show();
     const detailHtml = `
@@ -2732,72 +2742,11 @@
 
       <div class="manager-detail-actions">${primaryActions}</div>
 
-      <section class="manager-detail-section">
-        <h4>${tr("manager.guest_information", "Guest Information")}</h4>
-        <div class="manager-detail-grid">
-          <div><span>${tr("manager.name", "Name")}</span><strong>${esc(reservation.guest_name || guestFallback())}</strong></div>
-          <div><span>${tr("manager.phone", "Phone")}</span><strong>${esc(reservation.phone || tr("reservation.not_provided", "Not provided"))}</strong></div>
-          <div><span>${tr("manager.email", "Email")}</span><strong>${esc(reservation.email || tr("reservation.not_provided", "Not provided"))}</strong></div>
-        </div>
-      </section>
-
-      <section class="manager-detail-section">
-        <h4>${tr("manager.reservation_details", "Reservation Details")}</h4>
-        <div class="manager-detail-grid">
-          <div><span>${tr("common.status", "Status")}</span><strong>${esc(statusLabel(reservation.status))}</strong></div>
-          <div><span>${tr("manager.reservation_id", "Reservation ID")}</span><strong>#${esc(reservation.id)}</strong></div>
-          <div><span>${tr("common.date", "Date")}</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div>
-          <div><span>${tr("common.time", "Time")}</span><strong>${esc(timeLabel(reservation.reservation_time))}</strong></div>
-          <div><span>${tr("manager.party_size", "Party size")}</span><strong>${Number(reservation.party_size || 0)}</strong></div>
-          <div><span>${tr("reservation.occasion", "Occasion")}</span><strong>${esc(occasionLabel(reservation.occasion))}</strong></div>
-        </div>
-      </section>
-
-      <section class="manager-detail-section">
-        <h4>${tr("manager.notes", "Notes")}</h4>
-        <div class="manager-detail-note-block">
-          <strong>${esc(reservation.venue?.name || state.venue?.name || restaurantBarFallback())}</strong>
-          <span>${esc(reservation.notes || tr("reservation.no_special_request", "No special request provided."))}</span>
-        </div>
-      </section>
-
-      ${
-        reservation.status === "cancelled"
-          ? `
-        <section class="manager-detail-section">
-          <h4>${tr("manager.cancellation_context", "Cancellation Context")}</h4>
-          <div class="manager-detail-note-block">
-            <strong>${esc(dateTimeLabel(reservation.cancelled_at))}</strong>
-            <span>${esc(reservation.owner_cancellation_reason || reservation.cancellation_reason || tr("reservation.no_reason_provided", "No reason provided."))}</span>
-          </div>
-        </section>
-      `
-          : ""
-      }
-
-      <section class="manager-detail-section">
-        <h4>${tr("manager.status_history", "Status History")}</h4>
-        <div class="manager-detail-history">
-          ${
-            history.length
-              ? history
-                  .map(
-                    ([label, value]) =>
-                      `<div><i class="bi bi-clock-history"></i><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`,
-                  )
-                  .join("")
-              : `<div><i class="bi bi-clock-history"></i><span>${tr("manager.no_status_history", "No status history available")}</span><strong>${tr("manager.current_status_only", "Current status only")}</strong></div>`
-          }
-        </div>
-      </section>
-
-      <section class="manager-detail-section">
-        <h4>${tr("manager.related_context", "Related Context")}</h4>
-        <div class="manager-detail-note-block">
-          <strong>${esc(reservation.venue?.name || state.venue?.name || restaurantBarFallback())}</strong>
-          <span>${esc(reservation.reservation_date === todayValue() ? tr("manager.scheduled_for_today", "Scheduled for today") : tr("manager.scheduled_for_date", "Scheduled for {date}", { date: dateLabel(reservation.reservation_date) }))}</span>
-        </div>
-      </section>
+      ${detailSection(tr("manager.guest_information", "Guest Information"), guestFields ? `<div class="manager-detail-grid">${guestFields}</div>` : "")}
+      ${detailSection(tr("manager.reservation_details", "Reservation Details"), reservationFields ? `<div class="manager-detail-grid">${reservationFields}</div>` : "")}
+      ${detailSection(tr("manager.notes_occasion", "Notes / Occasion"), noteFields)}
+      ${detailSection(tr("manager.cancellation_context", "Cancellation Context"), cancellationContent)}
+      ${detailSection(tr("manager.status_history", "Status History"), historyContent)}
     `;
     window.requestAnimationFrame(() => {
       body.innerHTML = detailHtml;

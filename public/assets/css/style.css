@@ -5363,20 +5363,37 @@ textarea.form-control:focus {
 }
 
 .manager-reservation-detail-panel {
-  width: min(580px, 100vw) !important;
+  width: min(500px, calc(100vw - 2rem)) !important;
   background:
     linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025)),
     var(--bg);
   color: var(--text);
   border-left: 1px solid color-mix(in oklab, var(--border-strong) 74%, transparent);
+  box-shadow: -28px 0 80px rgba(0,0,0,.34);
+}
+
+.manager-reservation-detail-panel.offcanvas {
+  transition-duration: var(--motion-med);
+  transition-timing-function: var(--motion-ease);
 }
 
 .manager-reservation-detail-panel .offcanvas-header {
-  align-items: flex-start;
+  align-items: center;
+  gap: .85rem;
   border-bottom: 1px solid var(--border);
   background:
     linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
     var(--card);
+}
+
+.manager-reservation-detail-panel .offcanvas-header > div {
+  min-width: 0;
+}
+
+.manager-reservation-detail-panel .offcanvas-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .manager-detail-back {
@@ -5384,6 +5401,10 @@ textarea.form-control:focus {
 }
 
 .manager-reservation-detail-panel .offcanvas-body {
+  display: grid;
+  align-content: start;
+  gap: .85rem;
+  padding: 1rem;
   background:
     radial-gradient(circle at 90% 0%, rgba(91,140,255,.08), transparent 16rem),
     transparent;
@@ -5403,7 +5424,8 @@ textarea.form-control:focus {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: .85rem;
+  margin-bottom: 0;
+  animation: managerWorkspaceEnter .16s ease-out;
 }
 
 .manager-detail-hero h3 {
@@ -5411,18 +5433,32 @@ textarea.form-control:focus {
 }
 
 .manager-detail-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: .55rem;
-  margin-bottom: .85rem;
-  position: sticky;
-  top: 0;
+  margin-bottom: 0;
+  position: static;
   z-index: 2;
   backdrop-filter: blur(14px);
+  animation: managerWorkspaceEnter .18s ease-out;
 }
 
 .manager-detail-actions .btn {
   min-height: 44px;
+  justify-content: center;
+}
+
+.manager-detail-primary-action {
+  order: 1;
+}
+
+.manager-detail-secondary-action {
+  order: 2;
+}
+
+.manager-detail-danger-action {
+  order: 3;
+  margin-top: .2rem;
 }
 
 .manager-detail-state-note {
@@ -5445,7 +5481,8 @@ textarea.form-control:focus {
 .manager-detail-section {
   display: grid;
   gap: .75rem;
-  margin-bottom: .85rem;
+  margin-bottom: 0;
+  animation: managerWorkspaceEnter .2s ease-out;
 }
 
 .manager-detail-section h4 {
@@ -5458,7 +5495,7 @@ textarea.form-control:focus {
 
 .manager-detail-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: .65rem;
 }
 
