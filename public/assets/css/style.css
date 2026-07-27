@@ -6299,6 +6299,7 @@ textarea.form-control:focus {
 
   .manager-detail-actions {
     position: sticky;
+    top: auto;
     bottom: max(.65rem, env(safe-area-inset-bottom));
     order: 10;
     display: grid;

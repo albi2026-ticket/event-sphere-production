@@ -1934,7 +1934,7 @@
     const action = nextBestReservationAction(reservation);
     const mobileAction =
       reservation.status === "pending"
-        ? `<button class="btn btn-gold manager-reservation-mobile-primary" type="button" data-owner-reservation-action="confirm" data-owner-reservation-id="${reservation.id}">${tr("owner.confirm", "Confirm")}</button>`
+        ? `<button class="btn btn-gold-outline manager-reservation-mobile-primary" type="button" data-owner-reservation-view="${reservation.id}">${tr("manager.review", "Review")}</button>`
         : `<button class="btn btn-gold-outline manager-reservation-mobile-primary" type="button" data-owner-reservation-view="${reservation.id}">${tr("manager.view_details", "View details")}</button>`;
     const contact = [reservation.phone, reservation.email].filter(Boolean).join(" · ");
     const secondary = [
