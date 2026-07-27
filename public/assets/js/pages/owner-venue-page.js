@@ -818,11 +818,13 @@
         const item = byDay.get(index) || {};
         const closed = Boolean(item.is_closed);
         return `
-        <div class="col-lg-6">
+        <div class="col-12">
           <div class="facility owner-hours-row">
             <div class="owner-hours-day"><i class="bi bi-clock"></i><span>${day}</span></div>
-            ${timeSelect(`data-hours-open="${index}" aria-label="${esc(day)} opens at"`, item.opens_at, closed)}
-            ${timeSelect(`data-hours-close="${index}" aria-label="${esc(day)} closes at"`, item.closes_at, closed)}
+            <div class="owner-hours-times">
+              <label class="owner-hours-time"><span>${tr("restaurants.opens", "Opens")}</span>${timeSelect(`data-hours-open="${index}" aria-label="${esc(day)} opens at"`, item.opens_at, closed)}</label>
+              <label class="owner-hours-time"><span>${tr("restaurants.closes", "Closes")}</span>${timeSelect(`data-hours-close="${index}" aria-label="${esc(day)} closes at"`, item.closes_at, closed)}</label>
+            </div>
             <label class="form-check owner-hours-closed">
               <input class="form-check-input" type="checkbox" data-hours-closed="${index}" ${closed ? "checked" : ""}>
               <span data-i18n="availability.closed">${tr("availability.closed", "Closed")}</span>
@@ -928,10 +930,10 @@
       ? images
           .map(
             (image, index) => `
-      <div class="col-md-6 col-xl-4">
+      <div class="owner-gallery-col">
         <div class="owner-gallery-card ${index === 0 ? "is-cover" : ""}" draggable="true" data-owner-gallery-card="${image.id}">
           <div class="owner-gallery-image">
-            <img loading="lazy" decoding="async" width="800" height="500" sizes="(min-width: 1200px) 33vw, (min-width: 768px) 50vw, 100vw" src="${esc(imageUrl(image))}" alt="${esc(state.venue?.name || tr("common.restaurant_bar", "Restaurant or bar"))} ${esc(tr("venue.gallery", "Gallery"))} ${index + 1}" />
+            <img loading="lazy" decoding="async" width="800" height="600" sizes="(min-width: 1200px) 24vw, (min-width: 768px) 33vw, 50vw" src="${esc(imageUrl(image))}" alt="${esc(state.venue?.name || tr("common.restaurant_bar", "Restaurant or bar"))} ${esc(tr("venue.gallery", "Gallery"))} ${index + 1}" />
             <span class="owner-gallery-cover-badge"><i class="bi bi-star-fill"></i> ${tr("owner.cover", "Cover")}</span>
             <span class="owner-gallery-drag-hint"><i class="bi bi-grip-vertical"></i> ${tr("owner.drag", "Drag")}</span>
           </div>

@@ -5761,6 +5761,58 @@ textarea.form-control:focus {
   display: none;
 }
 
+.manager-workspace-main,
+.manager-workspace-main * {
+  min-width: 0;
+}
+
+.manager-workspace-main .card-pro,
+.manager-dashboard-panel,
+.manager-quick-actions-card,
+.manager-reservations-workspace,
+.manager-calendar-workspace,
+.manager-analytics-workspace,
+.manager-config-placeholder {
+  border-radius: 18px;
+}
+
+.manager-workspace-main .btn,
+.manager-workspace-main .form-control,
+.manager-workspace-main .form-select {
+  min-height: 44px;
+}
+
+.manager-workspace-main .form-control,
+.manager-workspace-main .form-select {
+  max-width: 100%;
+  color: var(--text);
+  background-color: color-mix(in oklab, var(--card) 86%, transparent);
+  border-color: color-mix(in oklab, var(--border-strong) 72%, transparent);
+}
+
+.manager-workspace-main .form-control:focus,
+.manager-workspace-main .form-select:focus,
+.manager-search:focus-visible,
+.manager-user-button:focus-visible,
+.manager-dropdown .dropdown-item:focus-visible,
+.manager-dropdown-language button:focus-visible {
+  border-color: color-mix(in oklab, var(--primary) 54%, var(--border-strong));
+  box-shadow: 0 0 0 .2rem color-mix(in oklab, var(--primary) 18%, transparent);
+  outline: 0;
+}
+
+.manager-workspace-main .section-head-res,
+.manager-config-header,
+.manager-reservations-header {
+  gap: .85rem;
+}
+
+.manager-workspace-main .section-head-res h2,
+.manager-config-header h2,
+.manager-reservations-header h2 {
+  overflow-wrap: anywhere;
+}
+
 .manager-workspace-main > .manager-reservations-workspace,
 .manager-workspace-main > .manager-config-placeholder,
 .manager-workspace-main > [data-owner-venue-form],
@@ -5802,6 +5854,293 @@ textarea.form-control:focus {
     linear-gradient(180deg, color-mix(in oklab, var(--bg) 90%, transparent), color-mix(in oklab, var(--bg) 74%, transparent));
   border-bottom: 1px solid color-mix(in oklab, var(--border-strong) 68%, transparent);
   backdrop-filter: blur(18px);
+}
+
+.manager-search-disabled {
+  cursor: help;
+}
+
+.manager-dropdown .dropdown-item {
+  min-height: 42px;
+  border-radius: 10px;
+}
+
+.manager-dropdown-language {
+  display: grid;
+  gap: .55rem;
+  padding: .55rem .75rem;
+  color: var(--text);
+}
+
+.manager-dropdown-language > span,
+.manager-dropdown-language > div {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+}
+
+.manager-dropdown-language > span {
+  color: var(--muted);
+  font-size: .9rem;
+  font-weight: 800;
+}
+
+.manager-dropdown-language i {
+  width: 1.1rem;
+}
+
+.manager-dropdown-language button {
+  min-height: 36px;
+  padding: .25rem .65rem;
+  border: 1px solid color-mix(in oklab, var(--border-strong) 70%, transparent);
+  border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  font-weight: 900;
+}
+
+.manager-dropdown-language button.is-active,
+.manager-dropdown-language button:hover {
+  border-color: color-mix(in oklab, var(--primary) 36%, var(--border-strong));
+  background: rgba(91,140,255,.1);
+}
+
+.manager-search > span {
+  display: grid;
+  flex: 1 1 auto;
+  gap: .08rem;
+  min-width: 0;
+}
+
+.manager-search strong,
+.manager-search small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manager-search strong {
+  color: var(--text);
+  font-size: .92rem;
+  font-weight: 850;
+}
+
+.manager-search small {
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 800;
+}
+
+[data-owner-hours] {
+  --owner-hours-day-width: 11rem;
+}
+
+.owner-hours-row {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, var(--owner-hours-day-width)) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .85rem;
+  width: 100%;
+  padding: .85rem;
+  border: 1px solid color-mix(in oklab, var(--border-strong) 68%, transparent);
+  border-radius: 16px;
+  background: rgba(255,255,255,.03);
+}
+
+.owner-hours-day,
+.owner-hours-times,
+.owner-hours-time,
+.owner-hours-closed {
+  min-width: 0;
+}
+
+.owner-hours-day {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  color: var(--text);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.owner-hours-day i {
+  color: var(--primary);
+}
+
+.owner-hours-times {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(9rem, 1fr));
+  gap: .65rem;
+}
+
+.owner-hours-time {
+  display: grid;
+  gap: .28rem;
+}
+
+.owner-hours-time > span {
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.owner-hours-time .owner-time-select {
+  width: 100%;
+  min-width: 0;
+  color: var(--text);
+  font-weight: 850;
+}
+
+.owner-hours-time .owner-time-select:disabled {
+  color: var(--muted);
+  opacity: .72;
+}
+
+.owner-hours-closed {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .45rem;
+  min-height: 44px;
+  margin: 0;
+  color: var(--muted);
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+[data-owner-gallery] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: .85rem;
+  margin-inline: 0;
+}
+
+[data-owner-gallery]::before,
+[data-owner-gallery]::after {
+  display: none;
+}
+
+.owner-gallery-col {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+}
+
+.owner-gallery-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--border-strong) 68%, transparent);
+  border-radius: 16px;
+  background: rgba(255,255,255,.032);
+}
+
+.owner-gallery-image {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: color-mix(in oklab, var(--card) 82%, #000);
+}
+
+.owner-gallery-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.owner-gallery-cover-badge,
+.owner-gallery-drag-hint {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  min-height: 28px;
+  padding: .22rem .5rem;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 999px;
+  background: rgba(2,6,23,.7);
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 850;
+  backdrop-filter: blur(10px);
+}
+
+.owner-gallery-cover-badge {
+  top: .55rem;
+  left: .55rem;
+}
+
+.owner-gallery-card:not(.is-cover) .owner-gallery-cover-badge {
+  display: none;
+}
+
+.owner-gallery-drag-hint {
+  right: .55rem;
+  bottom: .55rem;
+}
+
+.owner-gallery-card-body {
+  display: grid;
+  gap: .75rem;
+  padding: .75rem;
+}
+
+.owner-gallery-card-body > div:first-child {
+  display: grid;
+  gap: .1rem;
+}
+
+.owner-gallery-card-body strong,
+.owner-gallery-card-body small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.owner-gallery-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .45rem;
+}
+
+.owner-gallery-actions .btn {
+  width: 100%;
+  min-height: 38px;
+  padding-inline: .45rem;
+}
+
+.owner-gallery-dropzone,
+.owner-gallery-empty {
+  border: 1px dashed color-mix(in oklab, var(--border-strong) 72%, transparent);
+  border-radius: 16px;
+  background: rgba(255,255,255,.03);
+}
+
+.owner-gallery-dropzone {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .9rem;
+  padding: .9rem;
+}
+
+.owner-gallery-dropzone h5,
+.owner-gallery-dropzone small {
+  overflow-wrap: anywhere;
+}
+
+.owner-gallery-empty {
+  display: grid;
+  place-items: center;
+  gap: .35rem;
+  min-height: 180px;
+  padding: 1.25rem;
+  text-align: center;
 }
 
 .manager-venue-switcher {
@@ -5983,6 +6322,19 @@ textarea.form-control:focus {
   .manager-sidebar-collapsed {
     grid-template-columns: var(--manager-sidebar-collapsed-width) minmax(0, 1fr);
   }
+
+  .owner-hours-row {
+    grid-template-columns: minmax(7.5rem, 9rem) minmax(0, 1fr);
+  }
+
+  .owner-hours-closed {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
+
+  [data-owner-gallery] {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+  }
 }
 
 @media (max-width: 991.98px) {
@@ -6020,6 +6372,28 @@ textarea.form-control:focus {
 
   .manager-topbar-actions {
     margin-left: auto;
+  }
+
+  .owner-hours-row {
+    grid-template-columns: 1fr;
+    gap: .7rem;
+  }
+
+  .owner-hours-times {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .owner-hours-closed {
+    grid-column: auto;
+  }
+
+  .owner-gallery-dropzone {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .owner-gallery-dropzone .btn {
+    grid-column: 1 / -1;
+    width: 100%;
   }
 }
 
@@ -6584,6 +6958,79 @@ textarea.form-control:focus {
   .manager-topbar-button span,
   .manager-user-button span {
     display: none;
+  }
+
+  .manager-workspace-main {
+    padding-inline: .75rem;
+  }
+
+  .manager-workspace-main .card-pro {
+    padding: .9rem !important;
+  }
+
+  .manager-config-grid,
+  .manager-config-grid-compact,
+  .manager-settings-grid {
+    gap: .85rem;
+  }
+
+  .manager-search > span {
+    flex-basis: 100%;
+  }
+
+  .owner-hours-row {
+    padding: .75rem;
+  }
+
+  .owner-hours-times {
+    gap: .5rem;
+  }
+
+  .owner-hours-time .owner-time-select {
+    font-size: .92rem;
+    padding-inline: .55rem;
+  }
+
+  [data-owner-gallery] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .65rem;
+  }
+
+  .owner-gallery-image {
+    aspect-ratio: 1 / 1;
+  }
+
+  .owner-gallery-card-body {
+    gap: .55rem;
+    padding: .6rem;
+  }
+
+  .owner-gallery-card-body small,
+  .owner-gallery-drag-hint {
+    display: none;
+  }
+
+  .owner-gallery-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .owner-gallery-dropzone {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+
+@media (max-width: 360px) {
+  [data-owner-gallery] {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-hours-times {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-topbar-actions {
+    gap: .4rem;
   }
 }
 

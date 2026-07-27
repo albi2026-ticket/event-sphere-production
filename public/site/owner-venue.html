@@ -111,9 +111,9 @@
         <i class="bi bi-chevron-down"></i>
       </div>
 
-      <button class="manager-search" type="button" data-manager-search>
+      <button class="manager-search manager-search-disabled" type="button" data-manager-search aria-disabled="true" title="Global search coming soon" data-i18n-attr="title:manager.global_search_later">
         <i class="bi bi-search"></i>
-        <span data-i18n="manager.search_placeholder">Search reservations, guests, dates...</span>
+        <span><strong data-i18n="manager.search_placeholder">Search reservations, guests, dates...</strong><small data-i18n="manager.global_search_coming_soon">Global search coming soon</small></span>
         <kbd data-manager-shortcut>Ctrl K</kbd>
       </button>
 
@@ -153,8 +153,14 @@
             <span data-auth-name>Account</span><i class="bi bi-chevron-down"></i>
           </button>
           <div class="dropdown-menu dropdown-menu-end manager-dropdown">
-            <button class="dropdown-item" type="button" data-manager-placeholder="Account"><i class="bi bi-person"></i><span data-i18n="manager.account">Account</span></button>
-            <button class="dropdown-item" type="button" data-manager-placeholder="Language"><i class="bi bi-translate"></i><span data-i18n="manager.language">Language</span></button>
+            <button class="dropdown-item" type="button" data-manager-target="#managerSettingsAccount"><i class="bi bi-person"></i><span data-i18n="manager.account">Account</span></button>
+            <div class="manager-dropdown-language" data-language-switcher aria-label="Language" data-i18n-attr="aria-label:language.current">
+              <span><i class="bi bi-translate"></i><span data-i18n="manager.language">Language</span></span>
+              <div>
+                <button type="button" data-language-option="en" data-i18n="language.en_short" data-i18n-attr="aria-label:language.switch_to_english">EN</button>
+                <button type="button" data-language-option="sq" data-i18n="language.sq_short" data-i18n-attr="aria-label:language.switch_to_albanian">SQ</button>
+              </div>
+            </div>
             <a class="dropdown-item" href="/reservation-support"><i class="bi bi-life-preserver"></i><span data-i18n="manager.help_support">Help / Support</span></a>
             <a class="dropdown-item" href="#" data-manager-public-page><i class="bi bi-box-arrow-up-right"></i><span data-i18n="manager.public_venue_page">Public Venue Page</span></a>
             <div class="dropdown-divider"></div>
