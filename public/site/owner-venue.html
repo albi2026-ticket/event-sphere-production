@@ -27,6 +27,9 @@
       <button class="manager-sidebar-toggle" type="button" data-manager-sidebar-toggle aria-label="Collapse sidebar" data-i18n-attr="aria-label:manager.collapse_sidebar">
         <i class="bi bi-layout-sidebar-inset"></i>
       </button>
+      <button class="manager-sidebar-mobile-close" type="button" data-manager-mobile-sidebar-close aria-label="Close navigation" data-i18n-attr="aria-label:manager.close_navigation">
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
 
     <nav class="manager-nav" aria-label="Manager workspace" data-i18n-attr="aria-label:manager.manager_workspace">
@@ -95,9 +98,13 @@
       </div>
     </nav>
   </aside>
+  <button class="manager-sidebar-overlay" type="button" data-manager-sidebar-overlay aria-label="Close navigation" data-i18n-attr="aria-label:manager.close_navigation" hidden></button>
 
   <div class="manager-workspace">
     <header class="manager-topbar" data-manager-topbar>
+      <button class="manager-mobile-sidebar-trigger" type="button" data-manager-mobile-sidebar-open aria-label="Open navigation" data-i18n-attr="aria-label:manager.open_navigation">
+        <i class="bi bi-list"></i>
+      </button>
       <div class="manager-venue-switcher" data-manager-venue-switcher>
         <span class="manager-venue-icon"><i class="bi bi-shop"></i></span>
         <span><small data-i18n="manager.current_venue">Current venue</small><strong data-manager-venue-name>Restaurant / Bar</strong></span>

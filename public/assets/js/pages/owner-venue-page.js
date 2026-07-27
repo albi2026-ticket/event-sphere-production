@@ -3617,6 +3617,28 @@
     localStorage.setItem("tiketa_manager_sidebar_collapsed", collapsed ? "1" : "0");
   }
 
+  function isManagerMobileNav() {
+    return window.matchMedia?.("(max-width: 720px)")?.matches || window.innerWidth <= 720;
+  }
+
+  function setManagerMobileSidebarOpen(open) {
+    const shell = $("[data-manager-shell]");
+    const overlay = $("[data-manager-sidebar-overlay]");
+    const trigger = $("[data-manager-mobile-sidebar-open]");
+    if (!shell) return;
+    shell.classList.toggle("manager-mobile-sidebar-open", open);
+    document.body.classList.toggle("manager-mobile-sidebar-lock", open);
+    if (overlay) {
+      overlay.hidden = !open;
+      overlay.setAttribute("aria-hidden", open ? "false" : "true");
+    }
+    trigger?.setAttribute("aria-expanded", String(open));
+  }
+
+  function closeManagerMobileSidebar() {
+    setManagerMobileSidebarOpen(false);
+  }
+
   function updateManagerPendingBadge(count) {
     const badge = $("[data-manager-pending-badge]");
     if (!badge) return;
@@ -3763,6 +3785,17 @@
     setManagerSidebarCollapsed(localStorage.getItem("tiketa_manager_sidebar_collapsed") === "1");
     setManagerActiveSection("dashboard");
 
+    const mobileSidebarTrigger = $("[data-manager-mobile-sidebar-open]");
+    mobileSidebarTrigger?.setAttribute("aria-expanded", "false");
+    mobileSidebarTrigger?.addEventListener("click", () => {
+      setManagerMobileSidebarOpen(true);
+    });
+    $("[data-manager-mobile-sidebar-close]")?.addEventListener("click", closeManagerMobileSidebar);
+    $("[data-manager-sidebar-overlay]")?.addEventListener("click", closeManagerMobileSidebar);
+    window.addEventListener("resize", () => {
+      if (!isManagerMobileNav()) closeManagerMobileSidebar();
+    });
+
     $("[data-manager-sidebar-toggle]")?.addEventListener("click", () => {
       const shell = $("[data-manager-shell]");
       setManagerSidebarCollapsed(!shell?.classList.contains("manager-sidebar-collapsed"));
@@ -3772,6 +3805,7 @@
       item.addEventListener("click", (event) => {
         event.preventDefault();
         openManagerSection(item.dataset.managerSection);
+        closeManagerMobileSidebar();
       });
     });
 
@@ -3780,6 +3814,7 @@
         event.preventDefault();
         openManagerSection("reservations");
         applyManagerReservationFilter(item.dataset.managerReservationFilter);
+        closeManagerMobileSidebar();
       });
     });
 
@@ -3788,6 +3823,7 @@
         event.preventDefault();
         const section = item.closest("[data-manager-subnav]")?.dataset.managerSubnav || "dashboard";
         openManagerSection(section, { target: item.dataset.managerTarget });
+        closeManagerMobileSidebar();
       });
     });
 
@@ -3801,6 +3837,7 @@
           }),
           "info",
         );
+        closeManagerMobileSidebar();
       });
     });
 
@@ -3811,6 +3848,7 @@
           event.preventDefault();
           setManagerActiveSection("venue");
           openPublicVenuePage();
+          closeManagerMobileSidebar();
         });
       });
 
