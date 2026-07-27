@@ -164,7 +164,7 @@
       </div>
     </header>
 
-<main class="container-xxl py-5" data-owner-venue-page id="managerDashboard">
+<main class="container-xxl manager-workspace-main" data-owner-venue-page id="managerDashboard">
   <section class="manager-dashboard-header mb-4" data-dashboard-status-header>
     <div class="manager-dashboard-header-main">
       <span class="eyebrow-res"><i class="bi bi-command"></i> <span data-i18n="manager.manager_command_center">Manager Command Center</span></span>
@@ -321,12 +321,6 @@
       <button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservations-refresh><i class="bi bi-arrow-clockwise me-1"></i><span data-i18n="buttons.refresh">Refresh</span></button>
     </div>
 
-    <div class="visually-hidden" aria-hidden="true">
-      <button class="owner-reservation-tab active" type="button" data-owner-reservation-tab="list" data-i18n="manager.reservation_list">Reservation List</button>
-      <button class="owner-reservation-tab" type="button" data-owner-reservation-tab="calendar" data-i18n="manager.reservations_calendar">Reservations Calendar</button>
-      <button class="owner-reservation-tab" type="button" data-owner-reservation-tab="analytics" data-i18n="manager.analytics">Analytics</button>
-    </div>
-
     <div data-owner-reservation-panel="list">
       <section class="manager-reservation-summary mb-3" data-reservation-workspace-summary>
         <button type="button" data-reservation-summary-filter="pending"><span data-i18n="manager.pending">Pending</span><strong>0</strong><small data-i18n="manager.needs_review">Needs review</small></button>
@@ -406,8 +400,9 @@
         <div class="reservation-list-skeleton"><span></span><span></span><span></span></div>
       </div>
     </div>
+  </section>
 
-    <section class="manager-calendar-workspace mb-4" id="managerCalendar" data-owner-reservation-panel="calendar" hidden>
+  <section class="manager-calendar-workspace mb-4" id="managerCalendar" data-owner-reservation-panel="calendar" hidden>
       <div class="manager-config-header">
         <div>
           <span class="eyebrow-res"><i class="bi bi-calendar3"></i> <span data-i18n="manager.daily_operations">Daily Operations</span></span>
@@ -456,9 +451,9 @@
           <span class="skeleton-block"></span>
         </div>
       </div>
-    </section>
+  </section>
 
-    <section class="manager-analytics-workspace mb-4" id="managerAnalytics" data-owner-reservation-panel="analytics" hidden>
+  <section class="manager-analytics-workspace mb-4" id="managerAnalytics" data-owner-reservation-panel="analytics" hidden>
       <div class="manager-config-header">
         <div>
           <span class="eyebrow-res"><i class="bi bi-graph-up-arrow"></i> <span data-i18n="manager.daily_operations">Daily Operations</span></span>
@@ -536,7 +531,14 @@
           </div>
         </div>
       </div>
-    </section>
+  </section>
+
+  <section class="manager-config-placeholder mb-4" id="managerGuestsWorkspace" hidden>
+    <div>
+      <span class="eyebrow-res"><i class="bi bi-people"></i> <span data-i18n="manager.daily_operations">Daily Operations</span></span>
+      <h2 data-i18n="manager.guests">Guests</h2>
+      <p data-i18n="manager.guest_workspace_later">Guest workspace will be available in a later manager phase.</p>
+    </div>
   </section>
 
   <form data-owner-venue-form novalidate>

@@ -3646,10 +3646,89 @@
     badge.hidden = Number(count) <= 0;
   }
 
-  function scrollManagerTarget(selector) {
-    const target = typeof selector === "string" ? $(selector) : selector;
-    if (!target) return;
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  const managerWorkspaceSections = [
+    "dashboard",
+    "reservations",
+    "calendar",
+    "guests",
+    "analytics",
+    "venue",
+    "availability",
+    "settings",
+  ];
+
+  function managerSectionFromTarget(target = "") {
+    const value = String(target || "");
+    if (value.includes("ownerReservations")) return "reservations";
+    if (value.includes("managerCalendar")) return "calendar";
+    if (value.includes("managerGuestsWorkspace")) return "guests";
+    if (value.includes("managerAnalytics")) return "analytics";
+    if (value.includes("managerVenue") || value.includes("managerPublicPreview")) return "venue";
+    if (value.includes("managerAvailability") || value.includes("managerBookingRules") || value.includes("managerGuestRules"))
+      return "availability";
+    if (value.includes("managerSettings") || value.includes("managerDangerZone")) return "settings";
+    if (value.includes("managerDashboard")) return "dashboard";
+    return "";
+  }
+
+  function managerSectionFromHash(hash = window.location.hash) {
+    const cleanHash = String(hash || "").replace(/^#/, "");
+    if (!cleanHash) return "";
+    if (managerWorkspaceSections.includes(cleanHash)) return cleanHash;
+    return managerSectionFromTarget(`#${cleanHash}`);
+  }
+
+  function setManagerWorkspaceHistory(section, replace = false) {
+    const destination = `#${section || "dashboard"}`;
+    if (!destination || !window.history?.pushState) return;
+    const nextUrl = `${window.location.pathname}${window.location.search}${destination}`;
+    if (nextUrl === `${window.location.pathname}${window.location.search}${window.location.hash}`) return;
+    const method = replace ? "replaceState" : "pushState";
+    window.history[method]({ managerWorkspace: section }, "", nextUrl);
+  }
+
+  function showManagerWorkspace(section) {
+    const root = $("[data-owner-venue-page]");
+    const reservations = $("#ownerReservations");
+    const calendar = $("#managerCalendar");
+    const analytics = $("#managerAnalytics");
+    const guests = $("#managerGuestsWorkspace");
+    const form = $("[data-owner-venue-form]");
+    const venueModule = $("#managerVenueModule");
+    const availabilityModule = $("#managerAvailabilityModule");
+    const settingsModule = $("#managerSettings");
+    const activeSection = managerWorkspaceSections.includes(section) ? section : "dashboard";
+    const dashboardVisible = activeSection === "dashboard";
+    const formVisible = ["venue", "availability", "settings"].includes(activeSection);
+
+    Array.from(root?.children || []).forEach((child) => {
+      if (
+        child === reservations ||
+        child === calendar ||
+        child === analytics ||
+        child === guests ||
+        child === form ||
+        child.matches?.("[data-owner-alert]")
+      )
+        return;
+      child.hidden = !dashboardVisible;
+    });
+
+    if (reservations) reservations.hidden = activeSection !== "reservations";
+    if (calendar) calendar.hidden = activeSection !== "calendar";
+    if (analytics) analytics.hidden = activeSection !== "analytics";
+    if (guests) guests.hidden = activeSection !== "guests";
+    if (form) form.hidden = !formVisible;
+    if (venueModule) venueModule.hidden = activeSection !== "venue";
+    if (availabilityModule) availabilityModule.hidden = activeSection !== "availability";
+    if (settingsModule) settingsModule.hidden = activeSection !== "settings";
+
+    if (activeSection === "reservations") switchOwnerReservationPanel("list");
+    if (activeSection === "calendar") switchOwnerReservationPanel("calendar");
+    if (activeSection === "analytics") switchOwnerReservationPanel("analytics");
+
+    document.body.dataset.managerWorkspace = activeSection;
+    localStorage.setItem("tiketa_manager_workspace", activeSection);
   }
 
   function setManagerActiveSection(section) {
@@ -3664,8 +3743,19 @@
   }
 
   function switchOwnerReservationPanel(view) {
-    const tab = $(`[data-owner-reservation-tab="${view}"]`);
-    if (tab) tab.click();
+    state.reservationView = view;
+    document.querySelectorAll("[data-owner-reservation-tab]").forEach((tab) => {
+      tab.classList.toggle("active", tab.dataset.ownerReservationTab === view);
+    });
+    document.querySelectorAll("[data-owner-reservation-panel]").forEach((panel) => {
+      panel.hidden = panel.dataset.ownerReservationPanel !== view;
+    });
+    if (view === "calendar" && !state.calendar.reservations.length) {
+      loadCalendarReservations();
+    }
+    if (view === "analytics" && !state.analytics.data) {
+      loadAnalytics();
+    }
   }
 
   function applyManagerReservationFilter(status) {
@@ -3695,40 +3785,16 @@
   }
 
   function openManagerSection(section, options = {}) {
-    setManagerActiveSection(section);
-    if (section === "dashboard") {
-      scrollManagerTarget("#managerDashboard");
-      return;
+    const activeSection = managerWorkspaceSections.includes(section) ? section : "dashboard";
+    setManagerActiveSection(activeSection);
+    showManagerWorkspace(activeSection);
+    if (options.updateHistory !== false) {
+      setManagerWorkspaceHistory(activeSection, Boolean(options.replaceHistory));
     }
-    if (section === "reservations") {
-      switchOwnerReservationPanel("list");
-      scrollManagerTarget("#ownerReservations");
-      return;
+    if (options.resetScroll !== false) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     }
-    if (section === "calendar") {
-      switchOwnerReservationPanel("calendar");
-      scrollManagerTarget("#managerCalendar");
-      return;
-    }
-    if (section === "analytics") {
-      switchOwnerReservationPanel("analytics");
-      scrollManagerTarget("#managerAnalytics");
-      return;
-    }
-    if (section === "venue") {
-      scrollManagerTarget(options.target || "#managerVenueProfile");
-      return;
-    }
-    if (section === "availability") {
-      scrollManagerTarget(options.target || "#managerAvailabilityOpeningHours");
-      return;
-    }
-    if (section === "settings") {
-      scrollManagerTarget(options.target || "#managerSettings");
-      return;
-    }
-    if (section === "guests") {
-      scrollManagerTarget("#ownerReservations");
+    if (activeSection === "guests" && !options.silent) {
       window.tkToast?.(tr("manager.guest_workspace_later", "Guest workspace will be available in a later manager phase."), "info");
     }
   }
@@ -3774,6 +3840,7 @@
       return;
     }
     if (action === "preview") {
+      openManagerSection("venue", { target: "#managerVenuePublicPreview" });
       openPublicVenuePage();
     }
   }
@@ -3783,7 +3850,27 @@
     if (shortcut) shortcut.textContent = managerShortcutLabel();
 
     setManagerSidebarCollapsed(localStorage.getItem("tiketa_manager_sidebar_collapsed") === "1");
-    setManagerActiveSection("dashboard");
+    const initialSection =
+      managerSectionFromHash() ||
+      (managerWorkspaceSections.includes(localStorage.getItem("tiketa_manager_workspace"))
+        ? localStorage.getItem("tiketa_manager_workspace")
+        : "dashboard");
+    openManagerSection(initialSection, {
+      replaceHistory: true,
+      resetScroll: false,
+      silent: true,
+    });
+
+    const openWorkspaceFromLocation = () => {
+      const section = managerSectionFromHash() || "dashboard";
+      openManagerSection(section, {
+        updateHistory: false,
+        resetScroll: false,
+        silent: true,
+      });
+    };
+    window.addEventListener("popstate", openWorkspaceFromLocation);
+    window.addEventListener("hashchange", openWorkspaceFromLocation);
 
     const mobileSidebarTrigger = $("[data-manager-mobile-sidebar-open]");
     mobileSidebarTrigger?.setAttribute("aria-expanded", "false");
@@ -3846,7 +3933,7 @@
       .forEach((item) => {
         item.addEventListener("click", (event) => {
           event.preventDefault();
-          setManagerActiveSection("venue");
+          openManagerSection("venue", { target: "#managerVenuePublicPreview" });
           openPublicVenuePage();
           closeManagerMobileSidebar();
         });
@@ -3875,7 +3962,7 @@
     bindManagerShell();
     $("[data-owner-save]")?.addEventListener("click", saveVenue);
     $("[data-owner-start-create]")?.addEventListener("click", () =>
-      $("[data-owner-venue-form]")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      openManagerSection("venue", { target: "#managerVenueProfile" }),
     );
     $("[data-owner-image-browse]")?.addEventListener("click", () =>
       $("[data-owner-image-input]")?.click(),
