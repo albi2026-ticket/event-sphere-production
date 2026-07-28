@@ -15,8 +15,8 @@
     radial-gradient(1100px 600px at 8% -10%, rgba(124, 92, 255, 0.32), transparent 60%),
     radial-gradient(900px 500px at 92% 0%, rgba(212, 167, 90, 0.22), transparent 60%),
     linear-gradient(180deg, #0b0f19 0%, #0b0f19 100%);
-  --shadow-gold: 0 12px 40px rgba(212, 167, 90, 0.28);
-  --shadow-purple: 0 12px 40px rgba(124, 92, 255, 0.35);
+  --shadow-gold: 0 12px 34px rgba(212, 167, 90, 0.16);
+  --shadow-purple: 0 12px 34px rgba(124, 92, 255, 0.18);
   --font-serif: var(--font-display);
 }
 
@@ -3734,4 +3734,194 @@ body.reservation-success-burst::after {
   box-shadow:
     0 14px 36px rgba(15, 23, 42, 0.12),
     0 1px 0 rgba(255, 255, 255, 0.32) inset;
+}
+
+/* ---- Phase 1.2 reservation spacing, radius, shadow foundation ---- */
+.res-hero {
+  padding-block: var(--space-9) var(--space-8);
+}
+
+.section-head-res {
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.res-search,
+.venue-card,
+.venue-card-premium,
+.reservation-empty-state,
+.reservation-card-skeleton,
+.choice-card,
+.booking-step,
+.reservation-picker-panel,
+.reservation-booking-modal,
+.reservation-step-card,
+.reservation-summary-card,
+.confirm-card,
+.premium-reservation-card,
+.reservation-detail-modal,
+.reservation-cancel-modal,
+.reservation-stat,
+.venue-detail-hero,
+.venue-gallery-premium,
+.venue-side-card,
+.facility,
+.owner-completion-card,
+.owner-calendar-summary > div,
+.owner-calendar-day,
+.owner-analytics-panel,
+.owner-analytics-rate,
+.owner-analytics-rank,
+.owner-reservations-table,
+.owner-location-card,
+.venue-google-map,
+.owner-location-map {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.reservation-booking-modal,
+.reservation-detail-modal,
+.reservation-cancel-modal,
+.venue-lightbox-frame {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-modal);
+}
+
+.reservation-picker-panel,
+.venue-lightbox,
+.venue-mobile-reserve-bar,
+.owner-location-search-shell {
+  box-shadow: var(--shadow-floating);
+}
+
+.venue-card:hover,
+.venue-card-premium:hover,
+.choice-card:hover,
+.booking-step:hover,
+.reservation-step-card:hover,
+.reservation-summary-card:hover,
+.reservation-stat:hover,
+.owner-completion-card:hover,
+.owner-location-card:hover,
+.owner-calendar-item:hover,
+.owner-analytics-panel:hover,
+.owner-analytics-rate:hover,
+.owner-analytics-rank:hover,
+.facility:hover {
+  box-shadow: var(--shadow-floating);
+}
+
+.chip-gold,
+.chip-available,
+.eyebrow-res,
+.venue-preview-tags span,
+.choice-card .features span,
+.reservation-status,
+.owner-location-badge,
+.btn-res-grad,
+.btn-gold,
+.btn-gold-outline,
+.owner-reservation-tab,
+.reservation-choice-time {
+  border-radius: var(--radius-pill);
+}
+
+.res-search .field,
+.reservation-picker-trigger,
+.reservation-choice,
+.chip-select,
+.owner-time-select,
+.owner-calendar-item,
+.owner-location-search-shell,
+.owner-location-confirmation,
+.confirm-detail {
+  border-radius: var(--radius-sm);
+}
+
+.res-search {
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+.res-search .field {
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+
+.res-search.res-search-simple,
+.res-search.res-search-simple .field,
+.res-search.res-search-simple .btn {
+  border-radius: var(--radius-pill);
+}
+
+.venue-card .body,
+.venue-card-premium .body,
+.reservation-card-premium .body {
+  padding: var(--space-4) var(--space-4) var(--space-5);
+}
+
+.choice-card,
+.reservation-empty-state,
+.reservation-step-card,
+.reservation-summary-card,
+.confirm-card,
+.premium-reservation-card,
+.venue-side-card,
+.owner-completion-card,
+.owner-location-card,
+.owner-analytics-panel,
+.owner-analytics-rate,
+.owner-analytics-rank,
+.facility {
+  padding: var(--space-5);
+}
+
+.booking-step,
+.reservation-choice,
+.confirm-detail,
+.owner-check,
+.owner-gallery-card-body,
+.owner-reservation-actions .btn {
+  padding: var(--space-3) var(--space-4);
+}
+
+.reservation-modal-head {
+  padding: var(--space-5) var(--space-5) var(--space-4);
+}
+
+.venue-detail-shell,
+.venue-detail-content,
+.owner-check-grid,
+.owner-dashboard-stats,
+.owner-reservation-detail-grid,
+.owner-location-toolbar,
+.owner-location-meta,
+.owner-location-confirmation,
+.my-reservations-grid {
+  gap: var(--space-4);
+}
+
+@media (max-width: 767.98px) {
+  .res-hero {
+    padding-block: var(--space-8) var(--space-6);
+  }
+
+  .res-search {
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+  }
+
+  .choice-card,
+  .reservation-empty-state,
+  .reservation-step-card,
+  .reservation-summary-card,
+  .confirm-card,
+  .premium-reservation-card,
+  .venue-side-card,
+  .owner-completion-card,
+  .owner-location-card,
+  .facility {
+    padding: var(--space-4);
+  }
 }

@@ -39,17 +39,31 @@
     radial-gradient(1200px 600px at 10% -10%, rgba(91, 140, 255, 0.25), transparent 60%),
     radial-gradient(900px 500px at 90% 10%, rgba(139, 92, 246, 0.25), transparent 60%),
     linear-gradient(180deg, #0b0f19 0%, #0b0f19 100%);
-  --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 25px 60px rgba(0, 0, 0, 0.45);
-  --shadow-glow: 0 10px 40px rgba(91, 140, 255, 0.35);
-  --shadow: var(--shadow-md);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(255, 255, 255, 0.035) inset;
+  --shadow-card: 0 14px 36px rgba(0, 0, 0, 0.22), 0 1px 0 rgba(255, 255, 255, 0.035) inset;
+  --shadow-floating: 0 20px 52px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.045) inset;
+  --shadow-modal: 0 28px 76px rgba(0, 0, 0, 0.42), 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+  --shadow-glow: 0 12px 34px rgba(91, 140, 255, 0.22);
+  --shadow-md: var(--shadow-card);
+  --shadow-lg: var(--shadow-floating);
+  --shadow: var(--shadow-card);
   --focus-ring: 0 0 0 4px rgba(91, 140, 255, 0.18);
   --focus-ring-strong: 0 0 0 4px rgba(91, 140, 255, 0.26);
-  --radius-sm: 10px;
-  --radius: 14px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+  --radius: var(--radius-md);
   --font-sans:
     "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: "Sora", "Manrope", system-ui, sans-serif;
@@ -137,10 +151,14 @@
     radial-gradient(1200px 600px at 10% -10%, rgba(91, 140, 255, 0.18), transparent 60%),
     radial-gradient(900px 500px at 90% 10%, rgba(139, 92, 246, 0.18), transparent 60%),
     linear-gradient(180deg, #f7f8fb 0%, #f7f8fb 100%);
-  --shadow-sm: 0 4px 14px rgba(15, 23, 42, 0.06);
-  --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 25px 60px rgba(15, 23, 42, 0.12);
-  --shadow: var(--shadow-md);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.045), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  --shadow-card: 0 12px 30px rgba(15, 23, 42, 0.075), 0 1px 0 rgba(255, 255, 255, 0.82) inset;
+  --shadow-floating: 0 18px 46px rgba(15, 23, 42, 0.12), 0 1px 0 rgba(255, 255, 255, 0.86) inset;
+  --shadow-modal: 0 28px 70px rgba(15, 23, 42, 0.16), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  --shadow-glow: 0 12px 30px rgba(91, 140, 255, 0.15);
+  --shadow-md: var(--shadow-card);
+  --shadow-lg: var(--shadow-floating);
+  --shadow: var(--shadow-card);
   --focus-ring: 0 0 0 4px rgba(91, 140, 255, 0.16);
   --focus-ring-strong: 0 0 0 4px rgba(91, 140, 255, 0.24);
 }
@@ -9619,10 +9637,10 @@ textarea.form-control:focus {
     rgba(255, 255, 255, 0.09),
     rgba(255, 255, 255, 0.032)
   );
-  --lux-shadow: 0 22px 64px rgba(0, 0, 0, 0.24), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
-  --lux-shadow-hover: 0 30px 86px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(255, 255, 255, 0.035) inset;
-  --lux-glow-primary: 0 18px 58px rgba(91, 140, 255, 0.22);
-  --lux-glow-gold: 0 18px 58px rgba(212, 167, 90, 0.2);
+  --lux-shadow: var(--shadow-card);
+  --lux-shadow-hover: var(--shadow-floating);
+  --lux-glow-primary: 0 12px 34px rgba(91, 140, 255, 0.18);
+  --lux-glow-gold: 0 12px 34px rgba(212, 167, 90, 0.16);
 }
 
 [data-theme="light"] {
@@ -9634,10 +9652,10 @@ textarea.form-control:focus {
     rgba(255, 255, 255, 0.96),
     rgba(241, 245, 249, 0.82)
   );
-  --lux-shadow: 0 18px 54px rgba(15, 23, 42, 0.09), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
-  --lux-shadow-hover: 0 24px 70px rgba(15, 23, 42, 0.13), 0 0 0 1px rgba(91, 140, 255, 0.045) inset;
-  --lux-glow-primary: 0 16px 44px rgba(91, 140, 255, 0.18);
-  --lux-glow-gold: 0 16px 44px rgba(180, 124, 36, 0.16);
+  --lux-shadow: var(--shadow-card);
+  --lux-shadow-hover: var(--shadow-floating);
+  --lux-glow-primary: 0 12px 30px rgba(91, 140, 255, 0.14);
+  --lux-glow-gold: 0 12px 30px rgba(180, 124, 36, 0.12);
 }
 
 .section,
@@ -10334,4 +10352,232 @@ samp {
   font-weight: var(--type-mono-weight);
   line-height: var(--type-mono-line);
   letter-spacing: var(--type-mono-track);
+}
+
+/* ---------- Phase 1.2 spacing, radius, shadow foundation ---------- */
+.section {
+  padding-block: var(--space-8);
+}
+
+.section-sm {
+  padding-block: var(--space-7);
+}
+
+.content-page {
+  padding-top: var(--space-7);
+}
+
+.content-hero {
+  padding-block: var(--space-7) var(--space-5);
+}
+
+.section-title,
+.content-grid,
+.how-steps,
+.footer-links-grid,
+.dashboard-stack,
+.newsletter-tags,
+.hero-badges,
+.hero-actions {
+  gap: var(--space-4);
+}
+
+.card-pro,
+.glass,
+.content-card,
+.content-toc,
+.testimonial,
+.trust-card,
+.how-step,
+.kpi,
+.filter-card,
+.dashboard-empty,
+.admin-empty,
+.dashboard-event-row,
+.dashboard-activity-item,
+.dashboard-detail-grid > div,
+.dashboard-mini-row,
+.event-card-pro,
+.event-ticket-panel,
+.checkout-summary-card,
+.checkout-form-card,
+.checkout-result-card,
+.qr-ticket,
+.checkin-result {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.newsletter,
+.modal-content,
+.dashboard-modal,
+.admin-modal,
+.qr-scanner-panel {
+  border-radius: var(--radius-lg);
+}
+
+.notification-panel,
+.dropdown-menu,
+.popover,
+.toast-pro {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-floating);
+}
+
+.modal-content,
+.dashboard-modal,
+.admin-modal {
+  box-shadow: var(--shadow-modal);
+}
+
+.card-pro:hover,
+.content-card:hover,
+.testimonial:hover,
+.trust-card:hover,
+.how-step:hover,
+.kpi:hover,
+.dashboard-mini-row:hover,
+.dashboard-event-row:hover,
+.event-card-pro:hover {
+  box-shadow: var(--shadow-floating);
+}
+
+.card-pro .body,
+.skeleton-card .body,
+.skeleton-card-body {
+  padding: var(--space-4) var(--space-4) var(--space-5);
+}
+
+.content-card,
+.trust-card,
+.how-step,
+.kpi,
+.filter-card,
+.dashboard-empty,
+.admin-empty,
+.checkout-form-card,
+.event-ticket-panel,
+.checkout-summary-card,
+.checkin-result {
+  padding: var(--space-5);
+}
+
+.dashboard-loading-skeleton,
+.skeleton-card-body,
+.notification-head,
+.notification-item,
+.availability-exception-panel,
+.owner-calendar-summary > div {
+  padding: var(--space-4);
+}
+
+.form-control,
+.form-select,
+textarea.form-control,
+.dashboard-search,
+.dashboard-select,
+.event-ticket-panel .qty-wrap,
+.event-ticket-panel .qty-wrap .btn {
+  border-radius: var(--radius-sm);
+}
+
+.btn,
+.btn-pill,
+.badge,
+.badge-soft,
+.status-badge,
+.chip,
+.page-link,
+.newsletter-tags span,
+.footer-badges span {
+  border-radius: var(--radius-pill);
+}
+
+.btn {
+  padding-inline: var(--space-5);
+}
+
+.btn-sm {
+  padding-inline: var(--space-4);
+}
+
+.btn-lg {
+  padding-inline: var(--space-6);
+}
+
+.icon-btn,
+.language-switcher,
+.brand-logo,
+.notification-icon,
+.trust-icon,
+.how-step span,
+.content-icon,
+.checkin-result > i,
+.qr-ticket .qr {
+  border-radius: var(--radius-sm);
+}
+
+.search-pill,
+.dashboard-tabs {
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-pill);
+}
+
+.search-pill .field {
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+}
+
+.dashboard-tabs button {
+  border-radius: var(--radius-pill);
+  padding: var(--space-2) var(--space-4);
+}
+
+.dashboard-table th,
+.dashboard-table td,
+.card-pro .table td,
+.card-pro .table th {
+  padding: var(--space-3) var(--space-4);
+}
+
+.footer {
+  padding-block: var(--space-7) var(--space-5);
+}
+
+.newsletter {
+  padding: var(--space-7);
+}
+
+@media (max-width: 991.98px) {
+  .section {
+    padding-block: var(--space-7);
+  }
+
+  .section-sm,
+  .content-page {
+    padding-block: var(--space-6);
+  }
+}
+
+@media (max-width: 767.98px) {
+  .section,
+  .section-sm {
+    padding-block: var(--space-6);
+  }
+
+  .content-card,
+  .trust-card,
+  .how-step,
+  .kpi,
+  .filter-card,
+  .dashboard-empty,
+  .admin-empty,
+  .checkout-form-card,
+  .event-ticket-panel,
+  .checkout-summary-card,
+  .checkin-result,
+  .newsletter {
+    padding: var(--space-4);
+  }
 }
