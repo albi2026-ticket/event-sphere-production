@@ -1578,25 +1578,130 @@ a:hover { color: var(--secondary); }
 
 .owner-analytics-toolbar {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 1rem;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, auto);
+  gap: .85rem;
+  align-items: stretch;
   margin-bottom: 1rem;
 }
 
 .owner-analytics-range {
-  flex-wrap: wrap;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: .25rem;
+  min-width: 0;
+  width: 100%;
+  overflow: visible;
 }
 
 .owner-analytics-filters {
   display: flex;
-  gap: .5rem;
+  flex-wrap: nowrap;
+  gap: .6rem;
+  align-items: center;
   justify-content: flex-end;
+  min-width: 0;
 }
 
 .owner-analytics-filters .form-select,
 .owner-analytics-filters .form-control {
-  min-width: 150px;
+  min-width: 0;
+  width: auto;
+}
+
+.owner-analytics-filters .form-select {
+  width: clamp(190px, 20vw, 260px);
+}
+
+.owner-analytics-filters .form-control {
+  width: 146px;
+}
+
+.owner-analytics-toolbar .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 1199.98px) {
+  .owner-analytics-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-analytics-range,
+  .owner-analytics-filters {
+    width: 100%;
+  }
+
+  .owner-analytics-filters {
+    justify-content: flex-start;
+  }
+
+  .owner-analytics-filters .form-select {
+    flex: 1 1 240px;
+    width: auto;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .owner-analytics-toolbar {
+    gap: .75rem;
+    padding: .7rem;
+  }
+
+  .owner-analytics-range {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .45rem;
+    padding: .35rem;
+    border-radius: 16px;
+  }
+
+  .owner-dashboard-page .owner-analytics-range .btn {
+    min-width: 0;
+    min-height: 46px;
+    padding: .62rem .5rem;
+    white-space: normal;
+  }
+
+  .owner-analytics-range .btn[data-owner-analytics-range="custom"] {
+    grid-column: 1 / -1;
+  }
+
+  .owner-analytics-filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .6rem;
+  }
+
+  .owner-analytics-filters .form-select,
+  .owner-analytics-filters .form-control,
+  .owner-analytics-filters .btn {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .owner-analytics-filters .form-select,
+  .owner-analytics-filters .btn {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 360px) {
+  .owner-analytics-range,
+  .owner-analytics-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-analytics-range .btn[data-owner-analytics-range="custom"] {
+    grid-column: auto;
+  }
+
+  .owner-analytics-filters .form-select,
+  .owner-analytics-filters .btn {
+    grid-column: auto;
+  }
 }
 
 .owner-analytics-panel,
@@ -2143,11 +2248,6 @@ a:hover { color: var(--secondary); }
   .owner-calendar-day,
   .owner-calendar-day-compact { min-height: auto; }
   .owner-calendar-day-items { padding: .75rem; }
-  .owner-analytics-toolbar { grid-template-columns: 1fr; }
-  .owner-analytics-range,
-  .owner-analytics-filters { width: 100%; }
-  .owner-analytics-range .btn { flex: 1 1 45%; }
-  .owner-analytics-filters { flex-direction: column; }
   .owner-analytics-mini-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .owner-analytics-rank { grid-template-columns: auto 1fr; }
   .owner-analytics-rank em { grid-column: 2; }
@@ -4524,6 +4624,10 @@ textarea.form-control:focus {
   box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
 }
 
+.owner-dashboard-page .owner-analytics-range {
+  padding: .25rem;
+}
+
 .dashboard-enterprise .dashboard-tabs button,
 .owner-dashboard-page .owner-reservation-tab,
 .owner-dashboard-page .owner-analytics-range .btn,
@@ -4531,6 +4635,14 @@ textarea.form-control:focus {
   border-radius: 999px;
   min-height: 40px;
   font-weight: 800;
+}
+
+.owner-dashboard-page .owner-analytics-range .btn {
+  flex: 1 1 0;
+  min-width: max-content;
+  padding: .55rem .8rem;
+  font-size: .86rem;
+  line-height: 1.1;
 }
 
 .dashboard-enterprise .dashboard-tabs button.active,
@@ -4577,6 +4689,13 @@ textarea.form-control:focus {
   border-radius: 18px;
   padding: .75rem;
   background: rgba(255,255,255,.03);
+}
+
+.owner-dashboard-page .owner-analytics-toolbar {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.022)),
+    color-mix(in oklab, var(--card) 82%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
 }
 
 .owner-dashboard-page .manager-calendar-workspace,
