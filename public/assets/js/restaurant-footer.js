@@ -2,7 +2,7 @@
   "use strict";
 
   const footerHTML = `
-<footer class="footer">
+<footer class="footer footer-premium footer-dining">
   <div class="container-xxl">
     <div class="footer-top">
       <div class="footer-brand">
@@ -18,25 +18,25 @@
     </div>
 
     <div class="footer-links-grid">
-      <div>
+      <div class="footer-link-group">
         <h6 data-i18n="footer.company">Company</h6>
         <a href="/about-dining" data-i18n="footer.about_dining">About Tiketa Dining</a>
         <a href="/contact-dining" data-i18n="footer.contact">Contact</a>
         <a href="/careers" data-i18n="footer.careers">Careers</a>
       </div>
-      <div>
+      <div class="footer-link-group">
         <h6 data-i18n="footer.restaurant_owners">Restaurant Owners</h6>
         <a href="/become-restaurant-partner" data-i18n="footer.become_restaurant_partner">Become a Restaurant Partner</a>
         <a href="/restaurant-owner-guide" data-i18n="footer.owner_guide">Owner Guide</a>
         <a href="/list-your-restaurant" data-i18n="footer.list_your_restaurant">List Your Restaurant</a>
       </div>
-      <div>
+      <div class="footer-link-group">
         <h6 data-i18n="footer.reservations">Reservations</h6>
         <a href="/how-reservations-work" data-i18n="footer.how_reservations_work">How Reservations Work</a>
         <a href="/reservation-support" data-i18n="footer.reservation_support">Reservation Support</a>
         <a href="/reservation-policy" data-i18n="footer.reservation_policy">Reservation Policy</a>
       </div>
-      <div>
+      <div class="footer-link-group">
         <h6 data-i18n="footer.legal">Legal</h6>
         <a href="/terms-of-service" data-i18n="footer.terms_short">Terms</a>
         <a href="/privacy-policy" data-i18n="footer.privacy_short">Privacy</a>

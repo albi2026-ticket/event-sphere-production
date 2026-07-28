@@ -4411,3 +4411,19 @@ body.reservation-success-burst::after {
 .nav-res .dropdown-item:focus {
   background: color-mix(in oklab, var(--res-gold-soft) 42%, transparent);
 }
+
+/* ---------- Phase 2.4: Dining footer bridge ---------- */
+.footer-dining .brand-logo {
+  background: var(--grad-res) !important;
+}
+
+.footer-dining .footer-social a:hover,
+.footer-dining .footer-social a:focus-visible {
+  border-color: color-mix(in oklab, var(--res-gold) 48%, transparent);
+  background: var(--grad-res);
+  color: #111827;
+}
+
+.footer-dining .footer-badges i {
+  color: var(--res-gold);
+}
