@@ -5190,6 +5190,12 @@ textarea.form-control:focus {
   padding: 1rem;
 }
 
+.manager-public-preview {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.048), rgba(255,255,255,.024)),
+    rgba(255,255,255,.028);
+}
+
 .manager-new-venue-card h3,
 .manager-public-preview h3 {
   margin: 0 0 .35rem;
@@ -5207,8 +5213,9 @@ textarea.form-control:focus {
 
 .manager-public-preview {
   display: grid;
-  grid-template-columns: 130px minmax(0, 1fr);
-  gap: 1rem;
+  grid-template-columns: 1fr;
+  gap: .95rem;
+  align-content: start;
 }
 
 .manager-public-preview img {
@@ -5216,13 +5223,43 @@ textarea.form-control:focus {
   aspect-ratio: 1;
   object-fit: cover;
   border-radius: 16px;
+  background: var(--card-2);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+}
+
+.manager-public-preview > div {
+  display: grid;
+  gap: .65rem;
+  min-width: 0;
+}
+
+.manager-public-preview .eyebrow-res {
+  margin-bottom: -.15rem;
+}
+
+.manager-public-preview h3 {
+  margin-bottom: -.2rem;
+}
+
+.manager-public-preview p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.manager-public-preview .btn {
+  width: fit-content;
+  margin-top: .1rem;
+}
+
+.manager-public-preview [data-owner-public-note] {
+  margin-top: -.25rem !important;
 }
 
 .manager-public-meta {
   display: flex;
   flex-wrap: wrap;
   gap: .45rem;
-  margin-bottom: .5rem;
+  margin-bottom: 0;
   font-size: .82rem;
 }
 
