@@ -6874,6 +6874,26 @@ textarea.form-control:focus {
     #fff;
 }
 
+@media (min-width: 992px) and (max-width: 1399.98px) {
+  #managerAvailabilityOpeningHours {
+    grid-column: 1 / -1;
+  }
+
+  .owner-hours-row {
+    grid-template-columns: minmax(7.5rem, 9rem) minmax(0, 1fr) auto;
+    gap: .7rem;
+  }
+
+  .owner-hours-times {
+    grid-template-columns: repeat(2, minmax(7.75rem, 1fr));
+  }
+
+  .owner-hours-closed {
+    grid-column: auto;
+    justify-content: flex-end;
+  }
+}
+
 @media (max-width: 1180px) {
   .manager-shell {
     grid-template-columns: minmax(232px, 24vw) minmax(0, 1fr);
@@ -6885,15 +6905,6 @@ textarea.form-control:focus {
 
   .manager-sidebar-collapsed {
     grid-template-columns: var(--manager-sidebar-collapsed-width) minmax(0, 1fr);
-  }
-
-  .owner-hours-row {
-    grid-template-columns: minmax(7.5rem, 9rem) minmax(0, 1fr);
-  }
-
-  .owner-hours-closed {
-    grid-column: 2;
-    justify-content: flex-start;
   }
 
   [data-owner-gallery] {
