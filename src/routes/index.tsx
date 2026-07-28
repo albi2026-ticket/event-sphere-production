@@ -62,7 +62,7 @@ function Index() {
         minHeight: "100vh",
         background: "#0B0F19",
         color: "#F8FAFC",
-        fontFamily: "Inter, system-ui, sans-serif",
+        fontFamily: "Manrope, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       }}
     >
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "5rem 1.5rem" }}>
@@ -83,7 +83,7 @@ function Index() {
         </div>
         <h1
           style={{
-            fontFamily: "Poppins, sans-serif",
+            fontFamily: "Sora, Manrope, system-ui, sans-serif",
             fontSize: "clamp(2.4rem, 5vw, 4rem)",
             lineHeight: 1.05,
             margin: "1rem 0",
@@ -144,7 +144,12 @@ function Index() {
               <div
                 style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
               >
-                <strong style={{ fontFamily: "Poppins, sans-serif", fontSize: "1.05rem" }}>
+                <strong
+                  style={{
+                    fontFamily: "Sora, Manrope, system-ui, sans-serif",
+                    fontSize: "1.05rem",
+                  }}
+                >
                   {p.title}
                 </strong>
                 <span style={{ color: "#5B8CFF" }}>→</span>
@@ -180,7 +185,8 @@ function Index() {
               color: "#94A3B8",
               marginTop: "0.75rem",
               marginBottom: 0,
-              fontFamily: "ui-monospace, Menlo, monospace",
+              fontFamily:
+                "ui-monospace, 'SFMono-Regular', 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace",
               fontSize: 13,
             }}
           >{`public/

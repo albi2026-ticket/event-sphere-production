@@ -46,8 +46,7 @@ const errorCopy = {
     offline: {
       eyebrow: "Offline",
       title: "You appear to be offline.",
-      description:
-        "Check your internet connection, then try loading the page again.",
+      description: "Check your internet connection, then try loading the page again.",
       primary: "Try again",
       secondary: "Go home",
     },
@@ -80,8 +79,7 @@ const errorCopy = {
     offline: {
       eyebrow: "Pa internet",
       title: "Duket se nuk jeni të lidhur me internetin.",
-      description:
-        "Kontrolloni lidhjen tuaj me internetin dhe provoni ta ngarkoni faqen përsëri.",
+      description: "Kontrolloni lidhjen tuaj me internetin dhe provoni ta ngarkoni faqen përsëri.",
       primary: "Provo përsëri",
       secondary: "Shko në ballinë",
     },
@@ -153,7 +151,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   const status = Number((error as Error & { status?: number }).status || 500);
   const language = currentLanguage();
-  const key = status === 403 ? "forbidden" : typeof navigator !== "undefined" && !navigator.onLine ? "offline" : "server";
+  const key =
+    status === 403
+      ? "forbidden"
+      : typeof navigator !== "undefined" && !navigator.onLine
+        ? "offline"
+        : "server";
   const copy = errorCopy[language][key];
 
   return (
@@ -193,6 +196,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@Tiketa" },
     ],
     links: [
+      {
+        rel: "preconnect",
+        href: "https://fonts.googleapis.com",
+      },
+      {
+        rel: "preconnect",
+        href: "https://fonts.gstatic.com",
+        crossOrigin: "anonymous",
+      },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,

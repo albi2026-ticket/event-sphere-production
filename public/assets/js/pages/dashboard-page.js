@@ -668,8 +668,8 @@
     if (statsRow) {
       statsRow.innerHTML = `
         <div class="col-md-4"><div class="kpi"><div class="label" data-i18n="dashboard.total_events_attended">${tr("dashboard.total_events_attended", "Total Events Attended")}</div><div class="value">${attended.length}</div><div class="delta" data-i18n="dashboard.checked_in_tickets">${tr("dashboard.checked_in_tickets", "Checked-in tickets")}</div></div></div>
-        <div class="col-md-4"><div class="kpi"><div class="label" data-i18n="dashboard.most_recent_event">${tr("dashboard.most_recent_event", "Most Recent Event")}</div><div class="value" style="font-size:1.05rem">${escape(mostRecent?.event?.title || "-")}</div><div class="delta">${escape(dateTimeLabel(mostRecent?.checked_in_at || mostRecent?.event?.starts_at))}</div></div></div>
-        <div class="col-md-4"><div class="kpi"><div class="label" data-i18n="dashboard.favorite_category">${tr("dashboard.favorite_category", "Favorite Category")}</div><div class="value" style="font-size:1.25rem">${escape(favoriteCategory)}</div><div class="delta" data-i18n="dashboard.based_on_attendance">${tr("dashboard.based_on_attendance", "Based on attendance")}</div></div></div>`;
+        <div class="col-md-4"><div class="kpi"><div class="label" data-i18n="dashboard.most_recent_event">${tr("dashboard.most_recent_event", "Most Recent Event")}</div><div class="value kpi-value-compact">${escape(mostRecent?.event?.title || "-")}</div><div class="delta">${escape(dateTimeLabel(mostRecent?.checked_in_at || mostRecent?.event?.starts_at))}</div></div></div>
+        <div class="col-md-4"><div class="kpi"><div class="label" data-i18n="dashboard.favorite_category">${tr("dashboard.favorite_category", "Favorite Category")}</div><div class="value kpi-value-standard">${escape(favoriteCategory)}</div><div class="delta" data-i18n="dashboard.based_on_attendance">${tr("dashboard.based_on_attendance", "Based on attendance")}</div></div></div>`;
     }
 
     if (!body) return;
