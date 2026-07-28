@@ -268,6 +268,27 @@ a:hover { color: var(--secondary); }
   z-index: 1080;
   animation: notificationDrop .18s ease;
 }
+
+@media (max-width: 991.98px) {
+  .notification-panel {
+    position: fixed;
+    top: var(--notification-panel-top, calc(64px + max(12px, env(safe-area-inset-top))));
+    right: auto;
+    left: var(--notification-panel-left, max(12px, env(safe-area-inset-left)));
+    width: var(
+      --notification-panel-width,
+      min(
+        360px,
+        calc(100vw - max(12px, env(safe-area-inset-left)) - max(12px, env(safe-area-inset-right)))
+      )
+    );
+    max-height: min(
+      520px,
+      calc(100dvh - var(--notification-panel-top, 76px) - max(12px, env(safe-area-inset-bottom)))
+    );
+  }
+}
+
 .notification-head {
   display: flex;
   justify-content: space-between;
@@ -2688,10 +2709,8 @@ canvas {
     width: 100%;
   }
   .navbar-collapse .notification-panel {
-    position: static;
-    width: 100%;
+    width: var(--notification-panel-width, 100%);
     max-height: 60dvh;
-    margin-top: .5rem;
   }
   .navbar-collapse .dropdown-menu {
     position: static !important;

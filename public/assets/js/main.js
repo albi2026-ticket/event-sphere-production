@@ -361,6 +361,50 @@
   }
 
   let notificationsBound = false;
+
+  function resetNotificationPanelPosition(panel) {
+    if (!panel) return;
+    panel.style.removeProperty("--notification-panel-left");
+    panel.style.removeProperty("--notification-panel-top");
+    panel.style.removeProperty("--notification-panel-width");
+  }
+
+  function positionNotificationPanel(panel, toggle) {
+    if (!panel || !toggle) return;
+    if (!window.matchMedia("(max-width: 991.98px)").matches) {
+      resetNotificationPanelPosition(panel);
+      return;
+    }
+
+    const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    const edge = 12;
+    const toggleRect = toggle.getBoundingClientRect();
+    const panelWidth = Math.min(360, Math.max(0, viewportWidth - edge * 2));
+    const idealLeft = toggleRect.right - panelWidth;
+    const left = Math.min(Math.max(idealLeft, edge), viewportWidth - panelWidth - edge);
+    const top = Math.max(edge, Math.min(toggleRect.bottom + 12, viewportHeight - edge));
+
+    panel.style.setProperty(
+      "--notification-panel-left",
+      `max(${left}px, calc(env(safe-area-inset-left) + ${edge}px))`,
+    );
+    panel.style.setProperty(
+      "--notification-panel-top",
+      `max(${top}px, calc(env(safe-area-inset-top) + ${edge}px))`,
+    );
+    panel.style.setProperty(
+      "--notification-panel-width",
+      `min(${panelWidth}px, calc(100vw - max(${edge}px, env(safe-area-inset-left)) - max(${edge}px, env(safe-area-inset-right))))`,
+    );
+  }
+
+  function positionOpenNotificationPanel() {
+    const panel = document.querySelector("[data-notification-panel]:not([hidden])");
+    const toggle = document.querySelector("[data-notification-toggle][aria-expanded='true']");
+    positionNotificationPanel(panel, toggle);
+  }
+
   function setupNotifications() {
     renderNotifications();
     if (window.EventSphereAuth?.isLoggedIn?.()) {
@@ -377,6 +421,8 @@
         const open = panel.hidden;
         panel.hidden = !open;
         toggle.setAttribute("aria-expanded", open ? "true" : "false");
+        if (open) positionNotificationPanel(panel, toggle);
+        else resetNotificationPanelPosition(panel);
         if (open) refreshNotifications(true);
         else renderNotifications();
         return;
@@ -412,11 +458,14 @@
       }
       if (!root && panel) {
         panel.hidden = true;
+        resetNotificationPanelPosition(panel);
         document
           .querySelector("[data-notification-toggle]")
           ?.setAttribute("aria-expanded", "false");
       }
     });
+    window.addEventListener("resize", positionOpenNotificationPanel, { passive: true });
+    window.addEventListener("orientationchange", positionOpenNotificationPanel, { passive: true });
   }
 
   window.EventSphereNotifications = {
