@@ -5287,6 +5287,155 @@ textarea.form-control:focus {
   padding: clamp(1rem, 1.8vw, 1.25rem);
 }
 
+.manager-guests-workspace {
+  border: 1px solid color-mix(in oklab, var(--border-strong) 74%, transparent);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.062), rgba(255,255,255,.024)),
+    var(--card);
+  box-shadow: 0 20px 58px rgba(0,0,0,.2);
+  padding: clamp(1rem, 1.8vw, 1.25rem);
+}
+
+.manager-guests-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  justify-content: flex-end;
+}
+
+.manager-guests-summary span {
+  display: grid;
+  min-width: 116px;
+  gap: .08rem;
+  padding: .7rem .85rem;
+  border: 1px solid color-mix(in oklab, var(--border-strong) 72%, transparent);
+  border-radius: 16px;
+  background: rgba(255,255,255,.038);
+}
+
+.manager-guests-summary strong {
+  color: var(--text);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.manager-guests-summary small {
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 800;
+}
+
+.manager-guests-toolbar {
+  margin-bottom: 1rem;
+}
+
+.manager-guest-search {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  width: min(520px, 100%);
+  min-height: 48px;
+  padding: .25rem .85rem;
+  border: 1px solid color-mix(in oklab, var(--border-strong) 72%, transparent);
+  border-radius: 16px;
+  background: color-mix(in oklab, var(--card) 86%, transparent);
+  color: var(--muted);
+}
+
+.manager-guest-search:focus-within {
+  border-color: color-mix(in oklab, var(--primary) 54%, var(--border-strong));
+  box-shadow: 0 0 0 .2rem color-mix(in oklab, var(--primary) 18%, transparent);
+}
+
+.manager-guest-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 750;
+}
+
+.manager-guest-search input::placeholder {
+  color: var(--muted);
+}
+
+.manager-guests-list {
+  display: grid;
+  gap: .75rem;
+}
+
+.manager-guest-card {
+  display: grid;
+  grid-template-columns: 48px minmax(180px, 1.2fr) minmax(86px, .45fr) minmax(150px, .9fr) minmax(150px, .9fr) 28px;
+  align-items: center;
+  gap: .85rem;
+  width: 100%;
+  min-height: 82px;
+  padding: .85rem;
+  border: 1px solid color-mix(in oklab, var(--border-strong) 72%, transparent);
+  border-radius: 18px;
+  background: rgba(255,255,255,.032);
+  color: var(--text);
+  text-align: left;
+  transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+
+.manager-guest-card:hover,
+.manager-guest-card:focus-visible {
+  border-color: color-mix(in oklab, var(--primary) 38%, var(--border-strong));
+  background: rgba(91,140,255,.075);
+  transform: translateY(-1px);
+  outline: 0;
+}
+
+.manager-guest-avatar {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: var(--grad-primary);
+  color: #fff;
+  font-weight: 900;
+}
+
+.manager-guest-main,
+.manager-guest-metric,
+.manager-guest-reservation {
+  display: grid;
+  min-width: 0;
+  gap: .14rem;
+}
+
+.manager-guest-main strong,
+.manager-guest-reservation strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manager-guest-main small,
+.manager-guest-metric small,
+.manager-guest-reservation small {
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 750;
+}
+
+.manager-guest-metric strong {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.manager-guest-action {
+  color: var(--muted);
+  text-align: right;
+}
+
 .manager-reservations-header {
   display: flex;
   align-items: flex-start;
@@ -5982,6 +6131,7 @@ textarea.form-control:focus {
 .manager-dashboard-panel,
 .manager-quick-actions-card,
 .manager-reservations-workspace,
+.manager-guests-workspace,
 .manager-calendar-workspace,
 .manager-analytics-workspace,
 .manager-config-placeholder {
@@ -6026,6 +6176,7 @@ textarea.form-control:focus {
 }
 
 .manager-workspace-main > .manager-reservations-workspace,
+.manager-workspace-main > .manager-guests-workspace,
 .manager-workspace-main > .manager-config-placeholder,
 .manager-workspace-main > [data-owner-venue-form],
 .manager-workspace-main > [data-owner-reservation-panel],
@@ -6034,6 +6185,7 @@ textarea.form-control:focus {
 }
 
 .manager-workspace-main > .manager-reservations-workspace:not([hidden]),
+.manager-workspace-main > .manager-guests-workspace:not([hidden]),
 .manager-workspace-main > .manager-config-placeholder:not([hidden]),
 .manager-workspace-main > [data-owner-reservation-panel]:not([hidden]),
 .manager-workspace-main .manager-config-module:not([hidden]) {
@@ -7178,6 +7330,22 @@ textarea.form-control:focus {
     grid-template-columns: 1fr;
   }
 
+  .manager-guest-card {
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+  }
+
+  .manager-guest-metric {
+    justify-items: end;
+  }
+
+  .manager-guest-reservation {
+    grid-column: 2 / -1;
+  }
+
+  .manager-guest-action {
+    display: none;
+  }
+
   .manager-operation-row {
     align-items: flex-start;
     flex-direction: column;
@@ -7365,6 +7533,41 @@ textarea.form-control:focus {
   .manager-topbar-actions {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .manager-guests-summary,
+  .manager-guests-summary span,
+  .manager-guest-search {
+    width: 100%;
+  }
+
+  .manager-guests-summary {
+    justify-content: stretch;
+  }
+
+  .manager-guest-card {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: .7rem;
+    align-items: start;
+  }
+
+  .manager-guest-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  .manager-guest-main,
+  .manager-guest-metric,
+  .manager-guest-reservation {
+    grid-column: 2;
+    justify-items: start;
+  }
+
+  .manager-guest-metric {
+    display: flex;
+    align-items: baseline;
+    gap: .35rem;
   }
 
   .manager-topbar-button span,

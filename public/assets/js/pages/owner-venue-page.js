@@ -2170,6 +2170,7 @@
     renderReservationWorkspaceHeader();
     renderReservationWorkspaceSummary();
     renderActiveReservationFilters();
+    renderGuestsWorkspace();
     const signature = loading
       ? `loading:${reservationQuery()}`
       : state.reservations
@@ -2213,6 +2214,168 @@
           .join("")
       : reservationEmptyState();
     renderReservationStats();
+  }
+
+  function guestIdentity(reservation) {
+    const email = String(reservation.email || "").trim().toLowerCase();
+    if (email) return `email:${email}`;
+    const phone = String(reservation.phone || "").replace(/\D/g, "");
+    if (phone) return `phone:${phone}`;
+    return `name:${String(reservation.guest_name || guestFallback()).trim().toLowerCase()}`;
+  }
+
+  function buildGuestProfiles() {
+    const today = todayValue();
+    const profiles = new Map();
+    state.reservations.forEach((reservation) => {
+      const key = guestIdentity(reservation);
+      const existing = profiles.get(key) || {
+        key,
+        name: reservation.guest_name || guestFallback(),
+        phone: reservation.phone || "",
+        email: reservation.email || "",
+        reservations: [],
+        totalCovers: 0,
+      };
+      if (!existing.phone && reservation.phone) existing.phone = reservation.phone;
+      if (!existing.email && reservation.email) existing.email = reservation.email;
+      if (reservation.guest_name && existing.name === guestFallback()) existing.name = reservation.guest_name;
+      existing.reservations.push(reservation);
+      existing.totalCovers += Number(reservation.party_size || 0);
+      profiles.set(key, existing);
+    });
+
+    return Array.from(profiles.values()).map((profile) => {
+      const sorted = profile.reservations.slice().sort((a, b) => reservationDateTime(a) - reservationDateTime(b));
+      const pastOrToday = sorted.filter((reservation) => reservation.reservation_date <= today);
+      const upcoming = sorted.filter(
+        (reservation) =>
+          reservation.reservation_date >= today &&
+          !["completed", "cancelled", "no_show"].includes(reservation.status),
+      );
+      const lastReservation = (pastOrToday.length ? pastOrToday : sorted).slice(-1)[0] || null;
+      const nextReservation = upcoming[0] || null;
+      return {
+        ...profile,
+        visitCount: profile.reservations.length,
+        lastReservation,
+        nextReservation,
+        statuses: Array.from(new Set(profile.reservations.map((item) => item.status).filter(Boolean))),
+      };
+    });
+  }
+
+  function guestSearchText(profile) {
+    return [
+      profile.name,
+      profile.phone,
+      profile.email,
+      profile.statuses.join(" "),
+      profile.reservations.map((reservation) => reservation.id).join(" "),
+      profile.reservations.map((reservation) => reservation.venue?.name).join(" "),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+  }
+
+  function guestReservationLabel(reservation) {
+    if (!reservation) return tr("manager.none_scheduled", "None scheduled");
+    return [
+      dateLabel(reservation.reservation_date),
+      timeLabel(reservation.reservation_time),
+      reservation.venue?.name,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  }
+
+  function renderGuestCard(profile) {
+    const contact = [profile.phone, profile.email].filter(Boolean).join(" · ");
+    const next = profile.nextReservation;
+    return `
+      <button class="manager-guest-card" type="button" data-manager-guest="${esc(profile.key)}">
+        <span class="manager-guest-avatar">${esc(String(profile.name || guestFallback()).trim().slice(0, 1).toUpperCase() || "G")}</span>
+        <span class="manager-guest-main">
+          <strong>${esc(profile.name || guestFallback())}</strong>
+          <small>${esc(contact || tr("manager.contact_not_provided", "Contact not provided"))}</small>
+        </span>
+        <span class="manager-guest-metric">
+          <strong>${profile.visitCount}</strong>
+          <small>${profile.visitCount === 1 ? tr("manager.visit", "visit") : tr("manager.visits", "visits")}</small>
+        </span>
+        <span class="manager-guest-reservation">
+          <small>${tr("manager.last_reservation", "Last reservation")}</small>
+          <strong>${esc(guestReservationLabel(profile.lastReservation))}</strong>
+        </span>
+        <span class="manager-guest-reservation">
+          <small>${tr("manager.next_reservation", "Next reservation")}</small>
+          <strong>${esc(guestReservationLabel(next))}</strong>
+        </span>
+        <span class="manager-guest-action"><i class="bi bi-chevron-right"></i></span>
+      </button>
+    `;
+  }
+
+  function renderGuestsWorkspace() {
+    const list = $("[data-manager-guests-list]");
+    const summary = $("[data-manager-guests-summary]");
+    if (!list) return;
+    const query = String($("[data-manager-guest-search]")?.value || "").trim().toLowerCase();
+    const profiles = buildGuestProfiles().sort((a, b) => {
+      const nextA = a.nextReservation ? reservationDateTime(a.nextReservation).getTime() : Number.MAX_SAFE_INTEGER;
+      const nextB = b.nextReservation ? reservationDateTime(b.nextReservation).getTime() : Number.MAX_SAFE_INTEGER;
+      if (nextA !== nextB) return nextA - nextB;
+      return (b.lastReservation ? reservationDateTime(b.lastReservation).getTime() : 0) -
+        (a.lastReservation ? reservationDateTime(a.lastReservation).getTime() : 0);
+    });
+    const filtered = profiles.filter((profile) =>
+      query ? guestSearchText(profile).includes(query) : true,
+    );
+    const upcomingCount = profiles.filter((profile) => profile.nextReservation).length;
+    if (summary) {
+      summary.innerHTML = `
+        <span><strong>${profiles.length}</strong><small>${tr("manager.total_guests", "Total guests")}</small></span>
+        <span><strong>${upcomingCount}</strong><small>${tr("manager.with_upcoming", "With upcoming")}</small></span>
+      `;
+    }
+    if (!profiles.length) {
+      list.innerHTML = dashboardEmpty(
+        "bi-people",
+        tr("manager.no_guests_yet", "No guests yet."),
+        tr("manager.no_guests_yet_copy", "Guest profiles will appear here as reservations are loaded."),
+        `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-manager-quick-action="preview">${tr("manager.preview_public_page", "Preview public page")}</button><button class="btn btn-glass btn-sm" type="button" data-manager-quick-action="opening-hours">${tr("manager.check_availability", "Check availability")}</button></div>`,
+      );
+      return;
+    }
+    if (!filtered.length) {
+      list.innerHTML = dashboardEmpty(
+        "bi-search",
+        tr("manager.no_guest_results", "No guests match this search."),
+        tr("manager.no_guest_results_copy", "Try a guest name, phone, email, reservation ID, venue, or status."),
+      );
+      return;
+    }
+    list.innerHTML = filtered.map(renderGuestCard).join("");
+  }
+
+  function prepareGuestDetail(profileKey) {
+    const profile = buildGuestProfiles().find((item) => item.key === profileKey);
+    if (!profile) return;
+    state.reservationWorkspace.view = "all";
+    state.reservationWorkspace.search = profile.email || profile.phone || profile.name;
+    state.reservationWorkspace.dateEnd = "";
+    state.reservationWorkspace.partySize = "";
+    state.reservationWorkspace.occasion = "";
+    state.reservationFilters = { view: "", status: "", date: "", venue_id: "" };
+    syncReservationWorkspaceControls();
+    lastReservationRenderSignature = "";
+    window.tkToast?.(
+      tr("manager.guest_detail_prepared", "Guest detail is prepared. Showing this guest's loaded reservations."),
+      "info",
+    );
+    openManagerSection("reservations");
+    renderReservations();
   }
 
   function renderCalendarSummary() {
@@ -3677,6 +3840,7 @@
     if (activeSection === "reservations") switchOwnerReservationPanel("list");
     if (activeSection === "calendar") switchOwnerReservationPanel("calendar");
     if (activeSection === "analytics") switchOwnerReservationPanel("analytics");
+    if (activeSection === "guests") renderGuestsWorkspace();
 
     document.body.dataset.managerWorkspace = activeSection;
     localStorage.setItem("tiketa_manager_workspace", activeSection);
@@ -3744,9 +3908,6 @@
     }
     if (options.resetScroll !== false) {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    }
-    if (activeSection === "guests" && !options.silent) {
-      window.tkToast?.(tr("manager.guest_workspace_later", "Guest workspace will be available in a later manager phase."), "info");
     }
   }
 
@@ -3842,13 +4003,12 @@
       terms: "settings preferences notifications language danger zone account",
     },
     {
-      type: "empty",
+      type: "workspace",
+      section: "guests",
       icon: "bi-people",
       title: "Guests",
-      subtitle: "Guest workspace is not implemented yet. Guest names are searchable through loaded reservations.",
+      subtitle: "Guest list, visit counts, and reservation history from loaded data",
       terms: "guests guest customers crm profiles history",
-      emptyTitle: "Guest workspace is not available yet.",
-      emptyCopy: "Search loaded reservations by guest name, phone, email, or reservation ID for now.",
     },
   ];
 
@@ -4223,6 +4383,14 @@
           closeManagerMobileSidebar();
         });
       });
+
+    $("[data-manager-guest-search]")?.addEventListener("input", renderGuestsWorkspace);
+
+    $("[data-manager-guests-list]")?.addEventListener("click", (event) => {
+      const guest = event.target.closest("[data-manager-guest]");
+      if (!guest) return;
+      prepareGuestDetail(guest.dataset.managerGuest);
+    });
 
     $("[data-manager-search]")?.addEventListener("click", openManagerSearch);
 

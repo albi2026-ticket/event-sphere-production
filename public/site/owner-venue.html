@@ -539,12 +539,22 @@
       </div>
   </section>
 
-  <section class="manager-config-placeholder mb-4" id="managerGuestsWorkspace" hidden>
-    <div>
-      <span class="eyebrow-res"><i class="bi bi-people"></i> <span data-i18n="manager.daily_operations">Daily Operations</span></span>
-      <h2 data-i18n="manager.guests">Guests</h2>
-      <p data-i18n="manager.guest_workspace_later">Guest workspace will be available in a later manager phase.</p>
+  <section class="manager-guests-workspace mb-4" id="managerGuestsWorkspace" hidden>
+    <div class="manager-config-header">
+      <div>
+        <span class="eyebrow-res"><i class="bi bi-people"></i> <span data-i18n="manager.daily_operations">Daily Operations</span></span>
+        <h2 data-i18n="manager.guests">Guests</h2>
+        <p data-i18n="manager.guests_workspace_copy">Guest history from loaded reservations, ready for the future detail view.</p>
+      </div>
+      <div class="manager-guests-summary" data-manager-guests-summary></div>
     </div>
+    <div class="manager-guests-toolbar">
+      <label class="manager-guest-search" for="managerGuestSearch">
+        <i class="bi bi-search"></i>
+        <input id="managerGuestSearch" type="search" data-manager-guest-search placeholder="Search guests, phone, email, status..." aria-label="Search guests" data-i18n-attr="placeholder:manager.search_guests_placeholder,aria-label:manager.search_guests">
+      </label>
+    </div>
+    <div class="manager-guests-list" data-manager-guests-list></div>
   </section>
 
   <form data-owner-venue-form novalidate>
