@@ -3925,3 +3925,116 @@ body.reservation-success-burst::after {
     padding: var(--space-4);
   }
 }
+
+/* ---- Phase 1.3 reservation interaction bridge ---- */
+.btn-res-grad,
+.btn-gold,
+.btn-gold-outline,
+.venue-card .footer-row .btn,
+.venue-card-premium .footer-row .btn,
+.premium-reservation-card .btn,
+.reservation-booking-modal .modal-footer .btn,
+.reservation-step-card .btn,
+.confirm-card .btn,
+.my-reservation-actions .btn,
+.owner-preview-actions .btn,
+.venue-google-map-actions .btn,
+.venue-google-map-buttons .btn {
+  min-height: var(--button-height-md);
+  gap: var(--button-gap);
+  padding-inline: var(--button-pad-x-md);
+  border-radius: var(--button-radius);
+  transition: var(--button-transition);
+}
+
+.btn-res-grad,
+.btn-gold {
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-res-grad:hover,
+.btn-gold:hover,
+.btn-gold-outline:hover,
+.venue-card .footer-row .btn:hover,
+.venue-card-premium .footer-row .btn:hover,
+.premium-reservation-card .btn:hover,
+.reservation-step-card .btn:hover,
+.confirm-card .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-floating);
+}
+
+.btn-gold-outline {
+  background: transparent;
+  border-color: color-mix(in oklab, var(--res-gold) 62%, transparent);
+}
+
+.btn-gold-outline:hover {
+  background: var(--res-gold-soft);
+  border-color: color-mix(in oklab, var(--res-gold) 78%, transparent);
+}
+
+.reservation-picker-trigger,
+.reservation-choice,
+.chip-select,
+.owner-time-select,
+.owner-location-search-shell .form-control,
+.reservation-booking-modal .form-control,
+.reservation-booking-modal .form-select,
+.reservation-booking-modal textarea.form-control {
+  min-height: var(--field-height-md);
+  border-radius: var(--field-radius);
+  border-color: var(--field-border);
+  background-color: var(--field-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.reservation-picker-trigger:hover,
+.reservation-choice:not(:disabled):hover,
+.chip-select:not(.disabled):hover,
+.owner-time-select:hover,
+.reservation-booking-modal .form-control:hover,
+.reservation-booking-modal .form-select:hover,
+.reservation-booking-modal textarea.form-control:hover {
+  border-color: color-mix(in oklab, var(--res-gold) 54%, var(--border-strong));
+  background-color: var(--field-bg-hover);
+  transform: translateY(-1px);
+}
+
+.reservation-picker-trigger:focus,
+.reservation-choice:focus-visible,
+.chip-select:focus-visible,
+.owner-time-select:focus,
+.reservation-booking-modal .form-control:focus,
+.reservation-booking-modal .form-select:focus,
+.reservation-booking-modal textarea.form-control:focus {
+  outline: 0;
+  border-color: var(--res-gold);
+  box-shadow: 0 0 0 4px rgba(212, 167, 90, 0.18);
+}
+
+.reservation-choice[aria-selected="true"],
+.chip-select.active,
+.owner-reservation-tab.active,
+.owner-calendar-view-toggle .btn.active,
+.owner-analytics-range .btn.active {
+  box-shadow: var(--shadow-glow);
+}
+
+.reservation-choice:disabled,
+.reservation-picker-trigger:disabled,
+.owner-reservation-actions .btn:disabled,
+.reservation-booking-modal .btn:disabled,
+.chip-select.disabled {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.58;
+  filter: saturate(0.72);
+  transform: none;
+  box-shadow: none;
+}

@@ -139,6 +139,14 @@
   --shadow-floating: 0 18px 46px rgb(15 23 42 / 12%), 0 1px 0 rgb(255 255 255 / 86%) inset;
   --shadow-modal: 0 28px 70px rgb(15 23 42 / 16%), 0 1px 0 rgb(255 255 255 / 90%) inset;
   --radius: var(--radius-md);
+  --button-height-sm: 36px;
+  --button-height-md: 44px;
+  --button-height-lg: 52px;
+  --button-radius: var(--radius-pill);
+  --field-height-sm: 38px;
+  --field-height-md: 46px;
+  --field-height-lg: 52px;
+  --field-radius: var(--radius-sm);
   --background: oklch(0.982 0.006 255);
   --foreground: oklch(0.174 0.032 262);
   --card: oklch(1 0 0);
