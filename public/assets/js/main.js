@@ -960,6 +960,41 @@
     },
   };
 
+  function normalizePath(value) {
+    try {
+      const url = new URL(value, location.origin);
+      return url.pathname.replace(/\/$/, "") || "/";
+    } catch {
+      return String(value || "").replace(/\/$/, "") || "/";
+    }
+  }
+
+  function syncHeaderNavigationState() {
+    const current = normalizePath(location.pathname);
+    document.querySelectorAll(".nav-link-pro[href]").forEach((link) => {
+      const href = link.getAttribute("href") || "";
+      if (!href || href === "#") return;
+      const target = normalizePath(href);
+      const active =
+        current === target ||
+        (target === "/events/list" && current.startsWith("/event")) ||
+        (target === "/restaurants" && current.startsWith("/restaurant"));
+      link.classList.toggle("active", active);
+      if (active) link.setAttribute("aria-current", "page");
+      else link.removeAttribute("aria-current");
+    });
+  }
+
+  function syncHeaderScrollState() {
+    const update = () => {
+      document.querySelectorAll(".nav-blur").forEach((nav) => {
+        nav.classList.toggle("is-scrolled", window.scrollY > 8);
+      });
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+  }
+
   /* ---------- Init ---------- */
   document.addEventListener("DOMContentLoaded", () => {
     paintFavs();
@@ -978,13 +1013,10 @@
       .querySelectorAll("[data-year]")
       .forEach((el) => (el.textContent = new Date().getFullYear()));
 
-    // Active nav link by filename
-    const path = location.pathname.split("/").pop() || "/";
-    document.querySelectorAll(".nav-link-pro").forEach((a) => {
-      const h = a.getAttribute("href") || "";
-      if (h.endsWith(path)) a.classList.add("active");
-    });
+    syncHeaderNavigationState();
+    syncHeaderScrollState();
   });
+  document.addEventListener("event-sphere:partials-loaded", syncHeaderNavigationState);
   document.addEventListener("event-sphere:partials-loaded", observeFooters);
   document.addEventListener("event-sphere:partials-loaded", observeImages);
 })();

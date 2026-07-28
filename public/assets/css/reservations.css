@@ -4370,3 +4370,44 @@ body.reservation-success-burst::after {
     transform: none;
   }
 }
+
+/* ---------- Phase 2.3: Reservation header bridge ---------- */
+.nav-res {
+  --header-surface: color-mix(in oklab, var(--bg) 84%, transparent);
+  --header-surface-scrolled: color-mix(in oklab, var(--bg) 94%, transparent);
+  border-bottom-color: color-mix(in oklab, var(--res-gold) 12%, var(--border));
+}
+
+.nav-res.is-scrolled {
+  border-bottom-color: color-mix(in oklab, var(--res-gold) 22%, var(--border-strong));
+}
+
+.nav-res .brand-logo {
+  background: var(--grad-res) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.nav-res .nav-link-pro:hover,
+.nav-res .nav-link-pro:focus-visible {
+  color: var(--text) !important;
+  background: color-mix(in oklab, var(--res-gold-soft) 44%, transparent);
+}
+
+.nav-res .nav-link-pro.active,
+.nav-res .nav-link-pro[aria-current="page"] {
+  color: var(--text) !important;
+  border-color: color-mix(in oklab, var(--res-gold) 34%, var(--border));
+  background: color-mix(in oklab, var(--res-gold-soft) 54%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+
+.nav-res .navbar-toggler:hover,
+.nav-res .icon-btn:hover {
+  border-color: color-mix(in oklab, var(--res-gold) 38%, var(--border-strong));
+  color: var(--res-gold);
+}
+
+.nav-res .dropdown-item:hover,
+.nav-res .dropdown-item:focus {
+  background: color-mix(in oklab, var(--res-gold-soft) 42%, transparent);
+}
