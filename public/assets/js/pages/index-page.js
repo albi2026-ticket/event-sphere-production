@@ -166,6 +166,17 @@
     return a.label.localeCompare(b.label);
   }
 
+  function categorySectionTitle(category) {
+    const key = categoryInfo(category.key).key;
+    const specificTitleKey = `homepage.newest_category_events_${key}`;
+    const specificTitle = window.t?.(specificTitleKey, { category: category.label });
+    if (specificTitle && specificTitle !== specificTitleKey) return specificTitle;
+    if (category.key === "sports") return tr("homepage.game_day_title", "Game day, every day");
+    return tr("homepage.newest_category_events", "Newest {category} events", {
+      category: category.label,
+    });
+  }
+
   function groupedCategories(events) {
     const groups = new Map();
     events.forEach((event) => {
@@ -517,7 +528,7 @@
         return `<section class="section-sm home-section home-category-section" data-home-category-section="${window.EventSphereUtils.escapeHtml(category.key)}">
         <div class="container-xxl">
           <div class="section-title fade-up in">
-            <div><div class="eyebrow">${window.EventSphereUtils.escapeHtml(category.label)}</div><h2 class="mt-2">${window.EventSphereUtils.escapeHtml(category.key === "sports" ? tr("homepage.game_day_title", "Game day, every day") : tr("homepage.newest_category_events", "Newest {category} events", { category: category.label }))}</h2></div>
+            <div><div class="eyebrow">${window.EventSphereUtils.escapeHtml(category.label)}</div><h2 class="mt-2">${window.EventSphereUtils.escapeHtml(categorySectionTitle(category))}</h2></div>
             <a class="btn btn-ghost" href="${window.EventSphereCategories.href(category.key)}">${window.EventSphereUtils.escapeHtml(tr("homepage.browse_category", "Browse {category}", { category: category.label }))} <i class="bi bi-arrow-right ms-1"></i></a>
           </div>
           <div class="row g-4 fade-up in">${cards}</div>
