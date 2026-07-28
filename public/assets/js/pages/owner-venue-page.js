@@ -3796,6 +3796,340 @@
     }
   }
 
+  let managerSearchElements = null;
+  let managerSearchResults = [];
+  let managerSearchActiveIndex = 0;
+
+  const managerSearchDestinations = [
+    {
+      type: "workspace",
+      section: "dashboard",
+      icon: "bi-speedometer2",
+      title: "Dashboard",
+      subtitle: "Overview, readiness, and daily operations",
+      terms: "dashboard overview home readiness daily operations",
+    },
+    {
+      type: "workspace",
+      section: "reservations",
+      icon: "bi-calendar-check",
+      title: "Reservations",
+      subtitle: "Reservation list, guests, IDs, dates, and statuses",
+      terms: "reservations booking bookings guests reservation ids status pending confirmed cancelled completed no show",
+    },
+    {
+      type: "workspace",
+      section: "venue",
+      icon: "bi-shop-window",
+      title: "Venue",
+      subtitle: "Profile, gallery, location, facilities, and public preview",
+      terms: "venue restaurant bar profile gallery location facilities cuisines public preview",
+    },
+    {
+      type: "workspace",
+      section: "availability",
+      icon: "bi-clock-history",
+      title: "Availability",
+      subtitle: "Opening hours, booking rules, blackouts, and special hours",
+      terms: "availability opening hours booking rules guest rules blackout special hours",
+    },
+    {
+      type: "workspace",
+      section: "settings",
+      icon: "bi-gear",
+      title: "Settings",
+      subtitle: "Notifications, language, and danger zone",
+      terms: "settings preferences notifications language danger zone account",
+    },
+    {
+      type: "empty",
+      icon: "bi-people",
+      title: "Guests",
+      subtitle: "Guest workspace is not implemented yet. Guest names are searchable through loaded reservations.",
+      terms: "guests guest customers crm profiles history",
+      emptyTitle: "Guest workspace is not available yet.",
+      emptyCopy: "Search loaded reservations by guest name, phone, email, or reservation ID for now.",
+    },
+  ];
+
+  function normalizeSearchText(value) {
+    return String(value || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  }
+
+  function resultMatches(result, query) {
+    if (!query) return true;
+    return normalizeSearchText(
+      [result.title, result.subtitle, result.meta, result.terms].filter(Boolean).join(" "),
+    ).includes(query);
+  }
+
+  function reservationResult(reservation) {
+    const title = reservation.guest_name || guestFallback();
+    const meta = [
+      reservation.id ? `#${reservation.id}` : "",
+      dateLabel(reservation.reservation_date),
+      timeLabel(reservation.reservation_time),
+      statusLabel(reservation.status),
+      reservation.venue?.name,
+    ].filter(Boolean);
+    return {
+      type: "reservation",
+      id: String(reservation.id),
+      icon: "bi-calendar-check",
+      title,
+      subtitle: meta.join(" · "),
+      meta: reservationSearchText(reservation),
+      badge: statusLabel(reservation.status),
+      reservation,
+    };
+  }
+
+  function venueSearchResults(query) {
+    const venues = [...state.venues];
+    if (state.venue && !venues.some((venue) => String(venue.id) === String(state.venue.id))) {
+      venues.unshift(state.venue);
+    }
+    return venues
+      .map((venue) => ({
+        type: "venue",
+        id: String(venue.id || "current"),
+        icon: "bi-shop-window",
+        title: venue.name || restaurantBarFallback(),
+        subtitle: [venue.city, venue.type || venue.category, venue.status].filter(Boolean).join(" · ") ||
+          "Open venue workspace",
+        terms: [venue.name, venue.city, venue.address, venue.status, venue.type, "venue restaurant bar profile"]
+          .filter(Boolean)
+          .join(" "),
+      }))
+      .filter((result) => resultMatches(result, query))
+      .slice(0, 4);
+  }
+
+  function statusSearchResults(query) {
+    return [
+      ["pending", "Pending reservations", "Review reservation requests"],
+      ["confirmed", "Confirmed reservations", "Confirmed bookings in the reservation workspace"],
+      ["completed", "Completed reservations", "Completed reservation history"],
+      ["cancelled", "Cancelled reservations", "Cancelled reservation history"],
+      ["no_show", "No-show reservations", "Reservations marked no-show"],
+    ]
+      .map(([status, title, subtitle]) => ({
+        type: "reservation-filter",
+        status,
+        icon: "bi-funnel",
+        title,
+        subtitle,
+        terms: `${status} ${title} ${subtitle}`,
+      }))
+      .filter((result) => resultMatches(result, query));
+  }
+
+  function buildManagerSearchResults(value) {
+    const query = normalizeSearchText(value);
+    const destinationResults = managerSearchDestinations
+      .filter((result) => resultMatches(result, query))
+      .slice(0, query ? 6 : 5);
+    const reservations = state.reservations
+      .map(reservationResult)
+      .filter((result) => resultMatches(result, query))
+      .slice(0, 8);
+    const statuses = query ? statusSearchResults(query).slice(0, 3) : [];
+    const venues = venueSearchResults(query);
+    return [...reservations, ...venues, ...statuses, ...destinationResults].slice(0, 16);
+  }
+
+  function managerSearchResultMarkup(result, index) {
+    const active = index === managerSearchActiveIndex;
+    const badge = result.badge ? `<span class="manager-search-result-badge">${esc(result.badge)}</span>` : "";
+    return `
+      <button class="manager-search-result${active ? " is-active" : ""}${result.type === "empty" ? " is-empty-category" : ""}" type="button" data-manager-search-result="${index}" aria-selected="${active ? "true" : "false"}">
+        <span class="manager-search-result-icon"><i class="bi ${esc(result.icon)}"></i></span>
+        <span class="manager-search-result-copy">
+          <strong>${esc(result.title)}</strong>
+          <small>${esc(result.subtitle || "")}</small>
+        </span>
+        ${badge}
+      </button>
+    `;
+  }
+
+  function renderManagerSearchEmpty(title, copy, icon = "bi-search") {
+    if (!managerSearchElements?.results) return;
+    managerSearchResults = [];
+    managerSearchElements.results.innerHTML = `
+      <div class="manager-search-empty">
+        <i class="bi ${esc(icon)}"></i>
+        <strong>${esc(title)}</strong>
+        <span>${esc(copy)}</span>
+      </div>
+    `;
+  }
+
+  function renderManagerSearchResults() {
+    if (!managerSearchElements) return;
+    const query = managerSearchElements.input.value;
+    managerSearchResults = buildManagerSearchResults(query);
+    managerSearchActiveIndex = Math.min(managerSearchActiveIndex, Math.max(managerSearchResults.length - 1, 0));
+    if (!managerSearchResults.length) {
+      renderManagerSearchEmpty(
+        query
+          ? `No loaded manager data matches "${query}".`
+          : "Search loaded manager data.",
+        query
+          ? "Try a reservation ID, guest name, venue name, status, or workspace name."
+          : "Type to find reservations, guests, venues, dashboard, availability, or settings.",
+      );
+      return;
+    }
+    managerSearchElements.results.innerHTML = managerSearchResults
+      .map(managerSearchResultMarkup)
+      .join("");
+  }
+
+  function createManagerSearchDialog() {
+    if (managerSearchElements) return managerSearchElements;
+    const root = document.createElement("div");
+    root.className = "manager-search-overlay";
+    root.dataset.managerSearchOverlay = "";
+    root.hidden = true;
+    root.innerHTML = `
+      <div class="manager-search-dialog" role="dialog" aria-modal="true" aria-label="Manager global search">
+        <div class="manager-search-input-wrap">
+          <i class="bi bi-search"></i>
+          <input type="search" data-manager-search-input placeholder="Search reservations, guests, venue, status..." aria-label="Search manager workspace">
+          <button type="button" data-manager-search-close aria-label="Close search"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="manager-search-results" data-manager-search-results role="listbox"></div>
+      </div>
+    `;
+    document.body.appendChild(root);
+    managerSearchElements = {
+      root,
+      input: root.querySelector("[data-manager-search-input]"),
+      results: root.querySelector("[data-manager-search-results]"),
+      close: root.querySelector("[data-manager-search-close]"),
+    };
+    managerSearchElements.input.addEventListener("input", () => {
+      managerSearchActiveIndex = 0;
+      renderManagerSearchResults();
+    });
+    managerSearchElements.input.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeManagerSearch();
+        return;
+      }
+      if (!managerSearchResults.length) return;
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        const direction = event.key === "ArrowDown" ? 1 : -1;
+        managerSearchActiveIndex =
+          (managerSearchActiveIndex + direction + managerSearchResults.length) %
+          managerSearchResults.length;
+        renderManagerSearchResults();
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        selectManagerSearchResult(managerSearchActiveIndex);
+      }
+    });
+    managerSearchElements.results.addEventListener("click", (event) => {
+      const item = event.target.closest("[data-manager-search-result]");
+      if (!item) return;
+      selectManagerSearchResult(Number(item.dataset.managerSearchResult));
+    });
+    managerSearchElements.close.addEventListener("click", closeManagerSearch);
+    root.addEventListener("click", (event) => {
+      if (event.target === root) closeManagerSearch();
+    });
+    return managerSearchElements;
+  }
+
+  function openManagerSearch() {
+    const elements = createManagerSearchDialog();
+    elements.root.hidden = false;
+    document.body.classList.add("manager-search-open");
+    elements.input.value = "";
+    managerSearchActiveIndex = 0;
+    renderManagerSearchResults();
+    requestAnimationFrame(() => elements.input.focus());
+  }
+
+  function closeManagerSearch() {
+    if (!managerSearchElements) return;
+    managerSearchElements.root.hidden = true;
+    document.body.classList.remove("manager-search-open");
+    $("[data-manager-search]")?.focus();
+  }
+
+  function highlightReservationResult(id) {
+    const button = Array.from(document.querySelectorAll("[data-owner-reservation-view]")).find(
+      (item) => String(item.dataset.ownerReservationView) === String(id),
+    );
+    const row = button?.closest(".manager-reservation-row");
+    if (!row) return;
+    row.classList.add("manager-search-highlight");
+    row.scrollIntoView({ block: "center", behavior: "smooth" });
+    setTimeout(() => row.classList.remove("manager-search-highlight"), 2200);
+  }
+
+  function openReservationFromSearch(reservation) {
+    openManagerSection("reservations", { resetScroll: false });
+    state.reservationWorkspace.view = "all";
+    state.reservationWorkspace.search = String(reservation.id || reservation.guest_name || "");
+    state.reservationWorkspace.dateEnd = "";
+    state.reservationWorkspace.partySize = "";
+    state.reservationWorkspace.occasion = "";
+    state.reservationFilters = { view: "", status: "", date: "", venue_id: "" };
+    syncReservationWorkspaceControls();
+    lastReservationRenderSignature = "";
+    renderReservations();
+    renderReservationDetail(reservation);
+    setTimeout(() => highlightReservationResult(reservation.id), 80);
+  }
+
+  function openReservationStatusFromSearch(status) {
+    openManagerSection("reservations");
+    state.reservationWorkspace.search = status;
+    state.reservationWorkspace.view = "all";
+    state.reservationWorkspace.dateEnd = "";
+    state.reservationWorkspace.partySize = "";
+    state.reservationWorkspace.occasion = "";
+    state.reservationFilters = { view: "", status: "", date: "", venue_id: "" };
+    syncReservationWorkspaceControls();
+    lastReservationRenderSignature = "";
+    renderReservations();
+  }
+
+  function selectManagerSearchResult(index) {
+    const result = managerSearchResults[index];
+    if (!result) return;
+    if (result.type === "empty") {
+      renderManagerSearchEmpty(result.emptyTitle, result.emptyCopy, result.icon);
+      return;
+    }
+    closeManagerSearch();
+    if (result.type === "reservation") {
+      openReservationFromSearch(result.reservation);
+      return;
+    }
+    if (result.type === "venue") {
+      openManagerSection("venue");
+      return;
+    }
+    if (result.type === "reservation-filter") {
+      openReservationStatusFromSearch(result.status);
+      return;
+    }
+    if (result.type === "workspace") {
+      openManagerSection(result.section);
+    }
+  }
+
   function bindManagerShell() {
     const shortcut = $("[data-manager-shortcut]");
     if (shortcut) shortcut.textContent = managerShortcutLabel();
@@ -3890,15 +4224,13 @@
         });
       });
 
-    $("[data-manager-search]")?.addEventListener("click", () => {
-      window.tkToast?.(tr("manager.global_search_later", "Global search will be available in a later manager phase."), "info");
-    });
+    $("[data-manager-search]")?.addEventListener("click", openManagerSearch);
 
     document.addEventListener("keydown", (event) => {
       const isShortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
       if (!isShortcut) return;
       event.preventDefault();
-      window.tkToast?.(tr("manager.global_search_later", "Global search will be available in a later manager phase."), "info");
+      openManagerSearch();
     });
 
     document.addEventListener("click", (event) => {
