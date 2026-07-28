@@ -135,31 +135,31 @@
     const canCancel = canCancelReservation(reservation);
     return `
       <div class="col-md-6 col-xl-4">
-        <article class="venue-card venue-card-premium my-reservation-card reservation-card-premium">
-          <div class="img-wrap">
+        <article class="venue-card venue-card-premium venue-card-grid my-reservation-card reservation-card-premium">
+          <div class="img-wrap venue-card-media">
             <img loading="lazy" decoding="async" width="800" height="500" sizes="(min-width: 1200px) 33vw, (min-width: 768px) 50vw, 100vw" src="${esc(image)}" alt="${esc(`${reservation.venue?.name || tr("common.restaurant_bar", "Restaurant / Bar")} reservation venue`)}">
-            <div class="badges">
+            <div class="badges venue-card-badges">
               ${statusBadge(status)}
               <span class="fav"><i class="bi bi-calendar-heart"></i></span>
             </div>
           </div>
-          <div class="body">
-            <div class="d-flex justify-content-between gap-2 align-items-start">
+          <div class="body venue-card-body">
+            <div class="venue-card-head">
               <h3 class="title m-0">${esc(reservation.venue?.name || tr("common.restaurant_bar", "Restaurant / Bar"))}</h3>
-              <span class="rating"><i class="bi bi-people"></i> ${esc(reservation.party_size || "")}</span>
+              <span class="rating venue-card-type"><i class="bi bi-people"></i> ${esc(reservation.party_size || "")}</span>
             </div>
-            <div class="meta">
+            <div class="meta venue-card-meta">
               <span><i class="bi bi-calendar3 me-1"></i>${esc(dateLabel(reservation.reservation_date))}</span>
               <span class="dot"></span>
               <span><i class="bi bi-clock me-1"></i>${esc(timeLabel(reservation.reservation_time))}</span>
             </div>
-            <div class="meta">
+            <div class="meta venue-card-meta">
               <span>${esc(reservation.venue?.city || tr("restaurants.city", "City"))}</span>
               <span class="dot"></span>
               <span>${esc(reservation.venue?.venue_type || "restaurant / bar")}</span>
             </div>
-            <div class="footer-row my-reservation-actions">
-              <button class="btn btn-gold-outline btn-sm" type="button" data-reservation-view="${reservation.id}" data-i18n="buttons.view_reservation">${window.t?.("buttons.view_reservation") || "View Reservation"}</button>
+            <div class="footer-row venue-card-footer my-reservation-actions">
+              <button class="btn btn-gold-outline btn-sm venue-card-cta" type="button" data-reservation-view="${reservation.id}" data-i18n="buttons.view_reservation">${window.t?.("buttons.view_reservation") || "View Reservation"}</button>
               ${canCancel ? `<button class="btn btn-glass btn-sm" type="button" data-reservation-cancel="${reservation.id}" data-i18n="buttons.cancel_reservation">${window.t?.("buttons.cancel_reservation") || "Cancel Reservation"}</button>` : ""}
             </div>
           </div>

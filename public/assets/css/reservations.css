@@ -4038,3 +4038,335 @@ body.reservation-success-burst::after {
   transform: none;
   box-shadow: none;
 }
+
+/* ---------- Phase 2.2: Premium venue cards ---------- */
+.venue-card {
+  --venue-card-media-radius: calc(var(--radius-md) - 4px);
+  --venue-card-overlay: linear-gradient(
+    180deg,
+    rgba(6, 8, 12, 0.02) 26%,
+    rgba(6, 8, 12, 0.24) 68%,
+    rgba(6, 8, 12, 0.5)
+  );
+  position: relative;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid color-mix(in oklab, var(--border) 84%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--card) 95%, var(--res-gold) 5%);
+  box-shadow: var(--shadow-card);
+  transform: translateZ(0);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.venue-card:hover,
+.venue-card-premium:hover {
+  border-color: color-mix(in oklab, var(--res-gold) 34%, var(--border-strong));
+  background: color-mix(in oklab, var(--card) 91%, var(--res-gold) 9%);
+  box-shadow: var(--shadow-floating);
+  transform: translateY(-3px);
+}
+
+.venue-card-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.venue-card-media,
+.venue-card .img-wrap {
+  position: relative;
+  aspect-ratio: 1.08 / 1;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--card-2) 90%, var(--res-gold) 10%);
+}
+
+.venue-card-media::before,
+.venue-card .img-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.14), transparent 14rem);
+  opacity: 0.62;
+}
+
+.venue-card-media::after,
+.venue-card .img-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: var(--venue-card-overlay);
+  opacity: 0.86;
+  transition: opacity 180ms ease;
+}
+
+.venue-card:hover .venue-card-media::after,
+.venue-card:hover .img-wrap::after {
+  opacity: 0.7;
+}
+
+.venue-card-media img,
+.venue-card .img-wrap img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.03) contrast(1.025);
+  transform: scale(1);
+  transition:
+    transform 540ms ease,
+    filter 220ms ease;
+}
+
+.venue-card:hover .venue-card-media img,
+.venue-card:hover .img-wrap img {
+  filter: saturate(1.06) contrast(1.04);
+  transform: scale(1.04);
+}
+
+.venue-card-badges,
+.venue-card .badges {
+  position: absolute;
+  inset: var(--space-3) var(--space-3) auto var(--space-3);
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  pointer-events: none;
+}
+
+.venue-card-badge,
+.venue-card .chip-available,
+.venue-card .reservation-status,
+.venue-card .fav {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+  border: 1px solid color-mix(in oklab, white 24%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, rgba(8, 8, 10, 0.72) 92%, var(--res-gold) 8%);
+  color: #fff;
+  font-family: var(--type-label-family);
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-caption-weight);
+  letter-spacing: var(--type-caption-track);
+  line-height: 1;
+  text-transform: uppercase;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(14px) saturate(135%);
+  -webkit-backdrop-filter: blur(14px) saturate(135%);
+}
+
+.venue-card .fav {
+  width: var(--button-height-md);
+  height: var(--button-height-md);
+  min-width: var(--button-height-md);
+  justify-content: center;
+  padding: 0;
+}
+
+.venue-card-body,
+.venue-card .body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-5);
+}
+
+.venue-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.venue-card .title {
+  color: var(--text);
+  font-family: var(--type-h3-family);
+  font-size: clamp(1.08rem, 0.98rem + 0.36vw, 1.28rem);
+  font-weight: var(--type-h3-weight);
+  letter-spacing: 0;
+  line-height: 1.18;
+}
+
+.venue-card-type,
+.venue-card .rating {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 44%;
+  color: color-mix(in oklab, var(--res-gold) 82%, white 18%);
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-caption-weight);
+  letter-spacing: var(--type-caption-track);
+  line-height: 1.25;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.venue-card-meta,
+.venue-card .meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 0;
+  color: var(--muted);
+  font-size: var(--type-body-sm-size);
+  font-weight: var(--type-body-sm-weight);
+  line-height: var(--type-body-sm-line);
+}
+
+.venue-card-meta i,
+.venue-card .meta i {
+  color: color-mix(in oklab, var(--muted) 72%, var(--res-gold) 28%);
+}
+
+.venue-card .meta .dot {
+  width: 4px;
+  height: 4px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--muted) 58%, transparent);
+}
+
+.venue-card-tags,
+.venue-card .venue-preview-tags {
+  display: flex;
+  min-height: 34px;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: var(--space-2);
+}
+
+.venue-card-tags span,
+.venue-card .venue-preview-tags span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 var(--space-3);
+  border: 1px solid color-mix(in oklab, var(--res-gold) 20%, var(--border));
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--res-gold-soft) 42%, transparent);
+  color: color-mix(in oklab, var(--text) 82%, var(--res-gold) 18%);
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-caption-weight);
+  line-height: 1;
+}
+
+.venue-card-footer,
+.venue-card .footer-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: auto;
+  padding-top: var(--space-4);
+  border-top: 1px solid color-mix(in oklab, var(--border) 72%, transparent);
+}
+
+.venue-card-support {
+  min-width: 0;
+  color: var(--muted);
+  font-size: var(--type-body-sm-size);
+  font-weight: var(--type-body-sm-weight);
+  line-height: 1.35;
+}
+
+.venue-card-support i {
+  margin-right: var(--space-1);
+}
+
+.venue-card-cta,
+.venue-card .footer-row .btn {
+  flex: 0 0 auto;
+  min-width: 108px;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.venue-card:hover .venue-card-cta,
+.venue-card:hover .footer-row .btn {
+  box-shadow: var(--shadow-card);
+  transform: translateY(-1px);
+}
+
+.my-reservation-card .venue-card-media,
+.reservation-card-premium .venue-card-media {
+  aspect-ratio: 16 / 10.5;
+}
+
+.my-reservation-card .venue-card-footer {
+  align-items: center;
+}
+
+.my-reservation-actions {
+  flex-wrap: wrap;
+}
+
+.my-reservation-actions .btn {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 991.98px) {
+  .venue-card-media,
+  .venue-card .img-wrap {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .venue-card-body,
+  .venue-card .body {
+    padding: var(--space-4);
+  }
+
+  .venue-card-head,
+  .venue-card-footer,
+  .venue-card .footer-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .venue-card-type,
+  .venue-card .rating {
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .venue-card-cta,
+  .venue-card .footer-row .btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .venue-card,
+  .venue-card-media img,
+  .venue-card .img-wrap img {
+    transition: none;
+  }
+
+  .venue-card:hover,
+  .venue-card:hover .venue-card-media img,
+  .venue-card:hover .img-wrap img,
+  .venue-card:hover .venue-card-cta,
+  .venue-card:hover .footer-row .btn {
+    transform: none;
+  }
+}

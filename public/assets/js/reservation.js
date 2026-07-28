@@ -138,26 +138,26 @@
     return `
     <div class="col-lg-3 col-md-6">
       <a class="text-decoration-none" href="${detailsUrl}">
-        <article class="venue-card venue-card-premium">
-          <div class="img-wrap">
+        <article class="venue-card venue-card-premium venue-card-grid">
+          <div class="img-wrap venue-card-media">
             <img src="${esc(venueImage(venue))}" alt="${esc(imageAlt)}" loading="lazy" decoding="async" width="800" height="600" sizes="(min-width: 992px) 25vw, (min-width: 768px) 50vw, 100vw" />
-            <div class="badges">
-              ${venue.featured ? `<span class="chip-available"><i class="bi bi-stars"></i> <span data-i18n="common.featured">${window.t?.("common.featured") || "Featured"}</span></span>` : `<span class="chip-available"><i class="bi bi-circle-fill icon-dot-tiny"></i> <span data-i18n="header.reservations">${window.t?.("header.reservations") || "Reservations"}</span></span>`}
+            <div class="badges venue-card-badges">
+              ${venue.featured ? `<span class="chip-available venue-card-badge"><i class="bi bi-stars"></i> <span data-i18n="common.featured">${window.t?.("common.featured") || "Featured"}</span></span>` : `<span class="chip-available venue-card-badge"><i class="bi bi-circle-fill icon-dot-tiny"></i> <span data-i18n="header.reservations">${window.t?.("header.reservations") || "Reservations"}</span></span>`}
             </div>
           </div>
-          <div class="body">
-            <div class="d-flex justify-content-between gap-2">
+          <div class="body venue-card-body">
+            <div class="venue-card-head">
               <h3 class="title m-0">${esc(venue.name)}</h3>
-              <span class="rating"><i class="bi bi-cup-hot-fill"></i> ${esc(titleCase(venue.venue_type))}</span>
+              <span class="rating venue-card-type"><i class="bi bi-cup-hot-fill"></i> ${esc(titleCase(venue.venue_type))}</span>
             </div>
-            <div class="meta"><span>${esc(cuisines)}</span><span class="dot"></span><span><i class="bi bi-geo-alt"></i> ${esc(venue.city || "")}</span></div>
-            <div class="venue-preview-tags">${(venue.facilities || [])
+            <div class="meta venue-card-meta"><span>${esc(cuisines)}</span><span class="dot"></span><span><i class="bi bi-geo-alt"></i> ${esc(venue.city || "")}</span></div>
+            <div class="venue-preview-tags venue-card-tags">${(venue.facilities || [])
               .slice(0, 3)
               .map((item) => `<span>${esc(item.name)}</span>`)
               .join("")}</div>
-            <div class="footer-row">
-              <span class="small text-muted-pro"><i class="bi bi-egg-fried text-gold"></i> ${esc(facilities)}</span>
-              <span class="btn btn-gold btn-sm" data-i18n="restaurants.view_venue">${tr("restaurants.view_venue", "View Venue")}</span>
+            <div class="footer-row venue-card-footer">
+              <span class="venue-card-support"><i class="bi bi-egg-fried text-gold"></i> ${esc(facilities)}</span>
+              <span class="btn btn-gold btn-sm venue-card-cta" data-i18n="restaurants.view_venue">${tr("restaurants.view_venue", "View Venue")}</span>
             </div>
           </div>
         </article>
