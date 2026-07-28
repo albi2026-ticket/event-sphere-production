@@ -610,57 +610,54 @@
           <div class="section-head-res mb-3">
             <div><h2 data-i18n="manager.location">Location</h2><div class="sub" data-i18n="manager.location_copy">Address and exact map pin used on the public venue page</div></div>
           </div>
-          <div class="row g-3 mb-3">
-            <div class="col-md-6"><label class="form-label" data-i18n="venue.address">Address</label><input class="form-control" name="address" data-owner-address /></div>
-            <div class="col-md-3"><label class="form-label" data-i18n="restaurants.city">City</label><input class="form-control" name="city" required maxlength="255" /></div>
-            <div class="col-md-3"><label class="form-label" data-i18n="owner.country">Country</label><input class="form-control" name="country" maxlength="255" /></div>
-            <div class="col-md-6"><label class="form-label" data-i18n="owner.latitude">Latitude</label><input class="form-control" name="latitude" type="number" step="0.0000001" /></div>
-            <div class="col-md-6"><label class="form-label" data-i18n="owner.longitude">Longitude</label><input class="form-control" name="longitude" type="number" step="0.0000001" /></div>
-          </div>
-          <div class="owner-location-picker">
-            <div class="owner-location-toolbar">
-              <div>
-                <h5 class="mb-1" data-i18n="owner.exact_map_location">Exact Map Location</h5>
-                <p class="small text-muted-pro mb-0" data-i18n="owner.map_location_copy">Search, click the map, or drag the marker to set the exact pin.</p>
+          <div class="owner-location-picker owner-location-modern">
+            <div class="owner-location-hero">
+              <div class="owner-location-search-shell">
+                <i class="bi bi-search"></i>
+                <input class="form-control" type="search" placeholder="Search your venue or address..." data-i18n-attr="placeholder:manager.search_venue_address" data-owner-location-search autocomplete="off">
               </div>
-              <a class="btn btn-gold-outline btn-sm" href="#" target="_blank" rel="noopener" data-owner-location-open hidden>
-                <i class="bi bi-box-arrow-up-right me-1"></i><span data-i18n="manager.open_pin_google_maps">Open pin in Google Maps</span>
-              </a>
-            </div>
-            <div class="row g-2 mb-3">
-              <div class="col-md-8">
-                <input class="form-control" type="search" placeholder="Search address, city, or place" data-i18n-attr="placeholder:forms.search_address" data-owner-location-search>
-              </div>
-              <div class="col-md-4 d-grid">
-                <button class="btn btn-gold-outline" type="button" data-owner-location-search-button>
-                  <i class="bi bi-search me-1"></i><span data-i18n="manager.search_this_address">Search this address</span>
-                </button>
-              </div>
+              <button class="btn btn-gold owner-location-current" type="button" data-owner-location-current>
+                <i class="bi bi-geo-alt-fill me-1"></i><span data-i18n="manager.use_current_location">Use My Current Location</span>
+              </button>
             </div>
             <div class="owner-location-map" data-owner-location-map>
+              <div class="owner-location-loading" data-owner-location-loading>
+                <span class="skeleton-media"></span>
+                <span class="skeleton-line"></span>
+                <span class="skeleton-line short"></span>
+              </div>
+              <div class="owner-location-error" data-owner-location-error hidden>
+                <i class="bi bi-map"></i>
+                <strong data-i18n="manager.maps_unavailable">Unable to load Google Maps.</strong>
+                <button class="btn btn-gold-outline btn-sm" type="button" data-owner-location-retry data-i18n="buttons.retry">Retry</button>
+              </div>
               <div class="owner-location-canvas" data-owner-location-canvas hidden></div>
-              <iframe title="Restaurant or bar Google Map picker" loading="lazy" referrerpolicy="no-referrer-when-downgrade" data-owner-location-frame></iframe>
-              <button class="owner-location-click-layer" type="button" data-owner-location-click-layer aria-label="Click to set location" data-i18n-attr="aria-label:manager.location"></button>
-              <div class="owner-location-pin" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></div>
             </div>
-            <div class="owner-location-selected">
+            <div class="owner-location-confirmation" data-owner-location-confirmation>
               <div>
-                <span data-i18n="owner.selected_address">Selected Address</span>
-                <strong data-owner-location-selected-address data-i18n="manager.not_selected">Not selected</strong>
+                <i class="bi bi-check2-circle"></i>
+                <div>
+                  <strong data-owner-location-selected-address data-i18n="manager.pin_not_confirmed">Pin location not confirmed</strong>
+                  <span data-owner-location-status data-i18n="manager.search_or_use_location">Search for your venue or use your current location to place the pin.</span>
+                </div>
               </div>
-              <div>
-                <span data-i18n="owner.latitude">Latitude</span>
-                <strong data-owner-location-selected-latitude>-</strong>
-              </div>
-              <div>
-                <span data-i18n="owner.longitude">Longitude</span>
-                <strong data-owner-location-selected-longitude>-</strong>
-              </div>
+              <a class="btn btn-gold-outline" href="#" target="_blank" rel="noopener" data-owner-location-open hidden>
+                <i class="bi bi-box-arrow-up-right me-1"></i><span data-i18n="manager.open_pin_google_maps">Open in Google Maps</span>
+              </a>
             </div>
-            <div class="owner-location-meta">
-              <span data-owner-location-status data-i18n="manager.set_pin_copy">Set latitude and longitude to preview the map pin.</span>
-              <button class="btn btn-glass btn-sm" type="button" data-owner-location-clear data-i18n="manager.clear_map_pin">Clear map pin</button>
-            </div>
+            <details class="owner-location-advanced">
+              <summary><span data-i18n="manager.advanced_location_fields">Advanced location fields</span><i class="bi bi-chevron-down"></i></summary>
+              <div class="row g-3 mt-1">
+                <div class="col-md-6"><label class="form-label" data-i18n="venue.address">Address</label><input class="form-control" name="address" data-owner-address /></div>
+                <div class="col-md-3"><label class="form-label" data-i18n="restaurants.city">City</label><input class="form-control" name="city" required maxlength="255" /></div>
+                <div class="col-md-3"><label class="form-label" data-i18n="owner.country">Country</label><input class="form-control" name="country" maxlength="255" /></div>
+                <div class="col-md-6"><label class="form-label" data-i18n="owner.latitude">Latitude</label><input class="form-control" name="latitude" type="number" step="0.0000001" /></div>
+                <div class="col-md-6"><label class="form-label" data-i18n="owner.longitude">Longitude</label><input class="form-control" name="longitude" type="number" step="0.0000001" /></div>
+                <div class="col-12 d-flex flex-wrap gap-2">
+                  <button class="btn btn-glass btn-sm" type="button" data-owner-location-clear data-i18n="manager.clear_map_pin">Clear map pin</button>
+                </div>
+              </div>
+            </details>
           </div>
         </section>
 

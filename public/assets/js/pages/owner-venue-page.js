@@ -41,7 +41,7 @@
     "Maintenance",
   ];
   const locationPickerZoom = 15;
-  const defaultLocation = { lat: 40.7128, lng: -74.006 };
+  const defaultLocation = { lat: 42.6675, lng: 21.1662 };
   let ownerGoogleMap = null;
   let ownerGoogleMarker = null;
   let ownerGoogleGeocoder = null;
@@ -320,10 +320,6 @@
     });
   }
 
-  function googleMapEmbedUrl(lat, lng, zoom = locationPickerZoom) {
-    return `https://maps.google.com/maps?q=${encodeURIComponent(`${lat},${lng}`)}&z=${zoom}&output=embed`;
-  }
-
   function googleMapsUrl(lat, lng) {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}`;
   }
@@ -358,6 +354,16 @@
     return [form.elements.address?.value, form.elements.city?.value, form.elements.country?.value]
       .filter(Boolean)
       .join(", ");
+  }
+
+  function detectedCountryName() {
+    try {
+      const region = new Intl.Locale(navigator.language || "en").region;
+      if (!region || !Intl.DisplayNames) return "";
+      return new Intl.DisplayNames([navigator.language || "en"], { type: "region" }).of(region) || "";
+    } catch (_) {
+      return "";
+    }
   }
 
   function googleMapsApiKey() {
@@ -396,6 +402,43 @@
     return ownerMapsLoading;
   }
 
+  function setOwnerLocationState(stateName) {
+    const mapRoot = $("[data-owner-location-map]");
+    const loading = $("[data-owner-location-loading]");
+    const error = $("[data-owner-location-error]");
+    const canvas = $("[data-owner-location-canvas]");
+    mapRoot?.classList.toggle("is-loading", stateName === "loading");
+    mapRoot?.classList.toggle("is-error", stateName === "error");
+    if (loading) loading.hidden = stateName !== "loading";
+    if (error) error.hidden = stateName !== "error";
+    if (canvas) canvas.hidden = stateName !== "ready";
+  }
+
+  function locationAddressPartsFromComponents(components = []) {
+    const byType = (type) => components.find((component) => component.types?.includes(type));
+    const streetNumber = byType("street_number")?.long_name || "";
+    const route = byType("route")?.long_name || "";
+    const locality =
+      byType("locality")?.long_name ||
+      byType("postal_town")?.long_name ||
+      byType("administrative_area_level_2")?.long_name ||
+      byType("administrative_area_level_1")?.long_name ||
+      "";
+    const country = byType("country")?.long_name || "";
+    const address = [streetNumber, route].filter(Boolean).join(" ") || "";
+    return { address, city: locality, country };
+  }
+
+  function applyOwnerLocationDetails(details = {}) {
+    const form = $("[data-owner-venue-form]");
+    if (!form) return;
+    if (details.address && form.elements.address) form.elements.address.value = details.address;
+    if (details.city && form.elements.city) form.elements.city.value = details.city;
+    if (details.country && form.elements.country) form.elements.country.value = details.country;
+    const search = $("[data-owner-location-search]");
+    if (search && details.searchText) search.value = details.searchText;
+  }
+
   function selectedAddressText() {
     const form = $("[data-owner-venue-form]");
     return locationSearchText() || form?.elements.address?.value || "";
@@ -403,32 +446,29 @@
 
   function updateSelectedLocationDetails(coordinates) {
     const address = $("[data-owner-location-selected-address]");
-    const latitude = $("[data-owner-location-selected-latitude]");
-    const longitude = $("[data-owner-location-selected-longitude]");
 
     if (address)
       address.textContent = coordinates
-        ? selectedAddressText() || tr("manager.selected_pin", "Selected pin")
-        : tr("manager.not_selected", "Not selected");
-    if (latitude) latitude.textContent = coordinates ? formatCoordinate(coordinates.lat) : "-";
-    if (longitude) longitude.textContent = coordinates ? formatCoordinate(coordinates.lng) : "-";
+        ? tr("manager.pin_location_confirmed", "Pin location confirmed")
+        : tr("manager.pin_not_confirmed", "Pin location not confirmed");
   }
 
-  function setLocationFields(lat, lng, address = null) {
+  function setLocationFields(lat, lng, details = {}) {
     if (!validCoordinate(lat, lng)) return;
     const form = $("[data-owner-venue-form]");
     if (!form) return;
     form.elements.latitude.value = formatCoordinate(lat);
     form.elements.longitude.value = formatCoordinate(lng);
-    if (address && form.elements.address) form.elements.address.value = address;
+    applyOwnerLocationDetails(details);
     updateOwnerLocationMap();
   }
 
-  function syncOwnerMarker(lat, lng, animate = false) {
+  function syncOwnerMarker(lat, lng, animate = false, zoom = null) {
     if (!ownerGoogleMap || !ownerGoogleMarker || !validCoordinate(lat, lng)) return;
     const position = { lat, lng };
     ownerGoogleMarker.setPosition(position);
     ownerGoogleMap.panTo(position);
+    if (zoom) ownerGoogleMap.setZoom(zoom);
     if (animate && window.google?.maps?.Animation) {
       ownerGoogleMarker.setAnimation(window.google.maps.Animation.DROP);
       window.setTimeout(() => ownerGoogleMarker?.setAnimation(null), 700);
@@ -440,13 +480,14 @@
 
     ownerGoogleGeocoder.geocode({ location: { lat, lng } }, (results, status) => {
       if (status !== "OK" || !results?.[0]) return;
-      const form = $("[data-owner-venue-form]");
       const address = results[0].formatted_address || "";
-      if (form?.elements.address && address) {
-        form.elements.address.value = address;
-        const search = $("[data-owner-location-search]");
-        if (search) search.value = address;
-      }
+      const parts = locationAddressPartsFromComponents(results[0].address_components || []);
+      applyOwnerLocationDetails({
+        address: address || parts.address,
+        city: parts.city,
+        country: parts.country,
+        searchText: address || selectedAddressText(),
+      });
       updateSelectedLocationDetails(formCoordinates());
     });
   }
@@ -461,10 +502,14 @@
           return;
         }
         const result = results[0];
+        const parts = locationAddressPartsFromComponents(result.address_components || []);
         resolve({
           lat: result.geometry.location.lat(),
           lng: result.geometry.location.lng(),
-          address: result.formatted_address || query,
+          address: result.formatted_address || parts.address || query,
+          city: parts.city,
+          country: parts.country,
+          searchText: result.formatted_address || query,
         });
       });
     });
@@ -472,64 +517,34 @@
 
   function moveOwnerMarker(lat, lng, options = {}) {
     if (!validCoordinate(lat, lng)) return;
-    setLocationFields(lat, lng, options.address || null);
-    syncOwnerMarker(lat, lng, options.animate !== false);
-    if (options.reverseGeocode !== false && !options.address) {
+    setLocationFields(lat, lng, options);
+    syncOwnerMarker(lat, lng, options.animate !== false, options.zoom || null);
+    if (options.reverseGeocode !== false && !options.address && !options.searchText) {
       reverseGeocodeOwnerLocation(lat, lng);
     }
-  }
-
-  function webMercatorPoint(lat, lng, zoom) {
-    const scale = 256 * 2 ** zoom;
-    const sinLat = Math.sin((lat * Math.PI) / 180);
-
-    return {
-      x: ((lng + 180) / 360) * scale,
-      y: (0.5 - Math.log((1 + sinLat) / (1 - sinLat)) / (4 * Math.PI)) * scale,
-    };
-  }
-
-  function webMercatorLatLng(x, y, zoom) {
-    const scale = 256 * 2 ** zoom;
-    const lng = (x / scale) * 360 - 180;
-    const n = Math.PI - (2 * Math.PI * y) / scale;
-    const lat = (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
-
-    return { lat, lng };
-  }
-
-  function coordinatesFromPickerClick(event) {
-    const current = formCoordinates() || defaultLocation;
-    const rect = event.currentTarget.getBoundingClientRect();
-    const center = webMercatorPoint(current.lat, current.lng, locationPickerZoom);
-
-    return webMercatorLatLng(
-      center.x + (event.clientX - rect.left) - rect.width / 2,
-      center.y + (event.clientY - rect.top) - rect.height / 2,
-      locationPickerZoom,
-    );
   }
 
   function updateOwnerLocationMap() {
     const coordinates = formCoordinates();
     const preview = coordinates || defaultLocation;
     const mapRoot = $("[data-owner-location-map]");
-    const frame = $("[data-owner-location-frame]");
     const status = $("[data-owner-location-status]");
     const open = $("[data-owner-location-open]");
     const search = $("[data-owner-location-search]");
+    const confirmation = $("[data-owner-location-confirmation]");
 
-    if (frame) frame.src = googleMapEmbedUrl(preview.lat, preview.lng);
     if (ownerGoogleMap && !syncingOwnerMap) {
       syncingOwnerMap = true;
       syncOwnerMarker(preview.lat, preview.lng, Boolean(coordinates));
+      ownerGoogleMarker?.setVisible(Boolean(coordinates));
       syncingOwnerMap = false;
     }
     if (mapRoot) mapRoot.classList.toggle("has-location", Boolean(coordinates));
+    confirmation?.classList.toggle("has-location", Boolean(coordinates));
     if (status) {
       status.textContent = coordinates
-        ? tr("manager.location_pin_ready", "Location pin is ready. Drag the marker or click the map to refine it.")
-        : tr("owner.map_location_copy", "Search an address, click the map, or drag the marker to set the exact pin.");
+        ? tr("manager.guests_navigate_exact_location", "Guests will navigate to this exact location.")
+        : tr("manager.search_or_use_location", "Search for your venue or use your current location to place the pin.");
     }
     if (open) {
       open.hidden = !coordinates;
@@ -542,17 +557,22 @@
   async function initOwnerGoogleMap() {
     const canvas = $("[data-owner-location-canvas]");
     const mapRoot = $("[data-owner-location-map]");
-    if (!canvas || ownerGoogleMap) return;
+    if (!canvas) return false;
+    if (ownerGoogleMap) {
+      setOwnerLocationState("ready");
+      return true;
+    }
 
+    setOwnerLocationState("loading");
     const loaded = await loadGoogleMaps();
     if (!loaded || !window.google?.maps) {
-      updateOwnerLocationMap();
-      return;
+      setOwnerLocationState("error");
+      return false;
     }
 
     const coordinates = formCoordinates();
     const center = coordinates || defaultLocation;
-    canvas.hidden = false;
+    setOwnerLocationState("ready");
     mapRoot?.classList.add("has-google-map");
 
     ownerGoogleMap = new window.google.maps.Map(canvas, {
@@ -560,8 +580,10 @@
       zoom: coordinates ? 16 : 12,
       mapTypeControl: false,
       streetViewControl: false,
+      zoomControl: true,
       fullscreenControl: true,
       clickableIcons: true,
+      gestureHandling: "greedy",
     });
     ownerGoogleGeocoder = new window.google.maps.Geocoder();
     ownerGoogleMarker = new window.google.maps.Marker({
@@ -571,11 +593,13 @@
       animation: window.google.maps.Animation.DROP,
       title: tr("manager.selected_restaurant_location", "Selected restaurant or bar location"),
     });
+    ownerGoogleMarker.setVisible(Boolean(coordinates));
 
     ownerGoogleMap.addListener("click", (event) => {
       const lat = event.latLng.lat();
       const lng = event.latLng.lng();
-      moveOwnerMarker(lat, lng, { animate: true });
+      ownerGoogleMarker.setVisible(true);
+      moveOwnerMarker(lat, lng, { animate: true, zoom: Math.max(ownerGoogleMap.getZoom() || 16, 16) });
     });
     ownerGoogleMarker.addListener("dragend", (event) => {
       const lat = event.latLng.lat();
@@ -584,13 +608,13 @@
     });
 
     const search = $("[data-owner-location-search]");
-    if (search && window.google.maps.places?.SearchBox) {
-      ownerSearchBox = new window.google.maps.places.SearchBox(search);
-      ownerGoogleMap.addListener("bounds_changed", () => {
-        ownerSearchBox.setBounds(ownerGoogleMap.getBounds());
+    if (search && window.google.maps.places?.Autocomplete) {
+      ownerSearchBox = new window.google.maps.places.Autocomplete(search, {
+        fields: ["address_components", "formatted_address", "geometry", "name"],
       });
-      ownerSearchBox.addListener("places_changed", () => {
-        const place = ownerSearchBox.getPlaces()?.[0];
+      ownerSearchBox.bindTo("bounds", ownerGoogleMap);
+      ownerSearchBox.addListener("place_changed", () => {
+        const place = ownerSearchBox.getPlace();
         const location = place?.geometry?.location;
         if (!location) {
           window.tkToast?.(
@@ -602,21 +626,35 @@
           );
           return;
         }
+        const parts = locationAddressPartsFromComponents(place.address_components || []);
         moveOwnerMarker(location.lat(), location.lng(), {
-          address: place.formatted_address || place.name || search.value,
+          address: place.formatted_address || parts.address || search.value,
+          city: parts.city,
+          country: parts.country,
+          searchText: place.formatted_address || place.name || search.value,
           animate: true,
+          zoom: 17,
           reverseGeocode: false,
         });
-        ownerGoogleMap.setZoom(16);
+        ownerGoogleMarker.setVisible(true);
         window.tkToast?.(tr("owner.map_location_updated", "Map location updated."), "success");
       });
     }
 
+    const regionQuery = locationSearchText() || detectedCountryName();
+    if (!coordinates && regionQuery && ownerGoogleGeocoder) {
+      geocodeOwnerQuery(regionQuery).then((result) => {
+        if (!result || formCoordinates()) return;
+        ownerGoogleMap.setCenter({ lat: result.lat, lng: result.lng });
+        ownerGoogleMap.setZoom(12);
+      });
+    }
+
     updateOwnerLocationMap();
+    return true;
   }
 
   async function searchOwnerLocation() {
-    const button = $("[data-owner-location-search-button]");
     const search = $("[data-owner-location-search]");
     const query = String(search?.value || locationSearchText()).trim();
 
@@ -625,64 +663,95 @@
       return;
     }
 
-    if (button) {
-      button.dataset.originalLabel = button.dataset.originalLabel || button.innerHTML;
-      button.disabled = true;
-      button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Searching...';
-    }
-
     try {
-      await initOwnerGoogleMap();
+      const ready = await initOwnerGoogleMap();
+      if (!ready) return;
       const googleResult = await geocodeOwnerQuery(query);
       if (googleResult) {
         moveOwnerMarker(googleResult.lat, googleResult.lng, {
           address: googleResult.address,
+          city: googleResult.city,
+          country: googleResult.country,
+          searchText: googleResult.searchText,
           animate: true,
+          zoom: 17,
           reverseGeocode: false,
         });
-        if (ownerGoogleMap) ownerGoogleMap.setZoom(16);
+        ownerGoogleMarker?.setVisible(true);
         window.tkToast?.(tr("owner.map_location_updated", "Map location updated."), "success");
         return;
       }
-
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`,
-        {
-          headers: { Accept: "application/json" },
-        },
+      window.tkToast?.(
+        tr(
+          "owner.no_matching_address",
+          "No matching address yet. Try a more specific street, city, or restaurant name.",
+        ),
+        "error",
       );
-      const results = await response.json();
-      const result = Array.isArray(results) ? results[0] : null;
-
-      if (!result) {
-        window.tkToast?.(
-          tr(
-            "owner.no_matching_address",
-            "No matching address yet. Try a more specific street, city, or restaurant name.",
-          ),
-          "error",
-        );
-        return;
-      }
-
-      moveOwnerMarker(Number(result.lat), Number(result.lon), {
-        address: result.display_name || query,
-        animate: true,
-        reverseGeocode: false,
-      });
-      window.tkToast?.(tr("owner.map_location_updated", "Map location updated."), "success");
     } catch (err) {
       window.tkToast?.(
         tr("owner.address_search_failed", "We couldn’t search that address right now. Try a more specific street, city, or restaurant name."),
         "error",
       );
-    } finally {
-      if (button) {
-        button.disabled = false;
-        button.innerHTML =
-          button.dataset.originalLabel || '<i class="bi bi-search me-1"></i>Search this address';
-      }
     }
+  }
+
+  function useOwnerCurrentLocation() {
+    const button = $("[data-owner-location-current]");
+    if (!navigator.geolocation) {
+      window.tkToast?.(
+        tr(
+          "manager.location_access_failed",
+          "Location couldn't be accessed. Please search for your venue or place the pin manually.",
+        ),
+        "info",
+      );
+      return;
+    }
+
+    if (button) {
+      button.dataset.originalLabel = button.dataset.originalLabel || button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Locating...';
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const ready = await initOwnerGoogleMap();
+        if (ready) {
+          ownerGoogleMarker?.setVisible(true);
+          moveOwnerMarker(position.coords.latitude, position.coords.longitude, {
+            animate: true,
+            zoom: 17,
+          });
+          window.tkToast?.(
+            tr(
+              "manager.current_location_detected",
+              "Current location detected. You can drag the pin to fine-tune the venue entrance.",
+            ),
+            "success",
+          );
+        }
+        if (button) {
+          button.disabled = false;
+          button.innerHTML = button.dataset.originalLabel || button.innerHTML;
+        }
+      },
+      () => {
+        window.tkToast?.(
+          tr(
+            "manager.location_access_failed",
+            "Location couldn't be accessed. Please search for your venue or place the pin manually.",
+          ),
+          "info",
+        );
+        if (button) {
+          button.disabled = false;
+          button.innerHTML = button.dataset.originalLabel || button.innerHTML;
+        }
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
+    );
   }
 
   function localDate(value = new Date()) {
@@ -4449,22 +4518,23 @@
     $("[data-blackout-add]")?.addEventListener("click", addBlackoutDate);
     $("[data-special-save]")?.addEventListener("click", saveSpecialHours);
     $("[data-special-closed]")?.addEventListener("change", syncSpecialClosedState);
-    $("[data-owner-location-search-button]")?.addEventListener("click", searchOwnerLocation);
+    $("[data-owner-location-current]")?.addEventListener("click", useOwnerCurrentLocation);
+    $("[data-owner-location-retry]")?.addEventListener("click", () => {
+      ownerMapsLoading = null;
+      initOwnerGoogleMap();
+    });
     $("[data-owner-location-search]")?.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
         event.preventDefault();
         searchOwnerLocation();
       }
     });
-    $("[data-owner-location-click-layer]")?.addEventListener("click", (event) => {
-      const coordinates = coordinatesFromPickerClick(event);
-      setLocationFields(coordinates.lat, coordinates.lng);
-    });
     $("[data-owner-location-clear]")?.addEventListener("click", () => {
       const form = $("[data-owner-venue-form]");
       if (!form) return;
       form.elements.latitude.value = "";
       form.elements.longitude.value = "";
+      ownerGoogleMarker?.setVisible(false);
       updateOwnerLocationMap();
     });
     ["latitude", "longitude"].forEach((name) => {
