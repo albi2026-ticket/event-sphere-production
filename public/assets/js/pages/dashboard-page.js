@@ -531,19 +531,19 @@
           : tr("events.event_ended", "Ended"));
     return `
       <div class="col-md-6 col-xl-4">
-        <article class="card-pro dashboard-favorite-card">
-          <div class="thumb">
-            <span class="badge-soft">${escape((event.category || "EVENT").toUpperCase())}</span>
+        <article class="card-pro event-card-pro event-card-grid dashboard-favorite-card">
+          <div class="thumb event-card-media">
+            <span class="badge-soft event-card-badge">${escape((event.category || "EVENT").toUpperCase())}</span>
             <img loading="lazy" decoding="async" width="640" height="400" sizes="(min-width: 1200px) 33vw, (min-width: 768px) 50vw, 100vw" src="${escape(img)}" alt="${escape([event.title, event.venue_name, event.city].filter(Boolean).join(" in "))}"/>
           </div>
-          <div class="body">
-            <div class="meta"><i class="bi bi-calendar3"></i> ${escape(dateLabel(event.starts_at, event.timezone))}</div>
+          <div class="body event-card-body">
+            <div class="meta event-card-date"><i class="bi bi-calendar3"></i> ${escape(dateLabel(event.starts_at, event.timezone))}</div>
             <h3 class="title">${escape(event.title)}</h3>
-            <div class="venue"><i class="bi bi-geo-alt"></i> ${escape(event.venue_name || "")}${event.city ? `, ${escape(event.city)}` : ""}</div>
-            <div class="foot">
-              <div class="price">${pricing}<div class="mt-1">${statusBadge(stateBadge)}</div></div>
+            <div class="venue event-card-location"><i class="bi bi-geo-alt"></i> ${escape(event.venue_name || "")}${event.city ? `, ${escape(event.city)}` : ""}</div>
+            <div class="foot event-card-footer">
+              <div class="price event-card-price">${pricing}<div class="mt-1">${statusBadge(stateBadge)}</div></div>
               <div class="dashboard-actions">
-                <a class="btn btn-glass btn-sm" href="${window.EventSphereRoutes?.eventUrl?.(event.slug) || `/event/${encodeURIComponent(event.slug)}`}" data-i18n="dashboard.view_event">${tr("dashboard.view_event", "View event details")}</a>
+                <a class="btn btn-glass btn-sm event-card-cta" href="${window.EventSphereRoutes?.eventUrl?.(event.slug) || `/event/${encodeURIComponent(event.slug)}`}" data-i18n="dashboard.view_event">${tr("dashboard.view_event", "View event details")}</a>
                 <button class="btn btn-glass btn-sm" type="button" data-remove-favorite="${event.id}"><i class="bi bi-heartbreak"></i></button>
               </div>
             </div>
