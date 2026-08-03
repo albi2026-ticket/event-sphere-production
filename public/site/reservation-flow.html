@@ -70,7 +70,7 @@
 
       <!-- STEP 1 — DATE -->
       <div class="card-pro p-4 step-panel reservation-step-card" data-panel="1" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md)">
-        <h4 class="panel-title">Choose a date</h4>
+        <h2 class="panel-title">Choose a date</h2>
         <p class="text-muted-pro small">Select the day you'd like to dine with us.</p>
         <div class="chip-grid mt-3" id="dateGrid"></div>
         <div class="d-flex justify-content-end mt-4">
@@ -80,7 +80,7 @@
 
       <!-- STEP 2 — TIME -->
       <div class="card-pro p-4 step-panel d-none reservation-step-card" data-panel="2" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md)">
-        <h4 class="panel-title">Choose a time</h4>
+        <h2 class="panel-title">Choose a time</h2>
         <p class="text-muted-pro small">Available windows for your party.</p>
         <div class="chip-grid mt-3">
           <div class="chip-select">6:00<small>PM</small></div>
@@ -100,7 +100,7 @@
 
       <!-- STEP 3 — GUESTS -->
       <div class="card-pro p-4 step-panel d-none reservation-step-card" data-panel="3" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md)">
-        <h4 class="panel-title">How many guests?</h4>
+        <h2 class="panel-title">How many guests?</h2>
         <p class="text-muted-pro small">Parties larger than 8 require a private booking.</p>
         <div class="chip-grid mt-3" style="grid-template-columns:repeat(8,1fr)">
           <div class="chip-select">1</div><div class="chip-select active">2</div><div class="chip-select">3</div><div class="chip-select">4</div>
@@ -114,24 +114,24 @@
 
       <!-- STEP 4 — DETAILS -->
       <div class="card-pro p-4 step-panel d-none reservation-step-card" data-panel="4" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md)">
-        <h4 class="panel-title">Your details</h4>
+        <h2 class="panel-title">Your details</h2>
         <p class="text-muted-pro small">We'll send your confirmation to this email and phone.</p>
         <div class="row g-3 mt-1">
           <div class="col-md-6">
-            <label class="form-label small text-muted-pro">Full name</label>
-            <input type="text" class="form-control" placeholder="Full name for the reservation" style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)" />
+            <label class="form-label small text-muted-pro" for="reservation-flow-full-name">Full name</label>
+            <input id="reservation-flow-full-name" type="text" class="form-control" placeholder="Full name for the reservation" style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)" />
           </div>
           <div class="col-md-6">
-            <label class="form-label small text-muted-pro">Phone</label>
-            <input type="tel" class="form-control" placeholder="+44 ..." style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)" />
+            <label class="form-label small text-muted-pro" for="reservation-flow-phone">Phone</label>
+            <input id="reservation-flow-phone" type="tel" class="form-control" placeholder="+44 ..." style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)" />
           </div>
           <div class="col-12">
-            <label class="form-label small text-muted-pro">Email</label>
-            <input type="email" class="form-control" placeholder="Email for reservation updates" style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)" />
+            <label class="form-label small text-muted-pro" for="reservation-flow-email">Email</label>
+            <input id="reservation-flow-email" type="email" class="form-control" placeholder="Email for reservation updates" style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)" />
           </div>
           <div class="col-12">
-            <label class="form-label small text-muted-pro">Special requests (optional)</label>
-            <textarea rows="3" class="form-control" placeholder="Allergies, occasion, seating preference…" style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)"></textarea>
+            <label class="form-label small text-muted-pro" for="reservation-flow-special-requests">Special requests (optional)</label>
+            <textarea id="reservation-flow-special-requests" rows="3" class="form-control" placeholder="Allergies, occasion, seating preference…" style="background:rgba(255,255,255,.03);border-color:var(--border);color:var(--text)"></textarea>
           </div>
           <div class="col-12">
             <div class="form-check">
@@ -150,7 +150,7 @@
       <div class="step-panel d-none reservation-confirmation-panel" data-panel="5">
         <div class="confirm-card">
           <div class="confirm-check"><i class="bi bi-check2"></i></div>
-          <h3 class="panel-title">Reservation confirmed</h3>
+          <h2 class="panel-title">Reservation confirmed</h2>
           <p style="color:var(--muted)">We've sent the details to your email. The venue is expecting you.</p>
 
           <div class="text-start mt-4 mx-auto" style="max-width:480px">
@@ -178,7 +178,7 @@
           <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80" style="width:100%;height:160px;object-fit:cover" alt="Restaurant table prepared for a reservation" loading="lazy" decoding="async" width="800" height="533" sizes="100vw" />
           <div class="p-4">
             <span class="chip-gold mb-2"><i class="bi bi-award-fill"></i> Editor's pick</span>
-            <h5 class="m-0 mt-2 panel-title">Aurora Rooftop</h5>
+            <h3 class="m-0 mt-2 panel-title">Aurora Rooftop</h3>
             <div class="small text-muted-pro mt-1"><i class="bi bi-geo-alt"></i> Shoreditch, London · Modern European</div>
             <div class="rating text-gold mt-2"><i class="bi bi-star-fill"></i> 4.9 <span class="text-muted-pro small">(1,284)</span></div>
 

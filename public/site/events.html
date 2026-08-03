@@ -49,26 +49,26 @@
       <aside class="col-lg-3">
         <div class="card-pro filter-card">
           <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="m-0" data-i18n="events.filters">Filters</h6>
+            <h2 class="m-0" data-i18n="events.filters">Filters</h2>
             <a href="#" class="small" data-events-clear-filters data-i18n="events.clear_all">Clear all</a>
           </div>
           <div class="filter-group">
-            <label class="form-label" data-i18n="events.category">Category</label>
+            <div class="form-label" data-i18n="events.category">Category</div>
             <div class="d-flex gap-2 flex-wrap" data-events-category-chips>
               <span class="chip active" data-filter-category-chip="" data-i18n="events.all_categories">All</span><span class="chip" data-filter-category-chip="concerts">Concerts</span><span class="chip" data-filter-category-chip="sports">Sports</span><span class="chip" data-filter-category-chip="festivals">Festivals</span><span class="chip" data-filter-category-chip="theater">Theater</span><span class="chip" data-filter-category-chip="comedy">Comedy</span><span class="chip" data-filter-category-chip="family">Family</span><span class="chip" data-filter-category-chip="conferences">Conferences</span>
             </div>
           </div>
           <div class="filter-group">
-            <label class="form-label" data-i18n="events.date">Date</label>
-            <select class="form-select" data-filter-date><option value="" data-i18n="events.any_date">Any date</option><option value="today" data-i18n="events.today">Today</option><option value="weekend" data-i18n="events.this_weekend">This weekend</option><option value="month" data-i18n="events.this_month">This month</option></select>
+            <label class="form-label" for="events-filter-date" data-i18n="events.date">Date</label>
+            <select id="events-filter-date" class="form-select" data-filter-date><option value="" data-i18n="events.any_date">Any date</option><option value="today" data-i18n="events.today">Today</option><option value="weekend" data-i18n="events.this_weekend">This weekend</option><option value="month" data-i18n="events.this_month">This month</option></select>
           </div>
           <div class="filter-group">
-            <label class="form-label" data-i18n="events.city">City</label>
-            <input class="form-control" data-filter-city placeholder="Search city" data-i18n-attr="placeholder:forms.search_city"/>
+            <label class="form-label" for="events-filter-city" data-i18n="events.city">City</label>
+            <input id="events-filter-city" class="form-control" data-filter-city placeholder="Search city" data-i18n-attr="placeholder:forms.search_city"/>
           </div>
           <div class="filter-group">
-            <label class="form-label d-flex justify-content-between"><span data-i18n="events.price">Price</span> <span class="text-muted-pro small">$0 - $500</span></label>
-            <input type="range" class="form-range" min="0" max="500" value="500" data-filter-max-price/>
+            <label class="form-label d-flex justify-content-between" for="events-filter-max-price"><span data-i18n="events.price">Price</span> <span class="text-muted-pro small">$0 - $500</span></label>
+            <input id="events-filter-max-price" type="range" class="form-range" min="0" max="500" value="500" data-filter-max-price/>
           </div>
           <button class="btn btn-primary-grad w-100 mt-2" type="button" data-events-apply-filters data-i18n="events.apply_filters">Apply filters</button>
         </div>

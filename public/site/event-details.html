@@ -31,7 +31,7 @@
 <!-- Banner -->
 <section class="event-detail-hero" style="position:relative;height:420px;overflow:hidden" data-event-root>
   <div data-event-banner-placeholder class="event-banner-placeholder" style="width:100%;height:100%"></div>
-  <img data-event-banner src="" alt="Event hero image" hidden decoding="async" fetchpriority="high" loading="eager" width="1600" height="900" sizes="100vw" style="width:100%;height:100%;object-fit:cover"/>
+  <img data-event-banner src="" alt="" hidden decoding="async" fetchpriority="high" loading="eager" width="1600" height="900" sizes="100vw" style="width:100%;height:100%;object-fit:cover"/>
   <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,15,25,.2) 0%, rgba(11,15,25,.95) 90%)"></div>
   <div class="container-xxl position-relative event-detail-hero-copy" style="margin-top:-260px;z-index:2">
     <nav class="text-white-50 small mb-2"><a href="/events/list" class="text-white-50" data-i18n="header.events">Events</a> <i class="bi bi-chevron-right mx-1"></i> <a href="/events/list" class="text-white-50" data-event-breadcrumb-category data-i18n="loading.loading">Loading</a> <i class="bi bi-chevron-right mx-1"></i> <span data-event-breadcrumb data-i18n="events.loading_event">Loading event...</span></nav>
@@ -58,7 +58,7 @@
         </div>
 
         <!-- About -->
-        <h3 class="event-description-heading" data-i18n="events.about_this_event">About this event</h3>
+        <h2 class="event-description-heading" data-i18n="events.about_this_event">About this event</h2>
         <div data-event-description class="event-description text-muted-pro" role="status" aria-label="Loading event information">
           <span class="skeleton-line mb-2" style="width:92%"></span>
           <span class="skeleton-line mb-2" style="width:84%"></span>
@@ -66,7 +66,7 @@
         </div>
 
         <!-- Organizer -->
-        <h4 class="mt-5" data-i18n="events.organizer">Organizer</h4>
+        <h2 class="mt-5" data-i18n="events.organizer">Organizer</h2>
         <div class="card-pro p-4 d-flex justify-content-between align-items-center flex-wrap gap-3 event-organizer-card">
           <div class="d-flex align-items-center gap-3">
             <div style="width:56px;height:56px;border-radius:var(--radius-sm);background:var(--grad-primary);display:grid;place-items:center"><i class="bi bi-music-note-list text-white fs-4"></i></div>
@@ -82,17 +82,17 @@
           <div class="card-pro p-4 event-ticket-panel">
             <div class="d-flex justify-content-between align-items-start"><div><div class="text-muted-pro small" data-i18n="events.starting_from">Starting from</div><div class="fs-3 fw-bold" data-event-price data-i18n="loading.loading">Loading...</div></div><span class="badge status-badge status-active" data-event-availability data-i18n="loading.loading">Loading</span></div>
             <hr class="divider"/>
-            <label class="form-label" data-i18n="events.ticket_type">Ticket type</label>
-            <select class="form-select mb-3" data-ticket-type-select disabled><option data-i18n="events.loading_ticket_types">Loading ticket types...</option></select>
+            <label class="form-label" for="event-detail-ticket-type" data-i18n="events.ticket_type">Ticket type</label>
+            <select id="event-detail-ticket-type" class="form-select mb-3" data-ticket-type-select disabled><option data-i18n="events.loading_ticket_types">Loading ticket types...</option></select>
             <div class="dropdown mb-3 mobile-ticket-select" data-ticket-type-mobile hidden>
               <button class="form-select text-start" type="button" data-bs-toggle="dropdown" data-ticket-type-mobile-button disabled data-i18n="events.loading_ticket_types">Loading ticket types...</button>
               <div class="dropdown-menu w-100" data-ticket-type-mobile-menu></div>
             </div>
             <div class="small text-muted-pro mb-3" data-event-purchase-limit hidden></div>
-            <label class="form-label" data-i18n="events.quantity">Quantity</label>
+            <label class="form-label" for="event-detail-ticket-quantity" data-i18n="events.quantity">Quantity</label>
             <div class="qty-wrap d-flex align-items-center gap-2 mb-3" data-qty data-price="0" data-currency="USD">
               <button class="btn btn-glass" type="button" data-qty="-">−</button>
-              <input class="form-control text-center" value="1" min="1" type="number" style="max-width:70px"/>
+              <input id="event-detail-ticket-quantity" class="form-control text-center" value="1" min="1" type="number" style="max-width:70px"/>
               <button class="btn btn-glass" type="button" data-qty="+">+</button>
               <span class="ms-auto fw-bold" data-qty-total>$0.00</span>
             </div>

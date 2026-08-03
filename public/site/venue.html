@@ -188,7 +188,7 @@
 
       <!-- About -->
       <section class="mb-5 venue-detail-section">
-        <h3 class="panel-title" data-i18n="venue.about">About</h3>
+        <h2 class="panel-title" data-i18n="venue.about">About</h2>
         <p data-detail-description class="venue-detail-description mb-0" role="status" aria-label="Loading restaurant or bar details">
           <span class="skeleton-line mb-2" style="width:92%"></span>
           <span class="skeleton-line mb-2" style="width:84%"></span>
@@ -200,21 +200,21 @@
 
       <!-- Facilities -->
       <section class="mb-5 venue-detail-section" data-detail-section="facilities">
-        <h3 class="panel-title" data-i18n="venue.facilities">Facilities</h3>
+        <h2 class="panel-title" data-i18n="venue.facilities">Facilities</h2>
         <div class="row g-3 mt-2" data-detail-facilities></div>
       </section>
 
       <div class="divider-gold" data-detail-divider="facilities"></div>
 
       <section class="mb-5 venue-detail-section" data-detail-section="cuisines">
-        <h3 class="panel-title" data-i18n="venue.cuisines">Cuisines</h3>
+        <h2 class="panel-title" data-i18n="venue.cuisines">Cuisines</h2>
         <div class="row g-3 mt-2" data-detail-cuisine-list></div>
       </section>
 
       <div class="divider-gold" data-detail-divider="cuisines"></div>
 
       <section class="mb-5 venue-detail-section" data-detail-section="payments">
-        <h3 class="panel-title" data-i18n="venue.payment_options">Payment Options</h3>
+        <h2 class="panel-title" data-i18n="venue.payment_options">Payment Options</h2>
         <div class="row g-3 mt-2" data-detail-payments></div>
       </section>
 
@@ -222,7 +222,7 @@
 
       <!-- Hours -->
       <section class="mb-5 venue-detail-section">
-        <h3 class="panel-title" data-i18n="venue.opening_hours">Opening Hours</h3>
+        <h2 class="panel-title" data-i18n="venue.opening_hours">Opening Hours</h2>
         <div class="row g-2 mt-2" data-detail-hours></div>
       </section>
 
@@ -230,7 +230,7 @@
 
       <!-- Contact + Map -->
       <section class="mb-5 venue-detail-section">
-        <h3 class="panel-title" data-i18n="venue.location_contact">Location & Contact</h3>
+        <h2 class="panel-title" data-i18n="venue.location_contact">Location & Contact</h2>
         <div class="row g-3 mt-2" data-detail-contact></div>
         <div class="venue-google-map mt-3" data-detail-map-section hidden>
           <div class="venue-google-map-head">
@@ -264,7 +264,7 @@
             <span class="reservation-icon"><i class="bi bi-calendar-check fs-4"></i></span>
             <div>
               <span class="eyebrow-res" data-i18n="venue.table_booking">Table booking</span>
-              <h5 class="m-0 mt-1" data-i18n="venue.reserve_now">Reserve now</h5>
+              <h3 class="m-0 mt-1" data-i18n="venue.reserve_now">Reserve now</h3>
             </div>
           </div>
           <p class="text-muted-pro mb-4" data-i18n="venue.choose_party_date_time">Choose your party, date, and time to send a reservation request directly to the restaurant or bar.</p>
@@ -297,7 +297,7 @@
       <div class="modal-header reservation-modal-head">
         <div>
           <span class="eyebrow-res">Tiketa Reservations</span>
-          <h5 class="modal-title mt-2" data-i18n="venue.reserve_a_table">Reserve a table</h5>
+          <h3 class="modal-title mt-2" data-i18n="venue.reserve_a_table">Reserve a table</h3>
           <p class="text-muted-pro mb-0" data-reservation-modal-venue data-i18n="venue.choose_party_date_time">Choose your preferred party, date, and time.</p>
         </div>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>
@@ -310,7 +310,7 @@
               <div class="booking-step-title">
                 <span>1</span>
                 <div>
-                  <h6 data-i18n="reservation.guests">Guests</h6>
+                  <h4 data-i18n="reservation.guests">Guests</h4>
                   <p data-i18n="reservation.choose_party_size">Choose your party size</p>
                 </div>
               </div>
@@ -328,7 +328,7 @@
               <div class="booking-step-title">
                 <span>2</span>
                 <div>
-                  <h6 data-i18n="common.date">Date</h6>
+                  <h4 data-i18n="common.date">Date</h4>
                   <p data-i18n="availability.select_reservation_date">Select a reservation date</p>
                 </div>
               </div>
@@ -346,7 +346,7 @@
               <div class="booking-step-title">
                 <span>3</span>
                 <div>
-                  <h6 data-i18n="common.time">Time</h6>
+                  <h4 data-i18n="common.time">Time</h4>
                   <p data-i18n="availability.pick_available_time">Pick an available request time</p>
                 </div>
               </div>
@@ -364,7 +364,7 @@
               <div class="booking-step-title">
                 <span>4</span>
                 <div>
-                  <h6 data-i18n="reservation.reservation_details">Reservation Details</h6>
+                  <h4 data-i18n="reservation.reservation_details">Reservation Details</h4>
                   <p data-i18n="reservation.share_occasion_requests">Share the occasion and any special requests</p>
                 </div>
               </div>
@@ -377,15 +377,15 @@
                 <div class="reservation-picker-panel reservation-picker-panel-wide" data-picker-panel="occasion"></div>
               </div>
               <div class="mt-3">
-                <label class="form-label small text-muted-pro" data-i18n="reservation.special_request">Special Request</label>
-                <textarea class="form-control" name="notes" rows="3" placeholder="Allergies, seating preference, celebration details..." data-i18n-attr="placeholder:reservation.special_request_placeholder"></textarea>
+                <label class="form-label small text-muted-pro" for="reservation-notes" data-i18n="reservation.special_request">Special Request</label>
+                <textarea id="reservation-notes" class="form-control" name="notes" rows="3" placeholder="Allergies, seating preference, celebration details..." data-i18n-attr="placeholder:reservation.special_request_placeholder"></textarea>
               </div>
             </section>
 
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label small text-muted-pro" data-i18n="forms.phone">Phone</label>
-                <input class="form-control" name="phone" type="tel" placeholder="Optional" data-i18n-attr="placeholder:reservation.optional">
+                <label class="form-label small text-muted-pro" for="reservation-phone" data-i18n="forms.phone">Phone</label>
+                <input id="reservation-phone" class="form-control" name="phone" type="tel" placeholder="Optional" data-i18n-attr="placeholder:reservation.optional">
               </div>
             </div>
           </div>
@@ -404,7 +404,7 @@
   <button class="venue-lightbox-close" type="button" data-gallery-close aria-label="Close gallery"><i class="bi bi-x-lg"></i></button>
   <button class="venue-lightbox-nav venue-lightbox-prev" type="button" data-gallery-prev aria-label="Previous photo"><i class="bi bi-chevron-left"></i></button>
   <figure class="venue-lightbox-frame">
-    <img src="" alt="Restaurant gallery photo" data-gallery-lightbox-image loading="lazy" decoding="async" width="1200" height="800">
+    <img src="" alt="" data-gallery-lightbox-image loading="lazy" decoding="async" width="1200" height="800">
     <figcaption>
       <strong data-gallery-lightbox-title>Restaurant photo</strong>
       <span data-gallery-lightbox-count>1 / 1</span>
@@ -419,7 +419,7 @@
       <div class="modal-header reservation-modal-head">
         <div>
           <span class="eyebrow-res" data-i18n="auth.email_verification_required">Email Verification Required</span>
-          <h5 class="modal-title mt-2" data-i18n="auth.verify_email_first">Verify your email address first.</h5>
+          <h3 class="modal-title mt-2" data-i18n="auth.verify_email_first">Verify your email address first.</h3>
           <p class="text-muted-pro mb-0" data-i18n="auth.verify_before_reservation">Please verify your email address before creating a reservation.</p>
         </div>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>

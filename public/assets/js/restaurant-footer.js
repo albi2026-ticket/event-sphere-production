@@ -8,40 +8,40 @@
       <div class="footer-brand">
         <a class="brand mb-3" href="/restaurants"><span class="brand-logo" style="background:var(--grad-res)"><i class="bi bi-cup-hot-fill"></i></span>Tiketa</a>
         <p data-i18n="footer.dining_tagline">Discover and reserve restaurants, bars, lounges, and cafes with a polished hospitality booking experience.</p>
-        <div class="footer-social" data-i18n-attr="aria-label:footer.social_links">
+        <nav class="footer-social" aria-label="Social links" data-i18n-attr="aria-label:footer.social_links">
           <a href="https://www.instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
           <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="X Twitter"><i class="bi bi-twitter-x"></i></a>
           <a href="https://www.tiktok.com" target="_blank" rel="noreferrer" aria-label="TikTok"><i class="bi bi-tiktok"></i></a>
           <a href="https://www.linkedin.com" target="_blank" rel="noreferrer" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
-        </div>
+        </nav>
       </div>
     </div>
 
     <div class="footer-links-grid">
-      <div class="footer-link-group">
+      <nav class="footer-link-group" aria-label="Company">
         <h6 data-i18n="footer.company">Company</h6>
         <a href="/about-dining" data-i18n="footer.about_dining">About Tiketa Dining</a>
         <a href="/contact-dining" data-i18n="footer.contact">Contact</a>
         <a href="/careers" data-i18n="footer.careers">Careers</a>
-      </div>
-      <div class="footer-link-group">
+      </nav>
+      <nav class="footer-link-group" aria-label="Restaurant owners">
         <h6 data-i18n="footer.restaurant_owners">Restaurant Owners</h6>
         <a href="/become-restaurant-partner" data-i18n="footer.become_restaurant_partner">Become a Restaurant Partner</a>
         <a href="/restaurant-owner-guide" data-i18n="footer.owner_guide">Owner Guide</a>
         <a href="/list-your-restaurant" data-i18n="footer.list_your_restaurant">List Your Restaurant</a>
-      </div>
-      <div class="footer-link-group">
+      </nav>
+      <nav class="footer-link-group" aria-label="Reservations">
         <h6 data-i18n="footer.reservations">Reservations</h6>
         <a href="/how-reservations-work" data-i18n="footer.how_reservations_work">How Reservations Work</a>
         <a href="/reservation-support" data-i18n="footer.reservation_support">Reservation Support</a>
         <a href="/reservation-policy" data-i18n="footer.reservation_policy">Reservation Policy</a>
-      </div>
-      <div class="footer-link-group">
+      </nav>
+      <nav class="footer-link-group" aria-label="Legal">
         <h6 data-i18n="footer.legal">Legal</h6>
         <a href="/terms-of-service" data-i18n="footer.terms_short">Terms</a>
         <a href="/privacy-policy" data-i18n="footer.privacy_short">Privacy</a>
         <a href="/cookie-policy" data-i18n="footer.cookies_short">Cookies</a>
-      </div>
+      </nav>
     </div>
 
     <div class="legal">

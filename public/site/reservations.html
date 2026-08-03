@@ -75,7 +75,8 @@
 
     <!-- SEARCH -->
     <form class="res-search res-search-simple mx-auto" style="max-width:820px" data-venue-search-form>
-      <div class="field"><i class="bi bi-search"></i><input name="q" placeholder="Search by restaurant, bar, café, lounge, or city" autocomplete="off" data-i18n-attr="placeholder:restaurants.search_placeholder" /></div>
+      <label class="visually-hidden" for="reservation-search-query" data-i18n="restaurants.search_placeholder">Search by restaurant, bar, café, lounge, or city</label>
+      <div class="field"><i class="bi bi-search"></i><input id="reservation-search-query" name="q" placeholder="Search by restaurant, bar, café, lounge, or city" autocomplete="off" data-i18n-attr="placeholder:restaurants.search_placeholder" /></div>
       <button class="btn btn-gold btn-lg" type="submit"><i class="bi bi-search me-1"></i> <span data-i18n="restaurants.find_table">Find a Table</span></button>
     </form>
 
@@ -93,8 +94,8 @@
     <div class="card-pro p-3 p-lg-4" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md)">
       <div class="row g-3 align-items-end">
         <div class="col-md-6 col-xl-3">
-          <label class="form-label small text-muted-pro" data-i18n="restaurants.restaurant_bar_type">Restaurant / Bar Type</label>
-          <select class="form-select" data-venue-filter="venue_type">
+          <label class="form-label small text-muted-pro" for="reservation-filter-venue-type" data-i18n="restaurants.restaurant_bar_type">Restaurant / Bar Type</label>
+          <select id="reservation-filter-venue-type" class="form-select" data-venue-filter="venue_type">
             <option value="" data-i18n="restaurants.all_types">All types</option>
             <option value="restaurant" data-i18n="restaurants.restaurant">Restaurant</option>
             <option value="bar" data-i18n="restaurants.bar">Bar</option>
@@ -103,20 +104,20 @@
           </select>
         </div>
         <div class="col-md-6 col-xl-3">
-          <label class="form-label small text-muted-pro" data-i18n="restaurants.cuisine_type">Cuisine Type</label>
-          <select class="form-select" data-venue-filter="cuisine">
+          <label class="form-label small text-muted-pro" for="reservation-filter-cuisine" data-i18n="restaurants.cuisine_type">Cuisine Type</label>
+          <select id="reservation-filter-cuisine" class="form-select" data-venue-filter="cuisine">
             <option value="" data-i18n="restaurants.all_cuisines">All cuisines</option>
           </select>
         </div>
         <div class="col-md-6 col-xl-3">
-          <label class="form-label small text-muted-pro" data-i18n="venue.facilities">Facilities</label>
-          <select class="form-select" data-venue-filter="facility">
+          <label class="form-label small text-muted-pro" for="reservation-filter-facility" data-i18n="venue.facilities">Facilities</label>
+          <select id="reservation-filter-facility" class="form-select" data-venue-filter="facility">
             <option value="" data-i18n="restaurants.all_facilities">All facilities</option>
           </select>
         </div>
         <div class="col-md-6 col-xl-2">
-          <label class="form-label small text-muted-pro" data-i18n="restaurants.sort">Sort</label>
-          <select class="form-select" data-venue-filter="sort">
+          <label class="form-label small text-muted-pro" for="reservation-filter-sort" data-i18n="restaurants.sort">Sort</label>
+          <select id="reservation-filter-sort" class="form-select" data-venue-filter="sort">
             <option value="featured" data-i18n="restaurants.featured_first">Featured first</option>
             <option value="az">A-Z</option>
             <option value="newest" data-i18n="events.newest">Newest</option>
@@ -198,7 +199,7 @@
             <div style="width:52px;height:52px;border-radius:16px;background:var(--res-gold-soft);display:grid;place-items:center"><i class="bi bi-search-heart text-gold fs-4"></i></div>
             <span class="chip-gold" data-i18n="restaurants.step_1_label">Step 1</span>
           </div>
-          <h4 class="panel-title" data-i18n="restaurants.step_1_title">Discover Restaurants & Bars</h4>
+          <h3 class="panel-title" data-i18n="restaurants.step_1_title">Discover Restaurants & Bars</h3>
           <p class="text-muted-pro mb-0" data-i18n="restaurants.step_1_copy">Browse restaurants, bars, lounges, and cafes.</p>
         </div>
       </div>
@@ -208,7 +209,7 @@
             <div style="width:52px;height:52px;border-radius:16px;background:var(--res-gold-soft);display:grid;place-items:center"><i class="bi bi-calendar2-heart text-gold fs-4"></i></div>
             <span class="chip-gold" data-i18n="restaurants.step_2_label">Step 2</span>
           </div>
-          <h4 class="panel-title" data-i18n="restaurants.step_2_title">Choose Date & Time</h4>
+          <h3 class="panel-title" data-i18n="restaurants.step_2_title">Choose Date & Time</h3>
           <p class="text-muted-pro mb-0" data-i18n="restaurants.step_2_copy">Select your preferred date, time, and party size.</p>
         </div>
       </div>
@@ -218,7 +219,7 @@
             <div style="width:52px;height:52px;border-radius:16px;background:var(--res-gold-soft);display:grid;place-items:center"><i class="bi bi-send-check text-gold fs-4"></i></div>
             <span class="chip-gold" data-i18n="restaurants.step_3_label">Step 3</span>
           </div>
-          <h4 class="panel-title" data-i18n="restaurants.step_3_title">Send Reservation Request</h4>
+          <h3 class="panel-title" data-i18n="restaurants.step_3_title">Send Reservation Request</h3>
           <p class="text-muted-pro mb-0" data-i18n="restaurants.step_3_copy">Submit your reservation request instantly.</p>
         </div>
       </div>
@@ -228,7 +229,7 @@
             <div style="width:52px;height:52px;border-radius:16px;background:var(--res-gold-soft);display:grid;place-items:center"><i class="bi bi-patch-check text-gold fs-4"></i></div>
             <span class="chip-gold" data-i18n="restaurants.step_4_label">Step 4</span>
           </div>
-          <h4 class="panel-title" data-i18n="restaurants.step_4_title">Receive Confirmation</h4>
+          <h3 class="panel-title" data-i18n="restaurants.step_4_title">Receive Confirmation</h3>
           <p class="text-muted-pro mb-0" data-i18n="restaurants.step_4_copy">The restaurant or bar reviews your request and confirms your booking.</p>
         </div>
       </div>
@@ -248,9 +249,9 @@
         </div>
         <div class="col-lg-5">
           <form class="d-grid gap-3" data-restaurant-newsletter-form data-newsletter-source="restaurants" novalidate>
-            <label class="form-label small text-muted-pro mb-0" data-i18n="restaurants.email_address">Email Address</label>
+            <label class="form-label small text-muted-pro mb-0" for="restaurant-newsletter-email" data-i18n="restaurants.email_address">Email Address</label>
             <div class="d-flex flex-column flex-sm-row gap-2">
-              <input class="form-control form-control-lg" type="email" placeholder="you@example.com" aria-label="Email Address" required data-restaurant-newsletter-email data-i18n-attr="placeholder:restaurants.email_placeholder,aria-label:restaurants.email_address">
+              <input id="restaurant-newsletter-email" class="form-control form-control-lg" type="email" placeholder="you@example.com" required data-restaurant-newsletter-email data-i18n-attr="placeholder:restaurants.email_placeholder">
               <button class="btn btn-gold btn-lg px-4" type="submit" data-restaurant-newsletter-submit data-i18n="footer.subscribe">Subscribe</button>
             </div>
             <div class="newsletter-message" data-restaurant-newsletter-message role="status" aria-live="polite"></div>

@@ -290,7 +290,7 @@
       </section>
 
       <section class="manager-public-preview" data-owner-summary hidden id="managerPublicPreview">
-        <img data-owner-cover alt="Restaurant venue cover preview" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1000&q=80" loading="lazy" decoding="async" width="1000" height="667" sizes="(min-width: 992px) 36vw, 100vw" />
+        <img data-owner-cover alt="Restaurant or bar public page cover preview" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1000&q=80" loading="lazy" decoding="async" width="1000" height="667" sizes="(min-width: 992px) 36vw, 100vw" />
         <div>
           <span class="eyebrow-res"><i class="bi bi-window"></i> <span data-i18n="venue.public_page_preview">Public page preview</span></span>
           <h3 data-owner-title>Restaurant / Bar profile</h3>
@@ -492,13 +492,13 @@
       <div class="row g-3 mb-3">
         <div class="col-xl-6">
           <div class="owner-analytics-panel">
-            <h5 data-i18n="owner.todays_performance">Today's Performance</h5>
+            <h3 data-i18n="owner.todays_performance">Today's Performance</h3>
             <div class="owner-analytics-mini-grid" data-owner-analytics-today></div>
           </div>
         </div>
         <div class="col-xl-6">
           <div class="owner-analytics-panel">
-            <h5 data-i18n="owner.this_month">This Month</h5>
+            <h3 data-i18n="owner.this_month">This Month</h3>
             <div class="owner-analytics-mini-grid" data-owner-analytics-month></div>
           </div>
         </div>
@@ -509,14 +509,14 @@
       <div class="row g-3 mb-3">
         <div class="col-xl-8">
           <div class="owner-analytics-panel">
-            <h5 data-i18n="owner.reservation_trend">Reservation Trend</h5>
+            <h3 data-i18n="owner.reservation_trend">Reservation Trend</h3>
             <canvas id="ownerReservationTrendChart" height="130"></canvas>
             <div data-owner-analytics-trend-empty></div>
           </div>
         </div>
         <div class="col-xl-4">
           <div class="owner-analytics-panel">
-            <h5 data-i18n="owner.status_breakdown">Status Breakdown</h5>
+            <h3 data-i18n="owner.status_breakdown">Status Breakdown</h3>
             <canvas id="ownerReservationStatusChart" height="180"></canvas>
             <div data-owner-analytics-status-empty></div>
           </div>
@@ -526,13 +526,13 @@
       <div class="row g-3">
         <div class="col-xl-6">
           <div class="owner-analytics-panel">
-            <h5 data-i18n="owner.popular_days">Most Popular Reservation Days</h5>
+            <h3 data-i18n="owner.popular_days">Most Popular Reservation Days</h3>
             <div class="owner-analytics-list" data-owner-analytics-top-days></div>
           </div>
         </div>
         <div class="col-xl-6">
           <div class="owner-analytics-panel">
-            <h5 data-i18n="owner.popular_times">Most Popular Reservation Times</h5>
+            <h3 data-i18n="owner.popular_times">Most Popular Reservation Times</h3>
             <div class="owner-analytics-list" data-owner-analytics-top-times></div>
           </div>
         </div>
@@ -574,16 +574,16 @@
             <div><h2 data-i18n="header.profile">Profile</h2><div class="sub" data-i18n="manager.profile_copy">Name, type, description, contact, website, and social links</div></div>
           </div>
           <div class="row g-3">
-            <div class="col-md-8"><label class="form-label" data-i18n="forms.full_name">Name</label><input class="form-control" name="name" required maxlength="255" /></div>
-            <div class="col-md-4"><label class="form-label" data-i18n="restaurants.restaurant_bar_type">Restaurant / Bar Type</label><select class="form-select" name="venue_type" required><option value="" data-i18n="restaurants.all_types">Select type</option><option value="restaurant" data-i18n="restaurants.restaurant">Restaurant</option><option value="bar" data-i18n="restaurants.bar">Bar</option><option value="lounge" data-i18n="restaurants.lounge">Lounge</option><option value="cafe" data-i18n="restaurants.cafe">Cafe</option></select></div>
-            <div class="col-md-4"><label class="form-label" data-i18n="owner.status">Status</label><select class="form-select" name="status"><option value="active" data-i18n="manager.active">Active</option><option value="draft" data-i18n="manager.draft">Draft</option><option value="inactive" data-i18n="manager.inactive">Inactive</option></select></div>
-            <div class="col-md-4"><label class="form-label" data-i18n="venue.phone">Phone</label><input class="form-control" name="phone" maxlength="255" /></div>
-            <div class="col-md-4"><label class="form-label" data-i18n="venue.email">Email</label><input class="form-control" name="email" type="email" maxlength="255" /></div>
-            <div class="col-12"><label class="form-label" data-i18n="venue.description">Description</label><textarea class="form-control" name="description" rows="4"></textarea></div>
-            <div class="col-md-6"><label class="form-label" data-i18n="venue.website">Website</label><input class="form-control" name="website" type="url" placeholder="https://example.com" /></div>
-            <div class="col-md-6"><label class="form-label" data-i18n="manager.facebook">Facebook</label><input class="form-control" name="facebook_url" type="url" placeholder="Facebook URL" /></div>
-            <div class="col-md-6"><label class="form-label" data-i18n="manager.instagram">Instagram</label><input class="form-control" name="instagram_url" type="url" placeholder="Instagram URL" /></div>
-            <div class="col-md-6"><label class="form-label">TikTok</label><input class="form-control" name="tiktok_url" type="url" placeholder="TikTok URL" /></div>
+            <div class="col-md-8"><label class="form-label" for="owner-venue-name" data-i18n="forms.full_name">Name</label><input id="owner-venue-name" class="form-control" name="name" required maxlength="255" /></div>
+            <div class="col-md-4"><label class="form-label" for="owner-venue-type" data-i18n="restaurants.restaurant_bar_type">Restaurant / Bar Type</label><select id="owner-venue-type" class="form-select" name="venue_type" required><option value="" data-i18n="restaurants.all_types">Select type</option><option value="restaurant" data-i18n="restaurants.restaurant">Restaurant</option><option value="bar" data-i18n="restaurants.bar">Bar</option><option value="lounge" data-i18n="restaurants.lounge">Lounge</option><option value="cafe" data-i18n="restaurants.cafe">Cafe</option></select></div>
+            <div class="col-md-4"><label class="form-label" for="owner-venue-status" data-i18n="owner.status">Status</label><select id="owner-venue-status" class="form-select" name="status"><option value="active" data-i18n="manager.active">Active</option><option value="draft" data-i18n="manager.draft">Draft</option><option value="inactive" data-i18n="manager.inactive">Inactive</option></select></div>
+            <div class="col-md-4"><label class="form-label" for="owner-venue-phone" data-i18n="venue.phone">Phone</label><input id="owner-venue-phone" class="form-control" name="phone" maxlength="255" /></div>
+            <div class="col-md-4"><label class="form-label" for="owner-venue-email" data-i18n="venue.email">Email</label><input id="owner-venue-email" class="form-control" name="email" type="email" maxlength="255" /></div>
+            <div class="col-12"><label class="form-label" for="owner-venue-description" data-i18n="venue.description">Description</label><textarea id="owner-venue-description" class="form-control" name="description" rows="4"></textarea></div>
+            <div class="col-md-6"><label class="form-label" for="owner-venue-website" data-i18n="venue.website">Website</label><input id="owner-venue-website" class="form-control" name="website" type="url" placeholder="https://example.com" /></div>
+            <div class="col-md-6"><label class="form-label" for="owner-venue-facebook" data-i18n="manager.facebook">Facebook</label><input id="owner-venue-facebook" class="form-control" name="facebook_url" type="url" placeholder="Facebook URL" /></div>
+            <div class="col-md-6"><label class="form-label" for="owner-venue-instagram" data-i18n="manager.instagram">Instagram</label><input id="owner-venue-instagram" class="form-control" name="instagram_url" type="url" placeholder="Instagram URL" /></div>
+            <div class="col-md-6"><label class="form-label" for="owner-venue-tiktok">TikTok</label><input id="owner-venue-tiktok" class="form-control" name="tiktok_url" type="url" placeholder="TikTok URL" /></div>
           </div>
         </section>
 
@@ -594,7 +594,7 @@
           <div class="owner-gallery-dropzone mb-3" data-owner-gallery-dropzone>
             <i class="bi bi-images fs-3 text-gold"></i>
             <div>
-              <h5 class="mb-1" data-i18n="owner.upload_photos">Upload Restaurant & Bar Photos</h5>
+              <h3 class="mb-1" data-i18n="owner.upload_photos">Upload Restaurant & Bar Photos</h3>
               <small class="text-muted-pro" data-i18n="manager.gallery_dropzone_copy">Drag photos here or choose multiple PNG, JPG, WebP, or GIF files up to 5MB each.</small>
             </div>
             <button class="btn btn-gold-outline btn-sm" type="button" data-owner-image-browse>
@@ -614,7 +614,8 @@
             <div class="owner-location-hero">
               <div class="owner-location-search-shell">
                 <i class="bi bi-search"></i>
-                <input class="form-control" type="search" placeholder="Search your venue or address..." data-i18n-attr="placeholder:manager.search_venue_address" data-owner-location-search autocomplete="off">
+                <label class="visually-hidden" for="owner-venue-location-search" data-i18n="manager.search_venue_address">Search your venue or address...</label>
+                <input id="owner-venue-location-search" class="form-control" type="search" placeholder="Search your venue or address..." data-i18n-attr="placeholder:manager.search_venue_address" data-owner-location-search autocomplete="off">
               </div>
               <button class="btn btn-gold owner-location-current" type="button" data-owner-location-current>
                 <i class="bi bi-geo-alt-fill me-1"></i><span data-i18n="manager.use_current_location">Use My Current Location</span>
@@ -648,11 +649,11 @@
             <details class="owner-location-advanced">
               <summary><span data-i18n="manager.advanced_location_fields">Advanced location fields</span><i class="bi bi-chevron-down"></i></summary>
               <div class="row g-3 mt-1">
-                <div class="col-md-6"><label class="form-label" data-i18n="venue.address">Address</label><input class="form-control" name="address" data-owner-address /></div>
-                <div class="col-md-3"><label class="form-label" data-i18n="restaurants.city">City</label><input class="form-control" name="city" required maxlength="255" /></div>
-                <div class="col-md-3"><label class="form-label" data-i18n="owner.country">Country</label><input class="form-control" name="country" maxlength="255" /></div>
-                <div class="col-md-6"><label class="form-label" data-i18n="owner.latitude">Latitude</label><input class="form-control" name="latitude" type="number" step="0.0000001" /></div>
-                <div class="col-md-6"><label class="form-label" data-i18n="owner.longitude">Longitude</label><input class="form-control" name="longitude" type="number" step="0.0000001" /></div>
+                <div class="col-md-6"><label class="form-label" for="owner-venue-address" data-i18n="venue.address">Address</label><input id="owner-venue-address" class="form-control" name="address" data-owner-address /></div>
+                <div class="col-md-3"><label class="form-label" for="owner-venue-city" data-i18n="restaurants.city">City</label><input id="owner-venue-city" class="form-control" name="city" required maxlength="255" /></div>
+                <div class="col-md-3"><label class="form-label" for="owner-venue-country" data-i18n="owner.country">Country</label><input id="owner-venue-country" class="form-control" name="country" maxlength="255" /></div>
+                <div class="col-md-6"><label class="form-label" for="owner-venue-latitude" data-i18n="owner.latitude">Latitude</label><input id="owner-venue-latitude" class="form-control" name="latitude" type="number" step="0.0000001" /></div>
+                <div class="col-md-6"><label class="form-label" for="owner-venue-longitude" data-i18n="owner.longitude">Longitude</label><input id="owner-venue-longitude" class="form-control" name="longitude" type="number" step="0.0000001" /></div>
                 <div class="col-12 d-flex flex-wrap gap-2">
                   <button class="btn btn-glass btn-sm" type="button" data-owner-location-clear data-i18n="manager.clear_map_pin">Clear map pin</button>
                 </div>
@@ -717,13 +718,13 @@
           </div>
           <div class="row g-3">
             <div class="col-md-4">
-              <label class="form-label" data-i18n="availability.max_reservations_per_slot">Maximum Reservations Per Time Slot</label>
-              <input class="form-control" name="max_reservations_per_slot" type="number" min="1" value="10" />
+              <label class="form-label" for="owner-venue-max-reservations-per-slot" data-i18n="availability.max_reservations_per_slot">Maximum Reservations Per Time Slot</label>
+              <input id="owner-venue-max-reservations-per-slot" class="form-control" name="max_reservations_per_slot" type="number" min="1" value="10" />
               <small class="text-muted-pro" data-i18n="manager.max_reservations_slot_copy">Maximum number of reservations allowed for the same time slot.</small>
             </div>
             <div class="col-md-4">
-              <label class="form-label" data-i18n="availability.booking_horizon">Booking Horizon</label>
-              <select class="form-select" name="booking_horizon_days">
+              <label class="form-label" for="owner-venue-booking-horizon" data-i18n="availability.booking_horizon">Booking Horizon</label>
+              <select id="owner-venue-booking-horizon" class="form-select" name="booking_horizon_days">
                 <option value="7">7 Days</option>
                 <option value="14">14 Days</option>
                 <option value="30">30 Days</option>
@@ -733,8 +734,8 @@
                 <option value="365">365 Days</option>
               </select>
             </div>
-            <div class="col-md-4"><label class="form-label" data-i18n="availability.reservation_interval">Interval</label><select class="form-select" name="reservation_interval_minutes"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option><option value="90">90 minutes</option><option value="120">120 minutes</option></select></div>
-            <div class="col-md-4"><label class="form-label" data-i18n="availability.last_reservation">Last reservation time</label><select class="form-select owner-time-select" name="last_reservation_time" data-owner-time-select></select></div>
+            <div class="col-md-4"><label class="form-label" for="owner-venue-reservation-interval" data-i18n="availability.reservation_interval">Interval</label><select id="owner-venue-reservation-interval" class="form-select" name="reservation_interval_minutes"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option><option value="90">90 minutes</option><option value="120">120 minutes</option></select></div>
+            <div class="col-md-4"><label class="form-label" for="owner-venue-last-reservation-time" data-i18n="availability.last_reservation">Last reservation time</label><select id="owner-venue-last-reservation-time" class="form-select owner-time-select" name="last_reservation_time" data-owner-time-select></select></div>
           </div>
         </section>
 
@@ -743,8 +744,8 @@
             <div><h2 data-i18n="manager.guest_rules">Guest Rules</h2><div class="sub" data-i18n="manager.guest_rules_copy">Minimum and maximum party sizes guests can request</div></div>
           </div>
           <div class="row g-3">
-            <div class="col-md-6"><label class="form-label" data-i18n="reservation.min_guests">Min guests</label><input class="form-control" name="min_guests" type="number" min="1" value="1" /></div>
-            <div class="col-md-6"><label class="form-label" data-i18n="reservation.max_guests">Max guests</label><input class="form-control" name="max_guests" type="number" min="1" value="10" /></div>
+            <div class="col-md-6"><label class="form-label" for="owner-venue-min-guests" data-i18n="reservation.min_guests">Min guests</label><input id="owner-venue-min-guests" class="form-control" name="min_guests" type="number" min="1" value="1" /></div>
+            <div class="col-md-6"><label class="form-label" for="owner-venue-max-guests" data-i18n="reservation.max_guests">Max guests</label><input id="owner-venue-max-guests" class="form-control" name="max_guests" type="number" min="1" value="10" /></div>
           </div>
         </section>
 
@@ -771,9 +772,9 @@
             <div><h2 data-i18n="owner.special_hours">Special Hours</h2><div class="sub" data-i18n="manager.special_hours_copy">Override normal hours for a single date, or mark it closed.</div></div>
           </div>
           <div class="row g-2 align-items-end">
-            <div class="col-sm-4"><label class="form-label small" data-i18n="owner.date">Date</label><input class="form-control" type="date" data-special-date /></div>
-            <div class="col-sm-3"><label class="form-label small" data-i18n="restaurants.opens">Opens</label><select class="form-select owner-time-select" data-special-open></select></div>
-            <div class="col-sm-3"><label class="form-label small" data-i18n="restaurants.closes">Closes</label><select class="form-select owner-time-select" data-special-close></select></div>
+            <div class="col-sm-4"><label class="form-label small" for="owner-special-date" data-i18n="owner.date">Date</label><input id="owner-special-date" class="form-control" type="date" data-special-date /></div>
+            <div class="col-sm-3"><label class="form-label small" for="owner-special-open" data-i18n="restaurants.opens">Opens</label><select id="owner-special-open" class="form-select owner-time-select" data-special-open></select></div>
+            <div class="col-sm-3"><label class="form-label small" for="owner-special-close" data-i18n="restaurants.closes">Closes</label><select id="owner-special-close" class="form-select owner-time-select" data-special-close></select></div>
             <div class="col-sm-2 d-grid"><button class="btn btn-gold-outline" type="button" data-special-save><i class="bi bi-check2"></i></button></div>
             <div class="col-12">
               <label class="owner-check availability-closed-toggle">
@@ -832,7 +833,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content dashboard-modal">
       <div class="modal-header">
-        <h5 class="modal-title" data-i18n="owner.delete_question">Delete restaurant or bar?</h5>
+        <h3 class="modal-title" data-i18n="owner.delete_question">Delete restaurant or bar?</h3>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>
       </div>
       <div class="modal-body">
@@ -851,7 +852,7 @@
     <button class="btn btn-glass manager-detail-back" type="button" data-bs-dismiss="offcanvas"><i class="bi bi-chevron-left me-1"></i><span data-i18n="manager.back">Back</span></button>
     <div>
       <span class="eyebrow-res"><i class="bi bi-person-lines-fill"></i> <span data-i18n="manager.reservation_detail">Reservation Detail</span></span>
-      <h5 class="offcanvas-title" id="ownerReservationPanelTitle" data-owner-reservation-title data-i18n="reservation.reservation">Reservation</h5>
+      <h3 class="offcanvas-title" id="ownerReservationPanelTitle" data-owner-reservation-title data-i18n="reservation.reservation">Reservation</h3>
     </div>
     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>
   </div>
@@ -862,14 +863,14 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content dashboard-modal">
       <div class="modal-header">
-        <h5 class="modal-title" data-owner-action-title data-i18n="reservation.reservation">Update this reservation?</h5>
+        <h3 class="modal-title" data-owner-action-title data-i18n="reservation.reservation">Update this reservation?</h3>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>
       </div>
       <div class="modal-body">
         <p class="mb-0 text-muted-pro" data-owner-action-body data-i18n="reservation.reservation_status">This will update the reservation status.</p>
         <div class="mt-3" data-owner-cancel-reason-fields hidden>
-          <label class="form-label" data-i18n="reservation.cancellation_reason">Cancellation Reason</label>
-          <select class="form-select" data-owner-cancel-reason-select>
+          <label class="form-label" for="owner-cancel-reason-select" data-i18n="reservation.cancellation_reason">Cancellation Reason</label>
+          <select id="owner-cancel-reason-select" class="form-select" data-owner-cancel-reason-select>
             <option value="Fully booked" data-i18n="reservation.reason_fully_booked">Fully booked</option>
             <option value="Private event" data-i18n="reservation.reason_private_event">Private event</option>
             <option value="Kitchen closed" data-i18n="reservation.reason_kitchen_closed">Kitchen closed</option>
@@ -877,7 +878,8 @@
             <option value="Maintenance" data-i18n="reservation.reason_maintenance">Maintenance</option>
             <option value="Other" data-i18n="reservation.other">Other</option>
           </select>
-          <textarea class="form-control mt-3" rows="4" maxlength="1000" data-owner-cancel-reason-other hidden placeholder="Add cancellation reason" data-i18n-attr="placeholder:reservation.cancellation_reason"></textarea>
+          <label class="visually-hidden" for="owner-cancel-reason-other" data-i18n="reservation.cancellation_reason">Cancellation Reason</label>
+          <textarea id="owner-cancel-reason-other" class="form-control mt-3" rows="4" maxlength="1000" data-owner-cancel-reason-other hidden placeholder="Add cancellation reason" data-i18n-attr="placeholder:reservation.cancellation_reason"></textarea>
         </div>
       </div>
       <div class="modal-footer border-pro">

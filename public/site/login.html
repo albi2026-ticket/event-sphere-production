@@ -43,11 +43,11 @@
         <hr class="flex-grow-1 m-0" style="border-color:var(--border)"/>
       </div>
       <form data-login-form novalidate>
-        <label class="form-label" data-i18n="forms.email">Email</label>
-        <input class="form-control mb-3" type="email" name="email" required placeholder="you@email.com"/>
-        <div class="d-flex justify-content-between"><label class="form-label" data-i18n="auth.password">Password</label><a href="/forgot-password" class="small" data-forgot-password data-i18n="auth.forgot_password">Forgot password?</a></div>
-        <input class="form-control" type="password" name="password" required placeholder="••••••••"/>
-        <div class="form-check mt-3"><input class="form-check-input" type="checkbox" checked><label class="form-check-label small" data-i18n="auth.keep_signed_in">Keep me signed in</label></div>
+        <label class="form-label" for="login-email" data-i18n="forms.email">Email</label>
+        <input id="login-email" class="form-control mb-3" type="email" name="email" required placeholder="you@email.com"/>
+        <div class="d-flex justify-content-between"><label class="form-label" for="login-password" data-i18n="auth.password">Password</label><a href="/forgot-password" class="small" data-forgot-password data-i18n="auth.forgot_password">Forgot password?</a></div>
+        <input id="login-password" class="form-control" type="password" name="password" required placeholder="••••••••"/>
+        <div class="form-check mt-3"><input id="login-remember" class="form-check-input" type="checkbox" checked><label class="form-check-label small" for="login-remember" data-i18n="auth.keep_signed_in">Keep me signed in</label></div>
         <button type="submit" class="btn btn-primary-grad w-100 mt-4 btn-lg" data-i18n="auth.sign_in_button">Sign in</button>
       </form>
       <p class="text-muted-pro text-center mt-4 small"><span data-i18n="auth.new_here">New here?</span> <a href="/register" data-i18n="buttons.create_account">Create an account</a></p>

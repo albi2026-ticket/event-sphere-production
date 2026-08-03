@@ -69,37 +69,37 @@
       <div class="footer-brand">
         <a class="brand mb-3" href="/welcome"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Tiketa</a>
         <p data-i18n="footer.tagline">The premium marketplace to discover, buy, and manage tickets for live events with confidence.</p>
-        <div class="footer-social" aria-label="Social links">
+        <nav class="footer-social" aria-label="Social links">
           <a href="https://www.facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
           <a href="https://www.instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
           <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="X Twitter"><i class="bi bi-twitter-x"></i></a>
           <a href="https://www.linkedin.com" target="_blank" rel="noreferrer" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
-        </div>
+        </nav>
       </div>
     </div>
 
     <div class="footer-links-grid">
-      <div class="footer-link-group">
+      <nav class="footer-link-group" aria-label="Company">
         <h6 data-i18n="footer.company">Company</h6>
         <a href="/about" data-i18n="footer.about">About Tiketa</a>
         <a href="/contact" data-i18n="footer.contact">Contact Us</a>
         <a href="/careers" data-i18n="footer.careers">Careers</a>
         <a href="/blog" data-i18n="footer.blog">Blog</a>
-      </div>
-      <div class="footer-link-group">
+      </nav>
+      <nav class="footer-link-group" aria-label="Support">
         <h6 data-i18n="footer.support">Support</h6>
         <a href="/help-center" data-i18n="footer.help_center">Help Center</a>
         <a href="/faqs" data-i18n="footer.faqs">FAQs</a>
         <a href="/ticket-support" data-i18n="footer.ticket_support">Ticket Support</a>
         <a href="/refund-policy" data-i18n="footer.refund_policy">Refund Policy</a>
-      </div>
-      <div class="footer-link-group">
+      </nav>
+      <nav class="footer-link-group" aria-label="Organizers">
         <h6 data-i18n="footer.organizers">Organizers</h6>
         <a href="/become-organizer" data-i18n="footer.become_organizer">Become an Organizer</a>
         <a href="/organizer-guide" data-i18n="footer.organizer_guide">Organizer Guide</a>
         <a href="/create-event" data-i18n="footer.create_event">Create Event</a>
-      </div>
-      <div class="footer-link-group">
+      </nav>
+      <nav class="footer-link-group" aria-label="Legal">
         <h6 data-i18n="footer.legal">Legal</h6>
         <a href="/terms-of-service" data-i18n="footer.terms">Terms of Service</a>
         <a href="/privacy-policy" data-i18n="footer.privacy">Privacy Policy</a>
@@ -112,7 +112,7 @@
         <a href="/data-deletion-privacy-requests" data-i18n="footer.privacy_requests">Privacy Requests</a>
         <a href="/gdpr-information" data-i18n="footer.gdpr">GDPR</a>
         <a href="/legal-contact" data-i18n="footer.legal_contact">Legal Contact</a>
-      </div>
+      </nav>
     </div>
 
     <div class="legal">

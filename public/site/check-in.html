@@ -52,7 +52,7 @@
     <div class="row g-3">
       <div class="col-lg-5">
         <div class="card-pro p-3">
-          <h4 class="mb-3" data-i18n="scanner.camera_scanner">Camera Scanner</h4>
+          <h2 class="mb-3" data-i18n="scanner.camera_scanner">Camera Scanner</h2>
           <div class="qr-scanner-panel">
             <video data-scanner-video playsinline muted></video>
             <div class="qr-scanner-empty" data-scanner-empty><i class="bi bi-camera-video"></i><span data-i18n="scanner.start_camera_or_manual">Start the camera or use manual lookup.</span></div>
@@ -62,9 +62,9 @@
             <button class="btn btn-glass" type="button" data-scanner-stop><i class="bi bi-stop-circle me-1"></i><span data-i18n="scanner.stop_scan">Stop</span></button>
           </div>
           <form id="manual" class="mt-4" data-scanner-manual-form>
-            <label class="form-label" data-i18n="scanner.manual_lookup_label">Manual ticket or attendee lookup</label>
+            <label class="form-label" for="scanner-manual-query" data-i18n="scanner.manual_lookup_label">Manual ticket or attendee lookup</label>
             <div class="d-flex gap-2">
-              <input class="form-control" name="q" data-i18n-attr="placeholder:scanner.search_ticket" placeholder="Ticket code, attendee, email, or order number"/>
+              <input id="scanner-manual-query" class="form-control" name="q" data-i18n-attr="placeholder:scanner.search_ticket" placeholder="Ticket code, attendee, email, or order number"/>
               <button class="btn btn-glass" type="submit" data-i18n="scanner.lookup">Lookup</button>
             </div>
           </form>
@@ -74,15 +74,16 @@
 
       <div class="col-lg-7">
         <div class="card-pro p-3">
-          <h4 class="mb-3" data-i18n="scanner.validation_result">Validation Result</h4>
+          <h2 class="mb-3" data-i18n="scanner.validation_result">Validation Result</h2>
           <div data-scanner-result class="checkin-result is-empty">
             <i class="bi bi-qr-code-scan"></i>
-            <div><h5 data-i18n="scanner.ready_to_scan">Ready to scan</h5><p data-i18n="scanner.validation_copy">Validation happens on the server. A ticket cannot be checked in twice.</p></div>
+            <div><h3 data-i18n="scanner.ready_to_scan">Ready to scan</h3><p data-i18n="scanner.validation_copy">Validation happens on the server. A ticket cannot be checked in twice.</p></div>
           </div>
-          <h6 id="history" class="mt-4" data-i18n="scanner.recent_scan_history">Recent scan history</h6>
+          <h4 id="history" class="mt-4" data-i18n="scanner.recent_scan_history">Recent scan history</h4>
           <div class="table-responsive">
             <table class="table table-borderless align-middle mb-0 dashboard-table">
-              <thead><tr><th data-i18n="admin.result">Result</th><th data-i18n="scanner.attendee">Attendee</th><th data-i18n="scanner.ticket">Ticket</th><th data-i18n="admin.time">Time</th></tr></thead>
+              <caption class="visually-hidden">Ticket check-in history</caption>
+              <thead><tr><th scope="col" data-i18n="admin.result">Result</th><th scope="col" data-i18n="scanner.attendee">Attendee</th><th scope="col" data-i18n="scanner.ticket">Ticket</th><th scope="col" data-i18n="admin.time">Time</th></tr></thead>
               <tbody data-scanner-logs><tr class="skeleton-row"><td></td><td></td><td></td><td></td></tr><tr class="skeleton-row"><td></td><td></td><td></td><td></td></tr></tbody>
             </table>
           </div>

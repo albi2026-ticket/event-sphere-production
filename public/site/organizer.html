@@ -61,7 +61,7 @@
         <div class="col-xl-7">
           <div class="card-pro p-4 h-100">
             <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
-              <h4 class="m-0" data-i18n="admin.recent_activity">Recent activity</h4>
+              <h2 class="m-0" data-i18n="admin.recent_activity">Recent activity</h2>
               <button class="btn btn-glass btn-sm" type="button" data-retry-summary><i class="bi bi-arrow-clockwise me-1"></i><span data-i18n="buttons.refresh">Refresh</span></button>
             </div>
             <div class="dashboard-stack" data-organizer-activity>
@@ -71,7 +71,7 @@
         </div>
         <div class="col-xl-5">
           <div class="card-pro p-4 h-100">
-            <h4 class="mb-3" data-i18n="organizer.upcoming_live_events">Upcoming and live events</h4>
+            <h2 class="mb-3" data-i18n="organizer.upcoming_live_events">Upcoming and live events</h2>
             <div class="dashboard-stack" data-organizer-upcoming>
               <div class="row g-3"><div class="col-md-6"><article class="card-pro skeleton-card"><div class="skeleton-media"></div><div class="body"><span class="skeleton-line skeleton-title" style="width:72%"></span><span class="skeleton-line" style="width:54%"></span></div></article></div><div class="col-md-6"><article class="card-pro skeleton-card"><div class="skeleton-media"></div><div class="body"><span class="skeleton-line skeleton-title" style="width:64%"></span><span class="skeleton-line" style="width:58%"></span></div></article></div></div>
             </div>
@@ -83,7 +83,7 @@
     <section id="events" class="organizer-section" data-organizer-section="events">
       <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
-          <h4 class="m-0" data-i18n="organizer.event_management">Event management</h4>
+          <h2 class="m-0" data-i18n="organizer.event_management">Event management</h2>
           <p class="text-muted-pro mb-0" data-i18n="organizer.event_management_copy">Manage publish status, inventory, and quick edits.</p>
         </div>
         <button class="btn btn-primary-grad btn-sm" type="button" data-organizer-new-event><i class="bi bi-plus-lg me-1"></i><span data-i18n="organizer.new_event">New event</span></button>
@@ -91,8 +91,8 @@
       <div class="card-pro p-3 mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
           <div class="d-flex gap-2 flex-wrap">
-            <input class="form-control form-control-sm dashboard-search" data-organizer-event-search placeholder="Search events" data-i18n-attr="placeholder:forms.search_events"/>
-            <select class="form-select form-select-sm dashboard-select" data-organizer-event-status>
+            <input class="form-control form-control-sm dashboard-search" data-organizer-event-search aria-label="Search events" placeholder="Search events" data-i18n-attr="placeholder:forms.search_events"/>
+            <select class="form-select form-select-sm dashboard-select" data-organizer-event-status aria-label="Event status">
               <option value="">All statuses</option>
               <option value="draft">Draft</option>
               <option value="published">Published</option>
@@ -106,7 +106,8 @@
         </div>
         <div class="table-responsive">
           <table class="table table-borderless align-middle mb-0 dashboard-table">
-            <thead><tr><th data-i18n="scanner.event">Event</th><th data-i18n="admin.status">Status</th><th>Starts</th><th>Service Fee</th><th data-i18n="admin.tickets">Tickets</th><th data-i18n="admin.revenue">Revenue</th><th data-i18n="organizer.inventory">Inventory</th><th></th></tr></thead>
+            <caption class="visually-hidden">Organizer event list</caption>
+            <thead><tr><th scope="col" data-i18n="scanner.event">Event</th><th scope="col" data-i18n="admin.status">Status</th><th scope="col">Starts</th><th scope="col">Service Fee</th><th scope="col" data-i18n="admin.tickets">Tickets</th><th scope="col" data-i18n="admin.revenue">Revenue</th><th scope="col" data-i18n="organizer.inventory">Inventory</th><th scope="col"></th></tr></thead>
             <tbody data-organizer-events>
               <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
               <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
@@ -117,10 +118,11 @@
       <div class="row g-3">
         <div class="col-lg-7">
           <div class="card-pro p-3 h-100">
-            <h5 class="mb-3" data-i18n="organizer.event_performance">Event performance</h5>
+            <h3 class="mb-3" data-i18n="organizer.event_performance">Event performance</h3>
             <div class="table-responsive">
               <table class="table table-borderless align-middle mb-0 dashboard-table">
-                <thead><tr><th>Event</th><th>Sold</th><th>Remaining</th><th>Orders</th><th>Check-ins</th></tr></thead>
+                <caption class="visually-hidden">Organizer event performance</caption>
+                <thead><tr><th scope="col">Event</th><th scope="col">Sold</th><th scope="col">Remaining</th><th scope="col">Orders</th><th scope="col">Check-ins</th></tr></thead>
                 <tbody data-organizer-performance>
                   <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td></tr>
                   <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td></tr>
@@ -131,7 +133,7 @@
         </div>
         <div class="col-lg-5">
           <div class="card-pro p-3 h-100">
-            <h5 class="mb-3" data-i18n="organizer.inventory_remaining">Inventory remaining</h5>
+            <h3 class="mb-3" data-i18n="organizer.inventory_remaining">Inventory remaining</h3>
             <div data-organizer-inventory class="dashboard-stack">
               <div class="dashboard-loading-skeleton"><span class="skeleton-line" style="width:78%"></span><span class="skeleton-line" style="width:64%"></span><span class="skeleton-line" style="width:86%"></span></div>
             </div>
@@ -143,7 +145,7 @@
     <section id="ticket-analytics" class="organizer-section" data-organizer-section="ticket-analytics">
       <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
-          <h4 class="m-0" data-i18n="organizer.ticket_analytics">Ticket analytics</h4>
+          <h2 class="m-0" data-i18n="organizer.ticket_analytics">Ticket analytics</h2>
           <p class="text-muted-pro mb-0" data-i18n="organizer.ticket_analytics_copy">Daily and weekly ticket sales, top sellers, and future conversion structure.</p>
         </div>
         <span class="badge status-badge status-pending" data-i18n="organizer.conversion_metrics_prepared">Conversion metrics prepared</span>
@@ -151,21 +153,21 @@
       <div class="row g-3 mb-4">
         <div class="col-lg-6">
           <div class="card-pro p-4 h-100">
-            <h5 class="mb-3" data-i18n="admin.sales_by_day">Sales by day</h5>
+            <h3 class="mb-3" data-i18n="admin.sales_by_day">Sales by day</h3>
             <canvas id="chartSalesDay" height="150"></canvas>
             <div data-organizer-sales-day-empty></div>
           </div>
         </div>
         <div class="col-lg-6">
           <div class="card-pro p-4 h-100">
-            <h5 class="mb-3" data-i18n="admin.sales_by_week">Sales by week</h5>
+            <h3 class="mb-3" data-i18n="admin.sales_by_week">Sales by week</h3>
             <canvas id="chartSalesWeek" height="150"></canvas>
             <div data-organizer-sales-week-empty></div>
           </div>
         </div>
       </div>
       <div class="card-pro p-3">
-        <h5 class="mb-3" data-i18n="organizer.top_performing_events">Top performing events</h5>
+        <h3 class="mb-3" data-i18n="organizer.top_performing_events">Top performing events</h3>
         <div data-organizer-top-events class="dashboard-stack">
           <div class="dashboard-loading-skeleton"><span class="skeleton-line" style="width:78%"></span><span class="skeleton-line" style="width:64%"></span><span class="skeleton-line" style="width:52%"></span></div>
         </div>
@@ -183,7 +185,7 @@
         <div class="col-lg-8">
           <div class="card-pro p-4 h-100">
             <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
-              <h4 class="m-0" data-i18n="organizer.revenue_trend">Revenue trend</h4>
+              <h2 class="m-0" data-i18n="organizer.revenue_trend">Revenue trend</h2>
               <div class="dashboard-tabs" data-organizer-range-tabs>
                 <button class="active" type="button" data-organizer-range="day">Day</button>
                 <button type="button" data-organizer-range="week">Week</button>
@@ -196,17 +198,18 @@
         </div>
         <div class="col-lg-4">
           <div class="card-pro p-4 h-100">
-            <h4 class="mb-3" data-i18n="organizer.revenue_by_event">Revenue by event</h4>
+            <h2 class="mb-3" data-i18n="organizer.revenue_by_event">Revenue by event</h2>
             <canvas id="chartCat" height="180"></canvas>
             <div data-organizer-event-revenue-empty></div>
           </div>
         </div>
       </div>
       <div class="card-pro p-3">
-        <h5 class="mb-3" data-i18n="organizer.revenue_by_event">Revenue by event</h5>
+        <h3 class="mb-3" data-i18n="organizer.revenue_by_event">Revenue by event</h3>
         <div class="table-responsive">
           <table class="table table-borderless align-middle mb-0 dashboard-table">
-            <thead><tr><th>Event</th><th>Revenue</th><th>Tickets sold</th><th>Orders</th></tr></thead>
+            <caption class="visually-hidden">Organizer revenue by event</caption>
+            <thead><tr><th scope="col">Event</th><th scope="col">Revenue</th><th scope="col">Tickets sold</th><th scope="col">Orders</th></tr></thead>
             <tbody data-organizer-revenue-table>
               <tr class="skeleton-row"><td></td><td></td><td></td><td></td></tr>
               <tr class="skeleton-row"><td></td><td></td><td></td><td></td></tr>
@@ -220,15 +223,15 @@
       <div class="card-pro p-3">
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
           <div>
-            <h4 class="m-0" data-i18n="events.attendees">Attendees</h4>
+            <h2 class="m-0" data-i18n="events.attendees">Attendees</h2>
             <p class="text-muted-pro mb-0" data-i18n="organizer.search_copy">Search purchasers, attendees, tickets, and check-in status.</p>
           </div>
           <div class="d-flex gap-2 flex-wrap">
-            <input class="form-control form-control-sm dashboard-search" data-attendee-search placeholder="Search attendees" data-i18n-attr="placeholder:forms.search_attendees"/>
-            <select class="form-select form-select-sm dashboard-select" data-attendee-event>
+            <input class="form-control form-control-sm dashboard-search" data-attendee-search aria-label="Search attendees" placeholder="Search attendees" data-i18n-attr="placeholder:forms.search_attendees"/>
+            <select class="form-select form-select-sm dashboard-select" data-attendee-event aria-label="Attendee event">
               <option value="">All events</option>
             </select>
-            <select class="form-select form-select-sm dashboard-select" data-attendee-status>
+            <select class="form-select form-select-sm dashboard-select" data-attendee-status aria-label="Attendee status">
               <option value="">Any status</option>
               <option value="valid">Valid</option>
               <option value="checked_in">Checked in</option>
@@ -240,7 +243,8 @@
         </div>
         <div class="table-responsive">
           <table class="table table-borderless align-middle mb-0 dashboard-table">
-            <thead><tr><th>Attendee</th><th>Event</th><th>Ticket</th><th>Order</th><th>Purchase date</th><th>Status</th><th></th></tr></thead>
+            <caption class="visually-hidden">Organizer attendee list</caption>
+            <thead><tr><th scope="col">Attendee</th><th scope="col">Event</th><th scope="col">Ticket</th><th scope="col">Order</th><th scope="col">Purchase date</th><th scope="col">Status</th><th scope="col"></th></tr></thead>
             <tbody data-organizer-attendees>
               <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
               <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
@@ -254,7 +258,7 @@
     <section id="check-in" class="organizer-section" data-organizer-section="check-in">
       <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
-          <h4 class="m-0" data-i18n="organizer.check_in_alerts">Check-In</h4>
+          <h2 class="m-0" data-i18n="organizer.check_in_alerts">Check-In</h2>
           <p class="text-muted-pro mb-0" data-i18n="organizer.check_in_copy">Validate existing QR tickets and monitor live attendance.</p>
         </div>
       </div>
@@ -262,8 +266,8 @@
         <div class="col-xl-5">
           <div class="card-pro p-3 h-100">
             <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
-              <h5 class="m-0" data-i18n="scanner.scanner">Scanner</h5>
-              <select class="form-select form-select-sm dashboard-select" data-checkin-event>
+              <h3 class="m-0" data-i18n="scanner.scanner">Scanner</h3>
+              <select class="form-select form-select-sm dashboard-select" data-checkin-event aria-label="Check-in event">
                 <option value="">Select event</option>
               </select>
             </div>
@@ -279,9 +283,9 @@
               <button class="btn btn-glass btn-sm" type="button" data-checkin-stop-camera><i class="bi bi-stop-circle me-1"></i><span data-i18n="scanner.stop_scan">Stop</span></button>
             </div>
             <form class="mt-3" data-checkin-manual-form>
-              <label class="form-label" data-i18n="scanner.manual_lookup_label">Manual ticket or attendee lookup</label>
+              <label class="form-label" for="organizer-checkin-manual-query" data-i18n="scanner.manual_lookup_label">Manual ticket or attendee lookup</label>
               <div class="d-flex gap-2">
-                <input class="form-control" name="q" placeholder="Ticket code, attendee, email, or order number"/>
+                <input id="organizer-checkin-manual-query" class="form-control" name="q" placeholder="Ticket code, attendee, email, or order number"/>
                 <button class="btn btn-glass" type="submit" data-i18n="scanner.lookup">Lookup</button>
               </div>
             </form>
@@ -298,14 +302,15 @@
             <div data-checkin-result class="checkin-result is-empty">
               <i class="bi bi-qr-code-scan"></i>
               <div>
-                <h5 data-i18n="scanner.ready_to_validate">Ready to validate tickets</h5>
+                <h3 data-i18n="scanner.ready_to_validate">Ready to validate tickets</h3>
                 <p data-i18n="scanner.ready_copy">Select an event, scan a QR code, or search manually.</p>
               </div>
             </div>
-            <h6 class="mt-4" data-i18n="organizer.recent_validation_logs">Recent validation logs</h6>
+            <h4 class="mt-4" data-i18n="organizer.recent_validation_logs">Recent validation logs</h4>
             <div class="table-responsive">
               <table class="table table-borderless align-middle mb-0 dashboard-table">
-                <thead><tr><th>Result</th><th>Attendee</th><th>Ticket</th><th>Scanned</th></tr></thead>
+                <caption class="visually-hidden">Organizer recent validation logs</caption>
+                <thead><tr><th scope="col">Result</th><th scope="col">Attendee</th><th scope="col">Ticket</th><th scope="col">Scanned</th></tr></thead>
                 <tbody data-checkin-logs>
                   <tr class="skeleton-row"><td></td><td></td><td></td><td></td></tr>
                   <tr class="skeleton-row"><td></td><td></td><td></td><td></td></tr>
@@ -319,9 +324,9 @@
 
     <section id="reports" class="organizer-section" data-organizer-section="reports">
       <div class="row g-3">
-        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h5 data-i18n="organizer.ticket_sales_report">Ticket sales report</h5><p class="text-muted-pro" data-i18n="organizer.ticket_sales_report_copy">Sold tickets, inventory, and event performance.</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-glass btn-sm" data-report-export="ticket-sales" data-report-format="csv" data-i18n="buttons.export_csv">Export CSV</button><button class="btn btn-glass btn-sm" data-report-export="ticket-sales" data-report-format="pdf" data-i18n="buttons.export_pdf">Export PDF</button></div></div></div>
-        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h5 data-i18n="organizer.attendee_report">Attendee report</h5><p class="text-muted-pro" data-i18n="organizer.attendee_report_copy">Attendee details, ticket types, orders, and check-in state.</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-glass btn-sm" data-report-export="attendees" data-report-format="csv" data-i18n="buttons.export_csv">Export CSV</button><button class="btn btn-glass btn-sm" data-report-export="attendees" data-report-format="pdf" data-i18n="buttons.export_pdf">Export PDF</button></div></div></div>
-        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h5 data-i18n="organizer.revenue_report">Revenue report</h5><p class="text-muted-pro" data-i18n="organizer.revenue_report_copy">Revenue trend and event revenue comparison.</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-glass btn-sm" data-report-export="revenue" data-report-format="csv" data-i18n="buttons.export_csv">Export CSV</button><button class="btn btn-glass btn-sm" data-report-export="revenue" data-report-format="pdf" data-i18n="buttons.export_pdf">Export PDF</button></div></div></div>
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h3 data-i18n="organizer.ticket_sales_report">Ticket sales report</h3><p class="text-muted-pro" data-i18n="organizer.ticket_sales_report_copy">Sold tickets, inventory, and event performance.</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-glass btn-sm" data-report-export="ticket-sales" data-report-format="csv" data-i18n="buttons.export_csv">Export CSV</button><button class="btn btn-glass btn-sm" data-report-export="ticket-sales" data-report-format="pdf" data-i18n="buttons.export_pdf">Export PDF</button></div></div></div>
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h3 data-i18n="organizer.attendee_report">Attendee report</h3><p class="text-muted-pro" data-i18n="organizer.attendee_report_copy">Attendee details, ticket types, orders, and check-in state.</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-glass btn-sm" data-report-export="attendees" data-report-format="csv" data-i18n="buttons.export_csv">Export CSV</button><button class="btn btn-glass btn-sm" data-report-export="attendees" data-report-format="pdf" data-i18n="buttons.export_pdf">Export PDF</button></div></div></div>
+        <div class="col-lg-4"><div class="card-pro p-4 h-100"><h3 data-i18n="organizer.revenue_report">Revenue report</h3><p class="text-muted-pro" data-i18n="organizer.revenue_report_copy">Revenue trend and event revenue comparison.</p><div class="d-flex gap-2 flex-wrap"><button class="btn btn-glass btn-sm" data-report-export="revenue" data-report-format="csv" data-i18n="buttons.export_csv">Export CSV</button><button class="btn btn-glass btn-sm" data-report-export="revenue" data-report-format="pdf" data-i18n="buttons.export_pdf">Export PDF</button></div></div></div>
       </div>
     </section>
 
@@ -329,7 +334,7 @@
       <div class="row g-3">
         <div class="col-lg-6">
           <div class="card-pro p-4 h-100">
-            <h4 class="mb-3" data-i18n="organizer.organizer_profile">Organizer profile</h4>
+            <h2 class="mb-3" data-i18n="organizer.organizer_profile">Organizer profile</h2>
             <div class="dashboard-detail-grid" data-organizer-settings-profile>
               <div><dt>Name</dt><dd>Loading...</dd></div>
               <div><dt>Email</dt><dd>Loading...</dd></div>
@@ -339,7 +344,7 @@
         </div>
         <div class="col-lg-6">
           <div class="card-pro p-4 h-100">
-            <h4 class="mb-3" data-i18n="organizer.notification_preferences">Notification preferences</h4>
+            <h2 class="mb-3" data-i18n="organizer.notification_preferences">Notification preferences</h2>
             <div class="dashboard-stack">
               <label class="dashboard-mini-row"><span><span class="fw-semibold d-block">Ticket purchases</span><small>New sale notifications</small></span><input class="form-check-input" type="checkbox" checked disabled></label>
               <label class="dashboard-mini-row"><span><span class="fw-semibold d-block">Check-in alerts</span><small>Event-day scan activity</small></span><input class="form-check-input" type="checkbox" checked disabled></label>
@@ -356,7 +361,7 @@
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content dashboard-modal">
       <div class="modal-header">
-        <h5 class="modal-title" data-event-modal-title>Event</h5>
+        <h3 class="modal-title" data-event-modal-title>Event</h3>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>
       </div>
       <form data-organizer-event-form novalidate>
@@ -364,31 +369,31 @@
           <input type="hidden" name="event_id"/>
           <div data-event-form-error></div>
           <div class="row g-3">
-            <div class="col-md-8"><label class="form-label">Title</label><input class="form-control" name="title" required maxlength="255"/></div>
-            <div class="col-md-4"><label class="form-label">Category</label><select class="form-select" name="category" required>
+            <div class="col-md-8"><label class="form-label" for="organizer-event-title">Title</label><input id="organizer-event-title" class="form-control" name="title" required maxlength="255"/></div>
+            <div class="col-md-4"><label class="form-label" for="organizer-event-category">Category</label><select id="organizer-event-category" class="form-select" name="category" required>
               <option value="">Select category</option><option>Concert</option><option>Festival</option><option>Sports</option><option>Conference</option><option>Theater</option><option>Comedy</option><option>Family</option><option>Exhibition</option><option>Other</option>
             </select></div>
-            <div class="col-md-6"><label class="form-label">Start date and time</label><input class="form-control" name="starts_at" type="datetime-local" required/></div>
-            <div class="col-md-6"><label class="form-label">End date and time</label><input class="form-control" name="ends_at" type="datetime-local"/></div>
-            <div class="col-md-6"><label class="form-label">Status</label><select class="form-select" name="status"><option value="draft">Draft</option><option value="published">Published</option><option value="pending_review">Pending review</option><option value="cancelled">Cancelled</option><option value="completed">Completed</option></select></div>
-            <div class="col-md-6"><label class="form-label">Venue</label><input class="form-control" name="venue_name" required maxlength="255"/></div>
-            <div class="col-md-6"><label class="form-label">City</label><input class="form-control" name="city" required maxlength="255"/></div>
-            <div class="col-md-6"><label class="form-label">Address</label><input class="form-control" name="address"/></div>
-            <div class="col-md-6"><label class="form-label">Max tickets per user</label><select class="form-select" name="max_tickets_per_user" data-purchase-limit-select><option value="">No Limit</option><option value="1">1 ticket</option><option value="2">2 tickets</option><option value="5">5 tickets</option><option value="10">10 tickets</option><option value="custom">Custom</option></select><input class="form-control mt-2 d-none" name="max_tickets_per_user_custom" type="number" min="1" step="1" placeholder="Custom limit" data-purchase-limit-custom/></div>
-            <div class="col-12"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="4"></textarea></div>
+            <div class="col-md-6"><label class="form-label" for="organizer-event-starts-at">Start date and time</label><input id="organizer-event-starts-at" class="form-control" name="starts_at" type="datetime-local" required/></div>
+            <div class="col-md-6"><label class="form-label" for="organizer-event-ends-at">End date and time</label><input id="organizer-event-ends-at" class="form-control" name="ends_at" type="datetime-local"/></div>
+            <div class="col-md-6"><label class="form-label" for="organizer-event-status">Status</label><select id="organizer-event-status" class="form-select" name="status"><option value="draft">Draft</option><option value="published">Published</option><option value="pending_review">Pending review</option><option value="cancelled">Cancelled</option><option value="completed">Completed</option></select></div>
+            <div class="col-md-6"><label class="form-label" for="organizer-event-venue-name">Venue</label><input id="organizer-event-venue-name" class="form-control" name="venue_name" required maxlength="255"/></div>
+            <div class="col-md-6"><label class="form-label" for="organizer-event-city">City</label><input id="organizer-event-city" class="form-control" name="city" required maxlength="255"/></div>
+            <div class="col-md-6"><label class="form-label" for="organizer-event-address">Address</label><input id="organizer-event-address" class="form-control" name="address"/></div>
+            <div class="col-md-6"><label class="form-label" for="organizer-event-max-tickets">Max tickets per user</label><select id="organizer-event-max-tickets" class="form-select" name="max_tickets_per_user" data-purchase-limit-select><option value="">No Limit</option><option value="1">1 ticket</option><option value="2">2 tickets</option><option value="5">5 tickets</option><option value="10">10 tickets</option><option value="custom">Custom</option></select><label class="visually-hidden" for="organizer-event-max-tickets-custom">Custom ticket limit</label><input id="organizer-event-max-tickets-custom" class="form-control mt-2 d-none" name="max_tickets_per_user_custom" type="number" min="1" step="1" placeholder="Custom limit" data-purchase-limit-custom/></div>
+            <div class="col-12"><label class="form-label" for="organizer-event-description">Description</label><textarea id="organizer-event-description" class="form-control" name="description" rows="4"></textarea></div>
             <div class="col-md-6">
-              <label class="form-label">Event images</label>
+              <label class="form-label" for="organizer-event-images">Event images</label>
               <div class="card-pro p-3 text-center" style="border-style:dashed">
                 <i class="bi bi-cloud-arrow-up fs-3 text-muted-pro"></i>
                 <div class="mt-2"><a href="#" data-organizer-browse-image>Choose images</a></div>
                 <small class="text-muted-pro">PNG, JPG, WebP or GIF up to 5MB</small>
-                <input class="d-none" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple data-organizer-image-input/>
+                <input id="organizer-event-images" class="d-none" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple data-organizer-image-input/>
                 <div class="mt-2 small text-muted-pro" data-organizer-image-name>No images selected yet.</div>
               </div>
               <div class="row g-2 mt-2" data-organizer-gallery></div>
             </div>
             <div class="col-md-6">
-              <label class="form-label">Ticket types</label>
+              <div class="form-label">Ticket types</div>
               <div data-organizer-tiers></div>
               <button class="btn btn-ghost w-100" type="button" data-tier-add><i class="bi bi-plus-lg me-1"></i>Add ticket type</button>
             </div>
@@ -407,7 +412,7 @@
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content dashboard-modal">
       <div class="modal-header">
-        <h5 class="modal-title" data-organizer-detail-title>Details</h5>
+        <h3 class="modal-title" data-organizer-detail-title>Details</h3>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>
       </div>
       <div class="modal-body" data-organizer-detail-body></div>
