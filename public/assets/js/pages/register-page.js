@@ -126,17 +126,6 @@
         );
       });
     });
-    document.querySelectorAll("[data-policy-link]").forEach((link) => {
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
-        window.tkToast?.(
-          tr("auth.policy_unavailable", "{page} is not available yet.", {
-            page: link.dataset.policyLink,
-          }),
-          "info",
-        );
-      });
-    });
     if (!form) return;
 
     form.addEventListener("submit", async (e) => {

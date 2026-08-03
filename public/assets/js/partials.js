@@ -102,6 +102,14 @@
         <a href="/terms-of-service" data-i18n="footer.terms">Terms of Service</a>
         <a href="/privacy-policy" data-i18n="footer.privacy">Privacy Policy</a>
         <a href="/cookie-policy" data-i18n="footer.cookies">Cookie Policy</a>
+        <a href="/refund-policy" data-i18n="footer.refund_policy">Refund Policy</a>
+        <a href="/organizer-terms" data-i18n="footer.organizer_terms">Organizer Terms</a>
+        <a href="/venue-owner-terms" data-i18n="footer.venue_owner_terms">Venue Owner Terms</a>
+        <a href="/acceptable-use-content-policy" data-i18n="footer.acceptable_use">Acceptable Use</a>
+        <a href="/copyright-takedown-policy" data-i18n="footer.copyright_policy">Copyright</a>
+        <a href="/data-deletion-privacy-requests" data-i18n="footer.privacy_requests">Privacy Requests</a>
+        <a href="/gdpr-information" data-i18n="footer.gdpr">GDPR</a>
+        <a href="/legal-contact" data-i18n="footer.legal_contact">Legal Contact</a>
       </div>
     </div>
 
