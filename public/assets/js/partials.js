@@ -17,6 +17,7 @@
   window.EventSphereCategories = CategoryRoutes;
 
   const headerHTML = `
+<header>
 <nav class="navbar navbar-expand-lg nav-blur">
   <div class="container-xxl">
     <a class="brand" href="/welcome"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Tiketa</a>
@@ -59,7 +60,8 @@
       </div>
     </div>
   </div>
-</nav>`;
+</nav>
+</header>`;
   const footerHTML = `
 <footer class="footer footer-premium">
   <div class="container-xxl">

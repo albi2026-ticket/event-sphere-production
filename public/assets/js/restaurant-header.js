@@ -2,6 +2,7 @@
   "use strict";
 
   const headerHTML = `
+<header>
 <nav class="navbar navbar-expand-lg nav-blur nav-res">
   <div class="container-xxl">
     <a class="brand" href="/restaurants"><span class="brand-logo"><i class="bi bi-cup-hot-fill"></i></span>Tiketa <span class="text-gold ms-1 d-none d-sm-inline brand-context">· Reservations</span></a>
@@ -20,7 +21,8 @@
       </div>
     </div>
   </div>
-</nav>`;
+</nav>
+</header>`;
 
   function inject() {
     document.querySelectorAll("[data-restaurant-header]").forEach((el) => {
