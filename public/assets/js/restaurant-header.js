@@ -2,9 +2,10 @@
   "use strict";
 
   const headerHTML = `
+<header>
 <nav class="navbar navbar-expand-lg nav-blur nav-res">
   <div class="container-xxl">
-    <a class="brand" href="/restaurants"><span class="brand-logo"><i class="bi bi-cup-hot-fill"></i></span>Tiketa <span class="text-gold ms-1 d-none d-sm-inline" style="font-weight:500;font-size:.95rem">· Reservations</span></a>
+    <a class="brand" href="/restaurants"><span class="brand-logo"><i class="bi bi-cup-hot-fill"></i></span>Tiketa <span class="text-gold ms-1 d-none d-sm-inline brand-context">· Reservations</span></a>
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#resNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
     <div class="collapse navbar-collapse" id="resNav">
       <ul class="navbar-nav mx-auto gap-1">
@@ -20,7 +21,8 @@
       </div>
     </div>
   </div>
-</nav>`;
+</nav>
+</header>`;
 
   function inject() {
     document.querySelectorAll("[data-restaurant-header]").forEach((el) => {

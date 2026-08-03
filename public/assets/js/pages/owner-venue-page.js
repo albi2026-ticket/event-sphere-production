@@ -14,8 +14,24 @@
     image?.url ||
     image?.image_path ||
     "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1000&q=80";
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  const shortDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const dayKeys = [
+    "calendar.monday",
+    "calendar.tuesday",
+    "calendar.wednesday",
+    "calendar.thursday",
+    "calendar.friday",
+    "calendar.saturday",
+    "calendar.sunday",
+  ];
+  const shortDayKeys = [
+    "calendar.mon",
+    "calendar.tue",
+    "calendar.wed",
+    "calendar.thu",
+    "calendar.fri",
+    "calendar.sat",
+    "calendar.sun",
+  ];
   const calendarStatuses = ["pending", "confirmed", "cancelled", "completed", "no_show"];
   const ownerCancellationReasons = [
     "Fully booked",
@@ -25,7 +41,7 @@
     "Maintenance",
   ];
   const locationPickerZoom = 15;
-  const defaultLocation = { lat: 40.7128, lng: -74.006 };
+  const defaultLocation = { lat: 42.6675, lng: 21.1662 };
   let ownerGoogleMap = null;
   let ownerGoogleMarker = null;
   let ownerGoogleGeocoder = null;
@@ -52,7 +68,14 @@
     specialHours: [],
     editingSpecialHourId: null,
     reservationStats: { pending: 0, confirmed: 0, cancelled: 0, today: 0 },
-    reservationFilters: { view: "", status: "", date: "", venue_id: "" },
+    reservationFilters: { view: "today", status: "", date: "", venue_id: "" },
+    reservationWorkspace: {
+      view: "today",
+      search: "",
+      dateEnd: "",
+      partySize: "",
+      occasion: "",
+    },
     reservationView: "list",
     calendar: {
       view: "week",
@@ -71,6 +94,34 @@
     pendingReservationAction: null,
     saving: false,
   };
+
+  function currentLocale() {
+    return window.TiketaLanguage?.getLanguage?.() === "sq" ? "sq-AL" : "en-US";
+  }
+
+  function dayName(index) {
+    const fallback = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][
+      index
+    ];
+    return tr(dayKeys[index], fallback);
+  }
+
+  function shortDayName(index) {
+    const fallback = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][index];
+    return tr(shortDayKeys[index], fallback);
+  }
+
+  function guestCountLabel(count) {
+    return Number(count) === 1 ? tr("manager.guest", "guest") : tr("manager.guests_count", "guests");
+  }
+
+  function guestFallback() {
+    return tr("manager.guest_fallback", "Guest");
+  }
+
+  function restaurantBarFallback() {
+    return tr("manager.restaurant_bar", "Restaurant / Bar");
+  }
 
   function setBusy(busy) {
     state.saving = busy;
@@ -194,7 +245,7 @@
     if (!value) return "";
     const date = new Date(`${value}T00:00:00`);
     if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    return date.toLocaleDateString(currentLocale(), { month: "short", day: "numeric", year: "numeric" });
   }
 
   function timeLabel(value) {
@@ -260,17 +311,13 @@
     if (!value) return tr("reservation.not_set", "Not set");
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleString(undefined, {
+    return date.toLocaleString(currentLocale(), {
       month: "short",
       day: "numeric",
       year: "numeric",
       hour: "numeric",
       minute: "2-digit",
     });
-  }
-
-  function googleMapEmbedUrl(lat, lng, zoom = locationPickerZoom) {
-    return `https://maps.google.com/maps?q=${encodeURIComponent(`${lat},${lng}`)}&z=${zoom}&output=embed`;
   }
 
   function googleMapsUrl(lat, lng) {
@@ -309,6 +356,16 @@
       .join(", ");
   }
 
+  function detectedCountryName() {
+    try {
+      const region = new Intl.Locale(navigator.language || "en").region;
+      if (!region || !Intl.DisplayNames) return "";
+      return new Intl.DisplayNames([navigator.language || "en"], { type: "region" }).of(region) || "";
+    } catch (_) {
+      return "";
+    }
+  }
+
   function googleMapsApiKey() {
     return String(
       window.EventSphereConfig?.GOOGLE_MAPS_API_KEY ||
@@ -345,6 +402,43 @@
     return ownerMapsLoading;
   }
 
+  function setOwnerLocationState(stateName) {
+    const mapRoot = $("[data-owner-location-map]");
+    const loading = $("[data-owner-location-loading]");
+    const error = $("[data-owner-location-error]");
+    const canvas = $("[data-owner-location-canvas]");
+    mapRoot?.classList.toggle("is-loading", stateName === "loading");
+    mapRoot?.classList.toggle("is-error", stateName === "error");
+    if (loading) loading.hidden = stateName !== "loading";
+    if (error) error.hidden = stateName !== "error";
+    if (canvas) canvas.hidden = stateName !== "ready";
+  }
+
+  function locationAddressPartsFromComponents(components = []) {
+    const byType = (type) => components.find((component) => component.types?.includes(type));
+    const streetNumber = byType("street_number")?.long_name || "";
+    const route = byType("route")?.long_name || "";
+    const locality =
+      byType("locality")?.long_name ||
+      byType("postal_town")?.long_name ||
+      byType("administrative_area_level_2")?.long_name ||
+      byType("administrative_area_level_1")?.long_name ||
+      "";
+    const country = byType("country")?.long_name || "";
+    const address = [streetNumber, route].filter(Boolean).join(" ") || "";
+    return { address, city: locality, country };
+  }
+
+  function applyOwnerLocationDetails(details = {}) {
+    const form = $("[data-owner-venue-form]");
+    if (!form) return;
+    if (details.address && form.elements.address) form.elements.address.value = details.address;
+    if (details.city && form.elements.city) form.elements.city.value = details.city;
+    if (details.country && form.elements.country) form.elements.country.value = details.country;
+    const search = $("[data-owner-location-search]");
+    if (search && details.searchText) search.value = details.searchText;
+  }
+
   function selectedAddressText() {
     const form = $("[data-owner-venue-form]");
     return locationSearchText() || form?.elements.address?.value || "";
@@ -352,30 +446,29 @@
 
   function updateSelectedLocationDetails(coordinates) {
     const address = $("[data-owner-location-selected-address]");
-    const latitude = $("[data-owner-location-selected-latitude]");
-    const longitude = $("[data-owner-location-selected-longitude]");
 
     if (address)
-      address.textContent = coordinates ? selectedAddressText() || "Selected pin" : "Not selected";
-    if (latitude) latitude.textContent = coordinates ? formatCoordinate(coordinates.lat) : "-";
-    if (longitude) longitude.textContent = coordinates ? formatCoordinate(coordinates.lng) : "-";
+      address.textContent = coordinates
+        ? tr("manager.pin_location_confirmed", "Pin location confirmed")
+        : tr("manager.pin_not_confirmed", "Pin location not confirmed");
   }
 
-  function setLocationFields(lat, lng, address = null) {
+  function setLocationFields(lat, lng, details = {}) {
     if (!validCoordinate(lat, lng)) return;
     const form = $("[data-owner-venue-form]");
     if (!form) return;
     form.elements.latitude.value = formatCoordinate(lat);
     form.elements.longitude.value = formatCoordinate(lng);
-    if (address && form.elements.address) form.elements.address.value = address;
+    applyOwnerLocationDetails(details);
     updateOwnerLocationMap();
   }
 
-  function syncOwnerMarker(lat, lng, animate = false) {
+  function syncOwnerMarker(lat, lng, animate = false, zoom = null) {
     if (!ownerGoogleMap || !ownerGoogleMarker || !validCoordinate(lat, lng)) return;
     const position = { lat, lng };
     ownerGoogleMarker.setPosition(position);
     ownerGoogleMap.panTo(position);
+    if (zoom) ownerGoogleMap.setZoom(zoom);
     if (animate && window.google?.maps?.Animation) {
       ownerGoogleMarker.setAnimation(window.google.maps.Animation.DROP);
       window.setTimeout(() => ownerGoogleMarker?.setAnimation(null), 700);
@@ -387,13 +480,14 @@
 
     ownerGoogleGeocoder.geocode({ location: { lat, lng } }, (results, status) => {
       if (status !== "OK" || !results?.[0]) return;
-      const form = $("[data-owner-venue-form]");
       const address = results[0].formatted_address || "";
-      if (form?.elements.address && address) {
-        form.elements.address.value = address;
-        const search = $("[data-owner-location-search]");
-        if (search) search.value = address;
-      }
+      const parts = locationAddressPartsFromComponents(results[0].address_components || []);
+      applyOwnerLocationDetails({
+        address: address || parts.address,
+        city: parts.city,
+        country: parts.country,
+        searchText: address || selectedAddressText(),
+      });
       updateSelectedLocationDetails(formCoordinates());
     });
   }
@@ -408,10 +502,14 @@
           return;
         }
         const result = results[0];
+        const parts = locationAddressPartsFromComponents(result.address_components || []);
         resolve({
           lat: result.geometry.location.lat(),
           lng: result.geometry.location.lng(),
-          address: result.formatted_address || query,
+          address: result.formatted_address || parts.address || query,
+          city: parts.city,
+          country: parts.country,
+          searchText: result.formatted_address || query,
         });
       });
     });
@@ -419,64 +517,34 @@
 
   function moveOwnerMarker(lat, lng, options = {}) {
     if (!validCoordinate(lat, lng)) return;
-    setLocationFields(lat, lng, options.address || null);
-    syncOwnerMarker(lat, lng, options.animate !== false);
-    if (options.reverseGeocode !== false && !options.address) {
+    setLocationFields(lat, lng, options);
+    syncOwnerMarker(lat, lng, options.animate !== false, options.zoom || null);
+    if (options.reverseGeocode !== false && !options.address && !options.searchText) {
       reverseGeocodeOwnerLocation(lat, lng);
     }
-  }
-
-  function webMercatorPoint(lat, lng, zoom) {
-    const scale = 256 * 2 ** zoom;
-    const sinLat = Math.sin((lat * Math.PI) / 180);
-
-    return {
-      x: ((lng + 180) / 360) * scale,
-      y: (0.5 - Math.log((1 + sinLat) / (1 - sinLat)) / (4 * Math.PI)) * scale,
-    };
-  }
-
-  function webMercatorLatLng(x, y, zoom) {
-    const scale = 256 * 2 ** zoom;
-    const lng = (x / scale) * 360 - 180;
-    const n = Math.PI - (2 * Math.PI * y) / scale;
-    const lat = (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
-
-    return { lat, lng };
-  }
-
-  function coordinatesFromPickerClick(event) {
-    const current = formCoordinates() || defaultLocation;
-    const rect = event.currentTarget.getBoundingClientRect();
-    const center = webMercatorPoint(current.lat, current.lng, locationPickerZoom);
-
-    return webMercatorLatLng(
-      center.x + (event.clientX - rect.left) - rect.width / 2,
-      center.y + (event.clientY - rect.top) - rect.height / 2,
-      locationPickerZoom,
-    );
   }
 
   function updateOwnerLocationMap() {
     const coordinates = formCoordinates();
     const preview = coordinates || defaultLocation;
     const mapRoot = $("[data-owner-location-map]");
-    const frame = $("[data-owner-location-frame]");
     const status = $("[data-owner-location-status]");
     const open = $("[data-owner-location-open]");
     const search = $("[data-owner-location-search]");
+    const confirmation = $("[data-owner-location-confirmation]");
 
-    if (frame) frame.src = googleMapEmbedUrl(preview.lat, preview.lng);
     if (ownerGoogleMap && !syncingOwnerMap) {
       syncingOwnerMap = true;
       syncOwnerMarker(preview.lat, preview.lng, Boolean(coordinates));
+      ownerGoogleMarker?.setVisible(Boolean(coordinates));
       syncingOwnerMap = false;
     }
     if (mapRoot) mapRoot.classList.toggle("has-location", Boolean(coordinates));
+    confirmation?.classList.toggle("has-location", Boolean(coordinates));
     if (status) {
       status.textContent = coordinates
-        ? "Location pin is ready. Drag the marker or click the map to refine it."
-        : "Search an address, click the map, or drag the marker to set the exact pin.";
+        ? tr("manager.guests_navigate_exact_location", "Guests will navigate to this exact location.")
+        : tr("manager.search_or_use_location", "Search for your venue or use your current location to place the pin.");
     }
     if (open) {
       open.hidden = !coordinates;
@@ -489,17 +557,22 @@
   async function initOwnerGoogleMap() {
     const canvas = $("[data-owner-location-canvas]");
     const mapRoot = $("[data-owner-location-map]");
-    if (!canvas || ownerGoogleMap) return;
+    if (!canvas) return false;
+    if (ownerGoogleMap) {
+      setOwnerLocationState("ready");
+      return true;
+    }
 
+    setOwnerLocationState("loading");
     const loaded = await loadGoogleMaps();
     if (!loaded || !window.google?.maps) {
-      updateOwnerLocationMap();
-      return;
+      setOwnerLocationState("error");
+      return false;
     }
 
     const coordinates = formCoordinates();
     const center = coordinates || defaultLocation;
-    canvas.hidden = false;
+    setOwnerLocationState("ready");
     mapRoot?.classList.add("has-google-map");
 
     ownerGoogleMap = new window.google.maps.Map(canvas, {
@@ -507,8 +580,10 @@
       zoom: coordinates ? 16 : 12,
       mapTypeControl: false,
       streetViewControl: false,
+      zoomControl: true,
       fullscreenControl: true,
       clickableIcons: true,
+      gestureHandling: "greedy",
     });
     ownerGoogleGeocoder = new window.google.maps.Geocoder();
     ownerGoogleMarker = new window.google.maps.Marker({
@@ -516,13 +591,15 @@
       map: ownerGoogleMap,
       draggable: true,
       animation: window.google.maps.Animation.DROP,
-      title: "Selected restaurant or bar location",
+      title: tr("manager.selected_restaurant_location", "Selected restaurant or bar location"),
     });
+    ownerGoogleMarker.setVisible(Boolean(coordinates));
 
     ownerGoogleMap.addListener("click", (event) => {
       const lat = event.latLng.lat();
       const lng = event.latLng.lng();
-      moveOwnerMarker(lat, lng, { animate: true });
+      ownerGoogleMarker.setVisible(true);
+      moveOwnerMarker(lat, lng, { animate: true, zoom: Math.max(ownerGoogleMap.getZoom() || 16, 16) });
     });
     ownerGoogleMarker.addListener("dragend", (event) => {
       const lat = event.latLng.lat();
@@ -531,13 +608,13 @@
     });
 
     const search = $("[data-owner-location-search]");
-    if (search && window.google.maps.places?.SearchBox) {
-      ownerSearchBox = new window.google.maps.places.SearchBox(search);
-      ownerGoogleMap.addListener("bounds_changed", () => {
-        ownerSearchBox.setBounds(ownerGoogleMap.getBounds());
+    if (search && window.google.maps.places?.Autocomplete) {
+      ownerSearchBox = new window.google.maps.places.Autocomplete(search, {
+        fields: ["address_components", "formatted_address", "geometry", "name"],
       });
-      ownerSearchBox.addListener("places_changed", () => {
-        const place = ownerSearchBox.getPlaces()?.[0];
+      ownerSearchBox.bindTo("bounds", ownerGoogleMap);
+      ownerSearchBox.addListener("place_changed", () => {
+        const place = ownerSearchBox.getPlace();
         const location = place?.geometry?.location;
         if (!location) {
           window.tkToast?.(
@@ -549,21 +626,35 @@
           );
           return;
         }
+        const parts = locationAddressPartsFromComponents(place.address_components || []);
         moveOwnerMarker(location.lat(), location.lng(), {
-          address: place.formatted_address || place.name || search.value,
+          address: place.formatted_address || parts.address || search.value,
+          city: parts.city,
+          country: parts.country,
+          searchText: place.formatted_address || place.name || search.value,
           animate: true,
+          zoom: 17,
           reverseGeocode: false,
         });
-        ownerGoogleMap.setZoom(16);
+        ownerGoogleMarker.setVisible(true);
         window.tkToast?.(tr("owner.map_location_updated", "Map location updated."), "success");
       });
     }
 
+    const regionQuery = locationSearchText() || detectedCountryName();
+    if (!coordinates && regionQuery && ownerGoogleGeocoder) {
+      geocodeOwnerQuery(regionQuery).then((result) => {
+        if (!result || formCoordinates()) return;
+        ownerGoogleMap.setCenter({ lat: result.lat, lng: result.lng });
+        ownerGoogleMap.setZoom(12);
+      });
+    }
+
     updateOwnerLocationMap();
+    return true;
   }
 
   async function searchOwnerLocation() {
-    const button = $("[data-owner-location-search-button]");
     const search = $("[data-owner-location-search]");
     const query = String(search?.value || locationSearchText()).trim();
 
@@ -572,64 +663,95 @@
       return;
     }
 
-    if (button) {
-      button.dataset.originalLabel = button.dataset.originalLabel || button.innerHTML;
-      button.disabled = true;
-      button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Searching...';
-    }
-
     try {
-      await initOwnerGoogleMap();
+      const ready = await initOwnerGoogleMap();
+      if (!ready) return;
       const googleResult = await geocodeOwnerQuery(query);
       if (googleResult) {
         moveOwnerMarker(googleResult.lat, googleResult.lng, {
           address: googleResult.address,
+          city: googleResult.city,
+          country: googleResult.country,
+          searchText: googleResult.searchText,
           animate: true,
+          zoom: 17,
           reverseGeocode: false,
         });
-        if (ownerGoogleMap) ownerGoogleMap.setZoom(16);
+        ownerGoogleMarker?.setVisible(true);
         window.tkToast?.(tr("owner.map_location_updated", "Map location updated."), "success");
         return;
       }
-
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`,
-        {
-          headers: { Accept: "application/json" },
-        },
+      window.tkToast?.(
+        tr(
+          "owner.no_matching_address",
+          "No matching address yet. Try a more specific street, city, or restaurant name.",
+        ),
+        "error",
       );
-      const results = await response.json();
-      const result = Array.isArray(results) ? results[0] : null;
-
-      if (!result) {
-        window.tkToast?.(
-          tr(
-            "owner.no_matching_address",
-            "No matching address yet. Try a more specific street, city, or restaurant name.",
-          ),
-          "error",
-        );
-        return;
-      }
-
-      moveOwnerMarker(Number(result.lat), Number(result.lon), {
-        address: result.display_name || query,
-        animate: true,
-        reverseGeocode: false,
-      });
-      window.tkToast?.(tr("owner.map_location_updated", "Map location updated."), "success");
     } catch (err) {
       window.tkToast?.(
         tr("owner.address_search_failed", "We couldn’t search that address right now. Try a more specific street, city, or restaurant name."),
         "error",
       );
-    } finally {
-      if (button) {
-        button.disabled = false;
-        button.innerHTML =
-          button.dataset.originalLabel || '<i class="bi bi-search me-1"></i>Search this address';
-      }
     }
+  }
+
+  function useOwnerCurrentLocation() {
+    const button = $("[data-owner-location-current]");
+    if (!navigator.geolocation) {
+      window.tkToast?.(
+        tr(
+          "manager.location_access_failed",
+          "Location couldn't be accessed. Please search for your venue or place the pin manually.",
+        ),
+        "info",
+      );
+      return;
+    }
+
+    if (button) {
+      button.dataset.originalLabel = button.dataset.originalLabel || button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Locating...';
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const ready = await initOwnerGoogleMap();
+        if (ready) {
+          ownerGoogleMarker?.setVisible(true);
+          moveOwnerMarker(position.coords.latitude, position.coords.longitude, {
+            animate: true,
+            zoom: 17,
+          });
+          window.tkToast?.(
+            tr(
+              "manager.current_location_detected",
+              "Current location detected. You can drag the pin to fine-tune the venue entrance.",
+            ),
+            "success",
+          );
+        }
+        if (button) {
+          button.disabled = false;
+          button.innerHTML = button.dataset.originalLabel || button.innerHTML;
+        }
+      },
+      () => {
+        window.tkToast?.(
+          tr(
+            "manager.location_access_failed",
+            "Location couldn't be accessed. Please search for your venue or place the pin manually.",
+          ),
+          "info",
+        );
+        if (button) {
+          button.disabled = false;
+          button.innerHTML = button.dataset.originalLabel || button.innerHTML;
+        }
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
+    );
   }
 
   function localDate(value = new Date()) {
@@ -694,7 +816,7 @@
   function calendarTitle() {
     const { start, end } = calendarPeriod();
     if (state.calendar.view === "day") {
-      return start.toLocaleDateString(undefined, {
+      return start.toLocaleDateString(currentLocale(), {
         weekday: "long",
         month: "short",
         day: "numeric",
@@ -702,12 +824,12 @@
       });
     }
     if (state.calendar.view === "month") {
-      return localDate(state.calendar.anchorDate).toLocaleDateString(undefined, {
+      return localDate(state.calendar.anchorDate).toLocaleDateString(currentLocale(), {
         month: "long",
         year: "numeric",
       });
     }
-    return `${start.toLocaleDateString(undefined, { month: "short", day: "numeric" })} - ${end.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`;
+    return `${start.toLocaleDateString(currentLocale(), { month: "short", day: "numeric" })} - ${end.toLocaleDateString(currentLocale(), { month: "short", day: "numeric", year: "numeric" })}`;
   }
 
   function analyticsPeriod() {
@@ -757,17 +879,21 @@
   function renderHours(openingHours = []) {
     const root = $("[data-owner-hours]");
     if (!root) return;
+    $("[data-owner-availability-empty]")?.toggleAttribute("hidden", openingHours.length > 0);
     const byDay = new Map(openingHours.map((item) => [Number(item.day_of_week), item]));
-    root.innerHTML = days
-      .map((day, index) => {
+    root.innerHTML = dayKeys
+      .map((_, index) => {
+        const day = dayName(index);
         const item = byDay.get(index) || {};
         const closed = Boolean(item.is_closed);
         return `
-        <div class="col-lg-6">
+        <div class="col-12">
           <div class="facility owner-hours-row">
             <div class="owner-hours-day"><i class="bi bi-clock"></i><span>${day}</span></div>
-            ${timeSelect(`data-hours-open="${index}" aria-label="${esc(day)} opens at"`, item.opens_at, closed)}
-            ${timeSelect(`data-hours-close="${index}" aria-label="${esc(day)} closes at"`, item.closes_at, closed)}
+            <div class="owner-hours-times">
+              <label class="owner-hours-time"><span>${tr("restaurants.opens", "Opens")}</span>${timeSelect(`data-hours-open="${index}" aria-label="${esc(day)} opens at"`, item.opens_at, closed)}</label>
+              <label class="owner-hours-time"><span>${tr("restaurants.closes", "Closes")}</span>${timeSelect(`data-hours-close="${index}" aria-label="${esc(day)} closes at"`, item.closes_at, closed)}</label>
+            </div>
             <label class="form-check owner-hours-closed">
               <input class="form-check-input" type="checkbox" data-hours-closed="${index}" ${closed ? "checked" : ""}>
               <span data-i18n="availability.closed">${tr("availability.closed", "Closed")}</span>
@@ -780,7 +906,9 @@
   }
 
   function renderAvailabilityExceptions() {
-    $("[data-owner-availability-section]")?.toggleAttribute("hidden", !state.venue);
+    document.querySelectorAll("[data-owner-availability-section]").forEach((section) => {
+      section.toggleAttribute("hidden", !state.venue);
+    });
     renderBlackoutDates();
     renderSpecialHours();
   }
@@ -797,7 +925,7 @@
           <strong>${esc(dateLabel(item.date))}</strong>
           <span>${esc(item.reason || tr("availability.closed", "Closed"))}</span>
         </div>
-        <button class="btn btn-glass btn-sm" type="button" data-blackout-delete="${item.id}" aria-label="Remove blackout date">
+        <button class="btn btn-glass btn-sm" type="button" data-blackout-delete="${item.id}" aria-label="${esc(tr("manager.remove_blackout_date", "Remove blackout date"))}">
           <i class="bi bi-trash"></i>
         </button>
       </div>
@@ -820,10 +948,10 @@
           <span>${item.is_closed ? tr("availability.closed", "Closed") : `${esc(timeLabel(item.opens_at))} - ${esc(timeLabel(item.closes_at))}`}</span>
         </div>
         <div class="btn-group btn-group-sm">
-          <button class="btn btn-glass" type="button" data-special-edit="${item.id}" aria-label="Edit special hours">
+          <button class="btn btn-glass" type="button" data-special-edit="${item.id}" aria-label="${esc(tr("manager.edit_special_hours", "Edit special hours"))}">
             <i class="bi bi-pencil"></i>
           </button>
-          <button class="btn btn-glass" type="button" data-special-delete="${item.id}" aria-label="Delete special hours">
+          <button class="btn btn-glass" type="button" data-special-delete="${item.id}" aria-label="${esc(tr("manager.delete_special_hours", "Delete special hours"))}">
             <i class="bi bi-trash"></i>
           </button>
         </div>
@@ -871,10 +999,10 @@
       ? images
           .map(
             (image, index) => `
-      <div class="col-md-6 col-xl-4">
+      <div class="owner-gallery-col">
         <div class="owner-gallery-card ${index === 0 ? "is-cover" : ""}" draggable="true" data-owner-gallery-card="${image.id}">
           <div class="owner-gallery-image">
-            <img loading="lazy" decoding="async" width="800" height="500" sizes="(min-width: 1200px) 33vw, (min-width: 768px) 50vw, 100vw" src="${esc(imageUrl(image))}" alt="${esc(state.venue?.name || "Restaurant or bar")} gallery photo ${index + 1}" />
+            <img loading="lazy" decoding="async" width="800" height="600" sizes="(min-width: 1200px) 24vw, (min-width: 768px) 33vw, 50vw" src="${esc(imageUrl(image))}" alt="${esc(state.venue?.name || tr("common.restaurant_bar", "Restaurant or bar"))} ${esc(tr("venue.gallery", "Gallery"))} ${index + 1}" />
             <span class="owner-gallery-cover-badge"><i class="bi bi-star-fill"></i> ${tr("owner.cover", "Cover")}</span>
             <span class="owner-gallery-drag-hint"><i class="bi bi-grip-vertical"></i> ${tr("owner.drag", "Drag")}</span>
           </div>
@@ -884,10 +1012,10 @@
               <small class="text-muted-pro">${tr("owner.drag_to_reorder", "Drag to reorder")}</small>
             </div>
             <div class="owner-gallery-actions">
-              <button class="btn btn-glass btn-sm" type="button" data-owner-image-cover="${image.id}" ${index === 0 ? "disabled" : ""} aria-label="Set as cover photo"><i class="bi bi-star"></i></button>
-              <button class="btn btn-glass btn-sm" type="button" data-owner-image-up="${image.id}" ${index === 0 ? "disabled" : ""} aria-label="Move image left"><i class="bi bi-arrow-left"></i></button>
-              <button class="btn btn-glass btn-sm" type="button" data-owner-image-down="${image.id}" ${index === images.length - 1 ? "disabled" : ""} aria-label="Move image right"><i class="bi bi-arrow-right"></i></button>
-              <button class="btn btn-glass btn-sm" type="button" data-owner-image-delete="${image.id}" aria-label="Delete image"><i class="bi bi-trash"></i></button>
+              <button class="btn btn-glass btn-sm" type="button" data-owner-image-cover="${image.id}" ${index === 0 ? "disabled" : ""} aria-label="${esc(tr("manager.set_as_cover_photo", "Set as cover photo"))}"><i class="bi bi-star"></i></button>
+              <button class="btn btn-glass btn-sm" type="button" data-owner-image-up="${image.id}" ${index === 0 ? "disabled" : ""} aria-label="${esc(tr("manager.move_image_left", "Move image left"))}"><i class="bi bi-arrow-left"></i></button>
+              <button class="btn btn-glass btn-sm" type="button" data-owner-image-down="${image.id}" ${index === images.length - 1 ? "disabled" : ""} aria-label="${esc(tr("manager.move_image_right", "Move image right"))}"><i class="bi bi-arrow-right"></i></button>
+              <button class="btn btn-glass btn-sm" type="button" data-owner-image-delete="${image.id}" aria-label="${esc(tr("manager.delete_image", "Delete image"))}"><i class="bi bi-trash"></i></button>
             </div>
           </div>
         </div>
@@ -915,43 +1043,43 @@
     const images = venue?.images || [];
     return [
       {
-        label: "Restaurant name",
-        missing: "Add Name",
+        label: tr("manager.restaurant_name", "Restaurant name"),
+        missing: tr("manager.add_name", "Add Name"),
         complete: Boolean(String(venue?.name || "").trim()),
       },
       {
-        label: "Description",
-        missing: "Add Description",
+        label: tr("venue.description", "Description"),
+        missing: tr("manager.add_description", "Add Description"),
         complete: Boolean(String(venue?.description || "").trim()),
       },
       {
-        label: "Cover Image",
-        missing: "Add Cover Image",
+        label: tr("manager.cover_image", "Cover Image"),
+        missing: tr("manager.add_cover_image", "Add Cover Image"),
         complete: Boolean(venue?.logo_image || images.length),
       },
-      { label: "Gallery Images", missing: "Add Gallery Images", complete: images.length > 1 },
+      { label: tr("manager.gallery_images", "Gallery Images"), missing: tr("manager.add_gallery_images", "Add Gallery Images"), complete: images.length > 1 },
       {
-        label: "Phone",
-        missing: "Add Phone",
+        label: tr("venue.phone", "Phone"),
+        missing: tr("manager.add_phone", "Add Phone"),
         complete: Boolean(String(venue?.phone || "").trim()),
       },
       {
-        label: "Address",
-        missing: "Add Address",
+        label: tr("venue.address", "Address"),
+        missing: tr("manager.add_address", "Add Address"),
         complete: Boolean(String(venue?.address || "").trim()),
       },
-      { label: "Opening hours", missing: "Add opening hours", complete: hasOpeningHours(venue) },
+      { label: tr("owner.opening_hours", "Opening hours"), missing: tr("manager.add_opening_hours", "Add opening hours"), complete: hasOpeningHours(venue) },
       {
-        label: "Facilities",
-        missing: "Add Facilities",
+        label: tr("venue.facilities", "Facilities"),
+        missing: tr("manager.add_facilities", "Add Facilities"),
         complete: Boolean(venue?.facilities?.length),
       },
       {
-        label: "Cuisine Types",
-        missing: "Add Cuisine Types",
+        label: tr("manager.cuisine_types", "Cuisine Types"),
+        missing: tr("manager.add_cuisine_types", "Add Cuisine Types"),
         complete: Boolean(venue?.cuisine_types?.length),
       },
-      { label: "Social links", missing: "Add Instagram", complete: hasSocialLinks(venue) },
+      { label: tr("manager.social_links", "Social links"), missing: tr("manager.add_instagram", "Add Instagram"), complete: hasSocialLinks(venue) },
     ];
   }
 
@@ -979,6 +1107,510 @@
             .join("")
         : `<span class="complete"><i class="bi bi-patch-check"></i>${tr("owner.profile_complete", "Profile looks complete")}</span>`;
     }
+  }
+
+  function todayValue() {
+    return toDateInputValue(new Date());
+  }
+
+  function reservationTimeValue(reservation) {
+    return normalizeTime(reservation?.reservation_time || "");
+  }
+
+  function reservationDateTime(reservation) {
+    const date = reservation?.reservation_date || todayValue();
+    const time = reservationTimeValue(reservation) || "00:00";
+    return new Date(`${date}T${time}:00`);
+  }
+
+  function reservationUpdatedTime(reservation) {
+    return new Date(
+      reservation?.cancelled_at || reservation?.updated_at || reservation?.created_at || 0,
+    ).getTime();
+  }
+
+  function todayReservations() {
+    const today = todayValue();
+    return state.reservations
+      .filter((reservation) => reservation.reservation_date === today)
+      .sort((a, b) => reservationDateTime(a) - reservationDateTime(b));
+  }
+
+  function upcomingReservations(statuses = []) {
+    const now = new Date();
+    return state.reservations
+      .filter((reservation) => {
+        if (statuses.length && !statuses.includes(reservation.status)) return false;
+        return reservationDateTime(reservation) >= now;
+      })
+      .sort((a, b) => reservationDateTime(a) - reservationDateTime(b));
+  }
+
+  function todaysOpeningWindow() {
+    const hours = state.venue?.opening_hours || [];
+    const dayIndex = (new Date().getDay() + 6) % 7;
+    return hours.find((item) => Number(item.day_of_week) === dayIndex);
+  }
+
+  function operatingStatus() {
+    if (!state.venue) {
+      return {
+        label: tr("manager.setup_needed", "Setup needed"),
+        detail: tr("manager.setup_needed_detail", "Create a venue profile to start accepting reservations."),
+        tone: "warning",
+      };
+    }
+    if (state.venue.status !== "active") {
+      return {
+        label: tr("manager.venue_inactive", "Venue inactive"),
+        detail: tr("manager.venue_inactive_detail", "Activate the venue when you are ready for guests to book."),
+        tone: "critical",
+      };
+    }
+
+    const todayHours = todaysOpeningWindow();
+    if (!todayHours || todayHours.is_closed || !todayHours.opens_at || !todayHours.closes_at) {
+      return {
+        label: tr("manager.closed_today", "Closed today"),
+        detail: tr("manager.closed_today_detail", "Existing reservations still appear in today's operations."),
+        tone: "warning",
+      };
+    }
+
+    const now = new Date();
+    const open = new Date(`${todayValue()}T${normalizeTime(todayHours.opens_at)}:00`);
+    const close = new Date(`${todayValue()}T${normalizeTime(todayHours.closes_at)}:00`);
+    if (now < open) {
+      return {
+        label: tr("manager.opens_at", "Opens at {time}", { time: timeLabel(todayHours.opens_at) }),
+        detail: tr("manager.todays_hours", "Today's hours: {open} - {close}", {
+          open: timeLabel(todayHours.opens_at),
+          close: timeLabel(todayHours.closes_at),
+        }),
+        tone: "info",
+      };
+    }
+    if (now > close) {
+      return {
+        label: tr("manager.closed_now", "Closed now"),
+        detail: tr("manager.closed_at", "Closed at {time}", { time: timeLabel(todayHours.closes_at) }),
+        tone: "info",
+      };
+    }
+    return {
+      label: tr("manager.open_now", "Open now"),
+      detail: tr("manager.open_until", "Open until {time}", { time: timeLabel(todayHours.closes_at) }),
+      tone: "success",
+    };
+  }
+
+  function servicePeriodLabel() {
+    const hour = new Date().getHours();
+    if (hour < 11) return tr("manager.breakfast_service", "Breakfast service");
+    if (hour < 16) return tr("manager.lunch_service", "Lunch service");
+    if (hour < 22) return tr("manager.dinner_service", "Dinner service");
+    return tr("manager.late_service", "Late service");
+  }
+
+  function dashboardEmpty(icon, title, copy, actions = "") {
+    return `
+      <div class="manager-dashboard-empty">
+        <i class="bi ${icon}"></i>
+        <div><strong>${esc(title)}</strong><span>${esc(copy)}</span>${actions}</div>
+      </div>
+    `;
+  }
+
+  function dashboardReservationRow(reservation, action = "") {
+    return `
+      <div class="manager-operation-row">
+        <div>
+          <strong>${esc(reservation.guest_name || guestFallback())}</strong>
+          <span>${esc(timeLabel(reservation.reservation_time))} · ${Number(reservation.party_size || 0)} ${guestCountLabel(reservation.party_size)}</span>
+        </div>
+        <div class="manager-operation-meta">
+          ${statusBadge(reservation.status)}
+          ${action}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderDashboardHeader() {
+    const user = auth()?.getUser?.();
+    const name = user?.name ? user.name.split(" ")[0] : "";
+    const hour = new Date().getHours();
+    const greeting =
+      hour < 12
+        ? tr("manager.good_morning", "Good morning")
+        : hour < 18
+          ? tr("manager.good_afternoon", "Good afternoon")
+          : tr("manager.good_evening", "Good evening");
+    const status = operatingStatus();
+    const next = upcomingReservations(["pending", "confirmed"])[0];
+
+    const greetingEl = $("[data-dashboard-greeting]");
+    if (greetingEl) greetingEl.textContent = name ? `${greeting}, ${name}` : greeting;
+    const venueEl = $("[data-dashboard-venue-name]");
+    if (venueEl) {
+      venueEl.textContent = state.venue?.name || restaurantBarFallback();
+    }
+    const dateEl = $("[data-dashboard-date]");
+    if (dateEl) {
+      dateEl.textContent = new Date().toLocaleDateString(currentLocale(), {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      });
+    }
+    const statusEl = $("[data-dashboard-operating-status]");
+    if (statusEl) {
+      statusEl.textContent = status.label;
+      statusEl.className = `manager-status-pill manager-status-${status.tone}`;
+    }
+    const serviceEl = $("[data-dashboard-service-period]");
+    if (serviceEl) serviceEl.textContent = servicePeriodLabel();
+    const nextEl = $("[data-dashboard-next-service]");
+    if (nextEl) {
+      nextEl.textContent = next
+        ? tr("manager.next_reservation_at", "Next reservation at {time} · {guest}", {
+            time: timeLabel(next.reservation_time),
+            guest: next.guest_name || guestFallback(),
+          })
+        : status.detail;
+    }
+  }
+
+  function renderAttentionQueue() {
+    const root = $("[data-dashboard-attention-list]");
+    if (!root) return;
+    const today = todayValue();
+    const pending = state.reservations.filter((reservation) => reservation.status === "pending");
+    const cancellationsToday = state.reservations.filter(
+      (reservation) =>
+        reservation.status === "cancelled" &&
+        (reservation.reservation_date === today ||
+          String(reservation.cancelled_at || "").startsWith(today)),
+    );
+    const noShowsToday = state.reservations.filter(
+      (reservation) => reservation.status === "no_show" && reservation.reservation_date === today,
+    );
+    const missing = state.venue
+      ? profileCompletionItems(state.venue).filter((item) => !item.complete)
+      : [];
+    const status = operatingStatus();
+    const items = [];
+
+    if (!state.venue) {
+      items.push({
+        tone: "critical",
+        icon: "bi-exclamation-octagon",
+        title: tr("manager.venue_setup_blocking", "Venue setup is blocking bookings"),
+        copy: tr("manager.venue_setup_blocking_copy", "Create your venue profile before guests can reserve."),
+      });
+    } else if (state.venue.status !== "active") {
+      items.push({
+        tone: "critical",
+        icon: "bi-slash-circle",
+        title: tr("manager.venue_inactive", "Venue is not active"),
+        copy: tr("manager.venue_not_active_copy", "Public booking depends on the venue being active."),
+      });
+    }
+    if (pending.length) {
+      items.push({
+        tone: "warning",
+        icon: "bi-hourglass-split",
+        title: tr(
+          pending.length === 1 ? "manager.pending_request_count" : "manager.pending_requests_count",
+          "{count} pending requests",
+          { count: pending.length },
+        ),
+        copy: tr("manager.review_guest_requests_copy", "Review guest requests before service."),
+        action: "pending",
+      });
+    }
+    if (cancellationsToday.length) {
+      items.push({
+        tone: "warning",
+        icon: "bi-calendar-x",
+        title: tr(
+          cancellationsToday.length === 1
+            ? "manager.cancellation_today_count"
+            : "manager.cancellations_today_count",
+          "{count} cancellations today",
+          { count: cancellationsToday.length },
+        ),
+        copy: tr("manager.same_day_changes", "Same-day changes may affect covers and staffing."),
+      });
+    }
+    if (noShowsToday.length) {
+      items.push({
+        tone: "warning",
+        icon: "bi-person-x",
+        title: tr(
+          noShowsToday.length === 1 ? "manager.no_show_today_count" : "manager.no_shows_today_count",
+          "{count} no-shows today",
+          { count: noShowsToday.length },
+        ),
+        copy: tr("manager.review_missed_arrivals_copy", "Review missed arrivals before closing the day."),
+      });
+    }
+    if (state.venue && (!hasOpeningHours(state.venue) || missing.length >= 4)) {
+      items.push({
+        tone: "info",
+        icon: "bi-clipboard2-check",
+        title: !hasOpeningHours(state.venue)
+          ? tr("manager.opening_hours", "Opening hours missing")
+          : tr("manager.profile_needs_attention", "Profile needs attention"),
+        copy: !hasOpeningHours(state.venue)
+          ? tr("manager.availability_untrusted_copy", "Availability cannot be trusted until hours are configured.")
+          : tr("manager.setup_items_incomplete", "{count} setup items are still incomplete.", {
+              count: missing.length,
+            }),
+      });
+    }
+    if (status.label === tr("manager.closed_today", "Closed today") && todayReservations().length) {
+      items.push({
+        tone: "warning",
+        icon: "bi-calendar-event",
+        title: tr("manager.reservations_exist_closed", "Reservations exist while closed today"),
+        copy: tr("manager.review_closed_bookings_copy", "Review today's bookings against venue hours."),
+      });
+    }
+
+    root.innerHTML = items.length
+      ? items
+          .slice(0, 4)
+          .map(
+            (item) => `
+        <div class="manager-attention-item manager-attention-${item.tone}">
+          <i class="bi ${item.icon}"></i>
+          <div><strong>${esc(item.title)}</strong><span>${esc(item.copy)}</span></div>
+          ${
+            item.action
+              ? `<button class="btn btn-gold-outline btn-sm" type="button" data-manager-quick-action="${item.action}">${tr("manager.review", "Review")}</button>`
+              : ""
+          }
+        </div>
+      `,
+          )
+          .join("")
+      : dashboardEmpty(
+          "bi-shield-check",
+          tr("manager.no_urgent_items", "No urgent items."),
+          tr("manager.no_urgent_items_copy", "Pending requests, same-day cancellations, and setup blockers will appear here."),
+        );
+  }
+
+  function renderDashboardOperations() {
+    const pendingRoot = $("[data-dashboard-pending-list]");
+    const arrivalsRoot = $("[data-dashboard-arrivals-list]");
+    const timelineRoot = $("[data-dashboard-timeline-list]");
+    const pending = state.reservations
+      .filter((reservation) => reservation.status === "pending")
+      .sort((a, b) => reservationDateTime(a) - reservationDateTime(b))
+      .slice(0, 4);
+    const arrivals = upcomingReservations(["confirmed"]).slice(0, 4);
+    const today = todayReservations();
+
+    if (pendingRoot) {
+      pendingRoot.innerHTML = pending.length
+        ? pending
+            .map((reservation) =>
+              dashboardReservationRow(
+                reservation,
+                `<button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservation-view="${reservation.id}">${tr("manager.review", "Review")}</button>`,
+              ),
+            )
+            .join("")
+        : dashboardEmpty(
+            "bi-calendar-check",
+            tr("manager.no_pending_reservations", "No pending reservations."),
+            tr("manager.no_pending_reservations_copy", "New guest requests will appear here when they need review."),
+          );
+    }
+
+    if (arrivalsRoot) {
+      arrivalsRoot.innerHTML = arrivals.length
+        ? arrivals.map((reservation) => dashboardReservationRow(reservation)).join("")
+        : dashboardEmpty(
+            "bi-person-walking",
+            tr("manager.no_upcoming_arrivals", "No upcoming confirmed arrivals."),
+            tr("manager.no_upcoming_arrivals_copy", "Confirmed reservations will appear here as service approaches."),
+          );
+    }
+
+    if (timelineRoot) {
+      timelineRoot.innerHTML = today.length
+        ? today
+            .slice(0, 8)
+            .map(
+              (reservation) => `
+        <div class="manager-timeline-row">
+          <time>${esc(timeLabel(reservation.reservation_time))}</time>
+          <div><strong>${esc(reservation.guest_name || guestFallback())}</strong><span>${Number(reservation.party_size || 0)} ${guestCountLabel(reservation.party_size)}</span></div>
+          ${statusBadge(reservation.status)}
+        </div>
+      `,
+            )
+            .join("")
+        : dashboardEmpty(
+            "bi-calendar2",
+            tr("manager.no_reservations_yet", "No reservations yet."),
+            tr("manager.no_reservations_dashboard_copy", "Preview the public page or check availability when you are ready for bookings."),
+            `<div class="manager-empty-actions"><button class="btn btn-gold btn-sm" type="button" data-manager-quick-action="preview">${tr("manager.preview_public_page", "Preview public page")}</button><button class="btn btn-gold-outline btn-sm" type="button" data-manager-quick-action="opening-hours">${tr("manager.check_availability", "Check availability")}</button></div>`,
+          );
+    }
+  }
+
+  function renderDashboardActivity() {
+    const root = $("[data-dashboard-activity-list]");
+    if (!root) return;
+    const items = state.reservations
+      .slice()
+      .sort((a, b) => reservationUpdatedTime(b) - reservationUpdatedTime(a))
+      .slice(0, 6)
+      .map((reservation) => {
+        const label =
+          reservation.status === "pending"
+            ? tr("manager.new_reservation_request", "New reservation request")
+            : reservation.status === "confirmed"
+              ? tr("manager.reservation_confirmed", "Reservation confirmed")
+              : reservation.status === "cancelled"
+                ? tr("manager.reservation_cancelled", "Reservation cancelled")
+                : reservation.status === "completed"
+                  ? tr("manager.reservation_completed", "Reservation completed")
+                  : tr("manager.no_show_marked", "No-show marked");
+        return `
+          <div class="manager-activity-item">
+            <i class="bi bi-clock-history"></i>
+            <div>
+              <strong>${esc(label)}</strong>
+              <span>${esc(reservation.guest_name || guestFallback())} · ${esc(dateTimeLabel(reservation.cancelled_at || reservation.updated_at || reservation.created_at))}</span>
+            </div>
+          </div>
+        `;
+      });
+
+    if (state.venue?.updated_at) {
+      items.push(`
+        <div class="manager-activity-item">
+          <i class="bi bi-shop-window"></i>
+          <div><strong>${tr("manager.venue_updated", "Venue updated")}</strong><span>${esc(dateTimeLabel(state.venue.updated_at))}</span></div>
+        </div>
+      `);
+    }
+
+    root.innerHTML = items.length
+      ? items.join("")
+      : dashboardEmpty(
+          "bi-activity",
+          tr("manager.no_recent_activity", "No recent activity yet."),
+          tr("manager.no_recent_activity_copy", "Meaningful reservation and venue changes will appear here after activity begins."),
+        );
+  }
+
+  function renderDashboardReadiness() {
+    const root = $("[data-dashboard-readiness-list]");
+    if (!root) return;
+    if (!state.venue) {
+      root.innerHTML = dashboardEmpty(
+        "bi-list-check",
+        tr("manager.start_with_venue_setup", "Start with venue setup."),
+        tr("manager.start_with_venue_setup_copy", "Complete the checklist above before focusing on daily operations."),
+      );
+      return;
+    }
+
+    const insights = [];
+    const missing = profileCompletionItems(state.venue).filter((item) => !item.complete);
+    if (!hasOpeningHours(state.venue)) {
+      insights.push([
+        "bi-clock-history",
+        tr("manager.no_opening_hours_configured", "No opening hours configured"),
+        tr("manager.no_opening_hours_configured_copy", "Add hours so availability is clear."),
+      ]);
+    }
+    if (!(state.venue.images || []).length) {
+      insights.push([
+        "bi-images",
+        tr("manager.venue_no_images", "Venue has no images"),
+        tr("manager.venue_no_images_copy", "Upload at least one image before sharing the public page."),
+      ]);
+    }
+    if (!String(state.venue.address || "").trim()) {
+      insights.push([
+        "bi-geo-alt",
+        tr("manager.location_incomplete", "Location is incomplete"),
+        tr("manager.location_incomplete_copy", "Add an address so guests know where to arrive."),
+      ]);
+    }
+    if (!state.reservations.length) {
+      insights.push([
+        "bi-calendar-check",
+        tr("manager.no_reservations_yet", "No reservations yet"),
+        tr("manager.no_reservations_readiness_copy", "Preview the public page and confirm availability settings."),
+      ]);
+    }
+    if (!insights.length && missing.length) {
+      insights.push([
+        "bi-clipboard2-check",
+        tr("manager.profile_items_remaining", "{count} profile items remaining", {
+          count: missing.length,
+        }),
+        tr("manager.profile_items_remaining_copy", "Finish the remaining setup items when service is calm."),
+      ]);
+    }
+
+    root.innerHTML = insights.length
+      ? insights
+          .slice(0, 3)
+          .map(
+            ([icon, title, copy]) => `
+        <div class="manager-insight-item">
+          <i class="bi ${icon}"></i>
+          <div><strong>${esc(title)}</strong><span>${esc(copy)}</span></div>
+        </div>
+      `,
+          )
+          .join("")
+      : dashboardEmpty(
+          "bi-check2-circle",
+          tr("manager.venue_health_good", "Venue health looks good."),
+          tr("manager.venue_health_good_copy", "Availability and profile issues will appear here only when relevant."),
+        );
+  }
+
+  function renderManagerDashboard() {
+    const signature = stableSignature({
+      venue: state.venue
+        ? {
+            id: state.venue.id,
+            name: state.venue.name,
+            status: state.venue.status,
+            updated_at: state.venue.updated_at,
+            images: state.venue.images?.length || 0,
+            opening_hours: state.venue.opening_hours,
+            address: state.venue.address,
+          }
+        : null,
+      stats: state.reservationStats,
+      reservations: state.reservations.map((reservation) => [
+        reservation.id,
+        reservation.status,
+        reservation.reservation_date,
+        reservation.reservation_time,
+        reservation.party_size,
+        reservation.updated_at,
+        reservation.cancelled_at,
+      ]),
+    });
+    if (skipRender("manager-dashboard", signature)) return;
+    renderDashboardHeader();
+    renderAttentionQueue();
+    renderDashboardOperations();
+    renderDashboardActivity();
+    renderDashboardReadiness();
   }
 
   function fillForm() {
@@ -1045,8 +1677,11 @@
     $("[data-owner-empty]")?.toggleAttribute("hidden", hasVenue);
     $("[data-owner-summary]")?.toggleAttribute("hidden", !hasVenue);
     $("[data-owner-delete-section]")?.toggleAttribute("hidden", !hasVenue);
-    $("[data-owner-availability-section]")?.toggleAttribute("hidden", !hasVenue);
+    document.querySelectorAll("[data-owner-availability-section]").forEach((section) => {
+      section.toggleAttribute("hidden", !hasVenue);
+    });
     renderProfileCompletion();
+    renderManagerDashboard();
 
     if (!hasVenue) return;
     const venue = state.venue;
@@ -1077,6 +1712,10 @@
     $("[data-owner-description]").textContent =
       venue.description ||
       tr("venue.complete_profile_details", "Complete your profile details below.");
+    const managerVenueName = $("[data-manager-venue-name]");
+    if (managerVenueName) {
+      managerVenueName.textContent = venue.name || tr("venue.profile", "Restaurant or bar profile");
+    }
     const publicLink = $("[data-owner-public-link]");
     if (publicLink) {
       publicLink.href = venue.slug
@@ -1085,6 +1724,10 @@
         : "#";
       publicLink.toggleAttribute("aria-disabled", !venue.slug);
     }
+    document.querySelectorAll("[data-manager-public-page]").forEach((link) => {
+      link.href = publicLink?.href || "#";
+      link.toggleAttribute("aria-disabled", !venue.slug);
+    });
     const publicNote = $("[data-owner-public-note]");
     if (publicNote) {
       publicNote.textContent =
@@ -1133,83 +1776,470 @@
   function renderReservationStats() {
     const root = $("[data-owner-reservation-stats]");
     if (!root) return;
+    renderManagerDashboard();
     const stats = state.reservationStats || {};
-    const signature = stableSignature(stats);
+    const todaysReservations = todayReservations();
+    const coversToday = todaysReservations.reduce(
+      (total, reservation) => total + Number(reservation.party_size || 0),
+      0,
+    );
+    const cancellationsToday = todaysReservations.filter(
+      (reservation) => reservation.status === "cancelled",
+    ).length;
+    const noShowsToday = todaysReservations.filter(
+      (reservation) => reservation.status === "no_show",
+    ).length;
+    const next = upcomingReservations(["pending", "confirmed"])[0];
+    const signature = stableSignature({
+      stats,
+      today: todaysReservations.map((reservation) => [
+        reservation.id,
+        reservation.status,
+        reservation.reservation_time,
+        reservation.party_size,
+      ]),
+      next: next ? [next.id, next.reservation_time, next.guest_name] : null,
+    });
     if (skipRender("reservation-stats", signature)) return;
+    updateManagerPendingBadge(stats.pending || 0);
 
     root.innerHTML = [
       {
-        label: tr("reservation.pending_reservations", "Pending Reservations"),
+        label: tr("manager.pending_requests", "Pending Requests"),
         value: stats.pending || 0,
-        description: tr("reservation.requests_waiting", "Requests waiting for your review"),
+        description: tr("manager.needs_review", "Needs review"),
         icon: "bi-hourglass-split",
         tone: "pending",
+        action: "pending",
       },
       {
-        label: tr("reservation.confirmed_reservations", "Confirmed Reservations"),
-        value: stats.confirmed || 0,
-        description: tr("reservation.approved_by_venue", "Reservations approved by the restaurant or bar"),
-        icon: "bi-patch-check",
-        tone: "confirmed",
+        label: tr("manager.todays_reservations", "Today's Reservations"),
+        value: stats.today || todaysReservations.length,
+        description: tr("manager.scheduled_today", "Scheduled today"),
+        icon: "bi-calendar2-check",
+        tone: "today",
+        action: "calendar",
       },
       {
-        label: tr("reservation.cancelled_reservations", "Cancelled Reservations"),
-        value: stats.cancelled || 0,
-        description: tr("reservation.no_longer_active", "Requests that were cancelled"),
+        label: tr("manager.guests_today", "Guests Today"),
+        value: coversToday,
+        description: tr("manager.covers_expected", "Covers expected"),
+        icon: "bi-people",
+        tone: "guests",
+        action: "calendar",
+      },
+      {
+        label: tr("manager.next_arrival", "Next Arrival"),
+        value: next ? timeLabel(next.reservation_time) : "-",
+        description: next ? next.guest_name || guestFallback() : tr("manager.no_arrival_scheduled", "No arrival scheduled"),
+        icon: "bi-person-walking",
+        tone: "next",
+        action: "calendar",
+      },
+      {
+        label: tr("manager.cancellations_today", "Cancellations Today"),
+        value: cancellationsToday,
+        description: tr("manager.same_day_changes", "Same-day changes"),
         icon: "bi-x-circle",
         tone: "cancelled",
       },
       {
-        label: tr("owner.today_reservations", "Today's Reservations"),
-        value: stats.today || 0,
-        description: tr("owner.guest_arrivals_today", "Guest arrivals scheduled today"),
-        icon: "bi-calendar2-check",
-        tone: "today",
+        label: tr("manager.no_shows_today", "No-shows Today"),
+        value: noShowsToday,
+        description: tr("manager.marked_today", "Marked today"),
+        icon: "bi-person-x",
+        tone: "noshow",
       },
     ]
       .map(
         (item) => `
-      <div class="col-sm-6 col-xl-3">
-        <div class="reservation-stat reservation-stat-${item.tone}">
+      <div class="col-sm-6 col-xl-2">
+        <button class="reservation-stat reservation-stat-${item.tone}" type="button" ${item.action ? `data-manager-quick-action="${item.action}"` : ""}>
           <div class="reservation-stat-icon"><i class="bi ${item.icon}"></i></div>
           <span>${item.label}</span>
           <strong>${item.value}</strong>
           <small>${item.description}</small>
-        </div>
+        </button>
       </div>
     `,
       )
       .join("");
   }
 
-  function reservationActions(reservation) {
-    const id = reservation.id;
-    const status = reservation.status;
-    const isConfirmed = status === "confirmed";
+  function reservationSearchText(reservation) {
+    return [
+      reservation.id,
+      reservation.guest_name,
+      reservation.phone,
+      reservation.email,
+      reservation.reservation_date,
+      reservation.status,
+      reservation.occasion,
+      reservation.notes,
+      reservation.venue?.name,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+  }
+
+  function partySizeMatches(value, partySize) {
+    const size = Number(partySize || 0);
+    if (!value) return true;
+    if (value === "1-2") return size >= 1 && size <= 2;
+    if (value === "3-4") return size >= 3 && size <= 4;
+    if (value === "5-8") return size >= 5 && size <= 8;
+    if (value === "9+") return size >= 9;
+    return true;
+  }
+
+  function workspaceViewMatches(reservation) {
+    const view = state.reservationWorkspace.view || "today";
+    const today = todayValue();
+    const reservationDate = reservation.reservation_date || "";
+    if (view === "today") return reservationDate === today;
+    if (view === "pending") return reservation.status === "pending";
+    if (view === "upcoming") {
+      return (
+        reservationDate >= today &&
+        !["completed", "cancelled", "no_show"].includes(reservation.status)
+      );
+    }
+    if (view === "completed") return reservation.status === "completed";
+    if (view === "cancelled") return reservation.status === "cancelled";
+    if (view === "no_show") return reservation.status === "no_show";
+    return true;
+  }
+
+  function filteredWorkspaceReservations() {
+    const workspace = state.reservationWorkspace;
+    const query = workspace.search.trim().toLowerCase();
+    return state.reservations
+      .filter((reservation) => workspaceViewMatches(reservation))
+      .filter((reservation) => (query ? reservationSearchText(reservation).includes(query) : true))
+      .filter((reservation) =>
+        state.reservationFilters.date
+          ? reservation.reservation_date >= state.reservationFilters.date
+          : true,
+      )
+      .filter((reservation) =>
+        workspace.dateEnd ? reservation.reservation_date <= workspace.dateEnd : true,
+      )
+      .filter((reservation) => partySizeMatches(workspace.partySize, reservation.party_size))
+      .filter((reservation) =>
+        workspace.occasion ? String(reservation.occasion || "") === workspace.occasion : true,
+      );
+  }
+
+  function servicePeriod(time) {
+    const hour = Number(String(time || "00:00").slice(0, 2));
+    if (hour < 11) return tr("manager.morning", "Morning");
+    if (hour < 16) return tr("manager.lunch", "Lunch");
+    if (hour < 22) return tr("manager.dinner", "Dinner");
+    return tr("manager.late", "Late");
+  }
+
+  function urgencyGroup(reservation) {
+    const today = todayValue();
+    const tomorrow = toDateInputValue(new Date(Date.now() + 86400000));
+    if (reservation.reservation_date === today) return tr("manager.today", "Today");
+    if (reservation.reservation_date === tomorrow) return tr("manager.tomorrow", "Tomorrow");
+    return tr("manager.later", "Later");
+  }
+
+  function reservationGroupLabel(reservation) {
+    const view = state.reservationWorkspace.view || "today";
+    if (view === "today") return servicePeriod(reservation.reservation_time);
+    if (view === "pending") return urgencyGroup(reservation);
+    if (view === "upcoming") return dateLabel(reservation.reservation_date);
+    if (["completed", "cancelled", "no_show"].includes(view))
+      return dateLabel(reservation.reservation_date);
+    return reservation.reservation_date === todayValue()
+      ? tr("manager.today", "Today")
+      : dateLabel(reservation.reservation_date);
+  }
+
+  function sortWorkspaceReservations(items) {
+    const view = state.reservationWorkspace.view || "today";
+    return items.slice().sort((a, b) => {
+      if (["completed", "cancelled", "no_show", "all"].includes(view)) {
+        return reservationUpdatedTime(b) - reservationUpdatedTime(a);
+      }
+      return reservationDateTime(a) - reservationDateTime(b);
+    });
+  }
+
+  function nextBestReservationAction(reservation) {
+    return {
+      label: tr("manager.review", "Review"),
+      action: "view",
+      tone: reservation.status === "pending" ? "gold" : "glass",
+    };
+  }
+
+  function reservationRowCard(reservation) {
+    const action = nextBestReservationAction(reservation);
+    const mobileAction = `<button class="btn btn-gold-outline manager-reservation-mobile-primary" type="button" data-owner-reservation-view="${reservation.id}">${tr("manager.review", "Review")}</button>`;
+    const contact = [reservation.phone, reservation.email].filter(Boolean).join(" · ");
+    const secondary = [
+      contact || tr("reservation.not_provided", "Contact not provided"),
+      reservation.occasion ? occasionLabel(reservation.occasion) : "",
+      reservation.venue?.name || "",
+    ].filter(Boolean);
     return `
-      <div class="owner-reservation-actions">
-        <button class="btn btn-glass btn-sm" type="button" data-owner-reservation-view="${id}">
-          <i class="bi bi-eye"></i><span data-i18n="buttons.view_details">${tr("buttons.view_details", "View Details")}</span>
+      <article class="manager-reservation-row manager-reservation-${esc(reservation.status || "pending")}">
+        <button class="manager-reservation-main" type="button" data-owner-reservation-view="${reservation.id}">
+          <time>${esc(timeLabel(reservation.reservation_time) || dateLabel(reservation.reservation_date))}</time>
+          <div>
+            <strong>${esc(reservation.guest_name || guestFallback())}</strong>
+            <span>${Number(reservation.party_size || 0)} ${guestCountLabel(reservation.party_size)}</span>
+          </div>
+          ${statusBadge(reservation.status)}
         </button>
-        <button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservation-action="confirm" data-owner-reservation-id="${id}" ${status !== "pending" ? "disabled" : ""}>
-          <i class="bi bi-check2-circle"></i><span data-i18n="owner.confirm">${tr("owner.confirm", "Confirm")}</span>
-        </button>
-        <button class="btn btn-glass btn-sm" type="button" data-owner-reservation-action="complete" data-owner-reservation-id="${id}" ${!isConfirmed ? "disabled" : ""}>
-          <i class="bi bi-patch-check"></i><span data-i18n="owner.mark_completed">${tr("owner.mark_completed", "Mark Completed")}</span>
-        </button>
-        <button class="btn btn-glass btn-sm" type="button" data-owner-reservation-action="no-show" data-owner-reservation-id="${id}" ${!isConfirmed ? "disabled" : ""}>
-          <i class="bi bi-person-x"></i><span data-i18n="owner.mark_no_show">${tr("owner.mark_no_show", "Mark guest as no-show")}</span>
-        </button>
-        <button class="btn btn-outline-danger btn-sm" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${id}" ${!["pending", "confirmed"].includes(status) ? "disabled" : ""}>
-          <i class="bi bi-x-circle"></i><span data-i18n="buttons.cancel">${tr("buttons.cancel", "Cancel")}</span>
-        </button>
-      </div>
+        <div class="manager-reservation-mobile-meta">
+          <span><i class="bi bi-clock"></i>${esc(timeLabel(reservation.reservation_time) || dateLabel(reservation.reservation_date))}</span>
+          <span><i class="bi bi-people"></i>${Number(reservation.party_size || 0)} ${guestCountLabel(reservation.party_size)}</span>
+        </div>
+        <div class="manager-reservation-secondary">
+          <span>${esc(secondary.join(" · "))}</span>
+          ${
+            reservation.notes
+              ? `<small>${esc(String(reservation.notes).slice(0, 120))}</small>`
+              : ""
+          }
+        </div>
+        ${mobileAction}
+        <button class="btn ${action.tone === "gold" ? "btn-gold-outline" : "btn-glass"} btn-sm" type="button" data-owner-reservation-view="${reservation.id}">${esc(action.label)}</button>
+      </article>
     `;
+  }
+
+  function reservationEmptyState() {
+    const view = state.reservationWorkspace.view || "today";
+    if (state.reservationWorkspace.search) {
+      return dashboardEmpty(
+        "bi-search",
+        tr("manager.no_search_results_query", 'No reservations match "{query}".', {
+          query: state.reservationWorkspace.search,
+        }),
+        tr("manager.clear_search_filters_copy", "Clear the search or active filters to broaden the list."),
+        `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservations-clear>${tr("manager.clear_search", "Clear search")}</button><button class="btn btn-glass btn-sm" type="button" data-owner-reservations-clear>${tr("manager.clear_filters", "Clear filters")}</button></div>`,
+      );
+    }
+    if (view === "today") {
+      return dashboardEmpty(
+        "bi-calendar2",
+        tr("manager.no_reservations_today", "No reservations scheduled today."),
+        tr("manager.no_reservations_today_copy", "Upcoming bookings and public availability are one click away."),
+        `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-reservation-workspace-view="upcoming">${tr("manager.view_upcoming", "View Upcoming")}</button><button class="btn btn-glass btn-sm" type="button" data-manager-quick-action="opening-hours">${tr("manager.check_availability", "Check Availability")}</button><button class="btn btn-glass btn-sm" type="button" data-manager-quick-action="preview">${tr("manager.preview_public_page", "Preview Public Page")}</button></div>`,
+      );
+    }
+    if (view === "pending") {
+      return dashboardEmpty(
+        "bi-hourglass-split",
+        tr("manager.no_pending_requests", "No pending requests."),
+        tr("manager.no_pending_requests_copy", "New requests will appear here when guests need confirmation."),
+        `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-reservation-workspace-view="today">${tr("manager.view_today", "View Today")}</button><button class="btn btn-glass btn-sm" type="button" data-reservation-workspace-view="upcoming">${tr("manager.view_upcoming", "View Upcoming")}</button></div>`,
+      );
+    }
+    return dashboardEmpty(
+      "bi-calendar-check",
+      tr("manager.no_reservations_view", "No reservations in this view."),
+      tr("manager.no_reservations_view_copy", "Try another view or clear filters to see more reservations."),
+    );
+  }
+
+  function renderReservationWorkspaceHeader() {
+    const venue = $("[data-reservations-venue-name]");
+    if (venue) venue.textContent = state.venue?.name || restaurantBarFallback();
+    const date = $("[data-reservations-date-context]");
+    if (date) {
+      date.textContent = new Date().toLocaleDateString(currentLocale(), {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      });
+    }
+    const view = $("[data-reservation-current-view]");
+    if (view) {
+      view.textContent = {
+        today: tr("manager.today", "Today"),
+        pending: tr("manager.pending", "Pending"),
+        upcoming: tr("events.upcoming", "Upcoming"),
+        all: tr("manager.all", "All"),
+        completed: tr("manager.completed", "Completed"),
+        cancelled: tr("manager.cancelled", "Cancelled"),
+        no_show: tr("manager.no_shows", "No-shows"),
+      }[state.reservationWorkspace.view || "today"];
+    }
+  }
+
+  function renderReservationWorkspaceSummary() {
+    const root = $("[data-reservation-workspace-summary]");
+    if (!root) return;
+    const today = todayValue();
+    const todayItems = state.reservations.filter(
+      (reservation) => reservation.reservation_date === today,
+    );
+    const values = {
+      pending: state.reservations.filter((reservation) => reservation.status === "pending").length,
+      confirmed_today: todayItems.filter((reservation) => reservation.status === "confirmed")
+        .length,
+      today: todayItems.reduce(
+        (total, reservation) => total + Number(reservation.party_size || 0),
+        0,
+      ),
+      cancelled_today: todayItems.filter((reservation) => reservation.status === "cancelled")
+        .length,
+      no_show_today: todayItems.filter((reservation) => reservation.status === "no_show").length,
+    };
+    root.querySelectorAll("[data-reservation-summary-filter]").forEach((item) => {
+      const value = values[item.dataset.reservationSummaryFilter] || 0;
+      const number = item.querySelector("strong");
+      if (number) number.textContent = String(value);
+    });
+    const badge = $("[data-reservation-pending-tab-badge]");
+    if (badge) {
+      badge.textContent = String(values.pending);
+      badge.hidden = values.pending <= 0;
+      badge.closest("[data-reservation-workspace-view]")?.classList.toggle(
+        "manager-tab-attention",
+        values.pending > 0,
+      );
+    }
+  }
+
+  function activeReservationFilterCount() {
+    return [
+      state.reservationWorkspace.search,
+      state.reservationFilters.status,
+      state.reservationFilters.date,
+      state.reservationWorkspace.dateEnd,
+      state.reservationFilters.venue_id,
+      state.reservationWorkspace.partySize,
+      state.reservationWorkspace.occasion,
+    ].filter(Boolean).length;
+  }
+
+  function renderActiveReservationFilters() {
+    const root = $("[data-reservation-active-filters]");
+    if (!root) return;
+    const filters = [];
+    if (state.reservationWorkspace.search)
+      filters.push(tr("manager.search_filter", "Search: {value}", { value: state.reservationWorkspace.search }));
+    if (state.reservationFilters.status)
+      filters.push(tr("manager.status_filter", "Status: {value}", { value: statusLabel(state.reservationFilters.status) }));
+    if (state.reservationFilters.date)
+      filters.push(tr("manager.from_filter", "From: {value}", { value: dateLabel(state.reservationFilters.date) }));
+    if (state.reservationWorkspace.dateEnd)
+      filters.push(tr("manager.to_filter", "To: {value}", { value: dateLabel(state.reservationWorkspace.dateEnd) }));
+    if (state.reservationFilters.venue_id) filters.push(tr("manager.venue_selected", "Venue selected"));
+    if (state.reservationWorkspace.partySize)
+      filters.push(tr("manager.party_filter", "Party: {value}", { value: state.reservationWorkspace.partySize }));
+    if (state.reservationWorkspace.occasion)
+      filters.push(tr("manager.occasion_filter", "Occasion: {value}", { value: state.reservationWorkspace.occasion }));
+
+    root.hidden = !filters.length;
+    root.innerHTML = filters
+      .map((filter) => `<span><i class="bi bi-funnel"></i>${esc(filter)}</span>`)
+      .join("");
+    const count = activeReservationFilterCount();
+    const filterCount = $("[data-reservation-filter-count]");
+    if (filterCount) {
+      filterCount.textContent = String(count);
+      filterCount.hidden = count <= 0;
+    }
+  }
+
+  function syncReservationWorkspaceControls() {
+    document.querySelectorAll("[data-reservation-workspace-view]").forEach((button) => {
+      button.classList.toggle(
+        "active",
+        button.dataset.reservationWorkspaceView === state.reservationWorkspace.view,
+      );
+      button.setAttribute(
+        "aria-current",
+        button.dataset.reservationWorkspaceView === state.reservationWorkspace.view
+          ? "page"
+          : "false",
+      );
+    });
+    const view = $('[data-owner-reservation-filter="view"]');
+    if (view) view.value = state.reservationFilters.view;
+    const status = $('[data-owner-reservation-filter="status"]');
+    if (status) status.value = state.reservationFilters.status;
+    const date = $('[data-owner-reservation-filter="date"]');
+    if (date) date.value = state.reservationFilters.date;
+    const venue = $('[data-owner-reservation-filter="venue_id"]');
+    if (venue) venue.value = state.reservationFilters.venue_id;
+    const search = $("[data-owner-reservation-search]");
+    if (search) search.value = state.reservationWorkspace.search;
+    const dateEnd = $("[data-owner-reservation-date-end]");
+    if (dateEnd) dateEnd.value = state.reservationWorkspace.dateEnd;
+    const partySize = $("[data-owner-reservation-party-size]");
+    if (partySize) partySize.value = state.reservationWorkspace.partySize;
+    const occasion = $("[data-owner-reservation-occasion]");
+    if (occasion) occasion.value = state.reservationWorkspace.occasion;
+    const mobileView = $("[data-reservation-mobile-view]");
+    if (mobileView) {
+      mobileView.value = ["today", "pending", "upcoming"].includes(state.reservationWorkspace.view)
+        ? state.reservationWorkspace.view
+        : "today";
+    }
+  }
+
+  function setReservationWorkspaceView(view, options = {}) {
+    state.reservationWorkspace.view = view || "today";
+    const filterMap = {
+      today: { view: "today", status: "" },
+      pending: { view: "", status: "pending" },
+      upcoming: { view: "upcoming", status: "" },
+      all: { view: "", status: "" },
+      completed: { view: "completed", status: "" },
+      cancelled: { view: "cancelled", status: "" },
+      no_show: { view: "", status: "no_show" },
+    }[state.reservationWorkspace.view] || { view: "", status: "" };
+    state.reservationFilters.view = filterMap.view;
+    state.reservationFilters.status = filterMap.status;
+    state.reservationFilters.date = "";
+    syncReservationWorkspaceControls();
+    $("[data-reservation-filter-sheet]")?.classList.remove("is-open");
+    document.body.classList.remove("reservation-filter-sheet-open");
+    lastReservationRenderSignature = "";
+    clearOwnerRenderSignatures("reservation-stats");
+    if (options.load === false) {
+      renderReservations();
+      return;
+    }
+    loadReservations();
+  }
+
+  function clearReservationWorkspace() {
+    state.reservationFilters = { view: "today", status: "", date: "", venue_id: "" };
+    state.reservationWorkspace = {
+      view: "today",
+      search: "",
+      dateEnd: "",
+      partySize: "",
+      occasion: "",
+    };
+    document.querySelectorAll("[data-owner-reservation-filter]").forEach((control) => {
+      control.value = control.dataset.ownerReservationFilter === "view" ? "today" : "";
+    });
+    syncReservationWorkspaceControls();
+    lastReservationRenderSignature = "";
+    clearOwnerRenderSignatures("reservation-stats");
+    loadReservations();
   }
 
   function renderReservations(loading = false) {
     const body = $("[data-owner-reservations-table]");
     if (!body) return;
+    syncReservationWorkspaceControls();
+    renderReservationWorkspaceHeader();
+    renderReservationWorkspaceSummary();
+    renderActiveReservationFilters();
+    renderGuestsWorkspace();
     const signature = loading
       ? `loading:${reservationQuery()}`
       : state.reservations
@@ -1217,44 +2247,204 @@
             (reservation) =>
               `${reservation.id}:${reservation.status}:${reservation.updated_at || reservation.cancelled_at || ""}`,
           )
-          .join("|");
+          .join("|") +
+        `:${stableSignature(state.reservationWorkspace)}:${stableSignature(state.reservationFilters)}`;
     if (signature === lastReservationRenderSignature) return;
     lastReservationRenderSignature = signature;
 
     if (loading) {
       body.innerHTML = `
-        <tr>
-          <td colspan="7">
-            <div class="reservation-table-skeleton" aria-label="${tr("reservation.loading_reservations", "Loading reservations")}">
-              ${Array.from({ length: 4 }, () => "<span></span>").join("")}
-            </div>
-          </td>
-        </tr>
+        <div class="reservation-list-skeleton" aria-label="${tr("reservation.loading_reservations", "Loading reservations")}">
+          ${Array.from({ length: 5 }, () => "<span></span>").join("")}
+        </div>
       `;
       renderReservationStats();
       return;
     }
 
-    body.innerHTML = state.reservations.length
-      ? state.reservations
+    const reservations = sortWorkspaceReservations(filteredWorkspaceReservations());
+    const groups = reservations.reduce((acc, reservation) => {
+      const label = reservationGroupLabel(reservation);
+      if (!acc.has(label)) acc.set(label, []);
+      acc.get(label).push(reservation);
+      return acc;
+    }, new Map());
+
+    body.innerHTML = reservations.length
+      ? Array.from(groups.entries())
           .map(
-            (reservation) => `
-      <tr>
-        <td data-label="${tr("owner.guest", "Guest")}">
-          <span class="owner-reservation-guest">${esc(reservation.guest_name)}</span>
-        </td>
-        <td data-label="${tr("owner.phone", "Phone")}">${esc(reservation.phone || tr("reservation.not_provided", "Not provided"))}</td>
-        <td data-label="${tr("owner.date", "Date")}">${esc(dateLabel(reservation.reservation_date))}</td>
-        <td data-label="${tr("owner.time", "Time")}">${esc(timeLabel(reservation.reservation_time))}</td>
-        <td data-label="${tr("reservation.guests", "Guests")}">${reservation.party_size}</td>
-        <td data-label="${tr("owner.status", "Status")}">${statusBadge(reservation.status)}</td>
-        <td data-label="${tr("owner.actions", "Actions")}">${reservationActions(reservation)}</td>
-      </tr>
-    `,
+            ([label, items]) => `
+        <section class="manager-reservation-group">
+          <div class="manager-reservation-group-head"><strong>${esc(label)}</strong><span>${items.length} ${items.length === 1 ? "reservation" : "reservations"}</span></div>
+          <div class="manager-reservation-group-list">${items.map(reservationRowCard).join("")}</div>
+        </section>
+      `,
           )
           .join("")
-      : `<tr><td colspan="7"><div class="dashboard-empty owner-reservation-empty"><i class="bi bi-calendar-check"></i><div><strong data-i18n="empty.no_reservations_found">${tr("empty.no_reservations_found", "No reservations on the list yet.")}</strong><span class="d-block" data-i18n="empty.no_reservations_copy">${tr("empty.no_reservations_copy", "Table requests and status updates will appear here once guests start booking.")}</span><a class="btn btn-gold btn-sm mt-2" href="/restaurants" data-i18n="buttons.discover_restaurants">${tr("buttons.discover_restaurants", "Discover restaurants & bars")}</a></div></div></td></tr>`;
+      : reservationEmptyState();
     renderReservationStats();
+  }
+
+  function guestIdentity(reservation) {
+    const email = String(reservation.email || "").trim().toLowerCase();
+    if (email) return `email:${email}`;
+    const phone = String(reservation.phone || "").replace(/\D/g, "");
+    if (phone) return `phone:${phone}`;
+    return `name:${String(reservation.guest_name || guestFallback()).trim().toLowerCase()}`;
+  }
+
+  function buildGuestProfiles() {
+    const today = todayValue();
+    const profiles = new Map();
+    state.reservations.forEach((reservation) => {
+      const key = guestIdentity(reservation);
+      const existing = profiles.get(key) || {
+        key,
+        name: reservation.guest_name || guestFallback(),
+        phone: reservation.phone || "",
+        email: reservation.email || "",
+        reservations: [],
+        totalCovers: 0,
+      };
+      if (!existing.phone && reservation.phone) existing.phone = reservation.phone;
+      if (!existing.email && reservation.email) existing.email = reservation.email;
+      if (reservation.guest_name && existing.name === guestFallback()) existing.name = reservation.guest_name;
+      existing.reservations.push(reservation);
+      existing.totalCovers += Number(reservation.party_size || 0);
+      profiles.set(key, existing);
+    });
+
+    return Array.from(profiles.values()).map((profile) => {
+      const sorted = profile.reservations.slice().sort((a, b) => reservationDateTime(a) - reservationDateTime(b));
+      const pastOrToday = sorted.filter((reservation) => reservation.reservation_date <= today);
+      const upcoming = sorted.filter(
+        (reservation) =>
+          reservation.reservation_date >= today &&
+          !["completed", "cancelled", "no_show"].includes(reservation.status),
+      );
+      const lastReservation = (pastOrToday.length ? pastOrToday : sorted).slice(-1)[0] || null;
+      const nextReservation = upcoming[0] || null;
+      return {
+        ...profile,
+        visitCount: profile.reservations.length,
+        lastReservation,
+        nextReservation,
+        statuses: Array.from(new Set(profile.reservations.map((item) => item.status).filter(Boolean))),
+      };
+    });
+  }
+
+  function guestSearchText(profile) {
+    return [
+      profile.name,
+      profile.phone,
+      profile.email,
+      profile.statuses.join(" "),
+      profile.reservations.map((reservation) => reservation.id).join(" "),
+      profile.reservations.map((reservation) => reservation.venue?.name).join(" "),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+  }
+
+  function guestReservationLabel(reservation) {
+    if (!reservation) return tr("manager.none_scheduled", "None scheduled");
+    return [
+      dateLabel(reservation.reservation_date),
+      timeLabel(reservation.reservation_time),
+      reservation.venue?.name,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  }
+
+  function renderGuestCard(profile) {
+    const contact = [profile.phone, profile.email].filter(Boolean).join(" · ");
+    const next = profile.nextReservation;
+    return `
+      <button class="manager-guest-card" type="button" data-manager-guest="${esc(profile.key)}">
+        <span class="manager-guest-avatar">${esc(String(profile.name || guestFallback()).trim().slice(0, 1).toUpperCase() || "G")}</span>
+        <span class="manager-guest-main">
+          <strong>${esc(profile.name || guestFallback())}</strong>
+          <small>${esc(contact || tr("manager.contact_not_provided", "Contact not provided"))}</small>
+        </span>
+        <span class="manager-guest-metric">
+          <strong>${profile.visitCount}</strong>
+          <small>${profile.visitCount === 1 ? tr("manager.visit", "visit") : tr("manager.visits", "visits")}</small>
+        </span>
+        <span class="manager-guest-reservation">
+          <small>${tr("manager.last_reservation", "Last reservation")}</small>
+          <strong>${esc(guestReservationLabel(profile.lastReservation))}</strong>
+        </span>
+        <span class="manager-guest-reservation">
+          <small>${tr("manager.next_reservation", "Next reservation")}</small>
+          <strong>${esc(guestReservationLabel(next))}</strong>
+        </span>
+        <span class="manager-guest-action"><i class="bi bi-chevron-right"></i></span>
+      </button>
+    `;
+  }
+
+  function renderGuestsWorkspace() {
+    const list = $("[data-manager-guests-list]");
+    const summary = $("[data-manager-guests-summary]");
+    if (!list) return;
+    const query = String($("[data-manager-guest-search]")?.value || "").trim().toLowerCase();
+    const profiles = buildGuestProfiles().sort((a, b) => {
+      const nextA = a.nextReservation ? reservationDateTime(a.nextReservation).getTime() : Number.MAX_SAFE_INTEGER;
+      const nextB = b.nextReservation ? reservationDateTime(b.nextReservation).getTime() : Number.MAX_SAFE_INTEGER;
+      if (nextA !== nextB) return nextA - nextB;
+      return (b.lastReservation ? reservationDateTime(b.lastReservation).getTime() : 0) -
+        (a.lastReservation ? reservationDateTime(a.lastReservation).getTime() : 0);
+    });
+    const filtered = profiles.filter((profile) =>
+      query ? guestSearchText(profile).includes(query) : true,
+    );
+    const upcomingCount = profiles.filter((profile) => profile.nextReservation).length;
+    if (summary) {
+      summary.innerHTML = `
+        <span><strong>${profiles.length}</strong><small>${tr("manager.total_guests", "Total guests")}</small></span>
+        <span><strong>${upcomingCount}</strong><small>${tr("manager.with_upcoming", "With upcoming")}</small></span>
+      `;
+    }
+    if (!profiles.length) {
+      list.innerHTML = dashboardEmpty(
+        "bi-people",
+        tr("manager.no_guests_yet", "No guests yet."),
+        tr("manager.no_guests_yet_copy", "Guest profiles will appear here as reservations are loaded."),
+        `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-manager-quick-action="preview">${tr("manager.preview_public_page", "Preview public page")}</button><button class="btn btn-glass btn-sm" type="button" data-manager-quick-action="opening-hours">${tr("manager.check_availability", "Check availability")}</button></div>`,
+      );
+      return;
+    }
+    if (!filtered.length) {
+      list.innerHTML = dashboardEmpty(
+        "bi-search",
+        tr("manager.no_guest_results", "No guests match this search."),
+        tr("manager.no_guest_results_copy", "Try a guest name, phone, email, reservation ID, venue, or status."),
+      );
+      return;
+    }
+    list.innerHTML = filtered.map(renderGuestCard).join("");
+  }
+
+  function prepareGuestDetail(profileKey) {
+    const profile = buildGuestProfiles().find((item) => item.key === profileKey);
+    if (!profile) return;
+    state.reservationWorkspace.view = "all";
+    state.reservationWorkspace.search = profile.email || profile.phone || profile.name;
+    state.reservationWorkspace.dateEnd = "";
+    state.reservationWorkspace.partySize = "";
+    state.reservationWorkspace.occasion = "";
+    state.reservationFilters = { view: "", status: "", date: "", venue_id: "" };
+    syncReservationWorkspaceControls();
+    lastReservationRenderSignature = "";
+    window.tkToast?.(
+      tr("manager.guest_detail_prepared", "Guest detail is prepared. Showing this guest's loaded reservations."),
+      "info",
+    );
+    openManagerSection("reservations");
+    renderReservations();
   }
 
   function renderCalendarSummary() {
@@ -1285,7 +2475,7 @@
     const status = calendarStatuses.includes(reservation.status) ? reservation.status : "pending";
     return `
       <button class="owner-calendar-item owner-calendar-item-${status}" type="button" data-owner-calendar-reservation="${reservation.id}">
-        <strong>${esc(reservation.guest_name)}</strong>
+        <strong>${esc(reservation.guest_name || guestFallback())}</strong>
         <span>${esc(timeLabel(reservation.reservation_time))}</span>
         <span>${reservation.party_size} ${Number(reservation.party_size) === 1 ? tr("reservation.guest", "Guest") : tr("reservation.guests", "Guests")}</span>
         <em>${esc(statusLabel(reservation.status))}</em>
@@ -1299,7 +2489,7 @@
     return `
       <section class="owner-calendar-day ${compact ? "owner-calendar-day-compact" : ""}">
         <div class="owner-calendar-day-head">
-          <span>${esc(shortDays[(date.getDay() + 6) % 7])}</span>
+          <span>${esc(shortDayName((date.getDay() + 6) % 7))}</span>
           <strong>${date.getDate()}</strong>
         </div>
         <div class="owner-calendar-day-items">
@@ -1640,36 +2830,159 @@
     }
   }
 
-  function renderReservationDetail(reservation) {
-    $("[data-owner-reservation-title]").textContent = tr(
-      "owner.reservation_detail_title",
-      tr("reservation.reservation_details", "Reservation details"),
-    );
+  function detailActionMarkup(reservation) {
+    if (reservation.status === "pending") {
+      return `
+        <button class="btn btn-gold manager-detail-primary-action" type="button" data-owner-reservation-action="confirm" data-owner-reservation-id="${reservation.id}">
+          <i class="bi bi-check2-circle me-1"></i>${tr("owner.confirm", "Confirm")}
+        </button>
+        <button class="btn btn-outline-danger manager-detail-danger-action" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${reservation.id}">
+          <i class="bi bi-x-circle me-1"></i>${tr("buttons.cancel", "Cancel")}
+        </button>
+      `;
+    }
+    if (reservation.status === "confirmed") {
+      return `
+        <button class="btn btn-gold manager-detail-primary-action" type="button" data-owner-reservation-action="complete" data-owner-reservation-id="${reservation.id}">
+          <i class="bi bi-patch-check me-1"></i>${tr("owner.mark_completed", "Complete")}
+        </button>
+        <button class="btn btn-glass manager-detail-secondary-action" type="button" data-owner-reservation-action="no-show" data-owner-reservation-id="${reservation.id}">
+          <i class="bi bi-person-x me-1"></i>${tr("owner.mark_no_show", "Mark no-show")}
+        </button>
+        <button class="btn btn-outline-danger manager-detail-danger-action" type="button" data-owner-reservation-action="cancel" data-owner-reservation-id="${reservation.id}">
+          <i class="bi bi-x-circle me-1"></i>${tr("buttons.cancel", "Cancel")}
+        </button>
+      `;
+    }
+    if (reservation.status === "cancelled") {
+      return `<div class="manager-detail-state-note manager-detail-state-danger"><i class="bi bi-x-circle"></i><span>${tr("manager.reservation_cancelled_note", "This reservation has been cancelled.")}</span></div>`;
+    }
+    if (reservation.status === "no_show") {
+      return `<div class="manager-detail-state-note"><i class="bi bi-person-x"></i><span>${tr("manager.no_show_note", "This guest was marked as a no-show.")}</span></div>`;
+    }
+    return `<div class="manager-detail-state-note"><i class="bi bi-eye"></i><span>${esc(tr("manager.view_only_note", "{status} reservations are view-only.", { status: statusLabel(reservation.status) }))}</span></div>`;
+  }
+
+  function detailHistoryItems(reservation) {
+    return [
+      reservation.created_at ? [tr("manager.created", "Created"), dateTimeLabel(reservation.created_at)] : null,
+      reservation.status === "confirmed" && reservation.updated_at
+        ? [tr("manager.confirmed", "Confirmed"), dateTimeLabel(reservation.updated_at)]
+        : null,
+      reservation.status === "completed" && reservation.updated_at
+        ? [tr("manager.completed", "Completed"), dateTimeLabel(reservation.updated_at)]
+        : null,
+      reservation.status === "no_show" && reservation.updated_at
+        ? [tr("reservation.no_show", "No-show"), dateTimeLabel(reservation.updated_at)]
+        : null,
+      reservation.cancelled_at ? [tr("manager.cancelled", "Cancelled"), dateTimeLabel(reservation.cancelled_at)] : null,
+      reservation.updated_at ? [tr("manager.last_updated", "Last updated"), dateTimeLabel(reservation.updated_at)] : null,
+    ].filter(Boolean);
+  }
+
+  function renderReservationDetailSkeleton() {
     const body = $("[data-owner-reservation-detail]");
     if (!body) return;
     body.innerHTML = `
-      <div class="row g-3 owner-reservation-detail-grid">
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.guest">${tr("owner.guest", "Guest")}</span><strong>${esc(reservation.guest_name)}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.status">${tr("owner.status", "Status")}</span>${statusBadge(reservation.status)}</div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.phone">${tr("owner.phone", "Phone")}</span><strong>${esc(reservation.phone || tr("reservation.not_provided", "Not provided"))}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.party_size">${tr("reservation.party_size", "Party Size")}</span><strong>${reservation.party_size}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.date">${tr("owner.date", "Date")}</span><strong>${esc(dateLabel(reservation.reservation_date))}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="owner.time">${tr("owner.time", "Time")}</span><strong>${esc(timeLabel(reservation.reservation_time))}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.created_at">${tr("reservation.created_at", "Created at")}</span><strong>${esc(dateTimeLabel(reservation.created_at))}</strong></div></div>
-        <div class="col-12"><div class="facility justify-content-between"><span data-i18n="common.restaurant_bar">${tr("common.restaurant_bar", "Restaurant or bar")}</span><strong>${esc(reservation.venue?.name || "")}</strong></div></div>
-        <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.occasion">${tr("reservation.occasion", "Occasion")}</span><strong>${esc(occasionLabel(reservation.occasion))}</strong></div></div>
-        <div class="col-12"><div class="facility"><span><span class="text-muted-pro d-block mb-1" data-i18n="reservation.special_request">${tr("reservation.special_request", "Special Request")}</span>${esc(reservation.notes || tr("reservation.no_special_request", "No special request provided."))}</span></div></div>
-        ${
-          reservation.status === "cancelled"
-            ? `
-          <div class="col-md-6"><div class="facility justify-content-between"><span data-i18n="reservation.cancelled_at">${tr("reservation.cancelled_at", "Cancelled At")}</span><strong>${esc(dateTimeLabel(reservation.cancelled_at))}</strong></div></div>
-          <div class="col-12"><div class="facility"><span><span class="text-muted-pro d-block mb-1" data-i18n="reservation.cancellation_reason">${tr("reservation.cancellation_reason", "Cancellation Reason")}</span>${esc(reservation.owner_cancellation_reason || reservation.cancellation_reason || tr("reservation.no_reason_provided", "No reason provided."))}</span></div></div>
-        `
-            : ""
-        }
+      <div class="manager-detail-skeleton" aria-label="Loading reservation detail">
+        <span></span><span></span><span></span><span></span>
       </div>
     `;
-    bootstrap.Modal.getOrCreateInstance($("#ownerReservationModal")).show();
+  }
+
+  function renderReservationDetailMissing() {
+    $("[data-owner-reservation-title]").textContent = tr("manager.reservation_unavailable", "Reservation unavailable");
+    const body = $("[data-owner-reservation-detail]");
+    if (!body) return;
+    body.innerHTML = dashboardEmpty(
+      "bi-exclamation-circle",
+      tr("manager.reservation_not_found", "Reservation not found."),
+      tr("manager.reservation_not_found_copy", "The list may have refreshed or the selected reservation is no longer available."),
+      `<div class="manager-empty-actions"><button class="btn btn-gold-outline btn-sm" type="button" data-bs-dismiss="offcanvas">${tr("manager.close_panel", "Close panel")}</button></div>`,
+    );
+    bootstrap.Offcanvas.getOrCreateInstance($("#ownerReservationModal"), {
+      backdrop: true,
+      keyboard: true,
+      scroll: true,
+    }).show();
+  }
+
+  function renderReservationDetail(reservation) {
+    if (!reservation) {
+      renderReservationDetailMissing();
+      return;
+    }
+    $("[data-owner-reservation-title]").textContent =
+      reservation.guest_name ||
+      tr(
+        "owner.reservation_detail_title",
+        tr("reservation.reservation_details", "Reservation details"),
+      );
+    const body = $("[data-owner-reservation-detail]");
+    if (!body) return;
+    renderReservationDetailSkeleton();
+    const primaryActions = detailActionMarkup(reservation);
+    const history = detailHistoryItems(reservation);
+    const detailField = (label, value) =>
+      value ? `<div><span>${label}</span><strong>${esc(value)}</strong></div>` : "";
+    const detailSection = (title, content, className = "") =>
+      content
+        ? `<section class="manager-detail-section ${className}"><h4>${title}</h4>${content}</section>`
+        : "";
+    const guestFields = [
+      detailField(tr("manager.phone", "Phone"), reservation.phone),
+      detailField(tr("manager.email", "Email"), reservation.email),
+    ].join("");
+    const reservationFields = [
+      detailField(tr("common.status", "Status"), statusLabel(reservation.status)),
+      detailField(tr("common.date", "Date"), dateLabel(reservation.reservation_date)),
+      detailField(tr("common.time", "Time"), timeLabel(reservation.reservation_time)),
+      detailField(tr("manager.party_size", "Party size"), Number(reservation.party_size || 0) ? `${Number(reservation.party_size || 0)} ${guestCountLabel(reservation.party_size)}` : ""),
+    ].join("");
+    const noteFields = [
+      reservation.occasion ? `<div class="manager-detail-note-block"><strong>${tr("reservation.occasion", "Occasion")}</strong><span>${esc(occasionLabel(reservation.occasion))}</span></div>` : "",
+      reservation.notes ? `<div class="manager-detail-note-block"><strong>${tr("manager.notes", "Notes")}</strong><span>${esc(reservation.notes)}</span></div>` : "",
+    ].join("");
+    const cancellationContent =
+      reservation.status === "cancelled" && (reservation.cancelled_at || reservation.owner_cancellation_reason || reservation.cancellation_reason)
+        ? `<div class="manager-detail-note-block">
+            ${reservation.cancelled_at ? `<strong>${esc(dateTimeLabel(reservation.cancelled_at))}</strong>` : ""}
+            ${(reservation.owner_cancellation_reason || reservation.cancellation_reason) ? `<span>${esc(reservation.owner_cancellation_reason || reservation.cancellation_reason)}</span>` : ""}
+          </div>`
+        : "";
+    const historyContent = history.length
+      ? `<div class="manager-detail-history">${history
+          .map(
+            ([label, value]) =>
+              `<div><i class="bi bi-clock-history"></i><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`,
+          )
+          .join("")}</div>`
+      : "";
+    bootstrap.Offcanvas.getOrCreateInstance($("#ownerReservationModal"), {
+      backdrop: true,
+      keyboard: true,
+      scroll: true,
+    }).show();
+    const detailHtml = `
+      <div class="manager-detail-hero">
+        <div>
+          <h3>${esc(reservation.guest_name || guestFallback())}</h3>
+          <p>${esc(dateLabel(reservation.reservation_date))} · ${esc(timeLabel(reservation.reservation_time))} · ${Number(reservation.party_size || 0)} ${guestCountLabel(reservation.party_size)}</p>
+        </div>
+        ${statusBadge(reservation.status)}
+      </div>
+
+      <div class="manager-detail-actions">${primaryActions}</div>
+
+      ${detailSection(tr("manager.guest_information", "Guest Information"), guestFields ? `<div class="manager-detail-grid">${guestFields}</div>` : "")}
+      ${detailSection(tr("manager.reservation_details", "Reservation Details"), reservationFields ? `<div class="manager-detail-grid">${reservationFields}</div>` : "")}
+      ${detailSection(tr("manager.notes_occasion", "Notes / Occasion"), noteFields)}
+      ${detailSection(tr("manager.cancellation_context", "Cancellation Context"), cancellationContent)}
+      ${detailSection(tr("manager.status_history", "Status History"), historyContent)}
+    `;
+    window.requestAnimationFrame(() => {
+      body.innerHTML = detailHtml;
+    });
   }
 
   function collectIds(name) {
@@ -1679,7 +2992,7 @@
   }
 
   function collectHours() {
-    return days.map((day, index) => {
+    return dayKeys.map((_, index) => {
       const closed = $(`[data-hours-closed="${index}"]`)?.checked || false;
       return {
         day_of_week: index,
@@ -1787,7 +3100,12 @@
       renderUploadProgress(valid, 0, tr("loading.uploading", "Preparing uploads..."));
       for (const [index, file] of valid.entries()) {
         const data = await uploadVenueImage(file, (progress) => {
-          renderUploadProgress(valid, index, `Uploading ${file.name}`, progress);
+          renderUploadProgress(
+            valid,
+            index,
+            tr("manager.uploading_file", "Uploading {file}", { file: file.name }),
+            progress,
+          );
         });
         state.venue = data;
         state.venues = state.venues.map((venue) =>
@@ -1801,8 +3119,8 @@
         tr(
           valid.length === 1 ? "owner.image_uploaded" : "owner.images_uploaded",
           valid.length === 1
-            ? "Image uploaded. The public gallery is up to date."
-            : "Images uploaded. The public gallery is up to date.",
+            ? tr("owner.image_uploaded", "Image uploaded. The public gallery is up to date.")
+            : tr("owner.images_uploaded", "Images uploaded. The public gallery is up to date."),
         ),
         "success",
       );
@@ -2044,6 +3362,7 @@
   function reservationQuery() {
     const params = new URLSearchParams({ per_page: "50" });
     Object.entries(state.reservationFilters).forEach(([key, value]) => {
+      if (key === "date" && state.reservationWorkspace.dateEnd) return;
       if (value) params.set(key, value);
     });
     return params.toString();
@@ -2400,7 +3719,7 @@
           title: tr("owner.mark_completed", "Mark reservation completed?"),
           body: tr(
             "reservation.reservation_completed",
-            "Use this after the guest visit has finished.",
+            tr("manager.mark_completed_body", "Use this after the guest visit has finished."),
           ),
           confirm: tr("owner.mark_completed", "Mark completed"),
         },
@@ -2408,7 +3727,7 @@
           title: tr("owner.mark_no_show", "Mark reservation as no show?"),
           body: tr(
             "reservation.no_show",
-            "Use this only when the guest did not arrive for a confirmed reservation.",
+            tr("manager.mark_no_show_body", "Use this only when the guest did not arrive for a confirmed reservation."),
           ),
           confirm: tr("owner.mark_no_show", "Mark no show"),
         },
@@ -2465,10 +3784,705 @@
     await reservationAction(pending.id, pending.action, body);
   }
 
+  function managerShortcutLabel() {
+    return /Mac|iPhone|iPad|iPod/.test(navigator.platform || "") ? "⌘ K" : "Ctrl K";
+  }
+
+  function setManagerSidebarCollapsed(collapsed) {
+    const shell = $("[data-manager-shell]");
+    const toggle = $("[data-manager-sidebar-toggle]");
+    if (!shell) return;
+    shell.classList.toggle("manager-sidebar-collapsed", collapsed);
+    toggle?.setAttribute(
+      "aria-label",
+      collapsed ? tr("manager.expand_sidebar", "Expand sidebar") : tr("manager.collapse_sidebar", "Collapse sidebar"),
+    );
+    localStorage.setItem("tiketa_manager_sidebar_collapsed", collapsed ? "1" : "0");
+  }
+
+  function isManagerMobileNav() {
+    return window.matchMedia?.("(max-width: 720px)")?.matches || window.innerWidth <= 720;
+  }
+
+  function setManagerMobileSidebarOpen(open) {
+    const shell = $("[data-manager-shell]");
+    const overlay = $("[data-manager-sidebar-overlay]");
+    const trigger = $("[data-manager-mobile-sidebar-open]");
+    if (!shell) return;
+    shell.classList.toggle("manager-mobile-sidebar-open", open);
+    document.body.classList.toggle("manager-mobile-sidebar-lock", open);
+    if (overlay) {
+      overlay.hidden = !open;
+      overlay.setAttribute("aria-hidden", open ? "false" : "true");
+    }
+    trigger?.setAttribute("aria-expanded", String(open));
+  }
+
+  function closeManagerMobileSidebar() {
+    setManagerMobileSidebarOpen(false);
+  }
+
+  function updateManagerPendingBadge(count) {
+    const badge = $("[data-manager-pending-badge]");
+    if (!badge) return;
+    badge.textContent = String(count);
+    badge.hidden = Number(count) <= 0;
+  }
+
+  const managerWorkspaceSections = [
+    "dashboard",
+    "reservations",
+    "calendar",
+    "guests",
+    "analytics",
+    "venue",
+    "availability",
+    "settings",
+  ];
+
+  function managerSectionFromTarget(target = "") {
+    const value = String(target || "");
+    if (value.includes("ownerReservations")) return "reservations";
+    if (value.includes("managerCalendar")) return "calendar";
+    if (value.includes("managerGuestsWorkspace")) return "guests";
+    if (value.includes("managerAnalytics")) return "analytics";
+    if (value.includes("managerVenue") || value.includes("managerPublicPreview")) return "venue";
+    if (value.includes("managerAvailability") || value.includes("managerBookingRules") || value.includes("managerGuestRules"))
+      return "availability";
+    if (value.includes("managerSettings") || value.includes("managerDangerZone")) return "settings";
+    if (value.includes("managerDashboard")) return "dashboard";
+    return "";
+  }
+
+  function managerSectionFromHash(hash = window.location.hash) {
+    const cleanHash = String(hash || "").replace(/^#/, "");
+    if (!cleanHash) return "";
+    if (managerWorkspaceSections.includes(cleanHash)) return cleanHash;
+    return managerSectionFromTarget(`#${cleanHash}`);
+  }
+
+  function setManagerWorkspaceHistory(section, replace = false) {
+    const destination = `#${section || "dashboard"}`;
+    if (!destination || !window.history?.pushState) return;
+    const nextUrl = `${window.location.pathname}${window.location.search}${destination}`;
+    if (nextUrl === `${window.location.pathname}${window.location.search}${window.location.hash}`) return;
+    const method = replace ? "replaceState" : "pushState";
+    window.history[method]({ managerWorkspace: section }, "", nextUrl);
+  }
+
+  function showManagerWorkspace(section) {
+    const root = $("[data-owner-venue-page]");
+    const reservations = $("#ownerReservations");
+    const calendar = $("#managerCalendar");
+    const analytics = $("#managerAnalytics");
+    const guests = $("#managerGuestsWorkspace");
+    const form = $("[data-owner-venue-form]");
+    const venueModule = $("#managerVenueModule");
+    const availabilityModule = $("#managerAvailabilityModule");
+    const settingsModule = $("#managerSettings");
+    const activeSection = managerWorkspaceSections.includes(section) ? section : "dashboard";
+    const dashboardVisible = activeSection === "dashboard";
+    const formVisible = ["venue", "availability", "settings"].includes(activeSection);
+
+    Array.from(root?.children || []).forEach((child) => {
+      if (
+        child === reservations ||
+        child === calendar ||
+        child === analytics ||
+        child === guests ||
+        child === form ||
+        child.matches?.("[data-owner-alert]")
+      )
+        return;
+      child.hidden = !dashboardVisible;
+    });
+
+    if (reservations) reservations.hidden = activeSection !== "reservations";
+    if (calendar) calendar.hidden = activeSection !== "calendar";
+    if (analytics) analytics.hidden = activeSection !== "analytics";
+    if (guests) guests.hidden = activeSection !== "guests";
+    if (form) form.hidden = !formVisible;
+    if (venueModule) venueModule.hidden = activeSection !== "venue";
+    if (availabilityModule) availabilityModule.hidden = activeSection !== "availability";
+    if (settingsModule) settingsModule.hidden = activeSection !== "settings";
+
+    if (activeSection === "reservations") switchOwnerReservationPanel("list");
+    if (activeSection === "calendar") switchOwnerReservationPanel("calendar");
+    if (activeSection === "analytics") switchOwnerReservationPanel("analytics");
+    if (activeSection === "guests") renderGuestsWorkspace();
+
+    document.body.dataset.managerWorkspace = activeSection;
+    localStorage.setItem("tiketa_manager_workspace", activeSection);
+  }
+
+  function setManagerActiveSection(section) {
+    document.querySelectorAll("[data-manager-nav]").forEach((item) => {
+      const active = item.dataset.managerNav === section;
+      item.classList.toggle("active", active);
+      item.setAttribute("aria-current", active ? "page" : "false");
+    });
+    document.querySelectorAll("[data-manager-subnav]").forEach((subnav) => {
+      subnav.hidden = subnav.dataset.managerSubnav !== section;
+    });
+  }
+
+  function switchOwnerReservationPanel(view) {
+    state.reservationView = view;
+    document.querySelectorAll("[data-owner-reservation-tab]").forEach((tab) => {
+      tab.classList.toggle("active", tab.dataset.ownerReservationTab === view);
+    });
+    document.querySelectorAll("[data-owner-reservation-panel]").forEach((panel) => {
+      panel.hidden = panel.dataset.ownerReservationPanel !== view;
+    });
+    if (view === "calendar" && !state.calendar.reservations.length) {
+      loadCalendarReservations();
+    }
+    if (view === "analytics" && !state.analytics.data) {
+      loadAnalytics();
+    }
+  }
+
+  function applyManagerReservationFilter(status) {
+    const mappedView =
+      {
+        all: "all",
+        pending: "pending",
+        completed: "completed",
+        cancelled: "cancelled",
+        no_show: "no_show",
+      }[status] || "all";
+    state.reservationWorkspace.search = "";
+    state.reservationWorkspace.dateEnd = "";
+    state.reservationWorkspace.partySize = "";
+    state.reservationWorkspace.occasion = "";
+    if (status === "confirmed") {
+      state.reservationWorkspace.view = "all";
+      state.reservationFilters.view = "";
+      state.reservationFilters.status = "confirmed";
+      syncReservationWorkspaceControls();
+    } else {
+      setReservationWorkspaceView(mappedView, { load: false });
+    }
+    lastReservationRenderSignature = "";
+    clearOwnerRenderSignatures("reservation-stats");
+    loadReservations();
+  }
+
+  function openManagerSection(section, options = {}) {
+    const activeSection = managerWorkspaceSections.includes(section) ? section : "dashboard";
+    setManagerActiveSection(activeSection);
+    showManagerWorkspace(activeSection);
+    if (options.updateHistory !== false) {
+      setManagerWorkspaceHistory(activeSection, Boolean(options.replaceHistory));
+    }
+    if (options.resetScroll !== false) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+  }
+
+  function openPublicVenuePage() {
+    const link = $("[data-owner-public-link]");
+    if (link?.href && link.href !== "#") {
+      window.open(link.href, "_blank", "noopener");
+      return;
+    }
+    window.tkToast?.(
+      tr(
+        "owner.create_before_upload",
+        "Create the restaurant or bar before opening the public page.",
+      ),
+      "info",
+    );
+  }
+
+  function handleManagerQuickAction(action) {
+    if (action === "pending") {
+      openManagerSection("reservations");
+      applyManagerReservationFilter("pending");
+      return;
+    }
+    if (action === "calendar") {
+      openManagerSection("calendar");
+      document.querySelector('[data-owner-calendar-view="day"]')?.click();
+      return;
+    }
+    if (action === "blackout") {
+      openManagerSection("availability", { target: "#managerAvailabilityExceptions" });
+      $("[data-blackout-date]")?.focus();
+      return;
+    }
+    if (action === "special-hours") {
+      openManagerSection("availability", { target: "#managerAvailabilitySpecialHours" });
+      $("[data-special-date]")?.focus();
+      return;
+    }
+    if (action === "opening-hours") {
+      openManagerSection("availability", { target: "#managerAvailabilityOpeningHours" });
+      return;
+    }
+    if (action === "preview") {
+      openManagerSection("venue", { target: "#managerVenuePublicPreview" });
+      openPublicVenuePage();
+    }
+  }
+
+  let managerSearchElements = null;
+  let managerSearchResults = [];
+  let managerSearchActiveIndex = 0;
+
+  const managerSearchDestinations = [
+    {
+      type: "workspace",
+      section: "dashboard",
+      icon: "bi-speedometer2",
+      title: "Dashboard",
+      subtitle: "Overview, readiness, and daily operations",
+      terms: "dashboard overview home readiness daily operations",
+    },
+    {
+      type: "workspace",
+      section: "reservations",
+      icon: "bi-calendar-check",
+      title: "Reservations",
+      subtitle: "Reservation list, guests, IDs, dates, and statuses",
+      terms: "reservations booking bookings guests reservation ids status pending confirmed cancelled completed no show",
+    },
+    {
+      type: "workspace",
+      section: "venue",
+      icon: "bi-shop-window",
+      title: "Venue",
+      subtitle: "Profile, gallery, location, facilities, and public preview",
+      terms: "venue restaurant bar profile gallery location facilities cuisines public preview",
+    },
+    {
+      type: "workspace",
+      section: "availability",
+      icon: "bi-clock-history",
+      title: "Availability",
+      subtitle: "Opening hours, booking rules, blackouts, and special hours",
+      terms: "availability opening hours booking rules guest rules blackout special hours",
+    },
+    {
+      type: "workspace",
+      section: "settings",
+      icon: "bi-gear",
+      title: "Settings",
+      subtitle: "Notifications, language, and danger zone",
+      terms: "settings preferences notifications language danger zone account",
+    },
+    {
+      type: "workspace",
+      section: "guests",
+      icon: "bi-people",
+      title: "Guests",
+      subtitle: "Guest list, visit counts, and reservation history from loaded data",
+      terms: "guests guest customers crm profiles history",
+    },
+  ];
+
+  function normalizeSearchText(value) {
+    return String(value || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  }
+
+  function resultMatches(result, query) {
+    if (!query) return true;
+    return normalizeSearchText(
+      [result.title, result.subtitle, result.meta, result.terms].filter(Boolean).join(" "),
+    ).includes(query);
+  }
+
+  function reservationResult(reservation) {
+    const title = reservation.guest_name || guestFallback();
+    const meta = [
+      reservation.id ? `#${reservation.id}` : "",
+      dateLabel(reservation.reservation_date),
+      timeLabel(reservation.reservation_time),
+      statusLabel(reservation.status),
+      reservation.venue?.name,
+    ].filter(Boolean);
+    return {
+      type: "reservation",
+      id: String(reservation.id),
+      icon: "bi-calendar-check",
+      title,
+      subtitle: meta.join(" · "),
+      meta: reservationSearchText(reservation),
+      badge: statusLabel(reservation.status),
+      reservation,
+    };
+  }
+
+  function venueSearchResults(query) {
+    const venues = [...state.venues];
+    if (state.venue && !venues.some((venue) => String(venue.id) === String(state.venue.id))) {
+      venues.unshift(state.venue);
+    }
+    return venues
+      .map((venue) => ({
+        type: "venue",
+        id: String(venue.id || "current"),
+        icon: "bi-shop-window",
+        title: venue.name || restaurantBarFallback(),
+        subtitle: [venue.city, venue.type || venue.category, venue.status].filter(Boolean).join(" · ") ||
+          "Open venue workspace",
+        terms: [venue.name, venue.city, venue.address, venue.status, venue.type, "venue restaurant bar profile"]
+          .filter(Boolean)
+          .join(" "),
+      }))
+      .filter((result) => resultMatches(result, query))
+      .slice(0, 4);
+  }
+
+  function statusSearchResults(query) {
+    return [
+      ["pending", "Pending reservations", "Review reservation requests"],
+      ["confirmed", "Confirmed reservations", "Confirmed bookings in the reservation workspace"],
+      ["completed", "Completed reservations", "Completed reservation history"],
+      ["cancelled", "Cancelled reservations", "Cancelled reservation history"],
+      ["no_show", "No-show reservations", "Reservations marked no-show"],
+    ]
+      .map(([status, title, subtitle]) => ({
+        type: "reservation-filter",
+        status,
+        icon: "bi-funnel",
+        title,
+        subtitle,
+        terms: `${status} ${title} ${subtitle}`,
+      }))
+      .filter((result) => resultMatches(result, query));
+  }
+
+  function buildManagerSearchResults(value) {
+    const query = normalizeSearchText(value);
+    const destinationResults = managerSearchDestinations
+      .filter((result) => resultMatches(result, query))
+      .slice(0, query ? 6 : 5);
+    const reservations = state.reservations
+      .map(reservationResult)
+      .filter((result) => resultMatches(result, query))
+      .slice(0, 8);
+    const statuses = query ? statusSearchResults(query).slice(0, 3) : [];
+    const venues = venueSearchResults(query);
+    return [...reservations, ...venues, ...statuses, ...destinationResults].slice(0, 16);
+  }
+
+  function managerSearchResultMarkup(result, index) {
+    const active = index === managerSearchActiveIndex;
+    const badge = result.badge ? `<span class="manager-search-result-badge">${esc(result.badge)}</span>` : "";
+    return `
+      <button class="manager-search-result${active ? " is-active" : ""}${result.type === "empty" ? " is-empty-category" : ""}" type="button" data-manager-search-result="${index}" aria-selected="${active ? "true" : "false"}">
+        <span class="manager-search-result-icon"><i class="bi ${esc(result.icon)}"></i></span>
+        <span class="manager-search-result-copy">
+          <strong>${esc(result.title)}</strong>
+          <small>${esc(result.subtitle || "")}</small>
+        </span>
+        ${badge}
+      </button>
+    `;
+  }
+
+  function renderManagerSearchEmpty(title, copy, icon = "bi-search") {
+    if (!managerSearchElements?.results) return;
+    managerSearchResults = [];
+    managerSearchElements.results.innerHTML = `
+      <div class="manager-search-empty">
+        <i class="bi ${esc(icon)}"></i>
+        <strong>${esc(title)}</strong>
+        <span>${esc(copy)}</span>
+      </div>
+    `;
+  }
+
+  function renderManagerSearchResults() {
+    if (!managerSearchElements) return;
+    const query = managerSearchElements.input.value;
+    managerSearchResults = buildManagerSearchResults(query);
+    managerSearchActiveIndex = Math.min(managerSearchActiveIndex, Math.max(managerSearchResults.length - 1, 0));
+    if (!managerSearchResults.length) {
+      renderManagerSearchEmpty(
+        query
+          ? `No loaded manager data matches "${query}".`
+          : "Search loaded manager data.",
+        query
+          ? "Try a reservation ID, guest name, venue name, status, or workspace name."
+          : "Type to find reservations, guests, venues, dashboard, availability, or settings.",
+      );
+      return;
+    }
+    managerSearchElements.results.innerHTML = managerSearchResults
+      .map(managerSearchResultMarkup)
+      .join("");
+  }
+
+  function createManagerSearchDialog() {
+    if (managerSearchElements) return managerSearchElements;
+    const root = document.createElement("div");
+    root.className = "manager-search-overlay";
+    root.dataset.managerSearchOverlay = "";
+    root.hidden = true;
+    root.innerHTML = `
+      <div class="manager-search-dialog" role="dialog" aria-modal="true" aria-label="Manager global search">
+        <div class="manager-search-input-wrap">
+          <i class="bi bi-search"></i>
+          <input type="search" data-manager-search-input placeholder="Search reservations, guests, venue, status..." aria-label="Search manager workspace">
+          <button type="button" data-manager-search-close aria-label="Close search"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="manager-search-results" data-manager-search-results role="listbox"></div>
+      </div>
+    `;
+    document.body.appendChild(root);
+    managerSearchElements = {
+      root,
+      input: root.querySelector("[data-manager-search-input]"),
+      results: root.querySelector("[data-manager-search-results]"),
+      close: root.querySelector("[data-manager-search-close]"),
+    };
+    managerSearchElements.input.addEventListener("input", () => {
+      managerSearchActiveIndex = 0;
+      renderManagerSearchResults();
+    });
+    managerSearchElements.input.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeManagerSearch();
+        return;
+      }
+      if (!managerSearchResults.length) return;
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        const direction = event.key === "ArrowDown" ? 1 : -1;
+        managerSearchActiveIndex =
+          (managerSearchActiveIndex + direction + managerSearchResults.length) %
+          managerSearchResults.length;
+        renderManagerSearchResults();
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        selectManagerSearchResult(managerSearchActiveIndex);
+      }
+    });
+    managerSearchElements.results.addEventListener("click", (event) => {
+      const item = event.target.closest("[data-manager-search-result]");
+      if (!item) return;
+      selectManagerSearchResult(Number(item.dataset.managerSearchResult));
+    });
+    managerSearchElements.close.addEventListener("click", closeManagerSearch);
+    root.addEventListener("click", (event) => {
+      if (event.target === root) closeManagerSearch();
+    });
+    return managerSearchElements;
+  }
+
+  function openManagerSearch() {
+    const elements = createManagerSearchDialog();
+    elements.root.hidden = false;
+    document.body.classList.add("manager-search-open");
+    elements.input.value = "";
+    managerSearchActiveIndex = 0;
+    renderManagerSearchResults();
+    requestAnimationFrame(() => elements.input.focus());
+  }
+
+  function closeManagerSearch() {
+    if (!managerSearchElements) return;
+    managerSearchElements.root.hidden = true;
+    document.body.classList.remove("manager-search-open");
+    $("[data-manager-search]")?.focus();
+  }
+
+  function highlightReservationResult(id) {
+    const button = Array.from(document.querySelectorAll("[data-owner-reservation-view]")).find(
+      (item) => String(item.dataset.ownerReservationView) === String(id),
+    );
+    const row = button?.closest(".manager-reservation-row");
+    if (!row) return;
+    row.classList.add("manager-search-highlight");
+    row.scrollIntoView({ block: "center", behavior: "smooth" });
+    setTimeout(() => row.classList.remove("manager-search-highlight"), 2200);
+  }
+
+  function openReservationFromSearch(reservation) {
+    openManagerSection("reservations", { resetScroll: false });
+    state.reservationWorkspace.view = "all";
+    state.reservationWorkspace.search = String(reservation.id || reservation.guest_name || "");
+    state.reservationWorkspace.dateEnd = "";
+    state.reservationWorkspace.partySize = "";
+    state.reservationWorkspace.occasion = "";
+    state.reservationFilters = { view: "", status: "", date: "", venue_id: "" };
+    syncReservationWorkspaceControls();
+    lastReservationRenderSignature = "";
+    renderReservations();
+    renderReservationDetail(reservation);
+    setTimeout(() => highlightReservationResult(reservation.id), 80);
+  }
+
+  function openReservationStatusFromSearch(status) {
+    openManagerSection("reservations");
+    state.reservationWorkspace.search = status;
+    state.reservationWorkspace.view = "all";
+    state.reservationWorkspace.dateEnd = "";
+    state.reservationWorkspace.partySize = "";
+    state.reservationWorkspace.occasion = "";
+    state.reservationFilters = { view: "", status: "", date: "", venue_id: "" };
+    syncReservationWorkspaceControls();
+    lastReservationRenderSignature = "";
+    renderReservations();
+  }
+
+  function selectManagerSearchResult(index) {
+    const result = managerSearchResults[index];
+    if (!result) return;
+    if (result.type === "empty") {
+      renderManagerSearchEmpty(result.emptyTitle, result.emptyCopy, result.icon);
+      return;
+    }
+    closeManagerSearch();
+    if (result.type === "reservation") {
+      openReservationFromSearch(result.reservation);
+      return;
+    }
+    if (result.type === "venue") {
+      openManagerSection("venue");
+      return;
+    }
+    if (result.type === "reservation-filter") {
+      openReservationStatusFromSearch(result.status);
+      return;
+    }
+    if (result.type === "workspace") {
+      openManagerSection(result.section);
+    }
+  }
+
+  function bindManagerShell() {
+    const shortcut = $("[data-manager-shortcut]");
+    if (shortcut) shortcut.textContent = managerShortcutLabel();
+
+    setManagerSidebarCollapsed(localStorage.getItem("tiketa_manager_sidebar_collapsed") === "1");
+    const initialSection =
+      managerSectionFromHash() ||
+      (managerWorkspaceSections.includes(localStorage.getItem("tiketa_manager_workspace"))
+        ? localStorage.getItem("tiketa_manager_workspace")
+        : "dashboard");
+    openManagerSection(initialSection, {
+      replaceHistory: true,
+      resetScroll: false,
+      silent: true,
+    });
+
+    const openWorkspaceFromLocation = () => {
+      const section = managerSectionFromHash() || "dashboard";
+      openManagerSection(section, {
+        updateHistory: false,
+        resetScroll: false,
+        silent: true,
+      });
+    };
+    window.addEventListener("popstate", openWorkspaceFromLocation);
+    window.addEventListener("hashchange", openWorkspaceFromLocation);
+
+    const mobileSidebarTrigger = $("[data-manager-mobile-sidebar-open]");
+    mobileSidebarTrigger?.setAttribute("aria-expanded", "false");
+    mobileSidebarTrigger?.addEventListener("click", () => {
+      setManagerMobileSidebarOpen(true);
+    });
+    $("[data-manager-mobile-sidebar-close]")?.addEventListener("click", closeManagerMobileSidebar);
+    $("[data-manager-sidebar-overlay]")?.addEventListener("click", closeManagerMobileSidebar);
+    window.addEventListener("resize", () => {
+      if (!isManagerMobileNav()) closeManagerMobileSidebar();
+    });
+
+    $("[data-manager-sidebar-toggle]")?.addEventListener("click", () => {
+      const shell = $("[data-manager-shell]");
+      setManagerSidebarCollapsed(!shell?.classList.contains("manager-sidebar-collapsed"));
+    });
+
+    document.querySelectorAll("[data-manager-section]").forEach((item) => {
+      item.addEventListener("click", (event) => {
+        event.preventDefault();
+        openManagerSection(item.dataset.managerSection);
+        closeManagerMobileSidebar();
+      });
+    });
+
+    document.querySelectorAll("[data-manager-reservation-filter]").forEach((item) => {
+      item.addEventListener("click", (event) => {
+        event.preventDefault();
+        openManagerSection("reservations");
+        applyManagerReservationFilter(item.dataset.managerReservationFilter);
+        closeManagerMobileSidebar();
+      });
+    });
+
+    document.querySelectorAll("[data-manager-target]").forEach((item) => {
+      item.addEventListener("click", (event) => {
+        event.preventDefault();
+        const section = item.closest("[data-manager-subnav]")?.dataset.managerSubnav || "dashboard";
+        openManagerSection(section, { target: item.dataset.managerTarget });
+        closeManagerMobileSidebar();
+      });
+    });
+
+    document.querySelectorAll("[data-manager-placeholder]").forEach((item) => {
+      item.addEventListener("click", (event) => {
+        event.preventDefault();
+        const label = item.dataset.managerPlaceholder || tr("manager.this_section", "This section");
+        window.tkToast?.(
+          tr("manager.section_later", "{section} will be available in a later manager phase.", {
+            section: tr(`manager.${String(label).toLowerCase()}`, label),
+          }),
+          "info",
+        );
+        closeManagerMobileSidebar();
+      });
+    });
+
+    document
+      .querySelectorAll("[data-manager-public-preview], [data-manager-public-page]")
+      .forEach((item) => {
+        item.addEventListener("click", (event) => {
+          event.preventDefault();
+          openManagerSection("venue", { target: "#managerVenuePublicPreview" });
+          openPublicVenuePage();
+          closeManagerMobileSidebar();
+        });
+      });
+
+    $("[data-manager-guest-search]")?.addEventListener("input", renderGuestsWorkspace);
+
+    $("[data-manager-guests-list]")?.addEventListener("click", (event) => {
+      const guest = event.target.closest("[data-manager-guest]");
+      if (!guest) return;
+      prepareGuestDetail(guest.dataset.managerGuest);
+    });
+
+    $("[data-manager-search]")?.addEventListener("click", openManagerSearch);
+
+    document.addEventListener("keydown", (event) => {
+      const isShortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
+      if (!isShortcut) return;
+      event.preventDefault();
+      openManagerSearch();
+    });
+
+    document.addEventListener("click", (event) => {
+      const item = event.target.closest("[data-manager-quick-action]");
+      if (!item) return;
+      event.preventDefault();
+      handleManagerQuickAction(item.dataset.managerQuickAction);
+    });
+  }
+
   function bindEvents() {
+    bindManagerShell();
     $("[data-owner-save]")?.addEventListener("click", saveVenue);
     $("[data-owner-start-create]")?.addEventListener("click", () =>
-      $("[data-owner-venue-form]")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      openManagerSection("venue", { target: "#managerVenueProfile" }),
     );
     $("[data-owner-image-browse]")?.addEventListener("click", () =>
       $("[data-owner-image-input]")?.click(),
@@ -2504,22 +4518,23 @@
     $("[data-blackout-add]")?.addEventListener("click", addBlackoutDate);
     $("[data-special-save]")?.addEventListener("click", saveSpecialHours);
     $("[data-special-closed]")?.addEventListener("change", syncSpecialClosedState);
-    $("[data-owner-location-search-button]")?.addEventListener("click", searchOwnerLocation);
+    $("[data-owner-location-current]")?.addEventListener("click", useOwnerCurrentLocation);
+    $("[data-owner-location-retry]")?.addEventListener("click", () => {
+      ownerMapsLoading = null;
+      initOwnerGoogleMap();
+    });
     $("[data-owner-location-search]")?.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
         event.preventDefault();
         searchOwnerLocation();
       }
     });
-    $("[data-owner-location-click-layer]")?.addEventListener("click", (event) => {
-      const coordinates = coordinatesFromPickerClick(event);
-      setLocationFields(coordinates.lat, coordinates.lng);
-    });
     $("[data-owner-location-clear]")?.addEventListener("click", () => {
       const form = $("[data-owner-venue-form]");
       if (!form) return;
       form.elements.latitude.value = "";
       form.elements.longitude.value = "";
+      ownerGoogleMarker?.setVisible(false);
       updateOwnerLocationMap();
     });
     ["latitude", "longitude"].forEach((name) => {
@@ -2569,21 +4584,121 @@
       clearOwnerRenderSignatures("calendar");
       loadCalendarReservations();
     });
-    $("[data-owner-reservations-clear]")?.addEventListener("click", () => {
-      state.reservationFilters = { view: "", status: "", date: "", venue_id: "" };
-      document.querySelectorAll("[data-owner-reservation-filter]").forEach((control) => {
-        control.value = "";
-      });
-      lastReservationRenderSignature = "";
-      clearOwnerRenderSignatures("reservation-stats");
-      loadReservations();
+    document.addEventListener("click", (event) => {
+      const clearButton = event.target.closest("[data-owner-reservations-clear]");
+      if (!clearButton) return;
+      event.preventDefault();
+      clearReservationWorkspace();
     });
 
     document.querySelectorAll("[data-owner-reservation-filter]").forEach((control) => {
       control.addEventListener("change", () => {
         state.reservationFilters[control.dataset.ownerReservationFilter] = control.value;
+        if (control.dataset.ownerReservationFilter === "status" && control.value) {
+          state.reservationWorkspace.view =
+            control.value === "pending" || control.value === "no_show" ? control.value : "all";
+        }
+        if (control.dataset.ownerReservationFilter === "date" && control.value) {
+          state.reservationWorkspace.view = "all";
+          state.reservationFilters.view = "";
+        }
+        syncReservationWorkspaceControls();
         debounceReservationLoad();
       });
+    });
+
+    $("[data-owner-reservation-search]")?.addEventListener("input", (event) => {
+      state.reservationWorkspace.search = event.target.value;
+      lastReservationRenderSignature = "";
+      renderReservations();
+    });
+
+    $("[data-owner-reservation-date-end]")?.addEventListener("change", (event) => {
+      state.reservationWorkspace.dateEnd = event.target.value;
+      lastReservationRenderSignature = "";
+      loadReservations();
+    });
+
+    $("[data-owner-reservation-party-size]")?.addEventListener("change", (event) => {
+      state.reservationWorkspace.partySize = event.target.value;
+      lastReservationRenderSignature = "";
+      renderReservations();
+    });
+
+    $("[data-owner-reservation-occasion]")?.addEventListener("change", (event) => {
+      state.reservationWorkspace.occasion = event.target.value;
+      lastReservationRenderSignature = "";
+      renderReservations();
+    });
+
+    $("[data-reservation-mobile-view]")?.addEventListener("change", (event) => {
+      setReservationWorkspaceView(event.target.value);
+    });
+
+    $("[data-reservation-filter-toggle]")?.addEventListener("click", () => {
+      $("[data-reservation-filter-sheet]")?.classList.add("is-open");
+      document.body.classList.add("reservation-filter-sheet-open");
+    });
+
+    $("[data-reservation-filter-close]")?.addEventListener("click", () => {
+      $("[data-reservation-filter-sheet]")?.classList.remove("is-open");
+      document.body.classList.remove("reservation-filter-sheet-open");
+    });
+
+    document.addEventListener("click", (event) => {
+      const sheet = $("[data-reservation-filter-sheet]");
+      if (!sheet?.classList.contains("is-open")) return;
+      if (event.target.closest("[data-reservation-filter-sheet]")) return;
+      if (event.target.closest("[data-reservation-filter-toggle]")) return;
+      sheet.classList.remove("is-open");
+      document.body.classList.remove("reservation-filter-sheet-open");
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      $("[data-reservation-filter-sheet]")?.classList.remove("is-open");
+      document.body.classList.remove("reservation-filter-sheet-open");
+    });
+
+    document.querySelectorAll("[data-reservation-summary-filter]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const filter = button.dataset.reservationSummaryFilter;
+        if (filter === "pending") {
+          setReservationWorkspaceView("pending");
+          return;
+        }
+        if (filter === "confirmed_today") {
+          setReservationWorkspaceView("today", { load: false });
+          state.reservationFilters.status = "confirmed";
+          syncReservationWorkspaceControls();
+          loadReservations();
+          return;
+        }
+        if (filter === "today") {
+          setReservationWorkspaceView("today");
+          return;
+        }
+        if (filter === "cancelled_today") {
+          setReservationWorkspaceView("today", { load: false });
+          state.reservationFilters.status = "cancelled";
+          syncReservationWorkspaceControls();
+          loadReservations();
+          return;
+        }
+        if (filter === "no_show_today") {
+          setReservationWorkspaceView("today", { load: false });
+          state.reservationFilters.status = "no_show";
+          syncReservationWorkspaceControls();
+          loadReservations();
+        }
+      });
+    });
+
+    document.addEventListener("click", (event) => {
+      const viewButton = event.target.closest("[data-reservation-workspace-view]");
+      if (!viewButton) return;
+      event.preventDefault();
+      setReservationWorkspaceView(viewButton.dataset.reservationWorkspaceView);
     });
 
     document.querySelectorAll("[data-owner-reservation-tab]").forEach((button) => {
@@ -2684,7 +4799,7 @@
         const reservation = state.reservations.find(
           (item) => String(item.id) === String(reservationView.dataset.ownerReservationView),
         );
-        if (reservation) renderReservationDetail(reservation);
+        renderReservationDetail(reservation);
         return;
       }
       const calendarReservation = event.target.closest("[data-owner-calendar-reservation]");
@@ -2693,7 +4808,7 @@
           (item) =>
             String(item.id) === String(calendarReservation.dataset.ownerCalendarReservation),
         );
-        if (reservation) renderReservationDetail(reservation);
+        renderReservationDetail(reservation);
         return;
       }
       const reservationButton = event.target.closest("[data-owner-reservation-action]");

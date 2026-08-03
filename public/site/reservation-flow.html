@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <link href="../assets/css/style.css" rel="stylesheet">
@@ -56,7 +56,7 @@
 
     <!-- LEFT -->
     <div class="col-lg-8 reservation-flow-main">
-      <h1 style="font-family:'Cormorant Garamond',serif;font-weight:600">Reserve your table</h1>
+      <h1 class="page-title-standard">Reserve your table</h1>
       <p style="color:var(--muted)">Aurora Rooftop · Shoreditch, London</p>
 
       <!-- Stepper -->
@@ -69,8 +69,8 @@
       </div>
 
       <!-- STEP 1 — DATE -->
-      <div class="card-pro p-4 step-panel reservation-step-card" data-panel="1" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-        <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Choose a date</h4>
+      <div class="card-pro p-4 step-panel reservation-step-card" data-panel="1" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md)">
+        <h4 class="panel-title">Choose a date</h4>
         <p class="text-muted-pro small">Select the day you'd like to dine with us.</p>
         <div class="chip-grid mt-3" id="dateGrid"></div>
         <div class="d-flex justify-content-end mt-4">
@@ -79,8 +79,8 @@
       </div>
 
       <!-- STEP 2 — TIME -->
-      <div class="card-pro p-4 step-panel d-none reservation-step-card" data-panel="2" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-        <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Choose a time</h4>
+      <div class="card-pro p-4 step-panel d-none reservation-step-card" data-panel="2" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md)">
+        <h4 class="panel-title">Choose a time</h4>
         <p class="text-muted-pro small">Available windows for your party.</p>
         <div class="chip-grid mt-3">
           <div class="chip-select">6:00<small>PM</small></div>
@@ -99,8 +99,8 @@
       </div>
 
       <!-- STEP 3 — GUESTS -->
-      <div class="card-pro p-4 step-panel d-none reservation-step-card" data-panel="3" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-        <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">How many guests?</h4>
+      <div class="card-pro p-4 step-panel d-none reservation-step-card" data-panel="3" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md)">
+        <h4 class="panel-title">How many guests?</h4>
         <p class="text-muted-pro small">Parties larger than 8 require a private booking.</p>
         <div class="chip-grid mt-3" style="grid-template-columns:repeat(8,1fr)">
           <div class="chip-select">1</div><div class="chip-select active">2</div><div class="chip-select">3</div><div class="chip-select">4</div>
@@ -113,8 +113,8 @@
       </div>
 
       <!-- STEP 4 — DETAILS -->
-      <div class="card-pro p-4 step-panel d-none reservation-step-card" data-panel="4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-        <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600">Your details</h4>
+      <div class="card-pro p-4 step-panel d-none reservation-step-card" data-panel="4" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md)">
+        <h4 class="panel-title">Your details</h4>
         <p class="text-muted-pro small">We'll send your confirmation to this email and phone.</p>
         <div class="row g-3 mt-1">
           <div class="col-md-6">
@@ -150,7 +150,7 @@
       <div class="step-panel d-none reservation-confirmation-panel" data-panel="5">
         <div class="confirm-card">
           <div class="confirm-check"><i class="bi bi-check2"></i></div>
-          <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600">Reservation confirmed</h3>
+          <h3 class="panel-title">Reservation confirmed</h3>
           <p style="color:var(--muted)">We've sent the details to your email. The venue is expecting you.</p>
 
           <div class="text-start mt-4 mx-auto" style="max-width:480px">
@@ -174,11 +174,11 @@
     <!-- RIGHT — Summary -->
     <aside class="col-lg-4">
       <div style="position:sticky;top:90px">
-        <div class="card-pro reservation-summary-card p-0" style="background:var(--card);border:1px solid var(--border);border-radius:22px;overflow:hidden">
+        <div class="card-pro reservation-summary-card p-0" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden">
           <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80" style="width:100%;height:160px;object-fit:cover" alt="Restaurant table prepared for a reservation" loading="lazy" decoding="async" width="800" height="533" sizes="100vw" />
           <div class="p-4">
             <span class="chip-gold mb-2"><i class="bi bi-award-fill"></i> Editor's pick</span>
-            <h5 class="m-0 mt-2" style="font-family:'Cormorant Garamond',serif;font-weight:600">Aurora Rooftop</h5>
+            <h5 class="m-0 mt-2 panel-title">Aurora Rooftop</h5>
             <div class="small text-muted-pro mt-1"><i class="bi bi-geo-alt"></i> Shoreditch, London · Modern European</div>
             <div class="rating text-gold mt-2"><i class="bi bi-star-fill"></i> 4.9 <span class="text-muted-pro small">(1,284)</span></div>
 

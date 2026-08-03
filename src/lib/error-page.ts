@@ -37,24 +37,21 @@ const copies: Record<"en" | "sq", Record<ErrorPageKind, ErrorPageCopy>> = {
     offline: {
       code: "Offline",
       title: "You appear to be offline.",
-      description:
-        "Check your internet connection, then try loading the page again.",
+      description: "Check your internet connection, then try loading the page again.",
       primary: "Try again",
       secondary: "Go home",
     },
     network: {
       code: "Network",
       title: "We couldn’t connect.",
-      description:
-        "Your connection may be unstable. Please check it and try again.",
+      description: "Your connection may be unstable. Please check it and try again.",
       primary: "Try again",
       secondary: "Go home",
     },
     api: {
       code: "Service",
       title: "Tiketa is taking longer than expected.",
-      description:
-        "The service is temporarily unavailable. Please try again in a moment.",
+      description: "The service is temporarily unavailable. Please try again in a moment.",
       primary: "Try again",
       secondary: "Go home",
     },
@@ -87,8 +84,7 @@ const copies: Record<"en" | "sq", Record<ErrorPageKind, ErrorPageCopy>> = {
     offline: {
       code: "Pa internet",
       title: "Duket se nuk jeni të lidhur me internetin.",
-      description:
-        "Kontrolloni lidhjen tuaj me internetin dhe provoni ta ngarkoni faqen përsëri.",
+      description: "Kontrolloni lidhjen tuaj me internetin dhe provoni ta ngarkoni faqen përsëri.",
       primary: "Provo përsëri",
       secondary: "Shko në ballinë",
     },
@@ -119,14 +115,18 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-export function renderErrorPage(options: { kind?: ErrorPageKind; language?: "en" | "sq" } = {}): string {
+export function renderErrorPage(
+  options: { kind?: ErrorPageKind; language?: "en" | "sq" } = {},
+): string {
   const language = options.language === "sq" ? "sq" : "en";
   const kind = options.kind || "server";
   const copy = copies[language][kind] || copies.en.server;
-  const primaryAction = kind === "server" || kind === "offline" || kind === "network" || kind === "api"
-    ? `<button class="primary" onclick="location.reload()">${escapeHtml(copy.primary)}</button>`
-    : `<a class="primary" href="/">${escapeHtml(copy.primary)}</a>`;
-  const secondaryHref = kind === "notFound" ? "/events/list" : kind === "forbidden" ? "/login" : "/";
+  const primaryAction =
+    kind === "server" || kind === "offline" || kind === "network" || kind === "api"
+      ? `<button class="primary" onclick="location.reload()">${escapeHtml(copy.primary)}</button>`
+      : `<a class="primary" href="/">${escapeHtml(copy.primary)}</a>`;
+  const secondaryHref =
+    kind === "notFound" ? "/events/list" : kind === "forbidden" ? "/login" : "/";
 
   return `<!doctype html>
 <html lang="${language}">
@@ -136,7 +136,7 @@ export function renderErrorPage(options: { kind?: ErrorPageKind; language?: "en"
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       :root { color-scheme: dark; }
-      body { font: 15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; background: #0b0f19; color: #f8fafc; display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 1.5rem; }
+      body { font: 500 15px/1.5 Manrope, ui-sans-serif, system-ui, -apple-system, sans-serif; background: #0b0f19; color: #f8fafc; display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 1.5rem; }
       body::before { content: ""; position: fixed; inset: 0; background: radial-gradient(900px 500px at 50% -10%, rgba(91,140,255,.24), transparent 60%); pointer-events: none; }
       .card { max-width: 34rem; width: 100%; text-align: center; padding: 2rem; position: relative; }
       .badge { width: 4.5rem; height: 4.5rem; margin: 0 auto 1.25rem; display: inline-grid; place-items: center; border-radius: 1.25rem; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); color: #cbd5e1; font-weight: 700; }

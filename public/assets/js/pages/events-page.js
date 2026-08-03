@@ -335,18 +335,20 @@
             `/event/${encodeURIComponent(event.slug)}`;
           return `
           <div class="col-12">
-            <article class="card-pro p-3 d-flex gap-3 align-items-center flex-wrap">
-              <img loading="lazy" decoding="async" width="120" height="86" src="${u().escapeHtml(u().eventImage(event))}" alt="${u().escapeHtml([event.title, event.venue_name, event.city].filter(Boolean).join(" in "))}" style="width:120px;height:86px;object-fit:cover;border-radius:10px"/>
-              <div class="flex-grow-1">
-                <div class="meta"><i class="bi bi-calendar3"></i> ${u().escapeHtml(date)}</div>
+            <article class="card-pro event-card-pro event-card-list">
+              <div class="event-card-list-media">
+                <img loading="lazy" decoding="async" width="160" height="112" src="${u().escapeHtml(u().eventImage(event))}" alt="${u().escapeHtml([event.title, event.venue_name, event.city].filter(Boolean).join(" in "))}"/>
+              </div>
+              <div class="event-card-list-main">
+                <div class="meta event-card-date"><i class="bi bi-calendar3"></i> ${u().escapeHtml(date)}</div>
                 <h3 class="title mb-1"><a href="${detailsHref}" style="color:inherit">${u().escapeHtml(event.title)}</a></h3>
-                <div class="venue"><i class="bi bi-geo-alt"></i> ${u().escapeHtml(event.venue_name || "")}${event.city ? `, ${u().escapeHtml(event.city)}` : ""}</div>
+                <div class="venue event-card-location"><i class="bi bi-geo-alt"></i> ${u().escapeHtml(event.venue_name || "")}${event.city ? `, ${u().escapeHtml(event.city)}` : ""}</div>
               </div>
-              <div class="text-end">
-                <div class="price mb-2">${status.canBuy ? `From ${u().formatMoney(price.amount, price.currency)}` : status.priceLabel}</div>
-                <a class="btn btn-glass btn-sm" href="${detailsHref}" data-i18n="buttons.view">${window.t?.("buttons.view") || "View"}</a>
+              <div class="event-card-list-actions">
+                <div class="price event-card-price">${status.canBuy ? `From ${u().formatMoney(price.amount, price.currency)}` : status.priceLabel}</div>
+                <a class="btn btn-glass btn-sm event-card-cta" href="${detailsHref}" data-i18n="buttons.view">${window.t?.("buttons.view") || "View"}</a>
               </div>
-              <span class="fav" data-fav="event-${event.id}" data-event-id="${event.id}" style="position:static"><i class="bi bi-heart"></i></span>
+              <span class="fav event-card-fav" data-fav="event-${event.id}" data-event-id="${event.id}" aria-label="${u().escapeHtml(window.t?.("events.save_for_later") || "Save for later")}"><i class="bi bi-heart"></i></span>
             </article>
           </div>`;
         })

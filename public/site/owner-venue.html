@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <link href="../assets/css/style.css" rel="stylesheet">
@@ -17,21 +17,123 @@
 </head>
 <body class="dashboard-enterprise owner-dashboard-page restaurant-experience-page">
 
-<nav class="navbar navbar-expand-lg nav-blur nav-res">
-  <div class="container-xxl">
-    <a class="brand" href="/welcome"><span class="brand-logo" style="background:var(--grad-res)"><i class="bi bi-cup-hot-fill"></i></span>Tiketa <span class="text-gold ms-1 d-none d-sm-inline" style="font-weight:500;font-size:.95rem">· Reservations</span></a>
-    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#resNav"><i class="bi bi-list fs-3" style="color:var(--text)"></i></button>
-    <div class="collapse navbar-collapse" id="resNav">
-      <ul class="navbar-nav mx-auto gap-1">
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="/restaurants" data-i18n="header.home">Home</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro" href="/my-reservations" data-auth-role-nav="user" data-i18n="header.my_reservations" hidden>My Reservations</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-pro active" href="/owner-venue" data-auth-role-nav="owner" hidden>Restaurant & Bar Reservations</a></li>
-      </ul>
-      <div class="d-flex align-items-center gap-2">
-        <a class="btn btn-ghost" href="/login" data-auth-guest data-i18n="header.login">Login</a>
-        <a class="btn btn-gold" href="/register" data-auth-guest data-i18n="header.register">Register</a>
-        <div class="notification-root" data-notification-root data-auth-user hidden>
-          <button class="icon-btn notification-toggle" type="button" data-notification-toggle aria-label="Notifications" data-i18n-attr="aria-label:header.notifications" aria-expanded="false">
+<div class="manager-shell" data-manager-shell>
+  <aside class="manager-sidebar" data-manager-sidebar aria-label="Restaurant manager navigation" data-i18n-attr="aria-label:manager.restaurant_manager_navigation">
+    <div class="manager-sidebar-head">
+      <a class="manager-brand" href="/welcome" data-label="Tiketa Reservations" data-i18n-attr="data-label:manager.tiketa_reservations">
+        <span class="manager-brand-mark"><i class="bi bi-cup-hot-fill"></i></span>
+        <span class="manager-brand-copy"><strong>Tiketa</strong><small data-i18n="manager.reservations_brand">Reservations</small></span>
+      </a>
+      <button class="manager-sidebar-toggle" type="button" data-manager-sidebar-toggle aria-label="Collapse sidebar" data-i18n-attr="aria-label:manager.collapse_sidebar">
+        <i class="bi bi-layout-sidebar-inset"></i>
+      </button>
+      <button class="manager-sidebar-mobile-close" type="button" data-manager-mobile-sidebar-close aria-label="Close navigation" data-i18n-attr="aria-label:manager.close_navigation">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <nav class="manager-nav" aria-label="Manager workspace" data-i18n-attr="aria-label:manager.manager_workspace">
+      <div class="manager-nav-group">
+        <div class="manager-nav-label" data-i18n="manager.daily_operations">Daily Operations</div>
+        <a class="manager-nav-item active" href="#managerDashboard" data-manager-nav="dashboard" data-manager-section="dashboard" data-label="Dashboard" data-i18n-attr="data-label:manager.dashboard">
+          <i class="bi bi-speedometer2"></i><span data-i18n="manager.dashboard">Dashboard</span>
+        </a>
+        <a class="manager-nav-item" href="#ownerReservations" data-manager-nav="reservations" data-manager-section="reservations" data-label="Reservations" data-i18n-attr="data-label:header.reservations">
+          <i class="bi bi-calendar-check"></i><span data-i18n="header.reservations">Reservations</span><strong class="manager-nav-badge" data-manager-pending-badge hidden>0</strong>
+        </a>
+        <div class="manager-subnav" data-manager-subnav="reservations">
+          <a href="#ownerReservations" data-manager-reservation-filter="all" data-i18n="manager.all">All</a>
+          <a href="#ownerReservations" data-manager-reservation-filter="pending" data-i18n="manager.pending">Pending</a>
+          <a href="#ownerReservations" data-manager-reservation-filter="confirmed" data-i18n="manager.confirmed">Confirmed</a>
+          <a href="#ownerReservations" data-manager-reservation-filter="completed" data-i18n="manager.completed">Completed</a>
+          <a href="#ownerReservations" data-manager-reservation-filter="cancelled" data-i18n="manager.cancelled">Cancelled</a>
+          <a href="#ownerReservations" data-manager-reservation-filter="no_show" data-i18n="manager.no_shows">No-shows</a>
+        </div>
+        <a class="manager-nav-item" href="#managerCalendar" data-manager-nav="calendar" data-manager-section="calendar" data-label="Calendar" data-i18n-attr="data-label:manager.calendar">
+          <i class="bi bi-calendar3"></i><span data-i18n="manager.calendar">Calendar</span>
+        </a>
+        <a class="manager-nav-item" href="#ownerReservations" data-manager-nav="guests" data-manager-section="guests" data-label="Guests" data-i18n-attr="data-label:manager.guests">
+          <i class="bi bi-people"></i><span data-i18n="manager.guests">Guests</span>
+        </a>
+        <a class="manager-nav-item" href="#managerAnalytics" data-manager-nav="analytics" data-manager-section="analytics" data-label="Analytics" data-i18n-attr="data-label:manager.analytics">
+          <i class="bi bi-graph-up-arrow"></i><span data-i18n="manager.analytics">Analytics</span>
+        </a>
+      </div>
+
+      <div class="manager-nav-divider"></div>
+
+      <div class="manager-nav-group">
+        <div class="manager-nav-label" data-i18n="manager.configuration">Configuration</div>
+        <a class="manager-nav-item" href="#managerVenueProfile" data-manager-nav="venue" data-manager-section="venue" data-label="Venue" data-i18n-attr="data-label:manager.venue">
+          <i class="bi bi-shop-window"></i><span data-i18n="manager.venue">Venue</span>
+        </a>
+        <div class="manager-subnav" data-manager-subnav="venue">
+          <a href="#managerVenueProfile" data-manager-target="#managerVenueProfile" data-i18n="manager.profile">Profile</a>
+          <a href="#managerVenueGallery" data-manager-target="#managerVenueGallery" data-i18n="manager.gallery">Gallery</a>
+          <a href="#managerVenueLocation" data-manager-target="#managerVenueLocation" data-i18n="manager.location">Location</a>
+          <a href="#managerVenueAmenities" data-manager-target="#managerVenueAmenities" data-i18n="manager.amenities">Amenities</a>
+          <a href="#managerVenuePublicPreview" data-manager-target="#managerVenuePublicPreview" data-i18n="manager.public_preview">Public Preview</a>
+        </div>
+        <a class="manager-nav-item" href="#managerAvailabilityOpeningHours" data-manager-nav="availability" data-manager-section="availability" data-label="Availability" data-i18n-attr="data-label:manager.availability">
+          <i class="bi bi-clock-history"></i><span data-i18n="manager.availability">Availability</span>
+        </a>
+        <div class="manager-subnav" data-manager-subnav="availability">
+          <a href="#managerAvailabilityOpeningHours" data-manager-target="#managerAvailabilityOpeningHours" data-i18n="manager.opening_hours">Opening Hours</a>
+          <a href="#managerBookingRules" data-manager-target="#managerBookingRules" data-i18n="manager.booking_rules">Booking Rules</a>
+          <a href="#managerGuestRules" data-manager-target="#managerGuestRules" data-i18n="manager.guest_rules">Guest Rules</a>
+          <a href="#managerAvailabilityExceptions" data-manager-target="#managerAvailabilityExceptions" data-i18n="manager.blackout_dates">Blackout Dates</a>
+          <a href="#managerAvailabilitySpecialHours" data-manager-target="#managerAvailabilitySpecialHours" data-i18n="manager.special_hours">Special Hours</a>
+        </div>
+        <a class="manager-nav-item" href="#managerSettings" data-manager-nav="settings" data-manager-section="settings" data-label="Settings" data-i18n-attr="data-label:manager.settings">
+          <i class="bi bi-gear"></i><span data-i18n="manager.settings">Settings</span>
+        </a>
+        <div class="manager-subnav" data-manager-subnav="settings">
+          <a href="#managerSettingsAccount" data-manager-target="#managerSettingsAccount" data-i18n="manager.account">Account</a>
+          <a href="#managerSettingsNotifications" data-manager-target="#managerSettingsNotifications" data-i18n="header.notifications">Notifications</a>
+          <a href="#managerSettingsLanguage" data-manager-target="#managerSettingsLanguage" data-i18n="manager.language">Language</a>
+          <a href="#managerSettingsIntegrations" data-manager-target="#managerSettingsIntegrations" data-i18n="manager.integrations">Integrations</a>
+          <a href="#managerSettingsBilling" data-manager-target="#managerSettingsBilling" data-i18n="manager.billing">Billing</a>
+          <a href="#managerDangerZone" data-manager-target="#managerDangerZone" data-i18n="manager.danger_zone">Danger Zone</a>
+        </div>
+      </div>
+    </nav>
+  </aside>
+  <button class="manager-sidebar-overlay" type="button" data-manager-sidebar-overlay aria-label="Close navigation" data-i18n-attr="aria-label:manager.close_navigation" hidden></button>
+
+  <div class="manager-workspace">
+    <header class="manager-topbar" data-manager-topbar>
+      <button class="manager-mobile-sidebar-trigger" type="button" data-manager-mobile-sidebar-open aria-label="Open navigation" data-i18n-attr="aria-label:manager.open_navigation">
+        <i class="bi bi-list"></i>
+      </button>
+      <div class="manager-venue-switcher" data-manager-venue-switcher>
+        <span class="manager-venue-icon"><i class="bi bi-shop"></i></span>
+        <span><small data-i18n="manager.current_venue">Current venue</small><strong data-manager-venue-name>Restaurant / Bar</strong></span>
+        <i class="bi bi-chevron-down"></i>
+      </div>
+
+      <button class="manager-search" type="button" data-manager-search title="Search manager workspace" data-i18n-attr="title:manager.search_manager_workspace">
+        <i class="bi bi-search"></i>
+        <span><strong data-i18n="manager.search_placeholder">Search reservations, guests, dates...</strong><small data-i18n="manager.global_search_hint">Reservations, venue, dashboard, settings</small></span>
+        <kbd data-manager-shortcut>Ctrl K</kbd>
+      </button>
+
+      <div class="manager-topbar-actions">
+        <div class="dropdown">
+          <button class="btn btn-gold-outline manager-topbar-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-lightning-charge"></i><span data-i18n="manager.quick_actions">Quick Actions</span>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end manager-dropdown">
+            <button class="dropdown-item" type="button" data-manager-quick-action="pending"><i class="bi bi-hourglass-split"></i><span data-i18n="manager.review_pending_reservations">Review Pending Reservations</span></button>
+            <button class="dropdown-item" type="button" data-manager-quick-action="calendar"><i class="bi bi-calendar3"></i><span data-i18n="manager.open_todays_calendar">Open Today's Calendar</span></button>
+            <button class="dropdown-item" type="button" data-manager-quick-action="blackout"><i class="bi bi-calendar-x"></i><span data-i18n="manager.add_blackout_date">Add Blackout Date</span></button>
+            <button class="dropdown-item" type="button" data-manager-quick-action="special-hours"><i class="bi bi-clock-history"></i><span data-i18n="manager.add_special_hours">Add Special Hours</span></button>
+            <button class="dropdown-item" type="button" data-manager-quick-action="opening-hours"><i class="bi bi-clock"></i><span data-i18n="manager.edit_opening_hours">Edit Opening Hours</span></button>
+            <button class="dropdown-item" type="button" data-manager-quick-action="preview"><i class="bi bi-box-arrow-up-right"></i><span data-i18n="manager.preview_public_page">Preview Public Page</span></button>
+          </div>
+        </div>
+
+        <div class="notification-root manager-notification-root" data-notification-root data-auth-user hidden>
+          <button class="icon-btn notification-toggle manager-icon-button" type="button" data-notification-toggle aria-label="Notifications" data-i18n-attr="aria-label:header.notifications" aria-expanded="false">
             <i class="bi bi-bell"></i>
             <span class="notification-badge" data-notification-count hidden>0</span>
           </button>
@@ -45,150 +147,224 @@
             <a class="notification-view-all" href="/notifications" data-i18n="header.view_all_notifications">View all notifications</a>
           </div>
         </div>
-        <a class="btn btn-gold" href="#" data-auth-user data-logout data-i18n="header.logout" hidden>Logout</a>
-      </div>
-    </div>
-  </div>
-</nav>
 
-<main class="container-xxl py-5" data-owner-venue-page>
-  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
-    <div>
-      <span class="eyebrow-res"><i class="bi bi-shop"></i> <span data-i18n="owner.owner_profile">Restaurant / Bar owner profile</span></span>
-      <h1 class="mt-3 mb-2" style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="owner.manage_title">Manage your restaurant or bar</h1>
-      <p class="text-muted-pro mb-0" data-i18n="owner.manage_copy">Keep your reservation profile, gallery, amenities, payments, and hours current.</p>
+        <div class="dropdown">
+          <button class="manager-user-button" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <span data-auth-name>Account</span><i class="bi bi-chevron-down"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end manager-dropdown">
+            <button class="dropdown-item" type="button" data-manager-target="#managerSettingsAccount"><i class="bi bi-person"></i><span data-i18n="manager.account">Account</span></button>
+            <div class="manager-dropdown-language" data-language-switcher aria-label="Language" data-i18n-attr="aria-label:language.current">
+              <span><i class="bi bi-translate"></i><span data-i18n="manager.language">Language</span></span>
+              <div>
+                <button type="button" data-language-option="en" data-i18n="language.en_short" data-i18n-attr="aria-label:language.switch_to_english">EN</button>
+                <button type="button" data-language-option="sq" data-i18n="language.sq_short" data-i18n-attr="aria-label:language.switch_to_albanian">SQ</button>
+              </div>
+            </div>
+            <a class="dropdown-item" href="/reservation-support"><i class="bi bi-life-preserver"></i><span data-i18n="manager.help_support">Help / Support</span></a>
+            <a class="dropdown-item" href="#" data-manager-public-page><i class="bi bi-box-arrow-up-right"></i><span data-i18n="manager.public_venue_page">Public Venue Page</span></a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#" data-auth-user data-logout data-i18n="header.logout" hidden><i class="bi bi-box-arrow-right"></i>Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+<main class="container-xxl manager-workspace-main" data-owner-venue-page id="managerDashboard">
+  <section class="manager-dashboard-header mb-4" data-dashboard-status-header>
+    <div class="manager-dashboard-header-main">
+      <span class="eyebrow-res"><i class="bi bi-command"></i> <span data-i18n="manager.manager_command_center">Manager Command Center</span></span>
+      <h1 data-dashboard-greeting data-i18n="manager.good_day">Good day</h1>
+      <p><span data-dashboard-venue-name>Restaurant / Bar</span> · <span data-dashboard-date>Today</span></p>
     </div>
-    <div class="d-flex flex-wrap gap-2">
-      <a class="btn btn-gold-outline" href="/restaurants"><i class="bi bi-search me-1"></i><span data-i18n="owner.preview_discovery">Preview discovery</span></a>
-      <button class="btn btn-gold" type="button" data-owner-save><i class="bi bi-check2-circle me-1"></i><span data-i18n="buttons.save_profile">Save profile</span></button>
+    <div class="manager-dashboard-status-card">
+      <span class="manager-status-pill" data-dashboard-operating-status data-i18n="manager.checking_status">Checking status</span>
+      <strong data-dashboard-service-period data-i18n="manager.service_overview">Service overview</strong>
+      <small data-dashboard-next-service data-i18n="manager.reservation_activity_placeholder">Reservation activity will appear here.</small>
     </div>
-  </div>
+  </section>
 
   <div data-owner-alert></div>
 
-  <section class="owner-completion-card mb-4" data-owner-completion hidden>
-    <div class="owner-completion-main">
+  <section class="manager-attention-queue mb-4" data-dashboard-attention>
+    <div class="section-head-res">
       <div>
-        <span class="eyebrow-res"><i class="bi bi-clipboard2-check"></i> <span data-i18n="owner.profile_readiness">Profile readiness</span></span>
-        <h2 data-i18n="owner.profile_completion">Profile Completion</h2>
-        <p class="text-muted-pro mb-0" data-i18n="owner.profile_completion_copy">Complete the essentials that help guests trust and book your restaurant or bar.</p>
-      </div>
-      <div class="owner-completion-score">
-        <strong data-owner-completion-percent>0%</strong>
-        <span data-i18n="owner.complete">Complete</span>
+        <h2 data-i18n="manager.attention_queue">Attention Queue</h2>
+        <div class="sub" data-i18n="manager.attention_queue_copy">Operational items that may need action now</div>
       </div>
     </div>
-    <div class="owner-completion-progress" aria-hidden="true">
-      <span data-owner-completion-bar style="width:0%"></span>
+    <div class="manager-attention-grid" data-dashboard-attention-list>
+      <div class="manager-dashboard-empty">
+        <i class="bi bi-shield-check"></i>
+        <div><strong data-i18n="manager.no_urgent_items">No urgent items.</strong><span data-i18n="manager.no_urgent_items_copy">Pending requests, same-day cancellations, and setup blockers will appear here.</span></div>
+      </div>
     </div>
-    <div class="owner-completion-missing" data-owner-completion-missing></div>
   </section>
 
   <section class="row g-3 mb-4 owner-dashboard-stats" data-owner-reservation-stats>
-    <div class="col-sm-6 col-xl-3">
-      <div class="reservation-stat reservation-stat-pending">
-        <div class="reservation-stat-icon"><i class="bi bi-hourglass-split"></i></div>
-        <span data-i18n="reservation.pending_reservations">Pending Reservations</span>
-        <strong>0</strong>
-        <small data-i18n="reservation.requests_waiting">Requests waiting for your review</small>
+    <div class="col-sm-6 col-xl-2"><div class="reservation-stat reservation-stat-pending"><div class="reservation-stat-icon"><i class="bi bi-hourglass-split"></i></div><span data-i18n="manager.pending_requests">Pending Requests</span><strong>0</strong><small data-i18n="manager.needs_review">Needs review</small></div></div>
+    <div class="col-sm-6 col-xl-2"><div class="reservation-stat reservation-stat-today"><div class="reservation-stat-icon"><i class="bi bi-calendar2-check"></i></div><span data-i18n="manager.todays_reservations">Today's Reservations</span><strong>0</strong><small data-i18n="manager.scheduled_today">Scheduled today</small></div></div>
+    <div class="col-sm-6 col-xl-2"><div class="reservation-stat reservation-stat-guests"><div class="reservation-stat-icon"><i class="bi bi-people"></i></div><span data-i18n="manager.guests_today">Guests Today</span><strong>0</strong><small data-i18n="manager.covers_expected">Covers expected</small></div></div>
+    <div class="col-sm-6 col-xl-2"><div class="reservation-stat reservation-stat-next"><div class="reservation-stat-icon"><i class="bi bi-person-walking"></i></div><span data-i18n="manager.next_arrival">Next Arrival</span><strong>-</strong><small data-i18n="manager.no_arrival_scheduled">No arrival scheduled</small></div></div>
+    <div class="col-sm-6 col-xl-2"><div class="reservation-stat reservation-stat-cancelled"><div class="reservation-stat-icon"><i class="bi bi-x-circle"></i></div><span data-i18n="manager.cancellations_today">Cancellations Today</span><strong>0</strong><small data-i18n="manager.same_day_changes">Same-day changes</small></div></div>
+    <div class="col-sm-6 col-xl-2"><div class="reservation-stat reservation-stat-noshow"><div class="reservation-stat-icon"><i class="bi bi-person-x"></i></div><span data-i18n="manager.no_shows_today">No-shows Today</span><strong>0</strong><small data-i18n="manager.marked_today">Marked today</small></div></div>
+  </section>
+
+  <section class="manager-today-grid mb-4">
+    <div class="manager-dashboard-panel">
+      <div class="section-head-res">
+        <div><h2 data-i18n="manager.pending_reservations">Pending Reservations</h2><div class="sub" data-i18n="manager.pending_reservations_copy">Requests waiting for review</div></div>
       </div>
+      <div class="manager-operation-list" data-dashboard-pending-list></div>
     </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="reservation-stat reservation-stat-confirmed">
-        <div class="reservation-stat-icon"><i class="bi bi-patch-check"></i></div>
-        <span data-i18n="reservation.confirmed_reservations">Confirmed Reservations</span>
-        <strong>0</strong>
-        <small data-i18n="reservation.approved_by_venue">Approved upcoming bookings</small>
+    <div class="manager-dashboard-panel">
+      <div class="section-head-res">
+        <div><h2 data-i18n="manager.next_arrivals">Next Arrivals</h2><div class="sub" data-i18n="manager.next_arrivals_copy">Upcoming confirmed covers</div></div>
       </div>
+      <div class="manager-operation-list" data-dashboard-arrivals-list></div>
     </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="reservation-stat reservation-stat-cancelled">
-        <div class="reservation-stat-icon"><i class="bi bi-x-circle"></i></div>
-        <span data-i18n="reservation.cancelled_reservations">Cancelled Reservations</span>
-        <strong>0</strong>
-        <small data-i18n="reservation.no_longer_active">Requests that were cancelled</small>
+    <div class="manager-dashboard-panel manager-dashboard-panel-wide">
+      <div class="section-head-res">
+        <div><h2 data-i18n="manager.todays_timeline">Today's Timeline</h2><div class="sub" data-i18n="manager.todays_timeline_copy">A compact view of today's reservation flow</div></div>
       </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="reservation-stat reservation-stat-today">
-        <div class="reservation-stat-icon"><i class="bi bi-calendar2-check"></i></div>
-        <span data-i18n="owner.today_reservations">Today's Reservations</span>
-        <strong>0</strong>
-        <small data-i18n="owner.guest_arrivals_today">Guest arrivals scheduled today</small>
-      </div>
+      <div class="manager-timeline-list" data-dashboard-timeline-list></div>
     </div>
   </section>
 
-  <section class="card-pro p-4 mb-4" data-owner-empty hidden style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-    <div class="row g-4 align-items-center">
-      <div class="col-lg-8">
-        <span class="chip-gold mb-3"><i class="bi bi-stars"></i> Add Restaurant or Bar</span>
-        <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="owner.no_profile_yet">No restaurant or bar profile yet</h3>
-        <p class="text-muted-pro mb-0" data-i18n="owner.add_profile_copy">Add your restaurant, bar, lounge, or café profile so guests can discover it when reservations launch.</p>
-      </div>
-      <div class="col-lg-4 text-lg-end">
-        <button class="btn btn-gold btn-lg" type="button" data-owner-start-create><i class="bi bi-plus-lg me-1"></i><span data-i18n="owner.add_restaurant_bar">Add restaurant or bar</span></button>
-      </div>
-    </div>
-  </section>
-
-  <section class="mb-4" data-owner-summary hidden>
-    <div class="venue-card owner-venue-summary">
-      <div class="img-wrap">
-        <img data-owner-cover alt="Restaurant venue cover preview" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1000&q=80" loading="lazy" decoding="async" width="1000" height="667" sizes="(min-width: 992px) 50vw, 100vw" />
-        <div class="badges">
-          <span class="chip-available" data-owner-status>Draft</span>
-          <span class="owner-preview-badge"><i class="bi bi-building"></i></span>
-        </div>
-      </div>
-      <div class="body">
-        <span class="eyebrow-res"><i class="bi bi-window"></i> <span data-i18n="venue.public_page_preview">Public page preview</span></span>
-        <div class="d-flex justify-content-between gap-2">
-          <h3 class="title m-0" data-owner-title>Restaurant / Bar profile</h3>
-          <span class="rating"><i class="bi bi-cup-hot-fill"></i> <span data-owner-type>Restaurant / Bar</span></span>
-        </div>
-        <div class="meta"><span data-owner-location>City</span><span class="dot"></span><span data-owner-image-count>0 images</span></div>
-        <p class="desc m-0" data-owner-description>Complete your profile details below.</p>
-        <div class="owner-preview-actions">
-          <a class="btn btn-gold" href="#" target="_blank" rel="noopener" data-owner-public-link>
-            <i class="bi bi-box-arrow-up-right me-1"></i>View public guest page
-          </a>
-          <span class="small text-muted-pro" data-owner-public-note>Opens the public restaurant or bar page.</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="card-pro p-4 mb-4" id="ownerReservations" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+  <section class="manager-quick-actions-card mb-4">
     <div class="section-head-res">
+      <div><h2 data-i18n="manager.quick_actions">Quick Actions</h2><div class="sub" data-i18n="manager.safe_shortcuts_copy">Safe shortcuts for common manager tasks</div></div>
+    </div>
+    <div class="manager-dashboard-actions">
+      <button type="button" data-manager-quick-action="pending"><i class="bi bi-hourglass-split"></i><span data-i18n="manager.review_pending_reservations">Review Pending Reservations</span></button>
+      <button type="button" data-manager-quick-action="calendar"><i class="bi bi-calendar3"></i><span data-i18n="manager.open_todays_calendar">Open Today's Calendar</span></button>
+      <button type="button" data-manager-quick-action="blackout"><i class="bi bi-calendar-x"></i><span data-i18n="manager.add_blackout_date">Add Blackout Date</span></button>
+      <button type="button" data-manager-quick-action="special-hours"><i class="bi bi-clock-history"></i><span data-i18n="manager.add_special_hours">Add Special Hours</span></button>
+      <button type="button" data-manager-quick-action="opening-hours"><i class="bi bi-clock"></i><span data-i18n="manager.edit_opening_hours">Edit Opening Hours</span></button>
+      <button type="button" data-manager-quick-action="preview"><i class="bi bi-box-arrow-up-right"></i><span data-i18n="manager.preview_public_page">Preview Public Page</span></button>
+    </div>
+  </section>
+
+  <section class="manager-dashboard-bottom-grid mb-4">
+    <div class="manager-dashboard-panel">
+      <div class="section-head-res">
+        <div><h2 data-i18n="manager.recent_activity">Recent Activity</h2><div class="sub" data-i18n="manager.recent_activity_copy">Newest meaningful reservation and venue changes</div></div>
+      </div>
+      <div class="manager-activity-list" data-dashboard-activity-list></div>
+    </div>
+
+    <div class="manager-dashboard-panel manager-readiness-panel">
+      <div class="section-head-res">
+        <div><h2 data-i18n="manager.readiness_insights">Readiness / Insights</h2><div class="sub" data-i18n="manager.readiness_insights_copy">Low-priority setup and operating health</div></div>
+      </div>
+
+      <section class="owner-completion-card" data-owner-completion hidden>
+        <div class="owner-completion-main">
+          <div>
+            <span class="eyebrow-res"><i class="bi bi-clipboard2-check"></i> <span data-i18n="owner.profile_readiness">Profile readiness</span></span>
+            <h2 data-i18n="owner.profile_completion">Profile Completion</h2>
+            <p class="text-muted-pro mb-0" data-i18n="owner.profile_completion_copy">Complete the essentials that help guests trust and book your restaurant or bar.</p>
+          </div>
+          <div class="owner-completion-score">
+            <strong data-owner-completion-percent>0%</strong>
+            <span data-i18n="owner.complete">Complete</span>
+          </div>
+        </div>
+        <div class="owner-completion-progress" aria-hidden="true">
+          <span data-owner-completion-bar style="width:0%"></span>
+        </div>
+        <div class="owner-completion-missing" data-owner-completion-missing></div>
+      </section>
+
+      <section class="manager-new-venue-card" data-owner-empty hidden>
+        <span class="chip-gold mb-3"><i class="bi bi-stars"></i> <span data-i18n="manager.new_venue_setup">New venue setup</span></span>
+        <h3 data-i18n="owner.no_profile_yet">No restaurant or bar profile yet</h3>
+        <p class="text-muted-pro" data-i18n="owner.add_profile_copy">Add your restaurant, bar, lounge, or café profile so guests can discover it when reservations launch.</p>
+        <div class="manager-setup-list">
+          <span><i class="bi bi-circle"></i><span data-i18n="manager.complete_profile">Complete profile</span></span>
+          <span><i class="bi bi-circle"></i><span data-i18n="manager.add_opening_hours">Add opening hours</span></span>
+          <span><i class="bi bi-circle"></i><span data-i18n="manager.upload_images">Upload images</span></span>
+          <span><i class="bi bi-circle"></i><span data-i18n="manager.preview_public_page">Preview public page</span></span>
+        </div>
+        <button class="btn btn-gold mt-3" type="button" data-owner-start-create><i class="bi bi-plus-lg me-1"></i><span data-i18n="owner.add_restaurant_bar">Add restaurant or bar</span></button>
+      </section>
+
+      <section class="manager-public-preview" data-owner-summary hidden id="managerPublicPreview">
+        <img data-owner-cover alt="Restaurant venue cover preview" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1000&q=80" loading="lazy" decoding="async" width="1000" height="667" sizes="(min-width: 992px) 36vw, 100vw" />
+        <div>
+          <span class="eyebrow-res"><i class="bi bi-window"></i> <span data-i18n="venue.public_page_preview">Public page preview</span></span>
+          <h3 data-owner-title>Restaurant / Bar profile</h3>
+          <div class="manager-public-meta">
+            <span data-owner-status>Draft</span>
+            <span data-owner-type>Restaurant / Bar</span>
+            <span data-owner-location>City</span>
+            <span data-owner-image-count>0 images</span>
+          </div>
+          <p data-owner-description>Complete your profile details below.</p>
+          <a class="btn btn-gold btn-sm" href="#" target="_blank" rel="noopener" data-owner-public-link>
+            <i class="bi bi-box-arrow-up-right me-1"></i><span data-i18n="manager.view_public_guest_page">View public guest page</span>
+          </a>
+          <span class="small text-muted-pro d-block mt-2" data-owner-public-note>Opens the public restaurant or bar page.</span>
+        </div>
+      </section>
+
+      <div class="manager-insight-list" data-dashboard-readiness-list>
+        <div class="manager-dashboard-empty">
+          <i class="bi bi-check2-circle"></i>
+          <div><strong data-i18n="manager.venue_health_good">Venue health looks good.</strong><span data-i18n="manager.venue_health_good_copy">Availability and profile issues will appear here only when relevant.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="manager-reservations-workspace mb-4" id="ownerReservations">
+    <div class="manager-reservations-header">
       <div>
+        <span class="eyebrow-res"><i class="bi bi-calendar-check"></i> <span data-i18n="manager.daily_operations">Daily Operations</span></span>
         <h2 data-i18n="owner.reservations">Reservations</h2>
-        <div class="sub" data-i18n="owner.reservation_requests">Manage guest reservations for your restaurants and bars</div>
+        <p><span data-reservations-venue-name>Restaurant / Bar</span> · <span data-reservations-date-context>Today</span><span class="manager-mobile-current-view"> · <span data-reservation-current-view>Today</span></span></p>
       </div>
       <button class="btn btn-gold-outline btn-sm" type="button" data-owner-reservations-refresh><i class="bi bi-arrow-clockwise me-1"></i><span data-i18n="buttons.refresh">Refresh</span></button>
     </div>
 
-    <div class="owner-reservation-tabs mb-3" role="tablist" aria-label="Owner reservation views">
-      <button class="owner-reservation-tab active" type="button" data-owner-reservation-tab="list" data-i18n="owner.reservation_list">Reservation List</button>
-      <button class="owner-reservation-tab" type="button" data-owner-reservation-tab="calendar" data-i18n="owner.reservations_calendar">Reservations Calendar</button>
-      <button class="owner-reservation-tab" type="button" data-owner-reservation-tab="analytics" data-i18n="owner.analytics">Analytics</button>
-    </div>
-
     <div data-owner-reservation-panel="list">
-      <div class="row g-3 align-items-end mb-3">
-        <div class="col-md-6 col-xl-3">
-          <label class="form-label small text-muted-pro" data-i18n="buttons.view">View</label>
-          <select class="form-select" data-owner-reservation-filter="view">
-            <option value="" data-i18n="owner.all">All</option>
-            <option value="today" data-i18n="owner.today">Today</option>
-            <option value="upcoming" data-i18n="owner.upcoming">Upcoming</option>
-            <option value="completed" data-i18n="owner.completed">Completed</option>
-            <option value="cancelled" data-i18n="owner.cancelled">Cancelled</option>
+      <section class="manager-reservation-summary mb-3" data-reservation-workspace-summary>
+        <button type="button" data-reservation-summary-filter="pending"><span data-i18n="manager.pending">Pending</span><strong>0</strong><small data-i18n="manager.needs_review">Needs review</small></button>
+        <button type="button" data-reservation-summary-filter="confirmed_today"><span data-i18n="manager.confirmed_today">Confirmed Today</span><strong>0</strong><small data-i18n="manager.ready_for_service">Ready for service</small></button>
+        <button type="button" data-reservation-summary-filter="today"><span data-i18n="manager.guests_today">Guests Today</span><strong>0</strong><small data-i18n="manager.covers_expected">Covers expected</small></button>
+        <button type="button" data-reservation-summary-filter="cancelled_today"><span data-i18n="manager.cancelled_today">Cancelled Today</span><strong>0</strong><small data-i18n="manager.same_day_changes">Same-day changes</small></button>
+        <button type="button" data-reservation-summary-filter="no_show_today"><span data-i18n="manager.no_shows_today">No-shows Today</span><strong>0</strong><small data-i18n="manager.marked_today">Marked today</small></button>
+      </section>
+
+      <div class="owner-reservation-tabs manager-reservation-tabs mb-3" role="tablist" aria-label="Reservation queue views" data-i18n-attr="aria-label:manager.reservation_queue_views">
+        <button class="owner-reservation-tab active" type="button" data-reservation-workspace-view="today" data-i18n="manager.today">Today</button>
+        <button class="owner-reservation-tab" type="button" data-reservation-workspace-view="pending"><span data-i18n="manager.pending">Pending</span> <span class="manager-tab-badge" data-reservation-pending-tab-badge hidden>0</span></button>
+        <button class="owner-reservation-tab" type="button" data-reservation-workspace-view="upcoming" data-i18n="events.upcoming">Upcoming</button>
+        <button class="owner-reservation-tab" type="button" data-reservation-workspace-view="all" data-i18n="manager.all">All</button>
+        <button class="owner-reservation-tab secondary" type="button" data-reservation-workspace-view="completed" data-i18n="manager.completed">Completed</button>
+        <button class="owner-reservation-tab secondary" type="button" data-reservation-workspace-view="cancelled" data-i18n="manager.cancelled">Cancelled</button>
+        <button class="owner-reservation-tab secondary" type="button" data-reservation-workspace-view="no_show" data-i18n="manager.no_shows">No-shows</button>
+      </div>
+
+      <div class="manager-reservation-filters mb-3">
+        <div class="manager-reservation-search">
+          <i class="bi bi-search"></i>
+          <input class="form-control" type="search" data-owner-reservation-search placeholder="Search ID, guest, phone, email, date, status" aria-label="Search reservations" data-i18n-attr="placeholder:manager.search_reservations_placeholder,aria-label:header.reservations">
+        </div>
+        <div class="manager-mobile-filter-controls">
+          <button class="btn btn-gold-outline" type="button" data-reservation-filter-toggle><i class="bi bi-sliders me-1"></i><span data-i18n="manager.filters">Filters</span><span class="manager-filter-count" data-reservation-filter-count hidden>0</span></button>
+          <select class="form-select" data-reservation-mobile-view aria-label="Reservation view" data-i18n-attr="aria-label:manager.reservation_view">
+            <option value="today" data-i18n="manager.today">Today</option>
+            <option value="pending" data-i18n="manager.pending">Pending</option>
+            <option value="upcoming" data-i18n="events.upcoming">Upcoming</option>
           </select>
         </div>
-        <div class="col-md-6 col-xl-3">
-          <label class="form-label small text-muted-pro" data-i18n="owner.status">Status</label>
-          <select class="form-select" data-owner-reservation-filter="status">
+        <div class="manager-reservation-filter-sheet" data-reservation-filter-sheet>
+          <div class="manager-filter-sheet-head">
+            <strong data-i18n="manager.filters">Filters</strong>
+            <button class="btn btn-glass btn-sm" type="button" data-reservation-filter-close data-i18n="manager.done">Done</button>
+          </div>
+          <select class="form-select" data-owner-reservation-filter="status" aria-label="Reservation status">
             <option value="" data-i18n="owner.any_status">Any status</option>
             <option value="pending" data-i18n="owner.pending">Pending</option>
             <option value="confirmed" data-i18n="owner.confirmed">Confirmed</option>
@@ -196,44 +372,50 @@
             <option value="cancelled" data-i18n="owner.cancelled">Cancelled</option>
             <option value="no_show" data-i18n="owner.no_show">No Show</option>
           </select>
-        </div>
-        <div class="col-md-6 col-xl-3">
-          <label class="form-label small text-muted-pro" data-i18n="owner.date">Date</label>
-          <input class="form-control" type="date" data-owner-reservation-filter="date">
-        </div>
-        <div class="col-md-6 col-xl-2">
-          <label class="form-label small text-muted-pro" data-i18n="common.restaurant_bar">Restaurant / Bar</label>
-          <select class="form-select" data-owner-reservation-filter="venue_id">
+          <input class="form-control" type="date" data-owner-reservation-filter="date" aria-label="Reservation date">
+          <input class="form-control" type="date" data-owner-reservation-date-end aria-label="Reservation date range end">
+          <select class="form-select" data-owner-reservation-filter="venue_id" aria-label="Venue">
             <option value="" data-i18n="owner.all_restaurants_bars">All restaurants & bars</option>
           </select>
-        </div>
-        <div class="col-xl-1 d-grid">
+          <select class="form-select" data-owner-reservation-party-size aria-label="Party size">
+            <option value="" data-i18n="manager.any_party_size">Any party size</option>
+            <option value="1-2" data-i18n="manager.guests_1_2">1-2 guests</option>
+            <option value="3-4" data-i18n="manager.guests_3_4">3-4 guests</option>
+            <option value="5-8" data-i18n="manager.guests_5_8">5-8 guests</option>
+            <option value="9+" data-i18n="manager.guests_9_plus">9+ guests</option>
+          </select>
+          <select class="form-select" data-owner-reservation-occasion aria-label="Occasion">
+            <option value="" data-i18n="manager.any_occasion">Any occasion</option>
+            <option value="Birthday" data-i18n="reservation.birthday">Birthday</option>
+            <option value="Anniversary" data-i18n="reservation.anniversary">Anniversary</option>
+            <option value="Date Night" data-i18n="reservation.date_night">Date Night</option>
+            <option value="Business Meeting" data-i18n="reservation.business_meeting">Business Meeting</option>
+            <option value="Family Gathering" data-i18n="reservation.family_gathering">Family Gathering</option>
+            <option value="Celebration" data-i18n="reservation.celebration">Celebration</option>
+            <option value="Friends Night Out" data-i18n="reservation.friends_night_out">Friends Night Out</option>
+            <option value="Other" data-i18n="reservation.other">Other</option>
+          </select>
+          <input type="hidden" data-owner-reservation-filter="view" value="today">
           <button class="btn btn-gold-outline" type="button" data-owner-reservations-clear data-i18n="buttons.clear">Clear</button>
         </div>
       </div>
 
-      <div class="table-responsive owner-reservations-responsive">
-        <table class="table table-pro owner-reservations-table align-middle">
-          <thead>
-            <tr>
-              <th data-i18n="owner.guest">Guest</th>
-              <th data-i18n="owner.phone">Phone</th>
-              <th data-i18n="owner.date">Date</th>
-              <th data-i18n="owner.time">Time</th>
-              <th data-i18n="reservation.guests">Guests</th>
-              <th data-i18n="owner.status">Status</th>
-              <th data-i18n="owner.actions">Actions</th>
-            </tr>
-          </thead>
-          <tbody data-owner-reservations-table>
-            <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-            <tr class="skeleton-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          </tbody>
-        </table>
+      <div class="manager-active-filters mb-3" data-reservation-active-filters hidden></div>
+
+      <div class="manager-reservation-list" data-owner-reservations-table>
+        <div class="reservation-list-skeleton"><span></span><span></span><span></span></div>
       </div>
     </div>
+  </section>
 
-    <div data-owner-reservation-panel="calendar" hidden>
+  <section class="manager-calendar-workspace mb-4" id="managerCalendar" data-owner-reservation-panel="calendar" hidden>
+      <div class="manager-config-header">
+        <div>
+          <span class="eyebrow-res"><i class="bi bi-calendar3"></i> <span data-i18n="manager.daily_operations">Daily Operations</span></span>
+          <h2 data-i18n="manager.calendar">Calendar</h2>
+          <p data-i18n="manager.calendar_copy">Visual schedule for day, week, and month reservation planning.</p>
+        </div>
+      </div>
       <div class="owner-calendar-summary mb-3" data-owner-calendar-summary>
         <div><span data-i18n="owner.today_reservations">Today's Reservations</span><strong>0</strong></div>
         <div><span data-i18n="owner.pending_today">Pending Today</span><strong>0</strong></div>
@@ -242,7 +424,7 @@
       </div>
 
       <div class="owner-calendar-toolbar">
-        <div class="btn-group owner-calendar-view-toggle" role="group" aria-label="Calendar view">
+        <div class="btn-group owner-calendar-view-toggle" role="group" aria-label="Calendar view" data-i18n-attr="aria-label:manager.calendar_view">
           <button class="btn btn-gold-outline" type="button" data-owner-calendar-view="day" data-i18n="owner.today">Today</button>
           <button class="btn btn-gold-outline active" type="button" data-owner-calendar-view="week" data-i18n="owner.week">Week</button>
           <button class="btn btn-gold-outline" type="button" data-owner-calendar-view="month" data-i18n="owner.month">Month</button>
@@ -253,7 +435,7 @@
           <button class="btn btn-glass" type="button" data-owner-calendar-next><i class="bi bi-chevron-right"></i></button>
         </div>
         <div class="owner-calendar-filters">
-          <select class="form-select" data-owner-calendar-filter="status" aria-label="Calendar status">
+          <select class="form-select" data-owner-calendar-filter="status" aria-label="Calendar status" data-i18n-attr="aria-label:manager.calendar_status">
             <option value="" data-i18n="owner.all">All</option>
             <option value="pending" data-i18n="owner.pending">Pending</option>
             <option value="confirmed" data-i18n="owner.confirmed">Confirmed</option>
@@ -261,25 +443,32 @@
             <option value="completed" data-i18n="owner.completed">Completed</option>
             <option value="no_show" data-i18n="owner.no_show">No Show</option>
           </select>
-          <select class="form-select" data-owner-calendar-filter="venue_id" aria-label="Calendar venue">
+          <select class="form-select" data-owner-calendar-filter="venue_id" aria-label="Calendar venue" data-i18n-attr="aria-label:manager.calendar_venue">
             <option value="" data-i18n="owner.all_restaurants_bars">All restaurants & bars</option>
           </select>
-          <input class="form-control" type="date" data-owner-calendar-jump aria-label="Jump to date">
+          <input class="form-control" type="date" data-owner-calendar-jump aria-label="Jump to date" data-i18n-attr="aria-label:manager.jump_to_date">
         </div>
       </div>
 
       <div class="owner-calendar" data-owner-calendar>
-        <div class="dashboard-loading-skeleton" role="status" aria-label="Loading calendar">
+        <div class="dashboard-loading-skeleton" role="status" aria-label="Loading calendar" data-i18n-attr="aria-label:manager.loading_calendar">
           <span class="skeleton-block"></span>
           <span class="skeleton-block"></span>
           <span class="skeleton-block"></span>
         </div>
       </div>
-    </div>
+  </section>
 
-    <div data-owner-reservation-panel="analytics" hidden>
+  <section class="manager-analytics-workspace mb-4" id="managerAnalytics" data-owner-reservation-panel="analytics" hidden>
+      <div class="manager-config-header">
+        <div>
+          <span class="eyebrow-res"><i class="bi bi-graph-up-arrow"></i> <span data-i18n="manager.daily_operations">Daily Operations</span></span>
+          <h2 data-i18n="manager.analytics">Analytics</h2>
+          <p data-i18n="manager.analytics_copy">Reservation performance, status trends, and planning signals.</p>
+        </div>
+      </div>
       <div class="owner-analytics-toolbar">
-        <div class="btn-group owner-analytics-range" role="group" aria-label="Analytics range">
+        <div class="btn-group owner-analytics-range" role="group" aria-label="Analytics range" data-i18n-attr="aria-label:manager.analytics_range">
           <button class="btn btn-gold-outline" type="button" data-owner-analytics-range="7" data-i18n="owner.last_7_days">Last 7 Days</button>
           <button class="btn btn-gold-outline active" type="button" data-owner-analytics-range="30" data-i18n="owner.last_30_days">Last 30 Days</button>
           <button class="btn btn-gold-outline" type="button" data-owner-analytics-range="90" data-i18n="owner.last_90_days">Last 90 Days</button>
@@ -287,11 +476,11 @@
           <button class="btn btn-gold-outline" type="button" data-owner-analytics-range="custom" data-i18n="owner.custom_range">Custom Range</button>
         </div>
         <div class="owner-analytics-filters">
-          <select class="form-select" data-owner-analytics-filter="venue_id" aria-label="Analytics venue">
+          <select class="form-select" data-owner-analytics-filter="venue_id" aria-label="Analytics venue" data-i18n-attr="aria-label:manager.analytics_venue">
             <option value="" data-i18n="owner.all_restaurants_bars">All restaurants & bars</option>
           </select>
-          <input class="form-control" type="date" data-owner-analytics-start aria-label="Analytics start date" hidden>
-          <input class="form-control" type="date" data-owner-analytics-end aria-label="Analytics end date" hidden>
+          <input class="form-control" type="date" data-owner-analytics-start aria-label="Analytics start date" data-i18n-attr="aria-label:manager.analytics_start_date" hidden>
+          <input class="form-control" type="date" data-owner-analytics-end aria-label="Analytics end date" data-i18n-attr="aria-label:manager.analytics_end_date" hidden>
           <button class="btn btn-gold-outline" type="button" data-owner-analytics-apply hidden data-i18n="buttons.apply">Apply</button>
         </div>
       </div>
@@ -348,81 +537,57 @@
           </div>
         </div>
       </div>
+  </section>
+
+  <section class="manager-guests-workspace mb-4" id="managerGuestsWorkspace" hidden>
+    <div class="manager-config-header">
+      <div>
+        <span class="eyebrow-res"><i class="bi bi-people"></i> <span data-i18n="manager.daily_operations">Daily Operations</span></span>
+        <h2 data-i18n="manager.guests">Guests</h2>
+        <p data-i18n="manager.guests_workspace_copy">Guest history from loaded reservations, ready for the future detail view.</p>
+      </div>
+      <div class="manager-guests-summary" data-manager-guests-summary></div>
     </div>
+    <div class="manager-guests-toolbar">
+      <label class="manager-guest-search" for="managerGuestSearch">
+        <i class="bi bi-search"></i>
+        <input id="managerGuestSearch" type="search" data-manager-guest-search placeholder="Search guests, phone, email, status..." aria-label="Search guests" data-i18n-attr="placeholder:manager.search_guests_placeholder,aria-label:manager.search_guests">
+      </label>
+    </div>
+    <div class="manager-guests-list" data-manager-guests-list></div>
   </section>
 
   <form data-owner-venue-form novalidate>
     <input type="hidden" name="venue_slug" />
-    <div class="row g-4">
-      <div class="col-xl-8">
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+
+    <section class="manager-config-module mb-4" id="managerVenueModule">
+      <div class="manager-config-header">
+        <div>
+          <span class="eyebrow-res"><i class="bi bi-shop-window"></i> <span data-i18n="manager.configuration">Configuration</span></span>
+          <h2 data-i18n="manager.venue">Venue</h2>
+          <p data-i18n="manager.venue_copy">Manage the public restaurant or bar presence guests see before booking.</p>
+        </div>
+      </div>
+      <div class="manager-config-grid">
+        <section class="card-pro p-4" id="managerVenueProfile">
           <div class="section-head-res mb-3">
-            <div><h2 data-i18n="header.profile">Profile</h2><div class="sub" data-i18n="venue.contact">Name, type, contact, and location</div></div>
+            <div><h2 data-i18n="header.profile">Profile</h2><div class="sub" data-i18n="manager.profile_copy">Name, type, description, contact, website, and social links</div></div>
           </div>
           <div class="row g-3">
             <div class="col-md-8"><label class="form-label" data-i18n="forms.full_name">Name</label><input class="form-control" name="name" required maxlength="255" /></div>
             <div class="col-md-4"><label class="form-label" data-i18n="restaurants.restaurant_bar_type">Restaurant / Bar Type</label><select class="form-select" name="venue_type" required><option value="" data-i18n="restaurants.all_types">Select type</option><option value="restaurant" data-i18n="restaurants.restaurant">Restaurant</option><option value="bar" data-i18n="restaurants.bar">Bar</option><option value="lounge" data-i18n="restaurants.lounge">Lounge</option><option value="cafe" data-i18n="restaurants.cafe">Cafe</option></select></div>
-            <div class="col-md-4"><label class="form-label" data-i18n="owner.status">Status</label><select class="form-select" name="status"><option value="active">Active</option><option value="draft">Draft</option><option value="inactive">Inactive</option></select></div>
+            <div class="col-md-4"><label class="form-label" data-i18n="owner.status">Status</label><select class="form-select" name="status"><option value="active" data-i18n="manager.active">Active</option><option value="draft" data-i18n="manager.draft">Draft</option><option value="inactive" data-i18n="manager.inactive">Inactive</option></select></div>
             <div class="col-md-4"><label class="form-label" data-i18n="venue.phone">Phone</label><input class="form-control" name="phone" maxlength="255" /></div>
             <div class="col-md-4"><label class="form-label" data-i18n="venue.email">Email</label><input class="form-control" name="email" type="email" maxlength="255" /></div>
             <div class="col-12"><label class="form-label" data-i18n="venue.description">Description</label><textarea class="form-control" name="description" rows="4"></textarea></div>
             <div class="col-md-6"><label class="form-label" data-i18n="venue.website">Website</label><input class="form-control" name="website" type="url" placeholder="https://example.com" /></div>
-            <div class="col-md-6"><label class="form-label" data-i18n="venue.address">Address</label><input class="form-control" name="address" data-owner-address /></div>
-            <div class="col-md-4"><label class="form-label" data-i18n="restaurants.city">City</label><input class="form-control" name="city" required maxlength="255" /></div>
-            <div class="col-md-4"><label class="form-label" data-i18n="owner.country">Country</label><input class="form-control" name="country" maxlength="255" /></div>
-            <div class="col-md-2"><label class="form-label" data-i18n="owner.latitude">Latitude</label><input class="form-control" name="latitude" type="number" step="0.0000001" /></div>
-            <div class="col-md-2"><label class="form-label" data-i18n="owner.longitude">Longitude</label><input class="form-control" name="longitude" type="number" step="0.0000001" /></div>
-            <div class="col-12">
-              <div class="owner-location-picker">
-                <div class="owner-location-toolbar">
-                  <div>
-                    <h5 class="mb-1" data-i18n="owner.exact_map_location">Exact Map Location</h5>
-                    <p class="small text-muted-pro mb-0" data-i18n="owner.map_location_copy">Search, click the map, or drag the marker to set the exact pin.</p>
-                  </div>
-                  <a class="btn btn-gold-outline btn-sm" href="#" target="_blank" rel="noopener" data-owner-location-open hidden>
-                    <i class="bi bi-box-arrow-up-right me-1"></i>Open pin in Google Maps
-                  </a>
-                </div>
-                <div class="row g-2 mb-3">
-                  <div class="col-md-8">
-                    <input class="form-control" type="search" placeholder="Search address, city, or place" data-i18n-attr="placeholder:forms.search_address" data-owner-location-search>
-                  </div>
-                  <div class="col-md-4 d-grid">
-                    <button class="btn btn-gold-outline" type="button" data-owner-location-search-button>
-                      <i class="bi bi-search me-1"></i>Search this address
-                    </button>
-                  </div>
-                </div>
-                <div class="owner-location-map" data-owner-location-map>
-                  <div class="owner-location-canvas" data-owner-location-canvas hidden></div>
-                  <iframe title="Restaurant or bar Google Map picker" loading="lazy" referrerpolicy="no-referrer-when-downgrade" data-owner-location-frame></iframe>
-                  <button class="owner-location-click-layer" type="button" data-owner-location-click-layer aria-label="Click to set location"></button>
-                  <div class="owner-location-pin" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></div>
-                </div>
-                <div class="owner-location-selected">
-                  <div>
-                    <span data-i18n="owner.selected_address">Selected Address</span>
-                    <strong data-owner-location-selected-address>Not selected</strong>
-                  </div>
-                  <div>
-                    <span data-i18n="owner.latitude">Latitude</span>
-                    <strong data-owner-location-selected-latitude>-</strong>
-                  </div>
-                  <div>
-                    <span data-i18n="owner.longitude">Longitude</span>
-                    <strong data-owner-location-selected-longitude>-</strong>
-                  </div>
-                </div>
-                <div class="owner-location-meta">
-                  <span data-owner-location-status>Set latitude and longitude to preview the map pin.</span>
-                  <button class="btn btn-glass btn-sm" type="button" data-owner-location-clear>Clear map pin</button>
-                </div>
-              </div>
-            </div>
+            <div class="col-md-6"><label class="form-label" data-i18n="manager.facebook">Facebook</label><input class="form-control" name="facebook_url" type="url" placeholder="Facebook URL" /></div>
+            <div class="col-md-6"><label class="form-label" data-i18n="manager.instagram">Instagram</label><input class="form-control" name="instagram_url" type="url" placeholder="Instagram URL" /></div>
+            <div class="col-md-6"><label class="form-label">TikTok</label><input class="form-control" name="tiktok_url" type="url" placeholder="TikTok URL" /></div>
           </div>
         </section>
 
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <section class="card-pro p-4" id="managerVenueGallery">
           <div class="section-head-res mb-3">
             <div><h2 data-i18n="venue.gallery">Gallery</h2><div class="sub" data-i18n="owner.upload_photos">Upload, delete, and reorder restaurant or bar images</div></div>
           </div>
@@ -430,7 +595,7 @@
             <i class="bi bi-images fs-3 text-gold"></i>
             <div>
               <h5 class="mb-1" data-i18n="owner.upload_photos">Upload Restaurant & Bar Photos</h5>
-              <small class="text-muted-pro">Drag photos here or choose multiple PNG, JPG, WebP, or GIF files up to 5MB each.</small>
+              <small class="text-muted-pro" data-i18n="manager.gallery_dropzone_copy">Drag photos here or choose multiple PNG, JPG, WebP, or GIF files up to 5MB each.</small>
             </div>
             <button class="btn btn-gold-outline btn-sm" type="button" data-owner-image-browse>
               <i class="bi bi-cloud-arrow-up me-1"></i><span data-i18n="buttons.upload">Choose images</span>
@@ -441,80 +606,122 @@
           <div class="row g-3" data-owner-gallery></div>
         </section>
 
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <section class="card-pro p-4" id="managerVenueLocation">
+          <div class="section-head-res mb-3">
+            <div><h2 data-i18n="manager.location">Location</h2><div class="sub" data-i18n="manager.location_copy">Address and exact map pin used on the public venue page</div></div>
+          </div>
+          <div class="owner-location-picker owner-location-modern">
+            <div class="owner-location-hero">
+              <div class="owner-location-search-shell">
+                <i class="bi bi-search"></i>
+                <input class="form-control" type="search" placeholder="Search your venue or address..." data-i18n-attr="placeholder:manager.search_venue_address" data-owner-location-search autocomplete="off">
+              </div>
+              <button class="btn btn-gold owner-location-current" type="button" data-owner-location-current>
+                <i class="bi bi-geo-alt-fill me-1"></i><span data-i18n="manager.use_current_location">Use My Current Location</span>
+              </button>
+            </div>
+            <div class="owner-location-map" data-owner-location-map>
+              <div class="owner-location-loading" data-owner-location-loading>
+                <span class="skeleton-media"></span>
+                <span class="skeleton-line"></span>
+                <span class="skeleton-line short"></span>
+              </div>
+              <div class="owner-location-error" data-owner-location-error hidden>
+                <i class="bi bi-map"></i>
+                <strong data-i18n="manager.maps_unavailable">Unable to load Google Maps.</strong>
+                <button class="btn btn-gold-outline btn-sm" type="button" data-owner-location-retry data-i18n="buttons.retry">Retry</button>
+              </div>
+              <div class="owner-location-canvas" data-owner-location-canvas hidden></div>
+            </div>
+            <div class="owner-location-confirmation" data-owner-location-confirmation>
+              <div>
+                <i class="bi bi-check2-circle"></i>
+                <div>
+                  <strong data-owner-location-selected-address data-i18n="manager.pin_not_confirmed">Pin location not confirmed</strong>
+                  <span data-owner-location-status data-i18n="manager.search_or_use_location">Search for your venue or use your current location to place the pin.</span>
+                </div>
+              </div>
+              <a class="btn btn-gold-outline" href="#" target="_blank" rel="noopener" data-owner-location-open hidden>
+                <i class="bi bi-box-arrow-up-right me-1"></i><span data-i18n="manager.open_pin_google_maps">Open in Google Maps</span>
+              </a>
+            </div>
+            <details class="owner-location-advanced">
+              <summary><span data-i18n="manager.advanced_location_fields">Advanced location fields</span><i class="bi bi-chevron-down"></i></summary>
+              <div class="row g-3 mt-1">
+                <div class="col-md-6"><label class="form-label" data-i18n="venue.address">Address</label><input class="form-control" name="address" data-owner-address /></div>
+                <div class="col-md-3"><label class="form-label" data-i18n="restaurants.city">City</label><input class="form-control" name="city" required maxlength="255" /></div>
+                <div class="col-md-3"><label class="form-label" data-i18n="owner.country">Country</label><input class="form-control" name="country" maxlength="255" /></div>
+                <div class="col-md-6"><label class="form-label" data-i18n="owner.latitude">Latitude</label><input class="form-control" name="latitude" type="number" step="0.0000001" /></div>
+                <div class="col-md-6"><label class="form-label" data-i18n="owner.longitude">Longitude</label><input class="form-control" name="longitude" type="number" step="0.0000001" /></div>
+                <div class="col-12 d-flex flex-wrap gap-2">
+                  <button class="btn btn-glass btn-sm" type="button" data-owner-location-clear data-i18n="manager.clear_map_pin">Clear map pin</button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <section class="card-pro p-4" id="managerVenueAmenities">
+          <div class="section-head-res mb-3">
+            <div><h2 data-i18n="manager.amenities">Amenities</h2><div class="sub" data-i18n="manager.amenities_copy">Facilities, cuisine types, and payment options guests use to decide where to book</div></div>
+          </div>
+          <div class="manager-config-stack">
+            <div>
+              <h4 data-i18n="venue.facilities">Facilities</h4>
+              <div class="owner-check-grid mt-3" data-owner-facilities></div>
+            </div>
+            <div>
+              <h4 data-i18n="restaurants.cuisine_type">Cuisine Types</h4>
+              <div class="owner-check-grid mt-3" data-owner-cuisines></div>
+            </div>
+            <div>
+              <h4 data-i18n="venue.payment_options">Payment Options</h4>
+              <div class="owner-check-grid mt-3" data-owner-payments></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="manager-config-placeholder" id="managerVenuePublicPreview">
+          <div>
+            <h3 data-i18n="manager.public_preview">Public Preview</h3>
+            <p data-i18n="manager.public_preview_copy">The live guest-facing preview remains available from the Dashboard readiness panel and topbar quick action.</p>
+          </div>
+          <button class="btn btn-gold-outline" type="button" data-manager-quick-action="preview"><i class="bi bi-box-arrow-up-right me-1"></i><span data-i18n="manager.preview_public_page">Preview public page</span></button>
+        </section>
+      </div>
+    </section>
+
+    <section class="manager-config-module mb-4" id="managerAvailabilityModule">
+      <div class="manager-config-header">
+        <div>
+          <span class="eyebrow-res"><i class="bi bi-clock-history"></i> <span data-i18n="manager.configuration">Configuration</span></span>
+          <h2 data-i18n="manager.availability">Availability</h2>
+          <p data-i18n="manager.availability_copy">Control when guests can book and the rules that shape reservation availability.</p>
+        </div>
+      </div>
+      <div class="manager-config-grid manager-config-grid-compact">
+        <section class="card-pro p-4" id="managerAvailabilityOpeningHours">
           <div class="section-head-res mb-3">
             <div><h2 data-i18n="owner.opening_hours">Opening Hours</h2><div class="sub" data-i18n="owner.monday_sunday">Monday through Sunday</div></div>
+          </div>
+          <div class="manager-empty-inline" data-owner-availability-empty hidden>
+            <strong data-i18n="manager.opening_hours_missing_title">Opening hours define when guests can book.</strong>
+            <span data-i18n="manager.opening_hours_missing_copy">Configure your weekly schedule before opening reservations publicly.</span>
           </div>
           <div class="row g-2" data-owner-hours></div>
         </section>
 
-        <section class="card-pro p-4 mb-4" data-owner-availability-section hidden style="background:var(--card);border:1px solid var(--border);border-radius:22px">
+        <section class="card-pro p-4" id="managerBookingRules">
           <div class="section-head-res mb-3">
-            <div><h2 data-i18n="owner.availability">Availability Exceptions</h2><div class="sub"><span data-i18n="owner.blackout_dates">Blackout dates</span> & <span data-i18n="owner.special_hours">Special Hours</span></div></div>
+            <div><h2 data-i18n="manager.booking_rules">Booking Rules</h2><div class="sub" data-i18n="manager.booking_rules_copy">Reservation interval, booking horizon, and capacity per time slot</div></div>
           </div>
-
-          <div class="availability-exception-grid">
-            <div class="availability-exception-panel">
-              <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                <div>
-                  <h5 class="mb-1" data-i18n="owner.blackout_dates">Blackout Dates</h5>
-                  <p class="small text-muted-pro mb-0">Block reservations for holidays, private events, or maintenance.</p>
-                </div>
-                <i class="bi bi-calendar-x text-gold fs-4"></i>
-              </div>
-              <div class="row g-2">
-                <div class="col-sm-5"><input class="form-control" type="date" data-blackout-date aria-label="Blackout date" data-i18n-attr="aria-label:availability.blackout_date" /></div>
-                <div class="col-sm-5"><input class="form-control" list="blackout-reasons" maxlength="255" placeholder="Reason optional" data-blackout-reason aria-label="Blackout reason" data-i18n-attr="placeholder:reservation.reason,aria-label:reservation.reason" /></div>
-                <div class="col-sm-2 d-grid"><button class="btn btn-gold-outline" type="button" data-blackout-add><i class="bi bi-plus-lg"></i></button></div>
-              </div>
-              <datalist id="blackout-reasons">
-                <option value="Holiday"></option>
-                <option value="Private Event"></option>
-                <option value="Maintenance"></option>
-                <option value="Closed"></option>
-              </datalist>
-              <div class="availability-list mt-3" data-blackout-list></div>
-            </div>
-
-            <div class="availability-exception-panel">
-              <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                <div>
-                  <h5 class="mb-1" data-i18n="owner.special_hours">Special Opening Hours</h5>
-                  <p class="small text-muted-pro mb-0">Override normal hours for a single date, or mark it closed.</p>
-                </div>
-                <i class="bi bi-clock-history text-gold fs-4"></i>
-              </div>
-              <div class="row g-2 align-items-end">
-                <div class="col-sm-4"><label class="form-label small" data-i18n="owner.date">Date</label><input class="form-control" type="date" data-special-date /></div>
-                <div class="col-sm-3"><label class="form-label small" data-i18n="restaurants.opens">Opens</label><select class="form-select owner-time-select" data-special-open></select></div>
-                <div class="col-sm-3"><label class="form-label small" data-i18n="restaurants.closes">Closes</label><select class="form-select owner-time-select" data-special-close></select></div>
-                <div class="col-sm-2 d-grid"><button class="btn btn-gold-outline" type="button" data-special-save><i class="bi bi-check2"></i></button></div>
-                <div class="col-12">
-                  <label class="owner-check availability-closed-toggle">
-                    <input class="form-check-input" type="checkbox" data-special-closed>
-                    <span data-i18n="availability.closed_on_date">Closed on this date</span>
-                  </label>
-                </div>
-              </div>
-              <div class="availability-list mt-3" data-special-list></div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <div class="col-xl-4">
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="reservation.guest_settings">Guest Settings</h4>
-          <p class="small text-muted-pro mb-0">Active restaurants and bars are available publicly for reservations.</p>
-          <div class="row g-3 mt-1">
-            <div class="col-6"><label class="form-label" data-i18n="reservation.min_guests">Min guests</label><input class="form-control" name="min_guests" type="number" min="1" value="1" /></div>
-            <div class="col-6"><label class="form-label" data-i18n="reservation.max_guests">Max guests</label><input class="form-control" name="max_guests" type="number" min="1" value="10" /></div>
-            <div class="col-12">
+          <div class="row g-3">
+            <div class="col-md-4">
               <label class="form-label" data-i18n="availability.max_reservations_per_slot">Maximum Reservations Per Time Slot</label>
               <input class="form-control" name="max_reservations_per_slot" type="number" min="1" value="10" />
-              <small class="text-muted-pro">Maximum number of reservations allowed for the same time slot.</small>
+              <small class="text-muted-pro" data-i18n="manager.max_reservations_slot_copy">Maximum number of reservations allowed for the same time slot.</small>
             </div>
-            <div class="col-12">
+            <div class="col-md-4">
               <label class="form-label" data-i18n="availability.booking_horizon">Booking Horizon</label>
               <select class="form-select" name="booking_horizon_days">
                 <option value="7">7 Days</option>
@@ -526,44 +733,100 @@
                 <option value="365">365 Days</option>
               </select>
             </div>
-            <div class="col-12"><label class="form-label" data-i18n="availability.reservation_interval">Interval</label><select class="form-select" name="reservation_interval_minutes"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option><option value="90">90 minutes</option><option value="120">120 minutes</option></select></div>
-            <div class="col-12"><label class="form-label" data-i18n="availability.last_reservation">Last reservation time</label><select class="form-select owner-time-select" name="last_reservation_time" data-owner-time-select></select></div>
+            <div class="col-md-4"><label class="form-label" data-i18n="availability.reservation_interval">Interval</label><select class="form-select" name="reservation_interval_minutes"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option><option value="90">90 minutes</option><option value="120">120 minutes</option></select></div>
+            <div class="col-md-4"><label class="form-label" data-i18n="availability.last_reservation">Last reservation time</label><select class="form-select owner-time-select" name="last_reservation_time" data-owner-time-select></select></div>
           </div>
         </section>
 
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="owner.social_links">Social Links</h4>
-          <div class="d-grid gap-3 mt-3">
-            <input class="form-control" name="facebook_url" type="url" placeholder="Facebook URL" />
-            <input class="form-control" name="instagram_url" type="url" placeholder="Instagram URL" />
-            <input class="form-control" name="tiktok_url" type="url" placeholder="TikTok URL" />
+        <section class="card-pro p-4" id="managerGuestRules">
+          <div class="section-head-res mb-3">
+            <div><h2 data-i18n="manager.guest_rules">Guest Rules</h2><div class="sub" data-i18n="manager.guest_rules_copy">Minimum and maximum party sizes guests can request</div></div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label" data-i18n="reservation.min_guests">Min guests</label><input class="form-control" name="min_guests" type="number" min="1" value="1" /></div>
+            <div class="col-md-6"><label class="form-label" data-i18n="reservation.max_guests">Max guests</label><input class="form-control" name="max_guests" type="number" min="1" value="10" /></div>
           </div>
         </section>
 
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="venue.facilities">Facilities</h4>
-          <div class="owner-check-grid mt-3" data-owner-facilities></div>
+        <section class="card-pro p-4" data-owner-availability-section hidden id="managerAvailabilityExceptions">
+          <div class="section-head-res mb-3">
+            <div><h2 data-i18n="owner.blackout_dates">Blackout Dates</h2><div class="sub" data-i18n="manager.blackout_dates_copy">Block reservations for holidays, private events, or maintenance.</div></div>
+          </div>
+          <div class="row g-2">
+            <div class="col-sm-5"><input class="form-control" type="date" data-blackout-date aria-label="Blackout date" data-i18n-attr="aria-label:availability.blackout_date" /></div>
+            <div class="col-sm-5"><input class="form-control" list="blackout-reasons" maxlength="255" placeholder="Reason optional" data-blackout-reason aria-label="Blackout reason" data-i18n-attr="placeholder:reservation.reason,aria-label:reservation.reason" /></div>
+            <div class="col-sm-2 d-grid"><button class="btn btn-gold-outline" type="button" data-blackout-add><i class="bi bi-plus-lg"></i></button></div>
+          </div>
+          <datalist id="blackout-reasons">
+            <option value="Holiday"></option>
+            <option value="Private Event"></option>
+            <option value="Maintenance"></option>
+            <option value="Closed"></option>
+          </datalist>
+          <div class="availability-list mt-3" data-blackout-list></div>
         </section>
 
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="restaurants.cuisine_type">Cuisine Types</h4>
-          <div class="owner-check-grid mt-3" data-owner-cuisines></div>
+        <section class="card-pro p-4" data-owner-availability-section hidden id="managerAvailabilitySpecialHours">
+          <div class="section-head-res mb-3">
+            <div><h2 data-i18n="owner.special_hours">Special Hours</h2><div class="sub" data-i18n="manager.special_hours_copy">Override normal hours for a single date, or mark it closed.</div></div>
+          </div>
+          <div class="row g-2 align-items-end">
+            <div class="col-sm-4"><label class="form-label small" data-i18n="owner.date">Date</label><input class="form-control" type="date" data-special-date /></div>
+            <div class="col-sm-3"><label class="form-label small" data-i18n="restaurants.opens">Opens</label><select class="form-select owner-time-select" data-special-open></select></div>
+            <div class="col-sm-3"><label class="form-label small" data-i18n="restaurants.closes">Closes</label><select class="form-select owner-time-select" data-special-close></select></div>
+            <div class="col-sm-2 d-grid"><button class="btn btn-gold-outline" type="button" data-special-save><i class="bi bi-check2"></i></button></div>
+            <div class="col-12">
+              <label class="owner-check availability-closed-toggle">
+                <input class="form-check-input" type="checkbox" data-special-closed>
+                <span data-i18n="availability.closed_on_date">Closed on this date</span>
+              </label>
+            </div>
+          </div>
+          <div class="availability-list mt-3" data-special-list></div>
         </section>
+      </div>
+    </section>
 
-        <section class="card-pro p-4 mb-4" style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="venue.payment_options">Payment Options</h4>
-          <div class="owner-check-grid mt-3" data-owner-payments></div>
+    <section class="manager-config-module mb-4" id="managerSettings">
+      <div class="manager-config-header">
+        <div>
+          <span class="eyebrow-res"><i class="bi bi-gear"></i> <span data-i18n="manager.administration">Administration</span></span>
+          <h2 data-i18n="manager.settings">Settings</h2>
+          <p data-i18n="manager.settings_copy">Administrative preferences and account-level controls kept outside daily workflows.</p>
+        </div>
+      </div>
+      <div class="manager-settings-grid">
+        <section class="manager-config-placeholder" id="managerSettingsAccount">
+          <h3 data-i18n="manager.account">Account</h3>
+          <p data-i18n="manager.account_copy">Account preferences are managed by the current authenticated owner profile.</p>
         </section>
-
-        <section class="card-pro p-4 mb-4 border-danger-subtle" data-owner-delete-section hidden style="background:var(--card);border:1px solid var(--border);border-radius:22px">
-          <h4 style="font-family:'Cormorant Garamond',serif;font-weight:600" data-i18n="owner.delete_restaurant_bar">Delete Restaurant / Bar</h4>
-          <p class="small text-muted-pro">This removes the restaurant or bar profile and gallery.</p>
+        <section class="manager-config-placeholder" id="managerSettingsNotifications">
+          <h3 data-i18n="header.notifications">Notifications</h3>
+          <p data-i18n="manager.notifications_copy">Notification preferences are prepared for future reservation and venue alerts.</p>
+        </section>
+        <section class="manager-config-placeholder" id="managerSettingsLanguage">
+          <h3 data-i18n="manager.language">Language</h3>
+          <p data-i18n="manager.language_copy">Language controls will live here when manager preferences are expanded.</p>
+        </section>
+        <section class="manager-config-placeholder" id="managerSettingsIntegrations">
+          <h3 data-i18n="manager.integrations">Integrations</h3>
+          <p data-i18n="manager.integrations_copy">POS, calendar, and ordering integrations can be connected here in later phases.</p>
+        </section>
+        <section class="manager-config-placeholder" id="managerSettingsBilling">
+          <h3 data-i18n="manager.billing">Billing</h3>
+          <p data-i18n="manager.billing_copy">Billing is reserved for future subscription and payment administration.</p>
+        </section>
+        <section class="card-pro p-4 border-danger-subtle" data-owner-delete-section hidden id="managerDangerZone">
+          <h3 data-i18n="manager.danger_zone">Danger Zone</h3>
+          <p class="small text-muted-pro" data-i18n="manager.danger_zone_copy">Destructive venue actions live here and require confirmation.</p>
           <button class="btn btn-outline-danger w-100" type="button" data-owner-delete-open><i class="bi bi-trash me-1"></i><span data-i18n="owner.delete_profile">Delete profile</span></button>
         </section>
       </div>
-    </div>
+    </section>
   </form>
 </main>
+  </div>
+</div>
 
 <div class="modal fade" id="ownerDeleteModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -583,43 +846,43 @@
   </div>
 </div>
 
-<div class="modal fade" id="ownerReservationModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content dashboard-modal">
-      <div class="modal-header">
-        <h5 class="modal-title" data-owner-reservation-title data-i18n="reservation.reservation">Reservation</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>
-      </div>
-      <div class="modal-body" data-owner-reservation-detail></div>
+<div class="offcanvas offcanvas-end manager-reservation-detail-panel" id="ownerReservationModal" tabindex="-1" aria-labelledby="ownerReservationPanelTitle">
+  <div class="offcanvas-header">
+    <button class="btn btn-glass manager-detail-back" type="button" data-bs-dismiss="offcanvas"><i class="bi bi-chevron-left me-1"></i><span data-i18n="manager.back">Back</span></button>
+    <div>
+      <span class="eyebrow-res"><i class="bi bi-person-lines-fill"></i> <span data-i18n="manager.reservation_detail">Reservation Detail</span></span>
+      <h5 class="offcanvas-title" id="ownerReservationPanelTitle" data-owner-reservation-title data-i18n="reservation.reservation">Reservation</h5>
     </div>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>
   </div>
+  <div class="offcanvas-body" data-owner-reservation-detail></div>
 </div>
 
 <div class="modal fade" id="ownerReservationActionModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content dashboard-modal">
       <div class="modal-header">
-        <h5 class="modal-title" data-owner-action-title>Update this reservation?</h5>
+        <h5 class="modal-title" data-owner-action-title data-i18n="reservation.reservation">Update this reservation?</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:buttons.close"></button>
       </div>
       <div class="modal-body">
-        <p class="mb-0 text-muted-pro" data-owner-action-body>This will update the reservation status.</p>
+        <p class="mb-0 text-muted-pro" data-owner-action-body data-i18n="reservation.reservation_status">This will update the reservation status.</p>
         <div class="mt-3" data-owner-cancel-reason-fields hidden>
           <label class="form-label" data-i18n="reservation.cancellation_reason">Cancellation Reason</label>
           <select class="form-select" data-owner-cancel-reason-select>
-            <option value="Fully booked">Fully booked</option>
-            <option value="Private event">Private event</option>
-            <option value="Kitchen closed">Kitchen closed</option>
-            <option value="Staff shortage">Staff shortage</option>
-            <option value="Maintenance">Maintenance</option>
+            <option value="Fully booked" data-i18n="reservation.reason_fully_booked">Fully booked</option>
+            <option value="Private event" data-i18n="reservation.reason_private_event">Private event</option>
+            <option value="Kitchen closed" data-i18n="reservation.reason_kitchen_closed">Kitchen closed</option>
+            <option value="Staff shortage" data-i18n="reservation.reason_staff_shortage">Staff shortage</option>
+            <option value="Maintenance" data-i18n="reservation.reason_maintenance">Maintenance</option>
             <option value="Other" data-i18n="reservation.other">Other</option>
           </select>
-          <textarea class="form-control mt-3" rows="4" maxlength="1000" data-owner-cancel-reason-other hidden placeholder="Add cancellation reason"></textarea>
+          <textarea class="form-control mt-3" rows="4" maxlength="1000" data-owner-cancel-reason-other hidden placeholder="Add cancellation reason" data-i18n-attr="placeholder:reservation.cancellation_reason"></textarea>
         </div>
       </div>
       <div class="modal-footer border-pro">
         <button type="button" class="btn btn-glass" data-bs-dismiss="modal" data-i18n="buttons.cancel">Cancel</button>
-        <button type="button" class="btn btn-gold" data-owner-action-confirm>Save reservation update</button>
+        <button type="button" class="btn btn-gold" data-owner-action-confirm data-i18n="buttons.save_confirmation">Save reservation update</button>
       </div>
     </div>
   </div>

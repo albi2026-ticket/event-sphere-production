@@ -17,6 +17,7 @@
   window.EventSphereCategories = CategoryRoutes;
 
   const headerHTML = `
+<header>
 <nav class="navbar navbar-expand-lg nav-blur">
   <div class="container-xxl">
     <a class="brand" href="/welcome"><span class="brand-logo"><i class="bi bi-ticket-perforated-fill"></i></span>Tiketa</a>
@@ -59,9 +60,10 @@
       </div>
     </div>
   </div>
-</nav>`;
+</nav>
+</header>`;
   const footerHTML = `
-<footer class="footer">
+<footer class="footer footer-premium">
   <div class="container-xxl">
     <div class="footer-top">
       <div class="footer-brand">
@@ -77,31 +79,39 @@
     </div>
 
     <div class="footer-links-grid">
-      <div>
+      <div class="footer-link-group">
         <h6 data-i18n="footer.company">Company</h6>
         <a href="/about" data-i18n="footer.about">About Tiketa</a>
         <a href="/contact" data-i18n="footer.contact">Contact Us</a>
         <a href="/careers" data-i18n="footer.careers">Careers</a>
         <a href="/blog" data-i18n="footer.blog">Blog</a>
       </div>
-      <div>
+      <div class="footer-link-group">
         <h6 data-i18n="footer.support">Support</h6>
         <a href="/help-center" data-i18n="footer.help_center">Help Center</a>
         <a href="/faqs" data-i18n="footer.faqs">FAQs</a>
         <a href="/ticket-support" data-i18n="footer.ticket_support">Ticket Support</a>
         <a href="/refund-policy" data-i18n="footer.refund_policy">Refund Policy</a>
       </div>
-      <div>
+      <div class="footer-link-group">
         <h6 data-i18n="footer.organizers">Organizers</h6>
         <a href="/become-organizer" data-i18n="footer.become_organizer">Become an Organizer</a>
         <a href="/organizer-guide" data-i18n="footer.organizer_guide">Organizer Guide</a>
         <a href="/create-event" data-i18n="footer.create_event">Create Event</a>
       </div>
-      <div>
+      <div class="footer-link-group">
         <h6 data-i18n="footer.legal">Legal</h6>
         <a href="/terms-of-service" data-i18n="footer.terms">Terms of Service</a>
         <a href="/privacy-policy" data-i18n="footer.privacy">Privacy Policy</a>
         <a href="/cookie-policy" data-i18n="footer.cookies">Cookie Policy</a>
+        <a href="/refund-policy" data-i18n="footer.refund_policy">Refund Policy</a>
+        <a href="/organizer-terms" data-i18n="footer.organizer_terms">Organizer Terms</a>
+        <a href="/venue-owner-terms" data-i18n="footer.venue_owner_terms">Venue Owner Terms</a>
+        <a href="/acceptable-use-content-policy" data-i18n="footer.acceptable_use">Acceptable Use</a>
+        <a href="/copyright-takedown-policy" data-i18n="footer.copyright_policy">Copyright</a>
+        <a href="/data-deletion-privacy-requests" data-i18n="footer.privacy_requests">Privacy Requests</a>
+        <a href="/gdpr-information" data-i18n="footer.gdpr">GDPR</a>
+        <a href="/legal-contact" data-i18n="footer.legal_contact">Legal Contact</a>
       </div>
     </div>
 

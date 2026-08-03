@@ -71,7 +71,7 @@
       wrap.innerHTML = `
         <div class="col-12">
           <div class="eyebrow mb-2">${esc(tr("scanner.assigned_events", "Assigned Events"))}</div>
-          <h2 class="mb-3" style="font-size:1.55rem">${esc(tr("scanner.select_event_to_scan", "Select an event to scan"))}</h2>
+          <h2 class="mb-3 panel-title">${esc(tr("scanner.select_event_to_scan", "Select an event to scan"))}</h2>
         </div>
         ${events.map(eventCard).join("")}`;
       scanLink?.classList.add("disabled");
@@ -91,7 +91,7 @@
       </div>
       <div class="col-md-7">
         <div class="eyebrow mb-2">${esc(tr("scanner.assigned_event", "Assigned Event"))}</div>
-        <h2 class="mb-3" style="font-size:1.55rem">${esc(event.title)}</h2>
+        <h2 class="mb-3 panel-title">${esc(event.title)}</h2>
         <div class="dashboard-detail-grid">
           <div><dt>${esc(tr("common.date", "Date"))}</dt><dd>${dateTime(event.starts_at)}</dd></div>
           <div><dt>${esc(tr("venue.name", "Venue"))}</dt><dd>${esc(event.venue_name || "-")}</dd></div>
